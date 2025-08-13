@@ -332,8 +332,11 @@ namespace WorldServer.Services.World
                         // Entrances to warcamp necessary to compute objective rewards and spawn farm check
                         if (!_warcampEntrances.ContainsKey(res.ZoneId))
                             _warcampEntrances.Add(res.ZoneId, new Point3D[2]);
+                        if (res.Realm == 1 || res.Realm == 2)
+                            _warcampEntrances[res.ZoneId][res.Realm - 1] = new Point3D(res.X, res.Y, res.Z);
+                        else
+                            Log.Error("WorldMgr", $"Invalid realm value '{res.Realm}' for BattleFrontObject with Entry '{res.Entry}'. Realm must be 1 or 2.");
 
-                        _warcampEntrances[res.ZoneId][res.Realm - 1] = new Point3D(res.X, res.Y, res.Z);
                         break;
 
                     case (ushort)BattleFrontObjectType.WARCAMP_PORTAL:
@@ -354,7 +357,10 @@ namespace WorldServer.Services.World
                                 });
                         }
 
-                        _portalsToObjective[res.ZoneId][res.Realm - 1].Add(res.ObjectiveID, res);
+                        if (res.Realm == 1 || res.Realm == 2)
+                            _portalsToObjective[res.ZoneId][res.Realm - 1].Add(res.ObjectiveID, res);
+                        else
+                            Log.Error("WorldMgr", $"Invalid realm value '{res.Realm}' for BattleFrontObject with Entry '{res.Entry}'. Realm must be 1 or 2.");
                         break;
 
                     default:
