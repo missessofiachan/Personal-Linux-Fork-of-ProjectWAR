@@ -74,12 +74,6 @@
     <Reference Include="BehaviourTree, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\BehaviourTree.1.0.73\lib\netstandard1.0\BehaviourTree.dll</HintPath>
     </Reference>
-    <Reference Include="BepuPhysics, Version=2.3.0.0, Culture=neutral, PublicKeyToken=9345ce38ee48a1cd, processorArchitecture=MSIL">
-      <HintPath>..\packages\BepuPhysics.2.3.0\lib\netstandard2.0\BepuPhysics.dll</HintPath>
-    </Reference>
-    <Reference Include="BepuUtilities, Version=2.3.0.0, Culture=neutral, PublicKeyToken=a595ef937c270ac9, processorArchitecture=MSIL">
-      <HintPath>..\packages\BepuUtilities.2.3.0\lib\netstandard2.0\BepuUtilities.dll</HintPath>
-    </Reference>
     <Reference Include="BulletSharp, Version=0.11.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\BulletSharp.0.11.1\lib\net40-client\BulletSharp.dll</HintPath>
     </Reference>
