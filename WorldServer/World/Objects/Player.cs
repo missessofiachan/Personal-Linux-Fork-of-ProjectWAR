@@ -183,7 +183,10 @@ namespace WorldServer.World.Objects
         public static Player GetPlayer(uint characterId)
         {
             lock (_Players)
-                return _Players.Find(plr => plr.CharacterId == characterId);
+            {
+                PlayersByCharId.TryGetValue(characterId, out Player plr);
+                return plr;
+            }
         }
 
         public static Player CreatePlayer(GameClient client, Character Char)
