@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -38,6 +39,10 @@ namespace Common
         AUTH_ACCT_SUSPENDED = 0x0E
     };
 
+    /// <summary>
+    /// Manages all account-related operations, such as creating, retrieving, and updating accounts.
+    /// This class also handles account caching to improve performance.
+    /// </summary>
     [Rpc(true, System.Runtime.Remoting.WellKnownObjectMode.Singleton, 1)]
     public class AccountMgr : RpcObject
     {
@@ -47,13 +52,39 @@ namespace Common
         public Dictionary<string, AccountPending> _Codes = new Dictionary<string, AccountPending>();
         public static EmailClient EmailClient = null;
 
+        /// <summary>
+        /// Sets up the cache for storing account information.
+        /// The cache helps to speed up access to account data by keeping it in memory.
+        /// </summary>
+        /// <param name="enabled">Whether the cache should be used or not.</param>
+        /// <param name="maxSize">The maximum number of accounts to keep in the cache.</param>
+        public void InitializeCache(bool enabled, int maxSize)
+        {
+            _cacheEnabled = enabled;
+            _maxCacheSize = maxSize;
+        }
+
         #region Account
 
         // Account : Username,Account
-        private readonly Dictionary<string, Account> _accounts = new Dictionary<string, Account>();
+        //
+        // This class uses a simple in-memory cache to store account information. The cache is implemented as a
+        // ConcurrentDictionary for thread-safe access. A ConcurrentQueue is used to implement a simple FIFO
+        // (First-In, First-Out) eviction policy, which is an approximation of LRU (Least Recently Used).
+        // This is not a perfect LRU implementation, but it prevents the cache from growing indefinitely.
+        private bool _cacheEnabled = true;
+        private int _maxCacheSize = 10000;
+        private readonly ConcurrentDictionary<string, Account> _accounts = new ConcurrentDictionary<string, Account>();
+        private readonly ConcurrentDictionary<int, string> _accountUsernames = new ConcurrentDictionary<int, string>();
+        private readonly ConcurrentQueue<string> _accountAccessQueue = new ConcurrentQueue<string>();
 
         private readonly List<int> _pendingAccountIDs = new List<int>();
 
+        /// <summary>
+        /// Loads an account from the database into the cache.
+        /// </summary>
+        /// <param name="username">The username of the account to load.</param>
+        /// <returns>The loaded account, or null if the account was not found.</returns>
         public Account LoadAccount(string username)
         {
             username = username.ToLower();
@@ -68,8 +99,22 @@ namespace Common
                     return null;
                 }
 
-                lock (_accounts)
+                if (_cacheEnabled)
+                {
+                    while (_accountAccessQueue.Count >= _maxCacheSize)
+                    {
+                        if (_accountAccessQueue.TryDequeue(out string lruUsername))
+                        {
+                            if (_accounts.TryRemove(lruUsername, out var lruAcct))
+                            {
+                                _accountUsernames.TryRemove(lruAcct.AccountId, out _);
+                            }
+                        }
+                    }
                     _accounts[username] = acct;
+                    _accountUsernames[acct.AccountId] = username;
+                    _accountAccessQueue.Enqueue(username);
+                }
 
                 lock (_pendingAccountIDs)
                     _pendingAccountIDs.Add(acct.AccountId);
@@ -83,35 +128,50 @@ namespace Common
             }
         }
 
+        /// <summary>
+        /// Gets an account by its username.
+        /// This method will first try to get the account from the cache. If it's not in the cache, it will load it from the database.
+        /// </summary>
+        /// <param name="username">The username of the account to get.</param>
+        /// <returns>The account, or null if the account was not found.</returns>
         public Account GetAccount(string username)
         {
             username = username.ToLower();
 
             Log.Debug("GetAccount", username);
 
-            Account acct = null;
+            if (_cacheEnabled && _accounts.TryGetValue(username, out var acct))
+            {
+                return acct;
+            }
 
-            lock (_accounts)
-                if (_accounts.ContainsKey(username))
-                    acct = _accounts[username];
-
-            if (acct == null)
-                acct = LoadAccount(username);
-
-            return acct;
+            return LoadAccount(username);
         }
 
+        /// <summary>
+        /// Gets a list of sanctions (e.g., bans, mutes) for a specific account.
+        /// </summary>
+        /// <param name="accountId">The ID of the account to get sanctions for.</param>
+        /// <returns>A list of sanctions for the account.</returns>
         public IList<AccountSanctionInfo> GetSanctionsFor(int accountId)
         {
             return Database.SelectObjects<AccountSanctionInfo>("accountId = '" + accountId + "'");
         }
 
+        /// <summary>
+        /// Adds a new sanction to an account.
+        /// </summary>
+        /// <param name="sanct">The sanction to add.</param>
         public void AddSanction(AccountSanctionInfo sanct)
         {
             Database.AddObject(sanct);
             Database.ForceSave();
         }
 
+        /// <summary>
+        /// Saves changes to an account to the database and updates it in the cache.
+        /// </summary>
+        /// <param name="acct">The account to update.</param>
         public void UpdateAccount(Account acct)
         {
             acct.Dirty = true;
@@ -120,36 +180,41 @@ namespace Common
 
             Log.Success("AccountMgr", "Updated account " + acct.Username);
 
-            lock (_accounts)
-            {
-                if (_accounts.ContainsKey(acct.Username.ToLower()))
-                    _accounts.Remove(acct.Username.ToLower());
-                _accounts[acct.Username.ToLower()] = acct;
-            }
+            _accounts[acct.Username.ToLower()] = acct;
         }
 
+        /// <summary>
+        /// Gets an account by its ID.
+        /// This method will first try to get the account from the cache. If it's not in the cache, it will load it from the database.
+        /// </summary>
+        /// <param name="ID">The ID of the account to get.</param>
+        /// <returns>The account, or null if the account was not found.</returns>
         public Account GetAccountById(int? ID)
         {
-            Account acct;
-
-            lock (_accounts)
-                acct = _accounts.Where(e => e.Value.AccountId == ID).Select(e => e.Value).FirstOrDefault();
-
-            if (acct == null)
+            if (_cacheEnabled && ID.HasValue && _accountUsernames.TryGetValue(ID.Value, out var username))
             {
-                acct = Database.SelectObject<Account>("AccountId=" + ID);
-
-                if (acct == null)
+                if (_accounts.TryGetValue(username, out var acct))
                 {
-                    Log.Error("LoadAccount", "AccountId " + ID + "not found.");
-                    return null;
+                    return acct;
                 }
-
-                lock (_accounts)
-                    _accounts[acct.Username] = acct;
             }
 
-            return acct;
+            var acctFromDb = Database.SelectObject<Account>("AccountId=" + ID);
+
+            if (acctFromDb == null)
+            {
+                Log.Error("LoadAccount", "AccountId " + ID + "not found.");
+                return null;
+            }
+
+            if (_cacheEnabled)
+            {
+                _accounts[acctFromDb.Username] = acctFromDb;
+                _accountUsernames[acctFromDb.AccountId] = acctFromDb.Username;
+                _accountAccessQueue.Enqueue(acctFromDb.Username);
+            }
+
+            return acctFromDb;
         }
 
         private static void CheckPendingPassword(Account acct, string password)
@@ -175,12 +240,27 @@ namespace Common
             return Database.SelectObject<Account>("AccountId=" + accountId + "");
         }
 
+        /// <summary>
+        /// Checks if an account's username and password are valid.
+        /// </summary>
+        /// <param name="username">The username to check.</param>
+        /// <param name="password">The password to check.</param>
+        /// <param name="ip">The IP address of the user trying to log in.</param>
+        /// <returns>The result of the login attempt.</returns>
         public LoginResult CheckAccount(string username, string password, string ip)
         {
             int accountId = 0;
             return CheckAccount(username, password, ip, out accountId);
         }
 
+        /// <summary>
+        /// Checks if an account's username and password are valid.
+        /// </summary>
+        /// <param name="username">The username to check.</param>
+        /// <param name="password">The password to check.</param>
+        /// <param name="ip">The IP address of the user trying to log in.</param>
+        /// <param name="accountId">The ID of the account that was checked.</param>
+        /// <returns>The result of the login attempt.</returns>
         public LoginResult CheckAccount(string username, string password, string ip, out int accountId)
         {
             username = username.ToLower();
@@ -264,6 +344,11 @@ namespace Common
             return false;
         }
 
+        /// <summary>
+        /// Checks if an IP address is banned.
+        /// </summary>
+        /// <param name="Ip">The IP address to check.</param>
+        /// <returns>True if the IP address is not banned, false otherwise.</returns>
         public bool CheckIp(string Ip)
         {
             Ip_ban ban = Database.SelectObject<Ip_ban>("Ip=LEFT('" + Database.Escape(Ip) + "', " + Database.SqlCommand_CharLength() + "(Ip))");
@@ -288,6 +373,12 @@ namespace Common
             return true;
         }
 
+        /// <summary>
+        /// Generates a new security token for an account.
+        /// This token is used to authenticate the user's session.
+        /// </summary>
+        /// <param name="username">The username of the account to generate the token for.</param>
+        /// <returns>The new security token.</returns>
         public string GenerateToken(string username)
         {
             username = username.ToLower();
@@ -310,6 +401,12 @@ namespace Common
             return Acct.Token;
         }
 
+        /// <summary>
+        /// Checks if a security token is valid for a specific account.
+        /// </summary>
+        /// <param name="Username">The username of the account to check the token for.</param>
+        /// <param name="Token">The security token to check.</param>
+        /// <returns>The result of the token check.</returns>
         public AuthResult CheckToken(string Username, string Token)
         {
             Account Acct = GetAccount(Username);
@@ -322,11 +419,21 @@ namespace Common
             return AuthResult.AUTH_SUCCESS;
         }
 
+        /// <summary>
+        /// Checks if a security token is valid.
+        /// </summary>
+        /// <param name="Token">The security token to check.</param>
+        /// <returns>The result of the token check.</returns>
         public ResultCode CheckToken(string Token)
         {
             return ResultCode.RES_SUCCESS;
         }
 
+        /// <summary>
+        /// Bans an account for a specific amount of time.
+        /// </summary>
+        /// <param name="Username">The username of the account to ban.</param>
+        /// <param name="Time">The duration of the ban in seconds.</param>
         public void BanAccount(string Username, int Time)
         {
             Account Acct = GetAccount(Username);
@@ -340,6 +447,10 @@ namespace Common
             Acct.Banned = TCPManager.GetTimeStamp() + Time;
         }
 
+        /// <summary>
+        /// Gets a list of accounts that are waiting to be created.
+        /// </summary>
+        /// <returns>A list of pending account IDs.</returns>
         public List<int> GetPendingAccounts()
         {
             if (_pendingAccountIDs.Count == 0)
@@ -359,18 +470,29 @@ namespace Common
 
         public Dictionary<byte, Realm> _Realms = new Dictionary<byte, Realm>();
 
+        /// <summary>
+        /// Loads all the realms from the database.
+        /// </summary>
         public void LoadRealms()
         {
             foreach (Realm Rm in Database.SelectAllObjects<Realm>())
                 AddRealm(Rm);
         }
 
+        /// <summary>
+        /// Loads all the pending accounts from the database.
+        /// </summary>
         public void LoadPending()
         {
             foreach (AccountPending Ap in Database.SelectAllObjects<AccountPending>())
                 AddPending(Ap);
         }
 
+        /// <summary>
+        /// Adds a new pending account.
+        /// </summary>
+        /// <param name="Ap">The pending account to add.</param>
+        /// <returns>True if the pending account was added successfully, false otherwise.</returns>
         public bool AddPending(AccountPending Ap)
         {
             lock (_Codes)
@@ -383,8 +505,7 @@ namespace Common
                     Account acc = GetAccount(Ap.Username);
                     if (acc != null)
                     {
-                        lock (_accounts)
-                            _accounts.Remove(acc.Username);
+                        _accounts.TryRemove(acc.Username, out _);
                         Database.DeleteObject(acc);
                         Database.ForceSave();
                     }
@@ -406,6 +527,11 @@ namespace Common
             return true;
         }
 
+        /// <summary>
+        /// Adds a new realm.
+        /// </summary>
+        /// <param name="Rm">The realm to add.</param>
+        /// <returns>True if the realm was added successfully, false otherwise.</returns>
         public bool AddRealm(Realm Rm)
         {
             lock (_Realms)
@@ -421,6 +547,11 @@ namespace Common
             return true;
         }
 
+        /// <summary>
+        /// Gets a realm by its ID.
+        /// </summary>
+        /// <param name="RealmId">The ID of the realm to get.</param>
+        /// <returns>The realm, or null if the realm was not found.</returns>
         public Realm GetRealm(byte RealmId)
         {
             Log.Debug("GetRealm", "RealmId = " + RealmId);
@@ -431,6 +562,12 @@ namespace Common
             return null;
         }
 
+        /// <summary>
+        /// Checks if a verification code is valid for a specific account.
+        /// </summary>
+        /// <param name="username">The username of the account to check the code for.</param>
+        /// <param name="code">The verification code to check.</param>
+        /// <returns>An integer indicating the result of the check.</returns>
         public int CheckCode(string username, string code)
         {
             if (EmailClient == null)
@@ -453,6 +590,10 @@ namespace Common
             }
         }
 
+        /// <summary>
+        /// Gets a list of all the realms.
+        /// </summary>
+        /// <returns>A list of all the realms.</returns>
         public List<Realm> GetRealms()
         {
             List<Realm> Rms = new List<Realm>();
@@ -460,12 +601,22 @@ namespace Common
             return Rms;
         }
 
+        /// <summary>
+        /// Gets a realm by its RPC ID.
+        /// </summary>
+        /// <param name="RpcId">The RPC ID of the realm to get.</param>
+        /// <returns>The realm, or null if the realm was not found.</returns>
         public Realm GetRealmByRpc(int RpcId)
         {
             lock (_Realms)
                 return _Realms.Values.ToList().Find(info => info.Info != null && info.Info.RpcID == RpcId);
         }
 
+        /// <summary>
+        /// Updates the scenario rotation time for a realm.
+        /// </summary>
+        /// <param name="realmId">The ID of the realm to update.</param>
+        /// <param name="nextRotation">The next rotation time.</param>
         public void UpdateRealmScenarioRotationTime(byte realmId, long nextRotation)
         {
             Realm rm = GetRealm(realmId);
@@ -477,6 +628,12 @@ namespace Common
             }
         }
 
+        /// <summary>
+        /// Updates the status of a realm.
+        /// </summary>
+        /// <param name="Info">The RPC client info for the realm.</param>
+        /// <param name="RealmId">The ID of the realm to update.</param>
+        /// <returns>True if the realm was updated successfully, false otherwise.</returns>
         public bool UpdateRealm(RpcClientInfo Info, byte RealmId)
         {
             Realm Rm = GetRealm(RealmId);
@@ -502,6 +659,13 @@ namespace Common
             return true;
         }
 
+        /// <summary>
+        /// Updates the online player counts for a realm.
+        /// </summary>
+        /// <param name="RealmId">The ID of the realm to update.</param>
+        /// <param name="OnlinePlayers">The number of online players.</param>
+        /// <param name="OrderCount">The number of Order players.</param>
+        /// <param name="DestructionCount">The number of Destruction players.</param>
         public void UpdateRealm(byte RealmId, uint OnlinePlayers, uint OrderCount, uint DestructionCount)
         {
             Realm Rm = GetRealm(RealmId);
@@ -518,6 +682,12 @@ namespace Common
             Database.SaveObject(Rm);
         }
 
+        /// <summary>
+        /// Updates the character counts for a realm.
+        /// </summary>
+        /// <param name="RealmId">The ID of the realm to update.</param>
+        /// <param name="OrderCharacters">The number of Order characters.</param>
+        /// <param name="DestruCharacters">The number of Destruction characters.</param>
         public void UpdateRealmCharacters(byte RealmId, uint OrderCharacters, uint DestruCharacters)
         {
             Realm Rm = GetRealm(RealmId);
@@ -538,6 +708,10 @@ namespace Common
                                               .Build();
         }
 
+        /// <summary>
+        /// Builds a list of all the clusters (realms).
+        /// </summary>
+        /// <returns>A byte array containing the cluster list.</returns>
         public byte[] BuildClusterList()
         {
             GetClusterListReply.Builder ClusterListReplay = GetClusterListReply.CreateBuilder();
@@ -592,6 +766,10 @@ namespace Common
             return ClusterListReplay.Build().ToByteArray();
         }
 
+        /// <summary>
+        /// Called when a client disconnects from the RPC server.
+        /// </summary>
+        /// <param name="Info">The RPC client info for the disconnected client.</param>
         public override void OnClientDisconnected(RpcClientInfo Info)
         {
             Realm Rm = GetRealmByRpc(Info.RpcID);
@@ -609,6 +787,11 @@ namespace Common
 
         private string[] _bannedNames = { "zyklon", "fuck", "hitler", "nigger", "nigga", "faggot", "jihad", "muhajid" };
 
+        /// <summary>
+        /// Checks if an email address is valid.
+        /// </summary>
+        /// <param name="email">The email address to check.</param>
+        /// <returns>True if the email address is valid, false otherwise.</returns>
         public bool IsValidEmail(string email)
         {
             if (string.IsNullOrEmpty(email))
@@ -620,6 +803,10 @@ namespace Common
 
         private Random _random = new Random();
 
+        /// <summary>
+        /// Generates a random character.
+        /// </summary>
+        /// <returns>A random character.</returns>
         public string RandomChar()
         {
             int rand = (int)_random.Next(1, 16);
@@ -694,6 +881,10 @@ namespace Common
             return "";
         }
 
+        /// <summary>
+        /// Generates a random verification code.
+        /// </summary>
+        /// <returns>A random verification code.</returns>
         public string ReturnCode()
         {
             string toreturn = "";
@@ -706,6 +897,16 @@ namespace Common
             return toreturn;
         }
 
+        /// <summary>
+        /// Creates a new account.
+        /// </summary>
+        /// <param name="username">The username for the new account.</param>
+        /// <param name="password">The password for the new account.</param>
+        /// <param name="email">The email address for the new account.</param>
+        /// <param name="gmLevel">The GM level for the new account.</param>
+        /// <param name="langID">The language ID for the new account.</param>
+        /// <param name="ip">The IP address of the user creating the account.</param>
+        /// <returns>True if the account was created successfully, false otherwise.</returns>
         public bool CreateAccount(string username, string password, string email, int gmLevel, int langID, string ip = "127.0.0.1")
         {
             Account Acct = GetAccount(username);
@@ -753,6 +954,23 @@ namespace Common
             Database.AddObject(Acct);
             Database.ForceSave();
 
+            if (_cacheEnabled)
+            {
+                while (_accountAccessQueue.Count >= _maxCacheSize)
+                {
+                    if (_accountAccessQueue.TryDequeue(out string lruUsername))
+                    {
+                        if (_accounts.TryRemove(lruUsername, out var lruAcct))
+                        {
+                            _accountUsernames.TryRemove(lruAcct.AccountId, out _);
+                        }
+                    }
+                }
+                _accounts[Acct.Username] = Acct;
+                _accountUsernames[Acct.AccountId] = Acct.Username;
+                _accountAccessQueue.Enqueue(Acct.Username);
+            }
+
             if (!ip.Equals("127.0.0.1")) //Command created accounts do not need to be verified
             {
                 string code = ReturnCode();
@@ -786,14 +1004,18 @@ namespace Common
             Account acc = GetAccount(_Codes[user].Username);
             if (acc != null)
             {
-                lock (_accounts)
-                    _accounts.Remove(acc.Username);
+                _accounts.TryRemove(acc.Username, out _);
                 Database.DeleteObject(acc);
             }
             _Codes.Remove(user);
             Database.ExecuteNonQuery($"DELETE FROM accounts_pending WHERE Username = '{Database.Escape(user)}'");
         }
 
+        /// <summary>
+        /// Updates the patcher log for an account.
+        /// </summary>
+        /// <param name="accountId">The ID of the account to update.</param>
+        /// <param name="log">The patcher log to save.</param>
         public void UpdateClientPatcherLog(int accountId, string log)
         {
             var asset = Database.SelectObject<Account>("AccountId=" + accountId);
@@ -806,6 +1028,12 @@ namespace Common
             }
         }
 
+        /// <summary>
+        /// Updates the bio information for an account.
+        /// </summary>
+        /// <param name="accountId">The ID of the account to update.</param>
+        /// <param name="ip">The IP address of the user.</param>
+        /// <param name="installID">The installation ID of the user's client.</param>
         public void UpdateAccountBio(int accountId, string ip, string installID)
         {
             if (installID == "")
@@ -833,6 +1061,10 @@ namespace Common
             }
         }
 
+        /// <summary>
+        /// Gets the name of the account database schema.
+        /// </summary>
+        /// <returns>The name of the account database schema.</returns>
         public string GetAccountSchemaName()
         {
             return Database.GetSchemaName();

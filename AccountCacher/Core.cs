@@ -35,6 +35,7 @@ namespace AccountCacher
                 ConsoleMgr.WaitAndExit(2000);
 
             AcctMgr = Server.GetLocalObject<AccountMgr>();
+            AcctMgr.InitializeCache(Config.EnableCache, Config.MaxCacheSize);
             AcctMgr.LoadRealms();
             AcctMgr.LoadPending();
 
