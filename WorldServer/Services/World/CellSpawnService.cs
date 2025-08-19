@@ -169,7 +169,7 @@ namespace WorldServer.Services.World
                                 if (Px > SPx + Space || Px < SPx - Space)
                                     continue;
 
-                                Spy = ZoneService.CalculPin(Info, SubSp.WorldY, true);
+                                Spy = ZoneService.CalculPin(Info, SubSp.WorldY, false);
 
                                 if (Py > Spy + Space || Py < Spy - Space)
                                     continue;
