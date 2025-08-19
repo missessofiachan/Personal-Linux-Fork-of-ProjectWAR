@@ -58,9 +58,7 @@ namespace WorldServer.API
             var y = packet.ReadUInt32();
             var z = packet.ReadUInt16();
 
-            Player player = null;
-            lock (Player._Players)
-                player = Player._Players.Where(e => e.CharacterId == charId).FirstOrDefault();
+            Player player = Player.GetPlayer(charId);
             if (player != null)
                 player.Teleport(zoneId, x, y, (ushort)ClientFileMgr.GetHeight((int)zoneId, (int)x, (int)y), player.Heading);
         }
@@ -73,9 +71,7 @@ namespace WorldServer.API
             var charId = packet.ReadUInt32();
             var data = packet.ReadByteArray();
 
-            Player player = null;
-            lock (Player._Players)
-                player = Player._Players.Where(e => e.CharacterId == charId).FirstOrDefault();
+            Player player = Player.GetPlayer(charId);
             if (player != null)
             {
                 var Out = new PacketOut(op);
@@ -212,9 +208,7 @@ namespace WorldServer.API
             var charId = packet.ReadUInt32();
             var monsterID = packet.ReadUInt16();
 
-            Player player = null;
-            lock (Player._Players)
-                player = Player._Players.Where(e => e.CharacterId == charId).FirstOrDefault();
+            Player player = Player.GetPlayer(charId);
             if (player != null)
             {
                 var Out = new PacketOut(0x73);
@@ -232,9 +226,7 @@ namespace WorldServer.API
             var slotIndex = packet.ReadUInt16();
             var modelID = packet.ReadUInt16();
 
-            Player player = null;
-            lock (Player._Players)
-                player = Player._Players.Where(e => e.CharacterId == charId).FirstOrDefault();
+            Player player = Player.GetPlayer(charId);
             if (player != null)
             {
                 var Out = new PacketOut(0xAA);
