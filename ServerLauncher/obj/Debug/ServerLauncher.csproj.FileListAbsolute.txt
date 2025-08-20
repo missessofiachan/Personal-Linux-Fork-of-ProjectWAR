@@ -1,0 +1,10 @@
+C:\Users\Admin\Documents\GitHub\ProjectWAR\bin\Debug\ServerLauncher.exe.config
+C:\Users\Admin\Documents\GitHub\ProjectWAR\bin\Debug\ServerLauncher.exe
+C:\Users\Admin\Documents\GitHub\ProjectWAR\bin\Debug\ServerLauncher.pdb
+C:\Users\Admin\Documents\GitHub\ProjectWAR\ServerLauncher\obj\Debug\ServerLauncher.csproj.AssemblyReference.cache
+C:\Users\Admin\Documents\GitHub\ProjectWAR\ServerLauncher\obj\Debug\ServerLauncher.Form1.resources
+C:\Users\Admin\Documents\GitHub\ProjectWAR\ServerLauncher\obj\Debug\ServerLauncher.Properties.Resources.resources
+C:\Users\Admin\Documents\GitHub\ProjectWAR\ServerLauncher\obj\Debug\ServerLauncher.csproj.GenerateResource.cache
+C:\Users\Admin\Documents\GitHub\ProjectWAR\ServerLauncher\obj\Debug\ServerLauncher.csproj.CoreCompileInputs.cache
+C:\Users\Admin\Documents\GitHub\ProjectWAR\ServerLauncher\obj\Debug\ServerLauncher.exe
+C:\Users\Admin\Documents\GitHub\ProjectWAR\ServerLauncher\obj\Debug\ServerLauncher.pdb

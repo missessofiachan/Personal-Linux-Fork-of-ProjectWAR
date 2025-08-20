@@ -1,0 +1,8 @@
+C:\Users\Admin\Documents\GitHub\ProjectWAR\bin\Debug\LauncherServer.exe.config
+C:\Users\Admin\Documents\GitHub\ProjectWAR\bin\Debug\LauncherServer.exe
+C:\Users\Admin\Documents\GitHub\ProjectWAR\bin\Debug\LauncherServer.pdb
+C:\Users\Admin\Documents\GitHub\ProjectWAR\LauncherServer\obj\x64\Debug\LauncherServer.csproj.AssemblyReference.cache
+C:\Users\Admin\Documents\GitHub\ProjectWAR\LauncherServer\obj\x64\Debug\LauncherServer.csproj.CoreCompileInputs.cache
+C:\Users\Admin\Documents\GitHub\ProjectWAR\LauncherServer\obj\x64\Debug\Launcher.BE5181E6.Up2Date
+C:\Users\Admin\Documents\GitHub\ProjectWAR\LauncherServer\obj\x64\Debug\LauncherServer.exe
+C:\Users\Admin\Documents\GitHub\ProjectWAR\LauncherServer\obj\x64\Debug\LauncherServer.pdb

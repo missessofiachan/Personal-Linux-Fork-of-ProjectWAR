@@ -2,13 +2,12 @@
   "version": 3,
   "targets": {
     ".NETFramework,Version=v4.8": {
-      "NLog/5.2.0": {
+      "NLog/6.0.3": {
         "type": "package",
         "frameworkAssemblies": [
           "System",
           "System.Configuration",
           "System.Core",
-          "System.IO.Compression",
           "System.Xml"
         ],
         "compile": {
@@ -45,13 +44,54 @@
       }
     },
     ".NETFramework,Version=v4.8/win": {
-      "NLog/5.2.0": {
+      "NLog/6.0.3": {
         "type": "package",
         "frameworkAssemblies": [
           "System",
           "System.Configuration",
           "System.Core",
-          "System.IO.Compression",
+          "System.Xml"
+        ],
+        "compile": {
+          "lib/net46/NLog.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net46/NLog.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Common/1.0.0": {
+        "type": "project",
+        "dependencies": {
+          "FrameWork": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/Common.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Common.dll": {}
+        }
+      },
+      "FrameWork/1.0.0": {
+        "type": "project",
+        "compile": {
+          "bin/placeholder/FrameWork.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/FrameWork.dll": {}
+        }
+      }
+    },
+    ".NETFramework,Version=v4.8/win-arm64": {
+      "NLog/6.0.3": {
+        "type": "package",
+        "frameworkAssemblies": [
+          "System",
+          "System.Configuration",
+          "System.Core",
           "System.Xml"
         ],
         "compile": {
@@ -88,13 +128,12 @@
       }
     },
     ".NETFramework,Version=v4.8/win-x64": {
-      "NLog/5.2.0": {
+      "NLog/6.0.3": {
         "type": "package",
         "frameworkAssemblies": [
           "System",
           "System.Configuration",
           "System.Core",
-          "System.IO.Compression",
           "System.Xml"
         ],
         "compile": {
@@ -131,13 +170,12 @@
       }
     },
     ".NETFramework,Version=v4.8/win-x86": {
-      "NLog/5.2.0": {
+      "NLog/6.0.3": {
         "type": "package",
         "frameworkAssemblies": [
           "System",
           "System.Configuration",
           "System.Core",
-          "System.IO.Compression",
           "System.Xml"
         ],
         "compile": {
@@ -175,10 +213,10 @@
     }
   },
   "libraries": {
-    "NLog/5.2.0": {
-      "sha512": "uYBgseY0m/9lQUbZYGsQsTBFOWrfs3iaekzzYMH6vFmpoOAvV8/bp1XxG/suZkwB5h8nAiTJAp7VENWRDKtKPA==",
+    "NLog/6.0.3": {
+      "sha512": "5RMrpvadysflvDOi5ozD7aK1P+YL2DyZbQSxzE8qBKkw2pxPNOQA6vJtumcT6SuzE9qxhwGkQwMkLLaKnALwiw==",
       "type": "package",
-      "path": "nlog/5.2.0",
+      "path": "nlog/6.0.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -189,13 +227,11 @@
         "lib/net45/NLog.xml",
         "lib/net46/NLog.dll",
         "lib/net46/NLog.xml",
-        "lib/netstandard1.3/NLog.dll",
-        "lib/netstandard1.3/NLog.xml",
-        "lib/netstandard1.5/NLog.dll",
-        "lib/netstandard1.5/NLog.xml",
         "lib/netstandard2.0/NLog.dll",
         "lib/netstandard2.0/NLog.xml",
-        "nlog.5.2.0.nupkg.sha512",
+        "lib/netstandard2.1/NLog.dll",
+        "lib/netstandard2.1/NLog.xml",
+        "nlog.6.0.3.nupkg.sha512",
         "nlog.nuspec"
       ]
     },
@@ -214,28 +250,29 @@
     ".NETFramework,Version=v4.8": [
       "Common >= 1.0.0",
       "FrameWork >= 1.0.0",
-      "NLog >= 5.2.0"
+      "NLog >= 6.0.3"
     ]
   },
   "packageFolders": {
-    "C:\\Users\\wardwalf\\.nuget\\packages\\": {},
+    "C:\\Users\\Admin\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\wardwalf\\Desktop\\projectwar server\\ProjectWAR\\Launcher\\Launcher.csproj",
+      "projectUniqueName": "C:\\Users\\Admin\\Documents\\GitHub\\ProjectWAR\\Launcher\\Launcher.csproj",
       "projectName": "Launcher",
-      "projectPath": "C:\\Users\\wardwalf\\Desktop\\projectwar server\\ProjectWAR\\Launcher\\Launcher.csproj",
-      "packagesPath": "C:\\Users\\wardwalf\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\wardwalf\\Desktop\\projectwar server\\ProjectWAR\\Launcher\\obj\\",
+      "projectPath": "C:\\Users\\Admin\\Documents\\GitHub\\ProjectWAR\\Launcher\\Launcher.csproj",
+      "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Admin\\Documents\\GitHub\\ProjectWAR\\Launcher\\obj\\",
       "projectStyle": "PackageReference",
       "skipContentFileWrite": true,
+      "UsingMicrosoftNETSdk": false,
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\wardwalf\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -249,14 +286,19 @@
       "frameworks": {
         "net48": {
           "projectReferences": {
-            "C:\\Users\\wardwalf\\Desktop\\projectwar server\\ProjectWAR\\Common\\Common.csproj": {
-              "projectPath": "C:\\Users\\wardwalf\\Desktop\\projectwar server\\ProjectWAR\\Common\\Common.csproj"
+            "C:\\Users\\Admin\\Documents\\GitHub\\ProjectWAR\\Common\\Common.csproj": {
+              "projectPath": "C:\\Users\\Admin\\Documents\\GitHub\\ProjectWAR\\Common\\Common.csproj"
             },
-            "C:\\Users\\wardwalf\\Desktop\\projectwar server\\ProjectWAR\\FrameWork\\FrameWork.csproj": {
-              "projectPath": "C:\\Users\\wardwalf\\Desktop\\projectwar server\\ProjectWAR\\FrameWork\\FrameWork.csproj"
+            "C:\\Users\\Admin\\Documents\\GitHub\\ProjectWAR\\FrameWork\\FrameWork.csproj": {
+              "projectPath": "C:\\Users\\Admin\\Documents\\GitHub\\ProjectWAR\\FrameWork\\FrameWork.csproj"
             }
           }
         }
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
       }
     },
     "frameworks": {
@@ -264,13 +306,16 @@
         "dependencies": {
           "NLog": {
             "target": "Package",
-            "version": "[5.2.0, )"
+            "version": "[6.0.3, )"
           }
         }
       }
     },
     "runtimes": {
       "win": {
+        "#import": []
+      },
+      "win-arm64": {
         "#import": []
       },
       "win-x64": {
