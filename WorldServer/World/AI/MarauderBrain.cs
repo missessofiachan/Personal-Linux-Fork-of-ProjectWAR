@@ -28,6 +28,12 @@ namespace WorldServer.World.AI
 
             base.Think(tick);
 
+            if (Combat.IsFighting)
+                PerformCombat();
+        }
+
+        public void PerformCombat()
+        {
             // Only bother to seek targets if we're actually being observed by a player
             if (Combat.CurrentTarget == null && _unit.PlayersInRange.Count > 0)
             {
