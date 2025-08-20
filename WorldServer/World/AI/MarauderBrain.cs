@@ -4,6 +4,7 @@ using GameData;
 using WorldServer.Services.World;
 using WorldServer.World.Interfaces;
 using WorldServer.World.Objects;
+using WorldServer.World.Positions;
 
 //36172 <-- Ravenclaw Marauder
 
