@@ -43,78 +43,76 @@ namespace WorldServer.World.Battlefronts.Apocalypse
         public SM(BattleFrontKeep keep)
         {
             Keep = keep;
-            fsm = new PassiveStateMachine<ProcessState, Command>();
-
-            fsm.TransitionCompleted += RecordTransition;
+            var builder = new StateMachineDefinitionBuilder<ProcessState, Command>();
 
             /* Initial State */
-            fsm.In(ProcessState.Initial)
+            builder.In(ProcessState.Initial)
                 .On(Command.OnOpenBattleFront)
                 .Goto(ProcessState.Safe)
                 .Execute(() => Keep.SetKeepSafe());
             /* Any call to Lock Zone will execute Lock */
-            fsm.In(ProcessState.Initial)
+            builder.In(ProcessState.Initial)
                 .On(Command.OnLockZone).Goto(ProcessState.Locked).Execute(() => Keep.SetKeepLocked());
-            fsm.In(ProcessState.Safe)
+            builder.In(ProcessState.Safe)
                 .On(Command.OnLockZone).Goto(ProcessState.Locked).Execute(() => Keep.SetKeepLocked());
-            fsm.In(ProcessState.OuterDown)
+            builder.In(ProcessState.OuterDown)
                 .On(Command.OnLockZone).Goto(ProcessState.Locked).Execute(() => Keep.SetKeepLocked());
-            fsm.In(ProcessState.InnerDown)
+            builder.In(ProcessState.InnerDown)
                 .On(Command.OnLockZone).Goto(ProcessState.Locked).Execute(() => Keep.SetKeepLocked());
-            fsm.In(ProcessState.LordKilled)
+            builder.In(ProcessState.LordKilled)
                 .On(Command.OnLockZone).Goto(ProcessState.Locked).Execute(() => Keep.SetKeepLocked());
-            fsm.In(ProcessState.GuildClaim)
+            builder.In(ProcessState.GuildClaim)
                 .On(Command.OnLockZone).Goto(ProcessState.Locked).Execute(() => Keep.SetKeepLocked());
-            fsm.In(ProcessState.Locked)
+            builder.In(ProcessState.Locked)
                 .On(Command.OnLockZone).Goto(ProcessState.Locked).Execute(() => Keep.SetKeepLocked());
-            fsm.In(ProcessState.DefenceTick)
+            builder.In(ProcessState.DefenceTick)
                 .On(Command.OnLockZone).Goto(ProcessState.Locked).Execute(() => Keep.SetKeepLocked());
-            fsm.In(ProcessState.LordWounded)
+            builder.In(ProcessState.LordWounded)
                 .On(Command.OnLockZone).Goto(ProcessState.Locked).Execute(() => Keep.SetKeepLocked());
 
-            fsm.In(ProcessState.Safe)
+            builder.In(ProcessState.Safe)
                 .On(Command.OnOuterDoorDown)
                 .Goto(ProcessState.OuterDown)
                 .Execute<uint>((uint doorId) => Keep.SetOuterDoorDown(doorId));
-            fsm.In(ProcessState.Safe)
+            builder.In(ProcessState.Safe)
                 .On(Command.OnInnerDoorDown)
                 .Goto(ProcessState.InnerDown)
                 .Execute<uint>((uint doorId) => Keep.SetInnerDoorDown(doorId));
-            fsm.In(ProcessState.OuterDown)
+            builder.In(ProcessState.OuterDown)
                 .On(Command.OnInnerDoorDown)
                 .Goto(ProcessState.InnerDown)
                 .Execute<uint>((uint doorId) => Keep.SetInnerDoorDown(doorId));
             /* Lord Wounded events */
-            fsm.In(ProcessState.Safe)
+            builder.In(ProcessState.Safe)
                 .On(Command.OnLordWounded).Goto(ProcessState.LordWounded).Execute(() => Keep.SetLordWounded());
-            fsm.In(ProcessState.InnerDown)
+            builder.In(ProcessState.InnerDown)
                 .On(Command.OnInnerDoorDown).Goto(ProcessState.LordWounded).Execute(() => Keep.SetLordWounded());
 
             /* GM only events - lord kill */
-            fsm.In(ProcessState.InnerDown)
+            builder.In(ProcessState.InnerDown)
                 .On(Command.OnLordKilled).Goto(ProcessState.LordKilled).Execute(() => Keep.SetLordKilled());
-            fsm.In(ProcessState.OuterDown)
+            builder.In(ProcessState.OuterDown)
                 .On(Command.OnLordKilled).Goto(ProcessState.LordKilled).Execute(() => Keep.SetLordKilled());
-            fsm.In(ProcessState.LordWounded)
+            builder.In(ProcessState.LordWounded)
                 .On(Command.OnLordKilled).Goto(ProcessState.LordKilled).Execute(() => Keep.SetLordKilled());
             // Allow for keep to be safe (doors repaired) and lord still to be killed.
-            fsm.In(ProcessState.Safe)
+            builder.In(ProcessState.Safe)
                 .On(Command.OnLordKilled).Goto(ProcessState.LordKilled).Execute(() => Keep.SetLordKilled());
-            fsm.In(ProcessState.LordKilled)
+            builder.In(ProcessState.LordKilled)
                 .On(Command.OnLordKilledTimerEnd).Goto(ProcessState.GuildClaim).Execute(() => Keep.SetKeepSeized());
 
-            fsm.In(ProcessState.GuildClaim) // Guild claim interacted, go to safe.
+            builder.In(ProcessState.GuildClaim) // Guild claim interacted, go to safe.
                 .On(Command.OnGuildClaimInteracted)
                 .Goto(ProcessState.Safe)
                 .Execute<uint>((uint guildId) => Keep.SetGuildClaimed(guildId));
             //.Execute(() => Keep.SetKeepSafe());
-            fsm.In(ProcessState.GuildClaim)
+            builder.In(ProcessState.GuildClaim)
                 .On(Command.OnGuildClaimTimerEnd)
                 .If(Keep.IsFortress)
                 .Goto(ProcessState.Safe)
                 .Execute(() => Keep.ForceLockZone())
                 .Execute(() => Keep.SetKeepSafe());
-            fsm.In(ProcessState.GuildClaim)
+            builder.In(ProcessState.GuildClaim)
                 .On(Command.OnGuildClaimTimerEnd)
                 .If(Keep.IsNotFortress)
                 .Goto(ProcessState.Safe)
@@ -143,8 +141,15 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             //    //.Execute<uint>((uint doorId) => Keep.SetDoorRepaired(doorId))
             //    .Execute(() => Keep.SetKeepSafe());
 
-            fsm.In(ProcessState.Locked)
+            builder.In(ProcessState.Locked)
                 .On(Command.OnOpenBattleFront).Goto(ProcessState.Safe).Execute(() => Keep.SetKeepSafe());
+
+            builder.WithInitialState(ProcessState.Initial);
+
+            fsm = builder
+                .Build()
+                .CreatePassiveStateMachine();
+            fsm.TransitionCompleted += RecordTransition;
         }
 
         private void RecordTransition(object sender, EventArgs e)

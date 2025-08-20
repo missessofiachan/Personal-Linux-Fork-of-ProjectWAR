@@ -163,7 +163,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             CommsEngine = new ApocCommunications();
             RewardManager = new RVRRewardManager();
             fsm = new CampaignObjectiveStateMachine(this).Fsm;
-            fsm.Initialize(CampaignObjectiveStateMachine.ProcessState.Neutral);
+            fsm.Start();
             if (objective.Guards != null)
             {
                 foreach (BattleFront_Guard Guard in objective.Guards)
@@ -324,7 +324,6 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             {
                 BattlefrontLogger.Debug($"Starting BattlefieldObjective {Name} FSM...");
                 fsm.Fire(CampaignObjectiveStateMachine.Command.OnOpenBattleFront);
-                fsm.Start();
             }
             else
             {

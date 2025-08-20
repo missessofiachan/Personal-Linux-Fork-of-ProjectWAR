@@ -195,7 +195,6 @@ namespace WorldServer.World.Physics
         private readonly int bufferSize;
         private int bufferOffset;
         private int numBufferedBytes;
-        private byte[] m_charBytes;
         private char[] m_charBuffer;
         private int m_maxCharsSize;
         private Decoder m_decoder;
