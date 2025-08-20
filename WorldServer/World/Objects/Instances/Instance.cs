@@ -312,6 +312,7 @@ namespace WorldServer.World.Objects.Instances
         private void LoadBossSpawns()
         {
             List<uint> deadbossIds = new List<uint>();
+            List<uint> spawnedBossIds = new List<uint>();
 
             if (Lockout != null)
                 for (int i = 0; i < Lockout.Bosseskilled.Split(':').Count(); i++)
@@ -331,8 +332,13 @@ namespace WorldServer.World.Objects.Instances
                     if (deadbossIds.Contains(obj.bossId))
                         continue;
 
+                    if (spawnedBossIds.Contains(obj.bossId))
+                        continue;
+
                     if (obj.ZoneID != ZoneID)
                         continue;
+
+                    spawnedBossIds.Add(obj.bossId);
 
                     Creature_spawn spawn = new Creature_spawn
                     {
