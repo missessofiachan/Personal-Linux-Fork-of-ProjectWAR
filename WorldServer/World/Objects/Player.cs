@@ -1225,6 +1225,12 @@ namespace WorldServer.World.Objects
 
                 if (_throttleCount >= 4)
                 {
+                    if (_throttleCount > 30)
+                    {
+                        Client?.Disconnect("Excess flood");
+                        return true;
+                    }
+
                     if (_throttleCount > 10)
                     {
                         PacketOut Out = new PacketOut((byte)Opcodes.F_PLAYER_QUIT, 4);
@@ -1232,9 +1238,6 @@ namespace WorldServer.World.Objects
                         SendPacket(Out);
                         return true;
                     }
-
-                    if (_throttleCount > 30)
-                        Client?.Disconnect("Excess flood");
 
                     SendLocalizeString("", ChatLogFilters.CHATLOGFILTERS_SAY, Localized_text.TEXT_SLOW_DOWN_CHAT_THROTTLE);
 

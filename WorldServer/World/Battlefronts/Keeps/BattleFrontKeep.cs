@@ -845,15 +845,15 @@ namespace WorldServer.World.Battlefronts.Keeps
             if (status != null)
             {
                 ProgressionLogger.Debug($"Existing BattlefrontKeepStatus located. Loading.. {status.Status}");
-                if (!fsm.IsRunning)
-                    fsm.Initialize((SM.ProcessState)status.Status);
+                //if (!fsm.IsRunning)
+                    //fsm.Initialize((SM.ProcessState)status.Status);
             }
             else
             {
                 // Take us to SAFE
                 if (!fsm.IsRunning)
                 {
-                    fsm.Initialize(SM.ProcessState.Initial);
+                    //fsm.Initialize(SM.ProcessState.Initial);
                 }
 
                 fsm.Fire(SM.Command.OnOpenBattleFront);
@@ -866,8 +866,7 @@ namespace WorldServer.World.Battlefronts.Keeps
             }
             ProgressionLogger.Debug($"Starting Keep {Info.Name} FSM...");
 
-            if (!fsm.IsRunning)
-                fsm.Start();
+            fsm.Start();
 
             if (!fsm.IsRunning)
                 _logger.Error($"** Keep FSM is NOT Running! {Info.Name}");

@@ -34,12 +34,10 @@ namespace WorldServer.World.AI.EnhancedAI
         public NonCombatCreatureStateMachine(EnhancedCreature creature)
         {
             Creature = creature;
-            fsm = new PassiveStateMachine<ProcessState, Command>();
-
-            fsm.TransitionCompleted += RecordTransition;
+            var builder = new StateMachineDefinitionBuilder<ProcessState, Command>();
 
             ///* Initial State */
-            fsm.In(ProcessState.Initial)
+            builder.In(ProcessState.Initial)
                 .On(Command.OnLoading)
                 .Goto(ProcessState.Patrolling)
                 .Execute(() => creature.DeterminePath(creature.StartPatrolPoint, creature.EndPatrolPoint))
@@ -47,39 +45,47 @@ namespace WorldServer.World.AI.EnhancedAI
 
             // Moving through patrol, move stage complete, look for targets
 
-            fsm.In(ProcessState.Patrolling)
+            builder.In(ProcessState.Patrolling)
                 .On(Command.MoveStageComplete)
                 .Goto(ProcessState.Looking)
                 .Execute(creature.SetLookForTargets);
 
             // Found a target - go to combat
 
-            fsm.In(ProcessState.Looking)
+            builder.In(ProcessState.Looking)
                 .On(Command.OnTargetSpotted)
                 .Goto(ProcessState.Combat)
                 .Execute(creature.EnterCombatState);
 
             // No target found, continue patrol
 
-            fsm.In(ProcessState.Looking)
+            builder.In(ProcessState.Looking)
                 .On(Command.OnNoTargetSpotted)
                 .Goto(ProcessState.Patrolling)
                 .Execute(creature.SetPatrolling);
 
             // In Combat, asking to leave Combat
 
-            fsm.In(ProcessState.Combat)
+            builder.In(ProcessState.Combat)
                 .On(Command.OnLeavingCombat)
                 .Goto(ProcessState.Patrolling)
                 .Execute(creature.ReturnToLastPatrolPoint);
 
             // Reached the end of the path, calculate the return journey, and begin it
 
-            fsm.In(ProcessState.Patrolling)
+            builder.In(ProcessState.Patrolling)
                 .On(Command.OnEndPath)
                 .Goto(ProcessState.Looking)
                 .Execute(() => creature.DeterminePath(creature.EndPatrolPoint, creature.StartPatrolPoint))
                 .Execute(creature.SetPatrolling);
+
+            builder.WithInitialState(ProcessState.Initial);
+
+            fsm = builder
+                .Build()
+                .CreatePassiveStateMachine();
+
+            fsm.TransitionCompleted += RecordTransition;
 
         }
 
