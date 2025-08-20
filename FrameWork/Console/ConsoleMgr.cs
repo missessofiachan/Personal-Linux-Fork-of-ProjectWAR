@@ -121,7 +121,7 @@ namespace FrameWork
                 }
                 Log.Dump("ConsoleMgr", assembly.FullName);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
         }

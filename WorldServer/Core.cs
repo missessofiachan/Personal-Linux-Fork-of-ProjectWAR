@@ -117,7 +117,7 @@ namespace WorldServer
                     System.Diagnostics.Process.GetCurrentProcess().PriorityClass = System.Diagnostics.ProcessPriorityClass.AboveNormal;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 //Server.Diagnostics.ExceptionLogging.LogException(ex);
             }

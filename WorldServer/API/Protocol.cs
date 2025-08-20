@@ -288,7 +288,7 @@ namespace WorldServer.API
             var players = new List<Player>();
 
             lock (Player._Players)
-                players = Player._Players.Values.ToList();
+                players = new List<Player>(Player._Players);
 
             Out.WriteUInt16((byte)players.Count);
             foreach (var player in players)
