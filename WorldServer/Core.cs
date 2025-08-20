@@ -185,6 +185,8 @@ namespace WorldServer
 
             Rm = AcctMgr.GetRealm(Config.RealmId);
 
+            File.WriteAllText("COMMANDS.md", Managers.Commands.CommandDocumentation.GenerateMarkdown());
+
             if (Rm == null)
             {
                 Log.Error("WorldServer", "Realm (" + Config.RealmId + ") not found");
