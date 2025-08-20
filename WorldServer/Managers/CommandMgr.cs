@@ -124,6 +124,7 @@ namespace WorldServer.Managers
             new CommandHandler("/follow", null, null ),
             new CommandHandler("/helmtoggle", ToggleHelm, null ),
             new CommandHandler("/helm", null, null ),
+            new CommandHandler("/commands", ShowHelp, null ),
             new CommandHandler("/help", PlayerAd, null ),
             new CommandHandler("/hide", null, null ),
             new CommandHandler("/ignoreadd", null, null ),
@@ -413,6 +414,16 @@ namespace WorldServer.Managers
         public static void PlayerEmoteSay(Player plr, string text)
         {
             if (!plr.IsDead && plr.Info.TempFirstName == null) plr.Say(text, ChatLogFilters.CHATLOGFILTERS_EMOTE);
+        }
+
+        public static void ShowHelp(Player plr, string text)
+        {
+            bool isGm = plr.GmLevel > 0;
+            var helpLines = Managers.Commands.CommandDocumentation.GetCommandHelp(plr, isGm);
+            foreach (var line in helpLines)
+            {
+                plr.SendClientMessage(line);
+            }
         }
 
         public static void PlayerAd(Player sender, string messageString)
