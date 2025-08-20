@@ -1,4 +1,5 @@
 ﻿using Appccelerate.StateMachine;
+using Appccelerate.StateMachine.Machine;
 using NLog;
 using System;
 using WorldServer.Services.World;

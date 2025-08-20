@@ -1,4 +1,5 @@
 ﻿using Appccelerate.StateMachine;
+using Appccelerate.StateMachine.Machine;
 using Appccelerate.StateMachine.Machine.Events;
 using NLog;
 using System;
