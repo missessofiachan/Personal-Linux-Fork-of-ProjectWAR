@@ -291,6 +291,7 @@
     <Compile Include="Managers\Commands\TestCommands.cs" />
     <Compile Include="Managers\Commands\TicketCommands.cs" />
     <Compile Include="Managers\Commands\CommandDeclarations.cs" />
+    <Compile Include="Managers\Commands\CommandDocumentation.cs" />
     <Compile Include="Managers\Commands\CommandsBuilder.cs" />
     <Compile Include="Managers\Commands\DatabaseCommands.cs" />
     <Compile Include="Managers\Commands\EquipCommands.cs" />
