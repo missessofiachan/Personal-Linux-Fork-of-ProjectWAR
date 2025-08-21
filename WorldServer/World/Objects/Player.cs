@@ -3156,7 +3156,6 @@ namespace WorldServer.World.Objects
         public void AddKillRenown(uint renown, Player killer, Player victim, int participants = 1)
         {
             // removed as not required in bounty system.
-            return;
         }
 
         public void RenownUp(uint remainder)
