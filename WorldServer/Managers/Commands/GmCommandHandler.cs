@@ -21,6 +21,11 @@ namespace WorldServer.Managers.Commands
         public string Name;
         public GmComHandler Handler;
         public List<GmCommandHandler> Handlers;
+        public List<GmCommandHandler> SubCommands
+        {
+            get { return Handlers; }
+            set { Handlers = value; }
+        }
         public EGmLevel AccessRequired;
 
         /// <summary>
