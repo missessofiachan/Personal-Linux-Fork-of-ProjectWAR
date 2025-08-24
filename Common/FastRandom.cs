@@ -62,15 +62,20 @@ namespace Common
 
         public string randomCharacterString(int length)
         {
-            StringBuilder s = new StringBuilder();
+            StringBuilder s = new StringBuilder(length);
 
-            for (int i = 0; i < length / 2; i++)
+            for (int i = 0; i < length; i++)
             {
-                s.Append((char)('a' + fastAbs(randomDouble()) * 26d));
-                s.Append((char)('A' + fastAbs(randomDouble()) * 26d));
+                bool upper = randomBoolean();
+                int letterIndex = randomIntAbs(26);
+                char c = (char)((upper ? 'A' : 'a') + letterIndex);
+                s.Append(c);
             }
 
-            return s.ToString();
+            string result = s.ToString();
+            if (result.Length != length)
+                throw new InvalidOperationException("Generated string length does not match requested length");
+            return result;
         }
 
         public double standNormalDistrDouble()
@@ -166,15 +171,20 @@ namespace Common
 
         public string randomCharacterString(int length)
         {
-            StringBuilder s = new StringBuilder();
+            StringBuilder s = new StringBuilder(length);
 
-            for (int i = 0; i < length / 2; i++)
+            for (int i = 0; i < length; i++)
             {
-                s.Append((char)('a' + fastAbs(randomDouble()) * 26d));
-                s.Append((char)('A' + fastAbs(randomDouble()) * 26d));
+                bool upper = randomBoolean();
+                int letterIndex = randomIntAbs(26);
+                char c = (char)((upper ? 'A' : 'a') + letterIndex);
+                s.Append(c);
             }
 
-            return s.ToString();
+            string result = s.ToString();
+            if (result.Length != length)
+                throw new InvalidOperationException("Generated string length does not match requested length");
+            return result;
         }
 
         public double standNormalDistrDouble()

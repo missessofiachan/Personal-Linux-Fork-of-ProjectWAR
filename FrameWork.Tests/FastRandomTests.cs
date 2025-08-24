@@ -29,5 +29,23 @@ namespace FrameWork.Tests
                 Assert.IsTrue(value >= 0 && value < range, $"Value {value} out of range");
             }
         }
+
+        [TestMethod]
+        public void RandomCharacterString_ReturnsCorrectLength()
+        {
+            var rand = new FastRandom(12345);
+            const int length = 25;
+            string result = rand.randomCharacterString(length);
+            Assert.AreEqual(length, result.Length);
+        }
+
+        [TestMethod]
+        public void SRandomCharacterString_ReturnsCorrectLength()
+        {
+            var rand = new SFastRandom(54321);
+            const int length = 40;
+            string result = rand.randomCharacterString(length);
+            Assert.AreEqual(length, result.Length);
+        }
     }
 }
