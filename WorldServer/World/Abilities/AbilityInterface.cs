@@ -103,6 +103,7 @@ namespace WorldServer.World.Abilities
                     _abilitySet.Add(ab.Entry);
                 }
             }
+
         }
 
         public void SendAbilityLevels()
@@ -868,6 +869,8 @@ namespace WorldServer.World.Abilities
                 _playerOwner.SendPacket(Out);
             }
 
+            List<AbilityInfo> activeMasterySkills = new List<AbilityInfo>();
+
             for (int i = 0; i < MAX_TREE_COUNT; i++)
             {
                 for (int j = 0; j < MAX_TREE_ABILITIES; j++)
@@ -899,22 +902,25 @@ namespace WorldServer.World.Abilities
                     Out.Fill(0, 4);
                     _playerOwner.SendPacket(Out);
 
-#pragma warning disable CS1030 // Директива #warning
-#warning FIXME. This is a skill send packet, but it sends 5 skills - 4 empties and this mastery skill at rank 0. Why is it here? - Az
                     if (_activeSkillsInTree[i, j] == 1)
-#pragma warning restore CS1030 // Директива #warning
-                    {
-                        Out = new PacketOut((byte)Opcodes.F_CHARACTER_INFO, 48);
-                        Out.WriteByte(1);
-                        Out.WriteByte(5);
-                        Out.WriteByte(3); // Skills
-                        Out.Fill(0, 3);
-                        Out.Fill(0, 10);
-                        Out.WriteUInt16(_masteryAbilities[i, j].Entry);
-                        Out.WriteByte(0);
-                        _playerOwner.SendPacket(Out);
-                    }
+                        activeMasterySkills.Add(_masteryAbilities[i, j]);
                 }
+            }
+
+            if (activeMasterySkills.Count > 0)
+            {
+                Out = new PacketOut((byte)Opcodes.F_CHARACTER_INFO, 4 + activeMasterySkills.Count * 3);
+                Out.WriteByte(1);
+                Out.WriteByte((byte)activeMasterySkills.Count);
+                Out.WriteUInt16(0x300);
+
+                foreach (var ab in activeMasterySkills)
+                {
+                    Out.WriteUInt16(ab.Entry);
+                    Out.WriteByte(GetMasteryLevelFor(ab.ConstantInfo.MasteryTree));
+                }
+
+                _playerOwner.SendPacket(Out);
             }
         }
 
