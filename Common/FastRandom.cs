@@ -27,7 +27,7 @@ namespace Common
 
         public int randomInt(int range)
         {
-            return (int)randomLong() % range;
+            return fastAbs((int)randomLong() % range);
         }
 
         public int randomIntAbs()
@@ -131,7 +131,7 @@ namespace Common
 
         public int randomInt(int range)
         {
-            return (int)randomLong() % range;
+            return fastAbs((int)randomLong() % range);
         }
 
         public int randomIntAbs()
