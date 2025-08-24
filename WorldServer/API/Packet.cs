@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using FrameWork;
 
 namespace WorldServer.API
 {
@@ -154,9 +155,11 @@ namespace WorldServer.API
         {
             if (size + _offset > _data.Length)
             {
-                Console.WriteLine("Buffer short by " + ((size + _offset) - _data.Length));
-                var newArr = new byte[size + _offset + 100];
-                System.Buffer.BlockCopy(_data, 0, newArr, 0, _data.Length);
+                int expectedSize = size + _offset;
+                int actualSize = _data.Length;
+                Log.Error("Packet", $"Buffer short by {expectedSize - actualSize} bytes (expected {expectedSize}, actual {actualSize})");
+                var newArr = new byte[expectedSize + 100];
+                System.Buffer.BlockCopy(_data, 0, newArr, 0, actualSize);
                 _data = newArr;
             }
             System.Buffer.BlockCopy(data, 0, _data, _offset, size);
