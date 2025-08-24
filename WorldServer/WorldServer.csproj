@@ -723,6 +723,7 @@
     <Compile Include="NetWork\Crypt\RC4Crypto.cs" />
     <Compile Include="NetWork\GameClient.cs" />
     <Compile Include="NetWork\Opcodes.cs" />
+    <Compile Include="NetWork\ProtocolConstants.cs" />
     <Compile Include="NetWork\TCPServer.cs" />
     <Compile Include="Core.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
