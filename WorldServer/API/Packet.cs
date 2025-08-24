@@ -65,7 +65,12 @@ namespace WorldServer.API
 
         public bool Read(byte[] destBuffer, int size)
         {
-            //TODO: Check buffer size
+            if (destBuffer == null)
+                throw new ArgumentNullException(nameof(destBuffer));
+
+            if (size > destBuffer.Length)
+                return false;
+
             if (size + _offset > _data.Length)
                 return false;
 
@@ -277,7 +282,8 @@ namespace WorldServer.API
             if (length > 0)
             {
                 byte[] data = new byte[length];
-                Read(data, (int)length);
+                if (!Read(data, (int)length))
+                    return null;
                 return data;
             }
             return null;
@@ -288,7 +294,8 @@ namespace WorldServer.API
             if (length > 0)
             {
                 byte[] data = new byte[length];
-                Read(data, (int)length);
+                if (!Read(data, length))
+                    return null;
                 return data;
             }
             return null;
