@@ -442,7 +442,12 @@ namespace WorldServer.API
 
         public void Encrypt(byte[] key, int offset, int size)
         {
-            //TODO:check buffer size
+            if (key == null)
+                throw new ArgumentNullException(nameof(key));
+
+            if (key.Length < 256)
+                throw new ArgumentException("Key must be at least 256 bytes", nameof(key));
+
             System.Buffer.BlockCopy(key, 0, _tmpEncKey, 0, 256);
             int x, y, midpoint, pos;
             byte tmp = 0;
