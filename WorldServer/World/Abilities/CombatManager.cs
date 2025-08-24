@@ -1303,14 +1303,9 @@ namespace WorldServer.World.Abilities
                     damageInfo.Damage = (caster.ItmInterface.GetWeaponDamage(slot)) * damageInfo.CastTimeDamageMult;
                 }
 
-                //TODO : REMOVE BEFORE PRODUCTION
-                if (target is Player)
-                {
-                    if (target.Name.Contains("Ikthaleon"))
-                    {
-                        damageInfo.Damage *= 0.05f;
-                    }
-                }
+                // Optional debug scaling for targeted players.
+                if (target is Player plr && Math.Abs(plr.DebugDamageScaler - 1f) > 0.001f)
+                    damageInfo.Damage *= plr.DebugDamageScaler;
 
                 if (damageInfo.StatUsed > 0)
                 {

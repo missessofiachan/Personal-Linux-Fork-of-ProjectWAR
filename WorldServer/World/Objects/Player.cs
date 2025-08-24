@@ -3478,6 +3478,11 @@ namespace WorldServer.World.Objects
         public volatile float WarcampFarmScaler = 1.0f;
 
         /// <summary>
+        /// Configurable scalar for debugging or special-case damage tuning.
+        /// </summary>
+        public volatile float DebugDamageScaler = 1.0f;
+
+        /// <summary>
         /// Provides an opportunity for this unit to modify incoming ability damage from enemies.
         /// </summary>
         public override void ModifyHealIn(AbilityDamageInfo incHeal)
