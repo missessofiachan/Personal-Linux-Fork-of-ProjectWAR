@@ -1,11 +1,13 @@
-﻿namespace WorldServer.API
+using FrameWork;
+
+namespace WorldServer.API
 {
     public class ApiPacket : Packet
     {
         public ushort _sequenceID;
-        
+
         public ushort SequenceID
-        {            
+        {
             get { return _sequenceID; }
         }
 
@@ -25,20 +27,35 @@
 
         public void LoadFrame(int size, CircularBuffer buf)
         {
-            //TODO: Check buffer size
             _size = size;
             _offset = 0;
 
-            buf.Peek(_data, size + 1);
+            if (size + 1 > _data.Length || size + 1 > buf.Data.Length)
+            {
+                Log.Error("ApiPacket", $"Frame size {size} exceeds buffer length");
+                return;
+            }
+
+            if (!buf.Peek(_data, size + 1))
+            {
+                Log.Error("ApiPacket", $"Failed to peek {size + 1} bytes from buffer");
+                return;
+            }
 
             OP = (Opcodes)ReadByte();
         }
 
         public void LoadFrame(int size)
         {
-            //TODO: Check buffer size
             _size = size;
             _offset = 0;
+
+            if (size + 5 > _data.Length)
+            {
+                Log.Error("ApiPacket", $"Frame size {size} exceeds internal buffer length");
+                return;
+            }
+
             ReadUInt32();
             OP = (Opcodes)ReadByte();
         }
