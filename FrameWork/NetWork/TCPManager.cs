@@ -78,7 +78,7 @@ namespace FrameWork
                 return false;
 
             TCPManager Tcp = ConvertTcp<T>();
-            if (Tcp == null || Tcp.Start(IP, port))
+            if (Tcp == null || !Tcp.Start(IP, port))
             {
                 Log.Error(Name, "Can not connect to : " + IP + ":" + port);
                 return false;
