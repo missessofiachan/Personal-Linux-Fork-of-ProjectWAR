@@ -199,6 +199,10 @@ You're almost there! The final step on the computer-side of things is to "build"
 
 Sometimes, the build process can fail. This is a normal part of programming! Here's a common issue and how to solve it.
 
+*   **Error: Package restore fails with repository-signing or .NET tooling errors**
+    -   **Symptom:** Build output shows errors similar to "Compilation couldn't be verified because the required .NET tools were missing and repository-signing problems blocked dependency installation."
+    -   **Solution:** Ensure that Visual Studio 2022 with the ".NET desktop development" workload or the .NET Framework 4.8 Developer Pack is installed. If your NuGet feed includes unsigned packages, add a `NuGet.config` file with `<signatureValidationMode>accept</signatureValidationMode>` to the project root or add the feed's certificate to your `trustedSigners`, then retry the restore.
+
 *   **Error: "The type or namespace name 'NLog' could not be found"** (or similar errors for `Evolve`, `MySql.Data`, etc.)
     -   **What it means:** This usually means the NuGet packages (the add-ons) didn't download or install correctly.
     -   **How to fix it:** You can force Visual Studio to reinstall them.
