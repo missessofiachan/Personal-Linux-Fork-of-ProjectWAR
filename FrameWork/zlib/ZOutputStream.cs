@@ -125,12 +125,10 @@ namespace FrameWork
 		{
 			if (len == 0)
 				return ;
-			int err;
-			byte[] b = new byte[b1.Length];
-			Array.Copy(b1, 0, b, 0, b1.Length); 
-			z.next_in = b;
-			z.next_in_index = off;
-			z.avail_in = len;
+                        int err;
+                        z.next_in = b1;
+                        z.next_in_index = off;
+                        z.avail_in = len;
 			do 
 			{
 				z.next_out = buf;
