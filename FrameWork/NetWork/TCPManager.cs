@@ -125,6 +125,10 @@ namespace FrameWork
 
         private ReaderWriterLockSlim ClientRWLock = new ReaderWriterLockSlim();
         public BaseClient[] Clients = new BaseClient[MAX_CLIENT];
+
+        private readonly Stack<int> _freeClientIds = new Stack<int>();
+        private int _nextClientId = 10;
+
         public int GetClientCount()
         {
             int Count = 0;
@@ -143,37 +147,65 @@ namespace FrameWork
         public void GenerateId(BaseClient Client)
         {
             LockWriteClients();
-
-            for (int i = 10; i < Clients.Length; ++i)
+            try
             {
-                if (Clients[i] == null)
+                int id;
+                if (_freeClientIds.Count > 0)
                 {
-                    Client.Id = i;
-                    Clients[i] = Client;
-                    break;
+                    id = _freeClientIds.Pop();
                 }
-            }
+                else
+                {
+                    id = _nextClientId;
+                    if (_nextClientId < Clients.Length)
+                        _nextClientId++;
+                    else
+                        return;
+                }
 
-            UnLockWriteClients();
+                Client.Id = id;
+                Clients[id] = Client;
+            }
+            finally
+            {
+                UnLockWriteClients();
+            }
         }
 
         public void RemoveClient(BaseClient Client)
         {
             LockWriteClients();
-
-            if (Clients[Client.Id] == Client)
-                Clients[Client.Id] = null;
-
-            UnLockWriteClients();
+            try
+            {
+                int id = (int)Client.Id;
+                if (id >= 0 && id < Clients.Length && Clients[id] == Client)
+                {
+                    Clients[id] = null;
+                    if (id >= 10)
+                        _freeClientIds.Push(id);
+                }
+            }
+            finally
+            {
+                UnLockWriteClients();
+            }
         }
         public void RemoveClient(int Id)
         {
             LockWriteClients();
-
-                if (Id >= 0 && Id < Clients.Length)
+            try
+            {
+                if (Id >= 0 && Id < Clients.Length && Clients[Id] != null)
+                {
                     Clients[Id] = null;
-
-           UnLockWriteClients();
+                    if (Id >= 10)
+                        _freeClientIds.Push(Id);
+                }
+            }
+            finally
+            {
+                UnLockWriteClients();
+            }
         }
 
         public BaseClient GetClient(int Id)
