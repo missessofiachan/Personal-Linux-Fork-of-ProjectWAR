@@ -6228,7 +6228,7 @@ namespace WorldServer.World.Objects
                 if (region.AddObject(this, zoneID))
                 {
                     PacketOut Out = new PacketOut((byte)Opcodes.F_WORLD_ENTER, 64);
-                    Out.WriteUInt16(0x0608); // TODO
+                    Out.WriteUInt16(ProtocolConstants.WORLD_ENTER_HEADER);
                     Out.Fill(0, 20);
                     Out.WriteString("38699", 5);
                     Out.WriteString("38700", 5);
