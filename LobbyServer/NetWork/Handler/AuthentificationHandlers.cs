@@ -1,5 +1,6 @@
 ﻿using FrameWork;
 using Google.ProtocolBuffers;
+using System;
 using System.Text;
 
 namespace LobbyServer.NetWork.Handler
@@ -37,31 +38,47 @@ namespace LobbyServer.NetWork.Handler
             Client cclient = (Client)client;
 
             PacketOut Out = new PacketOut((byte)Opcodes.SMSG_AuthSessionTokenReply);
-
-            AuthSessionTokenReq.Builder authReq = AuthSessionTokenReq.CreateBuilder();
-            authReq.MergeFrom(packet.ToArray());
-
-            string session = Encoding.ASCII.GetString(authReq.SessionToken.ToByteArray());
-            Log.Debug("AuthSession", "session " + session);
-            cclient.Username = "";                                  //username is not important anymore in 1.4.8
-            cclient.Token = session;
-
             AuthSessionTokenReply.Builder authReply = AuthSessionTokenReply.CreateBuilder();
-            authReply.SetResultCode(AuthSessionTokenReply.Types.ResultCode.RES_SUCCESS);
 
-            Out.Write(authReply.Build().ToByteArray());
+            AuthSessionTokenReply.Types.ResultCode resultCode = AuthSessionTokenReply.Types.ResultCode.RES_SUCCESS;
 
-            cclient.SendTCPCuted(Out);
+            try
+            {
+                AuthSessionTokenReq.Builder authReq = AuthSessionTokenReq.CreateBuilder();
+                authReq.MergeFrom(packet.ToArray());
 
-            /*   //TODO: need auth check
+                string session = Encoding.ASCII.GetString(authReq.SessionToken.ToByteArray());
+                Log.Debug("AuthSession", "session " + session);
 
-                if (Result != AuthResult.AUTH_SUCCESS)
-                    cclient.Disconnect();
+                // Validate the session token using the authentication backend
+                FrameWork.ResultCode res = Core.AcctMgr.CheckToken(session);
+                resultCode = (AuthSessionTokenReply.Types.ResultCode)res;
+
+                if (resultCode == AuthSessionTokenReply.Types.ResultCode.RES_SUCCESS)
+                {
+                    // username is not important anymore in 1.4.8
+                    cclient.Username = string.Empty;
+                    cclient.Token = session;
+                    Log.Info("AuthSession", "Session token validated");
+                }
                 else
                 {
-                    cclient.Username = Username;
-                    cclient.Token = Token;
-                }*/
+                    Log.Warn("AuthSession", $"Session token validation failed: {res}");
+                }
+            }
+            catch (Exception e)
+            {
+                resultCode = AuthSessionTokenReply.Types.ResultCode.RES_SYSTEM_ERROR;
+                Log.Error("AuthSession", "Exception during token validation: " + e);
+            }
+
+            authReply.SetResultCode(resultCode);
+            Out.Write(authReply.Build().ToByteArray());
+            cclient.SendTCPCuted(Out);
+
+            // Disconnect the client on failure
+            if (resultCode != AuthSessionTokenReply.Types.ResultCode.RES_SUCCESS)
+                cclient.Disconnect("Invalid session token");
         }
 
         [PacketHandler(PacketHandlerType.TCP, (int)Opcodes.CMSG_GetAcctPropListReq, 0, "onAcctPropListReq")]
