@@ -167,12 +167,17 @@ namespace FrameWork
         {
             LockReadClients();
 
-            if (Id >= 0 && Id < Clients.Length)
-                return Clients[Id];
+            try
+            {
+                if (Id >= 0 && Id < Clients.Length)
+                    return Clients[Id];
 
-            UnLockReadClients();
-
-            return null;
+                return null;
+            }
+            finally
+            {
+                UnLockReadClients();
+            }
         }
 
         public void LockReadClients()
