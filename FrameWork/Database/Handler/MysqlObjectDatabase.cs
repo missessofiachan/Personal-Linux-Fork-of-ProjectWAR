@@ -497,67 +497,70 @@ namespace FrameWork
         {
             long startTime = TCPManager.GetTimeStampMS();
 
-            MySqlConnection sqlConn = (MySqlConnection)Connection.GetConnection();
-            MySqlCommand sqlCommand = sqlConn.CreateCommand();
-            MySqlTransaction transaction = sqlConn.BeginTransaction();
-
-            sqlCommand.Connection = sqlConn;
-            sqlCommand.Transaction = transaction;
-
-            try
+            using (MySqlConnection sqlConn = (MySqlConnection)Connection.GetConnection())
+            using (MySqlCommand sqlCommand = sqlConn.CreateCommand())
+            using (MySqlTransaction transaction = sqlConn.BeginTransaction())
             {
-                uint addsThisPass = 0;
-                uint savesThisPass = 0;
-                uint deletesThisPass = 0;
-                bool rel;
+                sqlCommand.Connection = sqlConn;
+                sqlCommand.Transaction = transaction;
 
-                foreach (var dataObject in dataObjects)
-                {
-                    switch (dataObject.pendingOp)
-                    {
-                        case DatabaseOp.DOO_Insert:
-                            sqlCommand.CommandText = FormulateInsert(dataObject, out rel);
-                            sqlCommand.ExecuteNonQuery();
-                            ++addsThisPass; break;
-                        case DatabaseOp.DOO_Update:
-                            sqlCommand.CommandText = FormulateUpdate(dataObject, out rel);
-                            sqlCommand.ExecuteNonQuery();
-                            ++savesThisPass; break;
-                        case DatabaseOp.DOO_Delete:
-                            sqlCommand.CommandText = FormulateDelete(dataObject);
-                            sqlCommand.ExecuteNonQuery();
-                            ++deletesThisPass; break;
-                    }
-                }
-
-                transaction.Commit();
-
-                Log.Debug(Connection.SchemaName, "Transaction committed: " + dataObjects.Count + " objects in " + (TCPManager.GetTimeStampMS() - startTime) + "ms. Added " + addsThisPass + ", updated " + savesThisPass + ", deleted " + deletesThisPass + ".");
-
-                foreach (DataObject d in dataObjects)
-                {
-                    d.Dirty = false;
-                    d.UpdateDBStatus();
-                }
-
-                return true;
-            }
-            catch (Exception)
-            {
                 try
                 {
-                    transaction.Rollback();
-                    return false;
+                    uint addsThisPass = 0;
+                    uint savesThisPass = 0;
+                    uint deletesThisPass = 0;
+                    bool rel;
+
+                    foreach (var dataObject in dataObjects)
+                    {
+                        switch (dataObject.pendingOp)
+                        {
+                            case DatabaseOp.DOO_Insert:
+                                sqlCommand.CommandText = FormulateInsert(dataObject, out rel);
+                                sqlCommand.ExecuteNonQuery();
+                                ++addsThisPass;
+                                break;
+                            case DatabaseOp.DOO_Update:
+                                sqlCommand.CommandText = FormulateUpdate(dataObject, out rel);
+                                sqlCommand.ExecuteNonQuery();
+                                ++savesThisPass;
+                                break;
+                            case DatabaseOp.DOO_Delete:
+                                sqlCommand.CommandText = FormulateDelete(dataObject);
+                                sqlCommand.ExecuteNonQuery();
+                                ++deletesThisPass;
+                                break;
+                        }
+                    }
+
+                    transaction.Commit();
+
+                    Log.Debug(Connection.SchemaName,
+                        "Transaction committed: " + dataObjects.Count + " objects in " +
+                        (TCPManager.GetTimeStampMS() - startTime) + "ms. Added " + addsThisPass +
+                        ", updated " + savesThisPass + ", deleted " + deletesThisPass + ".");
+
+                    foreach (DataObject d in dataObjects)
+                    {
+                        d.Dirty = false;
+                        d.UpdateDBStatus();
+                    }
+
+                    return true;
                 }
                 catch (Exception)
                 {
-                    Log.Error(Connection.SchemaName, "Transaction rollback FAILED");
-                    return false;
+                    try
+                    {
+                        transaction.Rollback();
+                        return false;
+                    }
+                    catch (Exception)
+                    {
+                        Log.Error(Connection.SchemaName, "Transaction rollback FAILED");
+                        return false;
+                    }
                 }
-            }
-            finally
-            {
-                sqlConn.Close();
             }
         }
 
