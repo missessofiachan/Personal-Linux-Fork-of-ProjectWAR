@@ -1191,8 +1191,10 @@ namespace WorldServer.World.Objects
 
         private long _lastExileWarned;
 
+        #if !DEBUG
         private int _throttleCount;
         private long _lastMessageTime;
+        #endif
 
         public bool ShouldThrottle()
         {
