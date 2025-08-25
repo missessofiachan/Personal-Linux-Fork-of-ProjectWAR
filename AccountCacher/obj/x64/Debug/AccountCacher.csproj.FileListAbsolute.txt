@@ -1,8 +1,0 @@
-C:\Users\Admin\Documents\GitHub\ProjectWAR\bin\Debug\AccountCacher.exe.config
-C:\Users\Admin\Documents\GitHub\ProjectWAR\bin\Debug\AccountCacher.exe
-C:\Users\Admin\Documents\GitHub\ProjectWAR\bin\Debug\AccountCacher.pdb
-C:\Users\Admin\Documents\GitHub\ProjectWAR\AccountCacher\obj\x64\Debug\AccountCacher.csproj.AssemblyReference.cache
-C:\Users\Admin\Documents\GitHub\ProjectWAR\AccountCacher\obj\x64\Debug\AccountCacher.csproj.CoreCompileInputs.cache
-C:\Users\Admin\Documents\GitHub\ProjectWAR\AccountCacher\obj\x64\Debug\AccountC.597D0695.Up2Date
-C:\Users\Admin\Documents\GitHub\ProjectWAR\AccountCacher\obj\x64\Debug\AccountCacher.exe
-C:\Users\Admin\Documents\GitHub\ProjectWAR\AccountCacher\obj\x64\Debug\AccountCacher.pdb

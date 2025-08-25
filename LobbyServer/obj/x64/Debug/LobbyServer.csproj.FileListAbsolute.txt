@@ -1,8 +1,0 @@
-C:\Users\Admin\Documents\GitHub\ProjectWAR\bin\Debug\LobbyServer.exe.config
-C:\Users\Admin\Documents\GitHub\ProjectWAR\bin\Debug\LobbyServer.exe
-C:\Users\Admin\Documents\GitHub\ProjectWAR\bin\Debug\LobbyServer.pdb
-C:\Users\Admin\Documents\GitHub\ProjectWAR\LobbyServer\obj\x64\Debug\LobbyServer.csproj.AssemblyReference.cache
-C:\Users\Admin\Documents\GitHub\ProjectWAR\LobbyServer\obj\x64\Debug\LobbyServer.csproj.CoreCompileInputs.cache
-C:\Users\Admin\Documents\GitHub\ProjectWAR\LobbyServer\obj\x64\Debug\LobbySer.D107D153.Up2Date
-C:\Users\Admin\Documents\GitHub\ProjectWAR\LobbyServer\obj\x64\Debug\LobbyServer.exe
-C:\Users\Admin\Documents\GitHub\ProjectWAR\LobbyServer\obj\x64\Debug\LobbyServer.pdb
