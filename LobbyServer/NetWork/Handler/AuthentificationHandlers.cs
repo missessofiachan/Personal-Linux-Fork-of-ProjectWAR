@@ -63,7 +63,7 @@ namespace LobbyServer.NetWork.Handler
                 }
                 else
                 {
-                    Log.Warn("AuthSession", $"Session token validation failed: {res}");
+                    Log.Notice("AuthSession", $"Session token validation failed: {res}");
                 }
             }
             catch (Exception e)
