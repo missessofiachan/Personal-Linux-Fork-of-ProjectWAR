@@ -1291,7 +1291,7 @@ namespace WorldServer.World.Objects
         {
 #if DEBUG
             return false;
-#endif
+#else
             if (IsBanned)
             {
                 if (_lastExileWarned + 30 < TCPManager.GetTimeStamp())
@@ -1343,6 +1343,7 @@ namespace WorldServer.World.Objects
             }
 
             return false;
+#endif
         }
 
         public bool BlocksChatFrom(Player sender)
