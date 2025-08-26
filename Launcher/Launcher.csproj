@@ -110,7 +110,7 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="WarhammerOnlineHash, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\EasyMyp\WarhammerOnlineHash.dll</HintPath>
+      <HintPath>..\deps\EasyMyp\WarhammerOnlineHash.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
