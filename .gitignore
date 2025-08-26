@@ -1,0 +1,20 @@
+# Ignore build and compiled artifacts
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+*.cache
+*.log
+
+# Visual Studio local settings
+.vs/
+*.o
+*.obj
+*.so
+*.dylib
+*.lib
+
+# Dependency directories
+packages/
+deps/
