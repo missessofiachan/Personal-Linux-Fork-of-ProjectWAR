@@ -43,7 +43,7 @@ namespace AuthenticationServer.Server.Handler {
 
             }
             Log.Debug("CL_CREATE", $"Writing response to Client {Out} ");
-            cclient.SendPacketNoBlock(Out);
+            cclient.SendTCPRaw(Out);
 
 
         }
@@ -75,7 +75,7 @@ namespace AuthenticationServer.Server.Handler {
             } else
                 Out.WriteByte((byte)result); // Banned
 
-            cclient.SendPacketNoBlock(Out);
+            cclient.SendTCPRaw(Out);
 
 #if !DEBUG
             if (result == LoginResult.LOGIN_SUCCESS && Program.Config.SeverOnConnect)
@@ -97,7 +97,7 @@ namespace AuthenticationServer.Server.Handler {
             if (version != Program.Version) {
                 Out.WriteByte((byte)CheckResult.LAUNCHER_VERSION); // Version incorrect + message
                 Out.WriteString(Program.Message);
-                client.SendPacketNoBlock(Out);
+                client.SendTCPRaw(Out);
 
                 cclient.Disconnect("Incorrect game version");
                 return;
@@ -113,7 +113,7 @@ namespace AuthenticationServer.Server.Handler {
                 if ((long)len != Program.Info.Length) {
                     Out.WriteByte((byte)CheckResult.LAUNCHER_FILE);
                     Out.WriteString(Program.StrInfo);
-                    cclient.SendPacketNoBlock(Out);
+                    cclient.SendTCPRaw(Out);
                     return;
                 }
             }
@@ -127,7 +127,7 @@ namespace AuthenticationServer.Server.Handler {
             }
 
             Out.WriteByte((byte)CheckResult.LAUNCHER_OK);
-            cclient.SendPacketNoBlock(Out);
+            cclient.SendTCPRaw(Out);
 
 
         }
@@ -176,7 +176,7 @@ namespace AuthenticationServer.Server.Handler {
                     Out.WriteUInt32(Rm.DestructionCount);
                 }
 
-                cclient.SendPacketNoBlock(Out);
+                cclient.SendTCPRaw(Out);
             }
         }
 
