@@ -214,6 +214,9 @@ WarPatcher/Release
 .vs/WarEmulator/v15/sqlite3/storage.ide-wal
 /Common/Common.csproj.bak
 
+# Zone data - too large for GitHub, distributed via release assets
+deps/zones/
+
 *.zip
 
 # VS2017 needed references - maybe c++ parts
