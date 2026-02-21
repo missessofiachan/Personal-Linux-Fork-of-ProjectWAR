@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Windows.Forms;
 
@@ -25,6 +27,9 @@ namespace Launcher
 
         // TCP
         public static Socket _Socket;
+        public static SslStream _sslStream;
+        public static TlsProxy _lobbyProxy;
+        public static TlsProxy _worldProxy;
 
         private static Logger _logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -45,6 +50,9 @@ namespace Launcher
                 _Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 _logger.Info($"Connecting to Launcher Server {ip}:{port}");
                 _Socket.Connect(ip, port);
+                
+                _sslStream = new SslStream(new NetworkStream(_Socket, true), false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null);
+                _sslStream.AuthenticateAsClient("ProjectWAR");
 
                 int size = sizeof(UInt32);
                 UInt32 on = 1;
@@ -62,7 +70,14 @@ namespace Launcher
             }
             catch (Exception e)
             {
-                MessageBox.Show("Can not connect to : " + ip + ":" + port + "\n" + e.Message);
+                if (ApocLauncher.Acc != null && ApocLauncher.Acc.InvokeRequired)
+                {
+                    ApocLauncher.Acc.Invoke(new Action(() => MessageBox.Show("Can not connect to : " + ip + ":" + port + "\n" + e.Message)));
+                }
+                else
+                {
+                    MessageBox.Show("Can not connect to : " + ip + ":" + port + "\n" + e.Message);
+                }
                 return false;
             }
 
@@ -73,6 +88,7 @@ namespace Launcher
         {
             try
             {
+                if (_sslStream != null) { _sslStream.Close(); _sslStream = null; }
                 if (_Socket != null)
                     _Socket.Close();
 
@@ -81,6 +97,11 @@ namespace Launcher
             {
 
             }
+        }
+
+        public static bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        {
+            return true; // We use a self-signed cert, so unconditionally accept
         }
 
         public static void UpdateLanguage()
@@ -181,7 +202,7 @@ namespace Launcher
             packet.WritePacketLength();
 
             //Get the packet buffer
-            byte[] buf = packet.GetBuffer(); //packet.WritePacketLength sets the Capacity
+            byte[] buf = packet.ToArray();
 
             //Send the buffer
             SendTCP(buf);
@@ -211,7 +232,10 @@ namespace Launcher
 
                     Buffer.BlockCopy(buf, 0, m_tcpSendBuffer, 0, buf.Length);
 
-                    _Socket.BeginSend(m_tcpSendBuffer, 0, buf.Length, SocketFlags.None, m_asyncTcpCallback, null);
+                    if (_sslStream != null)
+                        _sslStream.BeginWrite(m_tcpSendBuffer, 0, buf.Length, m_asyncTcpCallback, null);
+                    else
+                        _Socket.BeginSend(m_tcpSendBuffer, 0, buf.Length, SocketFlags.None, m_asyncTcpCallback, null);
                 }
                 catch (Exception e)
                 {
@@ -229,7 +253,8 @@ namespace Launcher
             {
                 Queue<byte[]> q = m_tcpQueue;
 
-                int sent = _Socket.EndSend(ar);
+                int sent = _sslStream != null ? 0 : _Socket.EndSend(ar);
+                if (_sslStream != null) _sslStream.EndWrite(ar);
 
                 int count = 0;
                 byte[] data = m_tcpSendBuffer;
@@ -252,7 +277,10 @@ namespace Launcher
                     }
                 }
 
-                _Socket.BeginSend(data, 0, count, SocketFlags.None, m_asyncTcpCallback, null);
+                if (_sslStream != null)
+                    _sslStream.BeginWrite(data, 0, count, m_asyncTcpCallback, null);
+                else
+                    _Socket.BeginSend(data, 0, count, SocketFlags.None, m_asyncTcpCallback, null);
 
             }
             catch (Exception)
@@ -288,7 +316,7 @@ namespace Launcher
 
         public static void SendTCPRaw(PacketOut packet)
         {
-            SendTCP((byte[])packet.GetBuffer().Clone());
+            SendTCP(packet.ToArray());
         }
 
         #endregion
@@ -297,24 +325,47 @@ namespace Launcher
 
         private static readonly AsyncCallback ReceiveCallback = OnReceiveHandler;
         static byte[] _pBuf = new byte[2048];
-
+        static int _pBufOffset = 0;
 
         private static void OnReceiveHandler(IAsyncResult ar)
         {
             try
             {
-                int numBytes = _Socket.EndReceive(ar);
+                int numBytes = _sslStream != null ? _sslStream.EndRead(ar) : _Socket.EndReceive(ar);
                 _logger.Debug($"Recieving {numBytes} bytes");
 
                 if (numBytes > 0)
                 {
-                    byte[] buffer = _pBuf;
-                    int bufferSize = numBytes;
+                    int bufferSize = _pBufOffset + numBytes;
+                    byte[] packetStream = new byte[bufferSize];
+                    Buffer.BlockCopy(_pBuf, 0, packetStream, 0, bufferSize);
+                    _pBufOffset = 0;
 
-                    PacketIn pack = new PacketIn(buffer, 0, bufferSize);
-                    OnReceive(pack);
+                    int offset = 0;
+                    while (offset < packetStream.Length)
+                    {
+                        if (packetStream.Length - offset < 5)
+                            break;
+
+                        uint size = (uint)((packetStream[offset] << 24) | (packetStream[offset + 1] << 16) | (packetStream[offset + 2] << 8) | packetStream[offset + 3]);
+                        uint totalSize = size + 1;
+
+                        if (packetStream.Length - offset < totalSize)
+                            break;
+
+                        PacketIn pack = new PacketIn(packetStream, offset, (int)totalSize);
+                        OnReceive(pack);
+                        
+                        offset += (int)totalSize;
+                    }
+
+                    if (offset < packetStream.Length)
+                    {
+                        _pBufOffset = packetStream.Length - offset;
+                        Buffer.BlockCopy(packetStream, offset, _pBuf, 0, _pBufOffset);
+                    }
+
                     BeginReceive();
-
                 }
                 else
                 {
@@ -335,13 +386,16 @@ namespace Launcher
             {
                 int bufSize = _pBuf.Length;
 
-                if (0 >= bufSize) //Do we have space to receive?
+                if (_pBufOffset >= bufSize) //Buffer overflow
                 {
                     Close();
                 }
                 else
                 {
-                    _Socket.BeginReceive(_pBuf, 0, bufSize, SocketFlags.None, ReceiveCallback, null);
+                    if (_sslStream != null)
+                        _sslStream.BeginRead(_pBuf, _pBufOffset, bufSize - _pBufOffset, ReceiveCallback, null);
+                    else
+                        _Socket.BeginReceive(_pBuf, _pBufOffset, bufSize - _pBufOffset, SocketFlags.None, ReceiveCallback, null);
                 }
             }
         }
@@ -466,6 +520,11 @@ namespace Launcher
                             }
 
                             _logger.Info($"Starting Client {warDirectory.FullName}\\WAR.exe");
+
+                            _lobbyProxy = new TlsProxy(8048, "127.0.0.1", 8049);
+                            _lobbyProxy.Start();
+                            _worldProxy = new TlsProxy(51932, "127.0.0.1", 51933);
+                            _worldProxy.Start();
 
                             if (ApocLauncher.Acc.AllowWarClientLaunch)
                             {

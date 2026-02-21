@@ -8,6 +8,9 @@ using System.Collections;
 using System.Threading;
 using System.Reflection;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
+using System.Net.Security;
+using System.Security.Authentication;
 
 namespace FrameWork
 {
@@ -40,6 +43,12 @@ namespace FrameWork
                     return false;
 
                 TCPManager Tcp = ConvertTcp<T>();
+
+                if (System.IO.File.Exists("cert.pfx"))
+                {
+                    try { Tcp.SslCertificate = new X509Certificate2("cert.pfx", "password123"); }
+                    catch (Exception ex) { Log.Error("TCPManager", "Failed to load cert.pfx: " + ex.Message); }
+                }
 
                 if (Tcp == null || !Tcp.Start(port))
                 {
@@ -100,6 +109,14 @@ namespace FrameWork
         private readonly byte[] stateRequirement = new byte[0xFF];
 
         public readonly Dictionary<string,ICryptHandler> m_cryptHandlers = new Dictionary<string,ICryptHandler>();
+        
+        /// <summary>
+        /// The X509 digital certificate utilized for authenticating the server and encrypting 
+        /// communication tunnels via TLS (Transport Layer Security). 
+        /// If this is populated, the server will require connecting clients to establish an encrypted SslStream.
+        /// </summary>
+        public X509Certificate2 SslCertificate { get; set; }
+
         private static readonly DateTime EpochDateTime = new DateTime(1970, 1, 1);
         #region Clients
 
@@ -462,8 +479,19 @@ namespace FrameWork
                     baseClient = GetNewClient();
                     baseClient.Socket = sock;
 
-                    baseClient.OnConnect();
-                    baseClient.BeginReceive();
+                    // If a valid digital certificate was provided to the TCPManager on boot,
+                    // we instruct the baseClient to wrap the raw socket in an authenticated SslStream.
+                    // This creates a secure tunnel where all packet payloads are seamlessly encrypted.
+                    if (SslCertificate != null)
+                    {
+                        baseClient.SslStream = new SslStream(new NetworkStream(sock, false), false);
+                        baseClient.SslStream.BeginAuthenticateAsServer(SslCertificate, false, SslProtocols.Tls12, false, OnSslAuthenticateAsync, baseClient);
+                    }
+                    else
+                    {
+                        baseClient.OnConnect();
+                        baseClient.BeginReceive();
+                    }
                 }
                 catch (SocketException e)
                 {
@@ -500,6 +528,22 @@ namespace FrameWork
             }
         }
 
+        private void OnSslAuthenticateAsync(IAsyncResult ar)
+        {
+            BaseClient baseClient = (BaseClient)ar.AsyncState;
+            try
+            {
+                baseClient.SslStream.EndAuthenticateAsServer(ar);
+                baseClient.OnConnect();
+                baseClient.BeginReceive();
+            }
+            catch (Exception e)
+            {
+                Log.Error("TCPManager", "SSL EndAuthenticate error: " + e.Message);
+                Disconnect(baseClient, "SSL Auth Error");
+            }
+        }
+
         public virtual bool Disconnect(BaseClient baseClient, string reason)
         {
             RemoveClient(baseClient);
@@ -526,8 +570,27 @@ namespace FrameWork
 
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                foreach (Type type in assembly.GetTypes())
+                Type[] types = null;
+                try
                 {
+                    types = assembly.GetTypes();
+                }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    types = ex.Types;
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+
+                if (types == null)
+                    continue;
+
+                foreach (Type type in types)
+                {
+                    if (type == null)
+                        continue;
                     // Pick up a class
                     if (type.IsClass != true)
                         continue;
@@ -556,9 +619,27 @@ namespace FrameWork
 
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                foreach (Type type in assembly.GetTypes())
+                Type[] types = null;
+                try
                 {
-                    // Pick up a class
+                    types = assembly.GetTypes();
+                }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    types = ex.Types;
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+
+                if (types == null)
+                    continue;
+
+                foreach (Type type in types)
+                {
+                    if (type == null)
+                        continue;
                     if (type.IsClass != true)
                         continue;
 

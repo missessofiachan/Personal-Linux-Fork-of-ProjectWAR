@@ -1306,7 +1306,7 @@ namespace FrameWork
                         }
                     }
 
-                    dataObjects[(TKey)data[keyIndex]] = currentObject;
+                    dataObjects[(TKey)Convert.ChangeType(data[keyIndex], typeof(TKey))] = currentObject;
 
                     if (hasRelations)
                     {
@@ -1418,7 +1418,7 @@ namespace FrameWork
 
                     currentObject = (TObject)currentObject.Clone();
 
-                    dataObjects[(TKey)data[keyIndex]] = currentObject;
+                    dataObjects[(TKey)Convert.ChangeType(data[keyIndex], typeof(TKey))] = currentObject;
 
                     if (hasRelations)
                     {
@@ -1497,14 +1497,14 @@ namespace FrameWork
                             {
                                 bind.MySqlBinder.Assign(currentObject, mySqlReader, field);
                                 if (i == keyIndex)
-                                    key = (TKey)mySqlReader.GetValue(field);
+                                    key = (TKey)Convert.ChangeType(mySqlReader.GetValue(field), typeof(TKey));
                             }
                             else
                             {
                                 object obj = ConvertFromDatabaseFormat(((PropertyInfo)bind.Member).PropertyType, mySqlReader.GetValue(field));
                                 bind.MySqlBinder.AssignObject(currentObject, obj);
                                 if (i == keyIndex)
-                                    key = (TKey)obj;
+                                    key = (TKey)Convert.ChangeType(obj, typeof(TKey));
                             }
                         }
 
@@ -1575,7 +1575,7 @@ namespace FrameWork
 
                     currentObject.Load(mySqlReader, field);
 
-                    dataObjects[(TKey) reader.GetValue(keyIndex)] = currentObject;
+                    dataObjects[(TKey)Convert.ChangeType(reader.GetValue(keyIndex), typeof(TKey))] = currentObject;
 
                     currentObject.IsValid = true;
                     currentObject.AllowAdd = false; // exists already

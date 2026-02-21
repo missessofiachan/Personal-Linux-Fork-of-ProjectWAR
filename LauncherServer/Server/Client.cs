@@ -48,17 +48,39 @@ namespace AuthenticationServer.Server
         {
             lock (this)
             {
-                PacketIn pack = new PacketIn(packetBuffer, 0, packetBuffer.Length);
-                pack.Size = pack.GetUint32();
-                pack.Opcode = pack.GetUint8();
-
-                if (!Enum.IsDefined(typeof(Opcodes), (byte)pack.Opcode))
+                int offset = 0;
+                while (offset < packetBuffer.Length)
                 {
-                    Log.Error("OnReceive", "Opcode invalid : " + pack.Opcode);
-                    return;
+                    if (packetBuffer.Length - offset < 5)
+                        break;
+
+                    uint size = (uint)((packetBuffer[offset] << 24) | (packetBuffer[offset + 1] << 16) | (packetBuffer[offset + 2] << 8) | packetBuffer[offset + 3]);
+                    uint totalSize = size + 1;
+
+                    if (packetBuffer.Length - offset < totalSize)
+                        break;
+
+                    PacketIn pack = new PacketIn(packetBuffer, offset, (int)totalSize);
+                    pack.Size = pack.GetUint32();
+                    pack.Opcode = pack.GetUint8();
+
+                    if (!Enum.IsDefined(typeof(Opcodes), (byte)pack.Opcode))
+                    {
+                        Log.Error("OnReceive", "Opcode invalid : " + pack.Opcode);
+                        return;
+                    }
+
+                    Server.HandlePacket(this, pack);
+
+                    offset += (int)totalSize;
                 }
 
-                Server.HandlePacket(this, pack);
+                if (offset < packetBuffer.Length)
+                {
+                    int remaining = packetBuffer.Length - offset;
+                    Buffer.BlockCopy(packetBuffer, offset, ReceiveBuffer, 0, remaining);
+                    ReceiveBufferOffset = remaining;
+                }
             }
         }
 

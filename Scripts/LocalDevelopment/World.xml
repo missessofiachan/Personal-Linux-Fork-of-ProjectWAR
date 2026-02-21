@@ -63,6 +63,6 @@
   <ZoneFolder>zones/</ZoneFolder>
   <EnableAPI>true</EnableAPI>
   <APIAddress>127.0.0.1</APIAddress>
-  <APIPort>51932</APIPort>
+  <APIPort>51933</APIPort>
   <PacketCollateLength>0</PacketCollateLength>
 </WorldConfigs>

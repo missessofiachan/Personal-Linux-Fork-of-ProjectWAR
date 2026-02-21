@@ -8,13 +8,13 @@
     <RegionList>
       <Region regionName="prod">
         <PingServer serverName="None">
-          <Address>0.0.0.0</Address>
+          <Address>127.0.0.1</Address>
           <Port>0</Port>
         </PingServer>
        <LoginServerList>
           <LoginServer serverName="Warhammer Online">
             <Address>127.0.0.1</Address>
-            <Port>8048</Port>
+            <Port>8049</Port>
           </LoginServer>
        </LoginServerList>
       </Region>

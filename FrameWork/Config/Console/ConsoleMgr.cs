@@ -114,8 +114,27 @@ namespace FrameWork
 
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                foreach (Type type in assembly.GetTypes())
+                Type[] types = null;
+                try
                 {
+                    types = assembly.GetTypes();
+                }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    types = ex.Types;
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+
+                if (types == null)
+                    continue;
+
+                foreach (Type type in types)
+                {
+                    if (type == null)
+                        continue;
                     // Pick up a class
                     if (type.IsClass != true)
                         continue;

@@ -6221,7 +6221,7 @@ namespace WorldServer.World.Objects
                     Out.Fill(0, 20);
                     Out.WriteString("38699", 5);
                     Out.WriteString("38700", 5);
-                    Out.WriteString("0.0.0.0", 20);
+                    Out.WriteString("127.0.0.1", 20);
                     SendPacket(Out);
 
                     SetOffset((ushort)(worldX >> 12), (ushort)(worldY >> 12), false);

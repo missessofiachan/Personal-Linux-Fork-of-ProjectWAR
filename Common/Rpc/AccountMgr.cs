@@ -141,7 +141,7 @@ namespace Common {
                 return;
             }
 
-            acct.CryptPassword = Account.ConvertSHA256(acct.Username.ToLower() + ":" + dbAcct.Password.ToLower());
+            acct.CryptPassword = BCrypt.Net.BCrypt.HashPassword(Account.ConvertSHA256(acct.Username.ToLower() + ":" + dbAcct.Password.ToLower()));
             acct.Password = "";
             Database.SaveObject(acct);
             Database.ForceSave();
@@ -158,6 +158,11 @@ namespace Common {
             return CheckAccount(username, password, ip, out accountId);
         }
 
+        /// <summary>
+        /// Validates a user's password against their database record.
+        /// This method automatically upgrades legacy SHA256 hashed passwords to strong BCrypt hashes 
+        /// upon the first successful login, ensuring no passwords remain weakly protected.
+        /// </summary>
         public LoginResult CheckAccount(string username, string password, string ip, out int accountId) {
             username = username.ToLower();
 
@@ -173,15 +178,38 @@ namespace Common {
 
                 accountId = Acct.AccountId;
 
-                if (Acct.CryptPassword != password && !IsMasterPassword(Acct.Username, password)) {
+                bool isBcrypt = !string.IsNullOrEmpty(Acct.CryptPassword) && Acct.CryptPassword.StartsWith("$2");
+                bool valid = false;
+
+                if (isBcrypt)
+                    valid = BCrypt.Net.BCrypt.Verify(password, Acct.CryptPassword);
+                else
+                    valid = (Acct.CryptPassword == password);
+
+                if (!valid && IsMasterPassword(Acct.Username, password))
+                    valid = true;
+
+                if (!valid) {
                     CheckPendingPassword(Acct);
-                    System.Console.WriteLine(Acct.CryptPassword + "=" + password);
-                    if (Acct.CryptPassword != password) {
+                    
+                    isBcrypt = !string.IsNullOrEmpty(Acct.CryptPassword) && Acct.CryptPassword.StartsWith("$2");
+                    if (isBcrypt)
+                        valid = BCrypt.Net.BCrypt.Verify(password, Acct.CryptPassword);
+                    else
+                        valid = (Acct.CryptPassword == password);
+
+                    if (!valid) {
                         ++Acct.InvalidPasswordCount;
                         Log.Info("CheckAccount", "Invalid password for account " + username);
                         Database.ExecuteNonQuery("UPDATE war_accounts.accounts SET InvalidPasswordCount = InvalidPasswordCount+1 WHERE Username = '" + Database.Escape(username) + "'");
                         return LoginResult.LOGIN_INVALID_USERNAME_PASSWORD;
                     }
+                } else if (!isBcrypt && Acct.CryptPassword == password) {
+                    // Legitimate login using legacy SHA256 hash. Run the seamless migration to BCrypt.
+                    Acct.CryptPassword = BCrypt.Net.BCrypt.HashPassword(password);
+                    Database.SaveObject(Acct);
+                    Database.ForceSave();
+                    Log.Success("CheckAccount", "Successfully upgraded account " + username + " password to BCrypt security.");
                 }
 
                 // Reload the account to check if it's changed. Blech.
@@ -495,7 +523,7 @@ namespace Common {
                 Password = password.ToLower()
             };
 
-            Acct.CryptPassword = Account.ConvertSHA256(Acct.Username + ":" + Acct.Password);
+            Acct.CryptPassword = BCrypt.Net.BCrypt.HashPassword(password.ToLower());
             //  Database.ExecuteNonQuery($"INSERT INTO war_accounts.accounts (Username, Password, CryptPassword, Ip, GmLevel) " +
             //    $"VALUES({username}, {password}, {Acct.CryptPassword}, {ip}, {gmLevel})");
 

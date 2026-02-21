@@ -24,8 +24,28 @@ namespace FrameWork
             {
                 HashSet<Type> loaded = new HashSet<Type>();
 
-                foreach (Type type in assembly.GetTypes())
-                    Load(WaitEnd, loaded, type);
+                Type[] types = null;
+                try
+                {
+                    types = assembly.GetTypes();
+                }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    types = ex.Types;
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+
+                if (types == null)
+                    continue;
+
+                foreach (Type type in types)
+                {
+                    if (type != null)
+                        Load(WaitEnd, loaded, type);
+                }
             }
 
             Wait();

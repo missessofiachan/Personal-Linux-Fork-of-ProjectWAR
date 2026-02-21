@@ -8,8 +8,8 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
-using ConfigurationManager = NLog.Internal.ConfigurationManager;
 
 namespace Launcher
 {
@@ -21,8 +21,8 @@ namespace Launcher
         public bool AllowWarClientLaunch { get; }
         public static ApocLauncher Acc;
 
-        public static string LocalServerIP = "192.168.0.21";
-        public static string TestServerIP = "10.10.10.150";
+        public static string LocalServerIP = "127.0.0.1";
+        public static string TestServerIP = "127.0.0.1";
         public static int LocalServerPort = 8000;
         public static int TestServerPort = 8000;
         static HttpClient client = new HttpClient();
@@ -161,27 +161,29 @@ namespace Launcher
         {
         }
 
-        private void bnConnectToServer_Click(object sender, EventArgs e)
+        private async void bnConnectToServer_Click(object sender, EventArgs e)
         {
-            Client.Connect(TestServerIP, TestServerPort);
             lblConnection.Text = $@"Connecting to : {TestServerIP}:{TestServerPort}";
 
             string userCode = T_username.Text.ToLower();
             string userPassword = T_password.Text.ToLower();
 
+            await Task.Run(() =>
+            {
+                Client.Connect(TestServerIP, TestServerPort);
+                Client.User = userCode;
 
-            Client.User = userCode;
+                string encryptedPassword = ConvertSHA256(userCode + ":" + userPassword);
 
-            string encryptedPassword = ConvertSHA256(userCode + ":" + userPassword);
+                _logger.Info($@"Connecting to : {TestServerIP}:{TestServerPort} as {userCode} [{encryptedPassword}]");
 
-            _logger.Info($@"Connecting to : {TestServerIP}:{TestServerPort} as {userCode} [{encryptedPassword}]");
+                _logger.Info($"Sending CL_START to {TestServerIP}:{TestServerPort}");
+                PacketOut Out = new PacketOut((byte)Opcodes.CL_START);
+                Out.WriteString(userCode);
+                Out.WriteString(encryptedPassword);
 
-            _logger.Info($"Sending CL_START to {TestServerIP}:{TestServerPort}");
-            PacketOut Out = new PacketOut((byte)Opcodes.CL_START);
-            Out.WriteString(userCode);
-            Out.WriteString(encryptedPassword);
-
-            Client.SendTCP(Out);
+                Client.SendTCP(Out);
+            });
 
             Configuration configuration = System.Configuration.ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
 
@@ -217,26 +219,30 @@ namespace Launcher
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void buttonCreate_Click(object sender, EventArgs e)
+        private async void buttonCreate_Click(object sender, EventArgs e)
         {
             if (String.IsNullOrEmpty(textBoxUsername.Text) || String.IsNullOrEmpty(textBoxPassword.Text)) return;
 
-            Client.Connect(TestServerIP, TestServerPort);
             lblConnection.Text = $@"Connecting to : {TestServerIP}:{TestServerPort}";
 
             string userCode = textBoxUsername.Text.ToLower();
             string userPassword = textBoxPassword.Text.ToLower();
 
-            Client.User = userCode;
+            await Task.Run(() =>
+            {
+                Client.Connect(TestServerIP, TestServerPort);
 
-            _logger.Info($@"Create account : {TestServerIP}:{TestServerPort} as {userCode}");
+                Client.User = userCode;
 
-            _logger.Info($"Sending CL_CREATE to {TestServerIP}:{TestServerPort}");
-            PacketOut Out = new PacketOut((byte)Opcodes.CL_CREATE);
-            Out.WriteString(userCode);
-            Out.WriteString(userPassword);
+                _logger.Info($@"Create account : {TestServerIP}:{TestServerPort} as {userCode}");
 
-            Client.SendTCP(Out);
+                _logger.Info($"Sending CL_CREATE to {TestServerIP}:{TestServerPort}");
+                PacketOut Out = new PacketOut((byte)Opcodes.CL_CREATE);
+                Out.WriteString(userCode);
+                Out.WriteString(userPassword);
+
+                Client.SendTCP(Out);
+            });
         }
 
         private void buttonAccountClose_Click(object sender, EventArgs e)
@@ -257,51 +263,58 @@ namespace Launcher
 
             lblConnection.Text = msg;
         }
-        private void bnCreateLocal_Click(object sender, EventArgs e)
+        private async void bnCreateLocal_Click(object sender, EventArgs e)
         {
             if (String.IsNullOrEmpty(textBoxUsername.Text) || String.IsNullOrEmpty(textBoxPassword.Text)) return;
 
-            Client.Connect(LocalServerIP, LocalServerPort);
             lblConnection.Text = $@"Connecting to : {LocalServerIP}:{LocalServerPort}";
 
             string userCode = textBoxUsername.Text.ToLower();
             string userPassword = textBoxPassword.Text.ToLower();
 
-            Client.User = userCode;
+            await Task.Run(() =>
+            {
+                Client.Connect(LocalServerIP, LocalServerPort);
 
-            _logger.Info($@"Create account : {LocalServerIP}:{LocalServerPort} as {userCode}");
+                Client.User = userCode;
 
-            _logger.Info($"Sending CL_CREATE to {LocalServerIP}:{LocalServerPort}");
-            PacketOut Out = new PacketOut((byte)Opcodes.CL_CREATE);
-            Out.WriteString(userCode);
-            Out.WriteString(userPassword);
+                _logger.Info($@"Create account : {LocalServerIP}:{LocalServerPort} as {userCode}");
 
-            Client.SendTCP(Out);
+                _logger.Info($"Sending CL_CREATE to {LocalServerIP}:{LocalServerPort}");
+                PacketOut Out = new PacketOut((byte)Opcodes.CL_CREATE);
+                Out.WriteString(userCode);
+                Out.WriteString(userPassword);
+
+                Client.SendTCP(Out);
+            });
         }
 
 
 
-        private void bnConnectToLocal_Click(object sender, EventArgs e)
+        private async void bnConnectToLocal_Click(object sender, EventArgs e)
         {
-            Client.Connect(LocalServerIP, LocalServerPort);
             lblConnection.Text = $@"Connecting to : {LocalServerIP}:{LocalServerPort}";
 
             string userCode = T_username.Text.ToLower();
             string userPassword = T_password.Text.ToLower();
 
+            await Task.Run(() =>
+            {
+                Client.Connect(LocalServerIP, LocalServerPort);
 
-            Client.User = userCode;
+                Client.User = userCode;
 
-            string encryptedPassword = ConvertSHA256(userCode + ":" + userPassword);
+                string encryptedPassword = ConvertSHA256(userCode + ":" + userPassword);
 
-            _logger.Info($@"Connecting to : {LocalServerIP}:{LocalServerPort} as {userCode} [{encryptedPassword}]");
+                _logger.Info($@"Connecting to : {LocalServerIP}:{LocalServerPort} as {userCode} [{encryptedPassword}]");
 
-            _logger.Info($"Sending CL_START to {LocalServerIP}:{LocalServerPort}");
-            PacketOut Out = new PacketOut((byte)Opcodes.CL_START);
-            Out.WriteString(userCode);
-            Out.WriteString(encryptedPassword);
+                _logger.Info($"Sending CL_START to {LocalServerIP}:{LocalServerPort}");
+                PacketOut Out = new PacketOut((byte)Opcodes.CL_START);
+                Out.WriteString(userCode);
+                Out.WriteString(encryptedPassword);
 
-            Client.SendTCP(Out);
+                Client.SendTCP(Out);
+            });
         }
 
         private void timer1_Tick(object sender, EventArgs e)

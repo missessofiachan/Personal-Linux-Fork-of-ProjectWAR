@@ -51,7 +51,7 @@ namespace FrameWork.Database
                     _assignmentAction(default(T));
                 else
                 {
-                    T conversion = (T)o;
+                    T conversion = (T)Convert.ChangeType(o, typeof(T));
                     _assignmentAction(conversion);
                 }
             }
@@ -80,7 +80,7 @@ namespace FrameWork.Database
                     _assignmentAction(null);
                 else
                 {
-                    T conversion = (T)o;
+                    T conversion = (T)Convert.ChangeType(o, typeof(T));
                     _assignmentAction(conversion);
                 }
             }

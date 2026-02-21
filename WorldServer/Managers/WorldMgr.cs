@@ -1111,9 +1111,26 @@ namespace WorldServer.Managers
 
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                foreach (Type type in assembly.GetTypes())
+                Type[] types = null;
+                try
                 {
-                    if (type.IsClass != true)
+                    types = assembly.GetTypes();
+                }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    types = ex.Types;
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+
+                if (types == null)
+                    continue;
+
+                foreach (Type type in types)
+                {
+                    if (type == null || type.IsClass != true)
                         continue;
 
                     if (!type.IsSubclassOf(typeof(AGeneralScript)))

@@ -1,5 +1,6 @@
 #include <mmsystem.h>
 #include <psapi.h>
+#include <string>
 #include "Platform.h"
 
 class Util
@@ -19,7 +20,7 @@ public:
 		return glm::vec3(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t);
 	}
 
-	static std::string Util::PathAppend(const std::string& p1, const std::string& p2)
+	static std::string PathAppend(const std::string& p1, const std::string& p2)
 	{
 		char sep = '/';
 		std::string tmp = p1;
@@ -36,14 +37,14 @@ public:
 			return(p1 + p2);
 	}
 
-	static __int64 Util::FileSize(std::string name)
+	static __int64 FileSize(std::string name)
 	{
 		std::wstring wc(name.begin(), name.end());
 		auto result = FileSize(wc.c_str());
 		return result;
 	}
 
-	static __int64  Util::FileSize(const wchar_t* name)
+	static __int64 FileSize(const wchar_t* name)
 	{
 		HANDLE hFile = CreateFile(name, GENERIC_READ,
 			FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,

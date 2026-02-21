@@ -10,9 +10,9 @@ namespace FrameWork
     {
         public string Server = "127.0.0.1";
         public string Port = "3306";
-        public string Database = "warserver";
-        public string Username = "warserver";
-        public string Password = "madremia";
+        public string Database = "war_%name%";
+        public string Username = "root";
+        public string Password = "password";
         public string Custom = "Treat Tiny As Boolean=False";
         public string Catalog = "";
         public string IPAddress = "";
@@ -82,9 +82,28 @@ namespace FrameWork
             List<string> typeNames = new List<string>();
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                foreach (Type type in assembly.GetTypes())
+                Type[] types = null;
+                try
                 {
-                    if (type.IsClass != true)
+                    types = assembly.GetTypes();
+                }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    // If an assembly is missing a strictly-bound optional dependency (like System.Memory for MySql.Data), 
+                    // extract all the types that were successfully loaded to prevent DB loader crashes:
+                    types = ex.Types;
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+
+                if (types == null)
+                    continue;
+
+                foreach (Type type in types)
+                {
+                    if (type == null || type.IsClass != true)
                         continue;
 
                     try
