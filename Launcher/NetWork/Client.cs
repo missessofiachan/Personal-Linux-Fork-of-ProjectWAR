@@ -50,9 +50,6 @@ namespace Launcher
                 _Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 _logger.Info($"Connecting to Launcher Server {ip}:{port}");
                 _Socket.Connect(ip, port);
-                
-                _sslStream = new SslStream(new NetworkStream(_Socket, true), false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null);
-                _sslStream.AuthenticateAsClient("ProjectWAR");
 
                 int size = sizeof(UInt32);
                 UInt32 on = 1;
@@ -520,11 +517,6 @@ namespace Launcher
                             }
 
                             _logger.Info($"Starting Client {warDirectory.FullName}\\WAR.exe");
-
-                            _lobbyProxy = new TlsProxy(8048, "127.0.0.1", 8049);
-                            _lobbyProxy.Start();
-                            _worldProxy = new TlsProxy(51932, "127.0.0.1", 51933);
-                            _worldProxy.Start();
 
                             if (ApocLauncher.Acc.AllowWarClientLaunch)
                             {
