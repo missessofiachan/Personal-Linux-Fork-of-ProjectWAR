@@ -76,6 +76,7 @@ namespace FrameWork
 
         public static void WaitAndExit(int WaitTime)
         {
+            NLog.LogManager.Flush();
             Thread.Sleep(WaitTime);
             Environment.Exit(0);
         }
