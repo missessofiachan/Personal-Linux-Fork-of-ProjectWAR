@@ -8,6 +8,15 @@
 	* install-package Evolve
 * You can also look to use Update-Package -reinstall (which should update all the packages for you)
 
+#### Zone Data ####
+
+Zone data is not included in this repository due to its size. You must download it separately before building.
+
+1. Download **zones.zip** from the [releases page](https://github.com/Shmerrick/ProjectWAR/releases/tag/zones-data-v1)
+2. Extract the contents into `deps/zones/` in the repository root
+
+The folder structure should look like `deps/zones/zone001/`, `deps/zones/zone002/`, etc.
+
 #### Building and running ####
 
 * There are really a couple of 'modes' of developing / debugging the solution. 
