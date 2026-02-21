@@ -62,14 +62,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Castle.Core, Version=5.0.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc">
-      <HintPath>..\packages\Castle.Core.5.2.1\lib\net462\Castle.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FakeItEasy, Version=9.0.0.0, Culture=neutral, PublicKeyToken=eff28e2146d5fd2c">
-      <HintPath>..\packages\FakeItEasy.9.0.1\lib\net462\FakeItEasy.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Google.ProtocolBuffers">
       <HintPath>..\deps\protobuf\Google.ProtocolBuffers.dll</HintPath>
     </Reference>
@@ -106,13 +98,6 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="xunit.abstractions, Version=2.0.0.0, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
-      <HintPath>..\packages\xunit.abstractions.2.0.3\lib\net35\xunit.abstractions.dll</HintPath>
-    </Reference>
-    <Reference Include="xunit.core, Version=2.9.3.0, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c">
-      <HintPath>..\packages\xunit.extensibility.core.2.9.3\lib\net452\xunit.core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Database\Account\Account.cs" />

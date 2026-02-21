@@ -20,8 +20,8 @@
     <TargetFrameworkProfile />
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
-    <BaseOutputPath>..\bin\</BaseOutputPath>
-    <OutputPath>..\bin\$(Configuration)\</OutputPath>
+    <BaseOutputPath>..\bin\Tests\</BaseOutputPath>
+    <OutputPath>..\bin\Tests\$(Configuration)\</OutputPath>
   </PropertyGroup>
   <!-- Fallback for command-line MSBuild builds where VS doesn't set DevEnvDir -->
   <PropertyGroup Condition="'$(DevEnvDir)' == ''">

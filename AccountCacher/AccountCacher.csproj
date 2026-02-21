@@ -64,14 +64,6 @@
     <ApplicationIcon>account.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Castle.Core, Version=5.0.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc">
-      <HintPath>..\packages\Castle.Core.5.2.1\lib\net462\Castle.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FakeItEasy, Version=9.0.0.0, Culture=neutral, PublicKeyToken=eff28e2146d5fd2c">
-      <HintPath>..\packages\FakeItEasy.9.0.1\lib\net462\FakeItEasy.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Google.Protobuf, Version=3.33.5.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604">
       <HintPath>..\packages\Google.Protobuf.3.33.5\lib\net45\Google.Protobuf.dll</HintPath>
       <Private>True</Private>

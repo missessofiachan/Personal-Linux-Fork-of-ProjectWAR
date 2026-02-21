@@ -39,7 +39,7 @@
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
     <BaseOutputPath>..\bin\</BaseOutputPath>
-    <OutputPath>..\bin\$(Configuration)\</OutputPath>
+    <OutputPath>..\bin\$(Configuration)\Launcher\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <DebugSymbols>true</DebugSymbols>
