@@ -36,11 +36,11 @@ Rewrite the root `README.md` so a complete computer novice can understand what t
 
 ## Acceptance Criteria
 
-- [ ] Old README is archived at `docs/archive/README-legacy-2026-02-24.md`.
-- [ ] New README explains emulator purpose for beginners.
-- [ ] New README includes step-by-step setup and run flow.
-- [ ] New README includes troubleshooting section.
-- [ ] Instructions reflect current repo scripts and config locations.
+- [x] Old README is archived at `docs/archive/README-legacy-2026-02-24.md`.
+- [x] New README explains emulator purpose for beginners.
+- [x] New README includes step-by-step setup and run flow.
+- [x] New README includes troubleshooting section.
+- [x] Instructions reflect current repo scripts and config locations.
 
 ## Branch Map
 
@@ -64,4 +64,8 @@ Rewrite the root `README.md` so a complete computer novice can understand what t
 
 - Consolidation waits for all five submissions by default.
 - Claude submission can be waived only by Project Director; record decision in `waiver.md`.
+
+## Task Status
+
+- `Completed via consolidation branch and merged to Restart`
 

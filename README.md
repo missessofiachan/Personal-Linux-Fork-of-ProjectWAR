@@ -1,60 +1,59 @@
-# ProjectWAR Emulator (Beginner Guide)
+# ProjectWAR Emulator Beginner Guide
 
-## What this project is
+This guide is written for complete beginners.
 
-ProjectWAR is a **server emulator** for Warhammer Online.
+## What this project does
 
-In simple terms: the original game servers are gone, and this project provides replacement server software so you can run a local test world on your own computer.
+ProjectWAR is a local server emulator for Warhammer Online. It lets you run the game server stack on your own computer so you can test and play in a private local environment.
 
-## What you can do with it
+## How the emulator is organized
 
-- Start local game server services
-- Connect a WAR client to your local server
-- Test gameplay/database/script changes
+When you start the emulator, these services work together:
 
-## Before you start (one-time requirements)
+- `AccountCacher`: account/login data and RPC hub
+- `LauncherServer`: patch/login handoff service
+- `LobbyServer`: client lobby connection
+- `WorldServer`: game world and gameplay logic
 
-You need:
+Your local launcher/client connects to these services on `127.0.0.1` (your own machine).
 
-- A Windows PC
-- Visual Studio 2022 (with `.NET desktop development`)
+## One-time checklist
+
+Install these first:
+
+- Windows
+- Visual Studio 2022 with `.NET desktop development`
 - .NET Framework 4.8 Developer Pack
-- MySQL or MariaDB running locally (default config uses `127.0.0.1:3306`)
-- A local WAR client/launcher install
+- MySQL or MariaDB (local)
+- Warhammer Online client files
 
-## Important files in this repo
-
-- `WarEmulator.sln`: Visual Studio solution
-- `Database/war_accounts.sql`: account database
-- `Database/war_characters.sql`: character database
-- `Database/war_world.sql`: world database
-- `start_servers.ps1`: starts all required server executables
-- `launch_client.ps1`: launches your local WAR launcher
-
-## Step-by-step setup
+## Setup steps (follow in order)
 
 ### 1. Download zone data
 
-Zone data is not included in git because it is large.
+Zone files are too large for git and must be downloaded separately.
 
-1. Download `zones.zip` from:  
-   [https://github.com/Shmerrick/ProjectWAR/releases/tag/zones-data-v1](https://github.com/Shmerrick/ProjectWAR/releases/tag/zones-data-v1)
-2. Extract it to `deps/zones/`
+1. Download `zones.zip` from:
+   - https://github.com/Shmerrick/ProjectWAR/releases/tag/zones-data-v1
+2. Extract to `deps/zones/`
 
-After extraction, you should have folders like:
-
-- `deps/zones/zone001/`
-- `deps/zones/zone002/`
+Checkpoint: you should see folders like `deps/zones/zone001/`.
 
 ### 2. Create and import databases
 
-The default config expects these databases:
+Create three databases:
 
 - `war_accounts`
 - `war_characters`
 - `war_world`
 
-If you use the MySQL command line, this is the basic flow:
+Import these SQL files:
+
+- `Database/war_accounts.sql`
+- `Database/war_characters.sql`
+- `Database/war_world.sql`
+
+Example commands:
 
 ```powershell
 mysql -u root -p -e "CREATE DATABASE war_accounts; CREATE DATABASE war_characters; CREATE DATABASE war_world;"
@@ -63,82 +62,97 @@ mysql -u root -p war_characters < Database/war_characters.sql
 mysql -u root -p war_world < Database/war_world.sql
 ```
 
+Checkpoint: all three databases exist and contain tables.
+
 ### 3. Build the solution
 
 1. Open `WarEmulator.sln` in Visual Studio.
 2. Set build configuration to `Release` and platform to `x64`.
 3. Build the solution.
 
-Build output is written to `bin/Release/`.
+Checkpoint: build output is in `bin/Release/`.
 
-### 4. Verify config files
+### 4. Verify local config files
 
 Check these files in `bin/Release/Configs/`:
 
 - `Account.xml`
-- `World.xml`
 - `Launcher.xml`
 - `Lobby.xml`
+- `World.xml`
 - `mythloginserviceconfig.xml`
 
-Defaults use:
+Default local values:
 
-- DB server: `127.0.0.1`
-- DB port: `3306`
-- DB user: `root`
-- DB password: `password`
+- host `127.0.0.1`
+- DB port `3306`
+- DB user `root`
+- DB password `password`
 
-If your local database password is different, update the XML files before running.
+If your DB password is different, update:
 
-### 5. Start emulator servers
+- `bin/Release/Configs/Account.xml`
+- `bin/Release/Configs/World.xml`
 
-Run:
+### 5. Start server services
 
 ```powershell
 .\start_servers.ps1
 ```
 
-This launches:
+Checkpoint: these processes should be running:
 
 - `AccountCacher`
 - `LauncherServer`
 - `LobbyServer`
 - `WorldServer`
 
-### 6. Start your game launcher
+### 6. Start the game launcher
 
-The script `launch_client.ps1` currently points to a local path.
-
-1. Open `launch_client.ps1`
-2. Replace the launcher path with your own WAR launcher location
+1. Open `launch_client.ps1`.
+2. Replace the launcher path with your local WAR launcher path.
 3. Run:
 
 ```powershell
 .\launch_client.ps1
 ```
 
-## Stopping servers
+## Quick health checks
 
-If needed, stop them with:
+Check running emulator services:
+
+```powershell
+Get-Process | Where-Object { $_.Name -match 'AccountCacher|LauncherServer|LobbyServer|WorldServer' } | Select-Object Name, Id
+```
+
+Check recent application errors:
+
+```powershell
+.\check_crash.ps1
+```
+
+## Stop all services
 
 ```powershell
 Get-Process | Where-Object { $_.Name -match 'AccountCacher|LauncherServer|LobbyServer|WorldServer' } | Stop-Process -Force
 ```
 
-## Basic troubleshooting
+## Troubleshooting
 
-- Build fails with missing packages:
-  - In Visual Studio, restore NuGet packages and rebuild.
-- Server cannot connect to database:
-  - Recheck DB credentials in `bin/Release/Configs/Account.xml` and `bin/Release/Configs/World.xml`.
+- Build fails or package errors:
+  - restore NuGet packages in Visual Studio, then rebuild.
+- Database connection failures:
+  - verify credentials in `Account.xml` and `World.xml`.
+  - verify MySQL/MariaDB is running on `127.0.0.1:3306`.
 - Client cannot connect:
-  - Confirm server processes are running.
-  - Confirm launcher config points to `127.0.0.1` and the expected ports.
-- Missing world/zone assets:
-  - Recheck `deps/zones/` extraction.
+  - verify all four services are running.
+  - verify config files still point to localhost values.
+- Missing terrain/zone data:
+  - verify `deps/zones/` extraction.
+  - rebuild so assets are copied into `bin/Release/zones/`.
 
-## Historical documentation
+## Legacy reference
 
-The previous README has been archived at:
+The previous README is archived at:
 
 - `docs/archive/README-legacy-2026-02-24.md`
