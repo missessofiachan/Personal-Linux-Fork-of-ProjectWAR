@@ -4,6 +4,16 @@ This folder contains the operational files for the ProjectWAR multi-agent team.
 
 Role definitions are in `agents/ORG.md`.
 
+## Mandatory one-time setup
+
+Install repo hooks so protected branch pushes are checked automatically:
+
+```powershell
+.\agents\scripts\setup-git-hooks.ps1
+```
+
+This configures `.githooks/pre-push`, which blocks direct protected-branch code pushes that do not include `TASK-####` (or explicit `DIRECTOR-OVERRIDE`).
+
 ## Task numbering
 
 - Use numbered IDs: `TASK-0001-short-name`.

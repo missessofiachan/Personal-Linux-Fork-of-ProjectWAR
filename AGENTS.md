@@ -107,6 +107,16 @@ No code is merged into the base branch until all conditions are true:
 - Preferred cleanup command:
   - `.\agents\scripts\purge-worker-branches.ps1 -TaskId "<task_id>" -BaseBranch "Restart" -DeleteRemote`
 
+## Codex Guardrails (No Exceptions Without Director Override)
+
+- Codex must not implement feature or bugfix code directly on `Restart`/`master`/`main`.
+- Codex must start by creating or selecting a numbered task (`TASK-####-*`) and follow the full agent workflow.
+- Codex must not skip worker parallelization, consolidation, QA gate, or release signoff.
+- If urgency requires direct protected-branch work, Project Director must explicitly authorize it and commit messages must include `DIRECTOR-OVERRIDE`.
+- Protected branch pushes must include a task reference (`TASK-####`) or `DIRECTOR-OVERRIDE` in the first-parent commit message(s).
+- Install repository hooks to enforce this locally:
+  - `.\agents\scripts\setup-git-hooks.ps1`
+
 ## Waiver Authority
 
 - Only Project Director can authorize waiver.
