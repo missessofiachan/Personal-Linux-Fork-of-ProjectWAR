@@ -125,11 +125,185 @@ namespace WorldServer.Managers.Commands
 
             return false;
         }
+
+        private static bool HasCommandAccess(Player plr, GmCommandHandler command)
+        {
+            return command != null && (command.AccessRequired == 0 || (int)command.AccessRequired <= plr.GmLevel);
+        }
+
+        private static GmCommandHandler FindAccessibleCommand(Player plr, List<GmCommandHandler> handlers, string token, out GmCommandHandler deniedCommand)
+        {
+            deniedCommand = null;
+            if (handlers == null || string.IsNullOrWhiteSpace(token))
+                return null;
+
+            string loweredToken = token.ToLowerInvariant();
+
+            foreach (GmCommandHandler command in handlers)
+            {
+                if (command == null || !command.Name.StartsWith(loweredToken))
+                    continue;
+
+                if (HasCommandAccess(plr, command))
+                    return command;
+
+                if (deniedCommand == null)
+                    deniedCommand = command;
+            }
+
+            return null;
+        }
+
+        private static string BuildCommandPath(List<GmCommandHandler> commandPath)
+        {
+            if (commandPath == null || commandPath.Count == 0)
+                return string.Empty;
+
+            return string.Join(" ", commandPath.Select(x => x.Name));
+        }
+
+        private static void SendGmCommandSyntax(Player plr)
+        {
+            plr.SendClientMessage("GM command syntax: .gmcommands <command path> [--long]", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
+            plr.SendClientMessage("Example: .gmcommands npc spawn --long", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
+        }
+
+        private static void SendGmCommandSummary(Player plr, GmCommandHandler command, string commandPath, bool longHelp)
+        {
+            if (command == null)
+                return;
+
+            bool isGroup = command.Handlers != null && command.Handlers.Count > 0;
+            string accessLevel = command.AccessRequired == 0
+                ? "Anyone"
+                : Enum.GetName(typeof(EGmLevel), command.AccessRequired) ?? command.AccessRequired.ToString();
+            string executionPath = "." + commandPath;
+            string gmLookupPath = ".gmcommands " + commandPath;
+
+            plr.SendClientMessage("===================================", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
+            plr.SendClientMessage($"Command: {executionPath}", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
+            plr.SendClientMessage($"Required access: {accessLevel}", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
+            plr.SendClientMessage($"Summary: {command.Description}", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
+
+            if (longHelp)
+            {
+                if (isGroup)
+                {
+                    plr.SendClientMessage("How it works: this command groups related subcommands and routes execution to the matched child command.", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
+                    plr.SendClientMessage($"Execution format: {executionPath} <subcommand> [arguments]", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
+                    plr.SendClientMessage($"Inspection format: {gmLookupPath} <subcommand> [--long]", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
+                }
+                else
+                {
+                    string handlerMethod = command.Handler?.Method?.Name ?? "Unknown";
+                    string handlerType = command.Handler?.Method?.DeclaringType?.Name ?? "Unknown";
+                    plr.SendClientMessage($"How it works: executes server handler {handlerType}.{handlerMethod}.", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
+                    plr.SendClientMessage($"Execution format: {executionPath} [arguments]", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
+
+                    if (command.ValueCount == -1)
+                    {
+                        plr.SendClientMessage("Arguments: variable argument count. Refer to the summary text for expected parameter meanings.", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
+                    }
+                    else if (command.ValueCount == 0)
+                    {
+                        plr.SendClientMessage("Arguments: no required positional arguments.", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
+                    }
+                    else
+                    {
+                        plr.SendClientMessage($"Arguments: requires at least {command.ValueCount} positional argument(s).", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
+                    }
+                }
+            }
+            else
+            {
+                plr.SendClientMessage($"For detailed help: {gmLookupPath} --long", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
+            }
+
+            plr.SendClientMessage("===================================", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
+        }
         #endregion
 
         #region Commands
 
         #region GM
+
+        public static bool GmCommands(Player plr, ref List<string> values)
+        {
+            if (plr.GmLevel < (int)EGmLevel.AnyGM)
+            {
+                plr.SendClientMessage("This command requires GM access.", ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
+                return true;
+            }
+
+            bool longHelp = values.Count > 0 && values[values.Count - 1].Equals("--long", StringComparison.OrdinalIgnoreCase);
+            if (longHelp)
+                values.RemoveAt(values.Count - 1);
+
+            if (values.Count == 0)
+            {
+                SendGmCommandSyntax(plr);
+                if (longHelp)
+                    plr.SendClientMessage("Use .gmcommands <command path> --long to inspect access, execution format, and handler details.", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
+
+                PrintCommands(plr, CommandDeclarations.BaseCommand);
+                return true;
+            }
+
+            List<GmCommandHandler> activeHandlers = CommandDeclarations.BaseCommand;
+            List<GmCommandHandler> commandPath = new List<GmCommandHandler>();
+
+            for (int i = 0; i < values.Count; ++i)
+            {
+                GmCommandHandler deniedCommand;
+                GmCommandHandler command = FindAccessibleCommand(plr, activeHandlers, values[i], out deniedCommand);
+                if (command == null)
+                {
+                    if (deniedCommand != null)
+                    {
+                        plr.SendClientMessage($"{deniedCommand.Name.ToUpper()}: This command has the access requirement of {Enum.GetName(typeof(EGmLevel), deniedCommand.AccessRequired)}", ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
+                    }
+                    else
+                    {
+                        plr.SendClientMessage($"Unknown command token '{values[i]}'.", ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
+                    }
+
+                    if (activeHandlers != null)
+                        PrintCommands(plr, activeHandlers);
+
+                    return true;
+                }
+
+                commandPath.Add(command);
+                bool finalToken = i == values.Count - 1;
+                bool hasChildren = command.Handlers != null && command.Handlers.Count > 0;
+
+                if (hasChildren)
+                {
+                    activeHandlers = command.Handlers;
+
+                    if (!finalToken)
+                        continue;
+
+                    string commandText = BuildCommandPath(commandPath);
+                    SendGmCommandSummary(plr, command, commandText, longHelp);
+                    PrintCommands(plr, command.Handlers);
+                    plr.SendClientMessage($"Use .gmcommands {commandText} <subcommand> [--long] to inspect deeper.", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
+                    return true;
+                }
+
+                if (!finalToken)
+                {
+                    string commandText = BuildCommandPath(commandPath);
+                    plr.SendClientMessage($"{commandText.ToUpper()} has no subcommands.", ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
+                    return true;
+                }
+
+                SendGmCommandSummary(plr, command, BuildCommandPath(commandPath), longHelp);
+                return true;
+            }
+
+            return true;
+        }
 
         public static bool Invincible(Player plr, ref List<string> values)
         {

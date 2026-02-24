@@ -694,7 +694,6 @@ namespace WorldServer.World.Objects
                 //if the loaded player has the GM tag (though we exclude DB people) we make them avilable to the gmlist
                 if (GmLevel >= (int)EGmLevel.AnyGM && !GmMgr.GmList.Contains(this))
                 {
-                    SendClientMessage("You have been added to the GM Account List");
                     GmMgr.NotifyGMOnline(this);
                 }
 
@@ -766,7 +765,6 @@ namespace WorldServer.World.Objects
                     //if the loaded player has the GM tag (though we exclude DB people) we make them avilable to the gmlist
                     if (GmLevel >= (int)EGmLevel.AnyGM && !GmMgr.GmList.Contains(this))
                     {
-                        SendClientMessage("You have been added to the GM Account List");
                         GmMgr.NotifyGMOnline(this);
                     }
                 }

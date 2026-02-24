@@ -23,7 +23,7 @@ namespace WorldServer.Managers.Commands
 
             foreach (GmCommandHandler com in handler)
             {
-                if ((com.AccessRequired == 0 || Utils.HasFlag((int)com.AccessRequired, plr.GmLevel)) && com.Handler == null)
+                if ((com.AccessRequired == 0 || (int)com.AccessRequired <= plr.GmLevel) && com.Handler == null)
                 {
                     plr.SendClientMessage("[Subgroup] " + com.Name.ToUpper() + ": " + com.Description);
                     ++count;
@@ -35,7 +35,7 @@ namespace WorldServer.Managers.Commands
 
             foreach (GmCommandHandler com in handler)
             {
-                if ((com.AccessRequired == 0 || Utils.HasFlag((int)com.AccessRequired, plr.GmLevel)) && com.Handler != null)
+                if ((com.AccessRequired == 0 || (int)com.AccessRequired <= plr.GmLevel) && com.Handler != null)
                     plr.SendClientMessage(com.Name.ToUpper() + ": " + com.Description + "\n");
             }
             plr.SendClientMessage("===================================");

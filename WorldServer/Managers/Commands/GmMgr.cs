@@ -15,7 +15,8 @@ namespace WorldServer.Managers.Commands
 
         public static void NotifyGMOnline(Player gameMaster)
         {
-            gameMaster.SendClientMessage($"Hi - I've added you to the GM List");
+            gameMaster.SendClientMessage($"GM account (Level {gameMaster.GmLevel}) Type .gmcommands to view your available commands.");
+            gameMaster.SendClientMessage("GM command syntax: .gmcommands <command path> [--long]. Example: .gmcommands npc spawn --long");
             lock (GmList)
             {
                 if (!GmList.Contains(gameMaster))

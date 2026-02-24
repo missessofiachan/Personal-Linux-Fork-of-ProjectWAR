@@ -340,6 +340,7 @@ namespace WorldServer.Managers.Commands
             new GmCommandHandler("scenariostatus", ScenarioStatus, null, 0, 0, "Shows player count and score of all running scenarios."),
             new GmCommandHandler("scenarioscore", GetScenarioScore, null, 0, 0, "Returns targets scenario scores."),
             new GmCommandHandler("gmlist", GmMgr.ListGameMasters, null, 0, 0, "Lists available GMs."),
+            new GmCommandHandler("gmcommands", GmCommands, null, EGmLevel.AnyGM, -1, "Lists available GM commands and explains them. Usage: .gmcommands <command path> [--long]"),
             new GmCommandHandler("rules", SendRules, null, 0, 0, "Sends a condensed list of in-game rules."),
             new GmCommandHandler("assist", Assist, null, 0, 1, "Switches to friendly target's target"),
             new GmCommandHandler("unlock", Unlock, null, 0, 0, "Used to fix stuck-in-combat problems preventing you from joining a scenario."),
