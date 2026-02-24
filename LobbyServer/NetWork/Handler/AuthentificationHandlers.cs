@@ -36,6 +36,17 @@ namespace LobbyServer.NetWork.Handler
 
         }
 
+        [PacketHandler(PacketHandlerType.TCP, (int)Opcodes.CMSG_AuthInitialTokenReq, 0, "onAuthInitialTokenReq")]
+        public static void CMSG_AuthInitialTokenReq(BaseClient client, PacketIn packet)
+        {
+            Log.Debug("LServ", "CMSG_AuthInitialTokenReq");
+            Client cclient = (Client) client;
+            PacketOut Out = new PacketOut((byte)Opcodes.SMSG_AuthInitialTokenReply);
+            byte[] val = { 0x08, 0x00 };
+            Out.Write(val);
+            cclient.SendTCPCuted(Out);
+        }
+
         [PacketHandler(PacketHandlerType.TCP, (int)Opcodes.CMSG_AuthSessionTokenReq, 0, "onAuthSessionTokenReq")]
         public static void CMSG_AuthSessionTokenReq(BaseClient client, PacketIn packet)
         {

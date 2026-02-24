@@ -3,7 +3,7 @@
   <MythLoginServiceConfig>
     <Settings>
       <ProductId>2</ProductId>
-      <MessageLastUpdatedTimeoutSecs>24</MessageLastUpdatedTimeoutSecs>
+      <MessageTimeoutSecs>30</MessageTimeoutSecs>
     </Settings>
     <RegionList>
       <Region regionName="prod">
@@ -14,7 +14,7 @@
        <LoginServerList>
           <LoginServer serverName="Warhammer Online">
             <Address>127.0.0.1</Address>
-            <Port>8049</Port>
+            <Port>8048</Port>
           </LoginServer>
        </LoginServerList>
       </Region>
