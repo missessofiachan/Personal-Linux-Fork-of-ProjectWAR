@@ -1,65 +1,144 @@
-# README #
+# ProjectWAR Emulator (Beginner Guide)
 
-#### nuget packages ####
-* If you get an error compiling, complaining about NLog, you may need to force the VS package manager to get NLog. Do the following : 
-	* install-package NLog  
-		* Make sure you select the Default Project = Launcher and WarConsoleLauncher
-		* If that fails, uninstall-package Nlog, and the install-package NLog
-	* install-package Evolve
-* You can also look to use Update-Package -reinstall (which should update all the packages for you)
+## What this project is
 
-#### Zone Data ####
+ProjectWAR is a **server emulator** for Warhammer Online.
 
-Zone data is not included in this repository due to its size. You must download it separately before building.
+In simple terms: the original game servers are gone, and this project provides replacement server software so you can run a local test world on your own computer.
 
-1. Download **zones.zip** from the [releases page](https://github.com/Shmerrick/ProjectWAR/releases/tag/zones-data-v1)
-2. Extract the contents into `deps/zones/` in the repository root
+## What you can do with it
 
-The folder structure should look like `deps/zones/zone001/`, `deps/zones/zone002/`, etc.
+- Start local game server services
+- Connect a WAR client to your local server
+- Test gameplay/database/script changes
 
-#### Building and running ####
+## Before you start (one-time requirements)
 
-* There are really a couple of 'modes' of developing / debugging the solution. 
-	* Debug the servers
-		* Set the solution to start multiple projects (AccountCacher, LauncherServer, LobbyServer, WorldServer). This will start these 4 projects in debug mode. You can then connect the client to these. 
-	* Debug DB changes
-		* You can do this in combination with 'Debug the Servers', but might be better(?) to just run the Servers up without the debugger attached and connect with a Client to see if the changes made work as expected.
-	* Debug the Launcher
-		* Set the solution to start a single project, Launcher.
+You need:
 
-### Implementing new Battlefield Objectives
+- A Windows PC
+- Visual Studio 2022 (with `.NET desktop development`)
+- .NET Framework 4.8 Developer Pack
+- MySQL or MariaDB running locally (default config uses `127.0.0.1:3306`)
+- A local WAR client/launcher install
 
-Current system uses database file and commands under the name of "Battlefront". The battlefront incorporates all things involving oRvR.
-The previous system was instanced PQs that were then used for a larger calculation. It looks as if the new system generates some type of 'resources'.
+## Important files in this repo
 
-The following two tables work in tandem. If you delete an entry for one, or change something out of bounds for the array, the world server will crash.
-BOs are currently only spawning in game when a zone is declared a battlefront.
+- `WarEmulator.sln`: Visual Studio solution
+- `Database/war_accounts.sql`: account database
+- `Database/war_characters.sql`: character database
+- `Database/war_world.sql`: world database
+- `start_servers.ps1`: starts all required server executables
+- `launch_client.ps1`: launches your local WAR launcher
 
-battlefront_objects
-battlefront_objectives
+## Step-by-step setup
 
-The .GO SPAWN object 'Battlefield Objective' should not be confused with code/DB driven battlefronts. This object is only a nuetral flag that has been named  'Battlefield Objective'.
+### 1. Download zone data
 
-### T1 and T4 Progression - July 2018 ###
+Zone data is not included in git because it is large.
 
-The T1 and T4 Battlefront progressions have been re-written.
+1. Download `zones.zip` from:  
+   [https://github.com/Shmerrick/ProjectWAR/releases/tag/zones-data-v1](https://github.com/Shmerrick/ProjectWAR/releases/tag/zones-data-v1)
+2. Extract it to `deps/zones/`
 
-T1 is designed to rotate from Emp -> Dwarf -> Elf. This should look and act in a similar fashion to the current T1 flow.
+After extraction, you should have folders like:
 
-T4 is based upon starting at Praag. Locking that zone will take you to CW or Reik, depending upon the winner of Praag. If that same side locks CW or Reik, the pairing itself will lock and the campaign will move to Dwarf (TM). If the other realm locks, they will return to Praag. 
+- `deps/zones/zone001/`
+- `deps/zones/zone002/`
 
-Simple rewards have been added (mail items), this section is not complete.
+### 2. Create and import databases
 
-The process will repeat through Dwarf and into Elf, until one side locks all 9 zones and then the system will reset and you will be back at Praag. 
+The default config expects these databases:
 
-Commands of interest : 
-.campaign status (gives you the status of the T4 region). 
-.campaign setvictorypoints <#> <#> (Number of victory points, and the realm to assign)
-.campaign lockpairing <#> <#> (locks the current pairing. # - [1 Order, 2 Dest], # - [0 - no reward, 1 - reward])
-.campaign advancepairing <#> <#> (moves the pairing # - [1 Order, 2 Dest], # - tier (1 or 4))
-.campaign UpdateRegionCaptureStatus (forces a refresh of the progression [ie the client's map])
-.campaign SetRegionCaptureStatus <#> <#> (this one is complex # - forces the region progression to change to the first parameter. The first parameter is a list of 9 digits, the first three representing Dwarf, the next three Empire and the final three Elf. Within each of these pairings is the region, eg <BC><TM><KV> where 1 is lock to Order, 2 is lock to Dest, 0 is unlocked. So 111111110 is lock all to order except Caledor. # - Open and make active the region Id defined by the number). An example is .campaign SetRegionCaptureStatus 111111110 7
+- `war_accounts`
+- `war_characters`
+- `war_world`
 
-Note : Lockpairing and Advancepairing are only two steps in the 'flip' process. They should only be used by developers (ie dont use them in Production). For testing, it is better to use .campaign setvictorypoints <#> <#>, as this emulates holding BOs/keep takes equivalent to the number of VP.
+If you use the MySQL command line, this is the basic flow:
 
-If it all goes haywire, reset by .campaign SetRegionCaptureStatus 102102102 2  -- this will reset you to Praag.
+```powershell
+mysql -u root -p -e "CREATE DATABASE war_accounts; CREATE DATABASE war_characters; CREATE DATABASE war_world;"
+mysql -u root -p war_accounts < Database/war_accounts.sql
+mysql -u root -p war_characters < Database/war_characters.sql
+mysql -u root -p war_world < Database/war_world.sql
+```
+
+### 3. Build the solution
+
+1. Open `WarEmulator.sln` in Visual Studio.
+2. Set build configuration to `Release` and platform to `x64`.
+3. Build the solution.
+
+Build output is written to `bin/Release/`.
+
+### 4. Verify config files
+
+Check these files in `bin/Release/Configs/`:
+
+- `Account.xml`
+- `World.xml`
+- `Launcher.xml`
+- `Lobby.xml`
+- `mythloginserviceconfig.xml`
+
+Defaults use:
+
+- DB server: `127.0.0.1`
+- DB port: `3306`
+- DB user: `root`
+- DB password: `password`
+
+If your local database password is different, update the XML files before running.
+
+### 5. Start emulator servers
+
+Run:
+
+```powershell
+.\start_servers.ps1
+```
+
+This launches:
+
+- `AccountCacher`
+- `LauncherServer`
+- `LobbyServer`
+- `WorldServer`
+
+### 6. Start your game launcher
+
+The script `launch_client.ps1` currently points to a local path.
+
+1. Open `launch_client.ps1`
+2. Replace the launcher path with your own WAR launcher location
+3. Run:
+
+```powershell
+.\launch_client.ps1
+```
+
+## Stopping servers
+
+If needed, stop them with:
+
+```powershell
+Get-Process | Where-Object { $_.Name -match 'AccountCacher|LauncherServer|LobbyServer|WorldServer' } | Stop-Process -Force
+```
+
+## Basic troubleshooting
+
+- Build fails with missing packages:
+  - In Visual Studio, restore NuGet packages and rebuild.
+- Server cannot connect to database:
+  - Recheck DB credentials in `bin/Release/Configs/Account.xml` and `bin/Release/Configs/World.xml`.
+- Client cannot connect:
+  - Confirm server processes are running.
+  - Confirm launcher config points to `127.0.0.1` and the expected ports.
+- Missing world/zone assets:
+  - Recheck `deps/zones/` extraction.
+
+## Historical documentation
+
+The previous README has been archived at:
+
+- `docs/archive/README-legacy-2026-02-24.md`
