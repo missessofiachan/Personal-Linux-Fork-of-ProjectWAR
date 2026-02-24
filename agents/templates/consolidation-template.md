@@ -5,6 +5,9 @@
 - Branch: `agent/<task_id>/consolidator`
 - Date (UTC):
 - Claude Waived: `true | false`
+- Waiver Authorization Source (required if `Claude Waived: true`):
+- QA Gate: `PENDING | PASS | FAIL`
+- Release Signoff: `PENDING | APPROVED | BLOCKED`
 
 ## 1. Inputs Reviewed
 

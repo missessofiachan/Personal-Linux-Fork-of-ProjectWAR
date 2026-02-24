@@ -5,6 +5,9 @@
 - Branch: `agent/TASK-0001-readme-modernization/consolidator`
 - Date (UTC): `2026-02-24`
 - Claude Waived: `true`
+- Waiver Authorization Source: `Project Director explicit instruction in chat`
+- QA Gate: `PASS`
+- Release Signoff: `APPROVED`
 
 ## 1. Inputs Reviewed
 

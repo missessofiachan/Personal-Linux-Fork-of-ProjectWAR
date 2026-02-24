@@ -44,11 +44,14 @@ Rewrite the root `README.md` so a complete computer novice can understand what t
 
 ## Branch Map
 
-- `agent/TASK-0001-readme-modernization/khorne`
-- `agent/TASK-0001-readme-modernization/tzeentch`
-- `agent/TASK-0001-readme-modernization/slaanesh`
-- `agent/TASK-0001-readme-modernization/nurgle`
-- `agent/TASK-0001-readme-modernization/claude`
+- `agent/TASK-0001-readme-modernization/pm`
+- `agent/TASK-0001-readme-modernization/qa`
+- `agent/TASK-0001-readme-modernization/release`
+- `agent/TASK-0001-readme-modernization/khorne` (purged after merge)
+- `agent/TASK-0001-readme-modernization/tzeentch` (purged after merge)
+- `agent/TASK-0001-readme-modernization/slaanesh` (purged after merge)
+- `agent/TASK-0001-readme-modernization/nurgle` (purged after merge)
+- `agent/TASK-0001-readme-modernization/claude` (purged after merge)
 - `agent/TASK-0001-readme-modernization/consolidator`
 
 ## Delivery Requirements (Each Engineer)
@@ -63,7 +66,13 @@ Rewrite the root `README.md` so a complete computer novice can understand what t
 ## Wait/Waive Rules
 
 - Consolidation waits for all five submissions by default.
-- Claude submission can be waived only by Project Director; record decision in `waiver.md`.
+- Claude submission can be waived only by explicit Project Director instruction; record decision in `waiver.md`.
+- Codex cannot self-authorize waiver.
+
+## Pre-Merge Gates
+
+- QA gate must be `PASS` in `admin/qa-review.md`.
+- Release signoff must be `APPROVED` in `admin/release-signoff.md`.
 
 ## Task Status
 

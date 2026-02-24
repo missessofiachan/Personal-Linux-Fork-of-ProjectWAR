@@ -4,6 +4,12 @@ param(
 
     [string]$BaseBranch = "Restart",
 
+    [switch]$SkipPM,
+
+    [switch]$SkipQA,
+
+    [switch]$SkipRelease,
+
     [switch]$SkipClaude,
 
     [switch]$SkipConsolidator
@@ -16,6 +22,18 @@ if ([string]::IsNullOrWhiteSpace($TaskId)) {
 }
 
 $agents = @("khorne", "tzeentch", "slaanesh", "nurgle")
+
+if (-not $SkipPM) {
+    $agents += "pm"
+}
+
+if (-not $SkipQA) {
+    $agents += "qa"
+}
+
+if (-not $SkipRelease) {
+    $agents += "release"
+}
 
 if (-not $SkipClaude) {
     $agents += "claude"
