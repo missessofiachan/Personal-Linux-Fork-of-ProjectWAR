@@ -1,10 +1,16 @@
 # Task Brief
 
-- Task ID: `TASK-YYYY-MM-DD-short-name`
+- Task Number: `0001`
+- Task ID: `TASK-0001-short-name`
 - Title:
 - Requestor:
 - Base Branch: `Restart`
 - Created At (UTC):
+
+## Claude Tasking Path
+
+- Start at `agents/TASK-INDEX.md`
+- Open this file: `agents/tasks/<task_id>/task.md`
 
 ## Objective
 

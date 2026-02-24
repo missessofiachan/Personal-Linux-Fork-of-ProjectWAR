@@ -2,6 +2,14 @@
 
 This folder contains the operational files for the ProjectWAR multi-agent team.
 
+## Task numbering
+
+- Use numbered IDs: `TASK-0001-short-name`.
+- Register every task in `agents/TASK-INDEX.md`.
+- Claude should be directed to:
+  - `agents/TASK-INDEX.md`
+  - `agents/tasks/<task_id>/task.md`
+
 ## 1. Create or copy a task file
 
 - Use `agents/templates/task-template.md` as the base.

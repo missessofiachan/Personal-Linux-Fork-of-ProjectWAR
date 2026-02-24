@@ -33,6 +33,15 @@ Per task `<task_id>`, create:
 - `agent/<task_id>/claude`
 - `agent/<task_id>/consolidator`
 
+## Task Numbering
+
+- Every task must use a numbered ID format: `TASK-0001-short-name`.
+- Task directories must match the ID: `agents/tasks/<task_id>/`.
+- The canonical task list is tracked in `agents/TASK-INDEX.md`.
+- Claude tasking entry point is always:
+  - `agents/TASK-INDEX.md` (find task)
+  - `agents/tasks/<task_id>/task.md` (full brief)
+
 ## Required Task Records
 
 For each task folder `agents/tasks/<task_id>/`:
@@ -72,5 +81,6 @@ No code is merged into the base branch until the wait gate passes, or a Claude w
 ## Repo Locations
 
 - Team workflow quickstart: `agents/README.md`
+- Task index: `agents/TASK-INDEX.md`
 - Templates: `agents/templates/`
 - Branch helper: `agents/scripts/create-agent-branches.ps1`

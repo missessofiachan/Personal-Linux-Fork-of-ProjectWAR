@@ -1,10 +1,16 @@
 # Task Brief
 
-- Task ID: `2026-02-24-readme-modernization`
+- Task Number: `0001`
+- Task ID: `TASK-0001-readme-modernization`
 - Title: Modernize project README for complete beginners
 - Requestor: Project Director
 - Base Branch: `Restart`
 - Created At (UTC): `2026-02-24`
+
+## Claude Tasking Path
+
+- Start at `agents/TASK-INDEX.md`
+- Open this file: `agents/tasks/TASK-0001-readme-modernization/task.md`
 
 ## Objective
 
@@ -38,12 +44,12 @@ Rewrite the root `README.md` so a complete computer novice can understand what t
 
 ## Branch Map
 
-- `agent/2026-02-24-readme-modernization/khorne`
-- `agent/2026-02-24-readme-modernization/tzeentch`
-- `agent/2026-02-24-readme-modernization/slaanesh`
-- `agent/2026-02-24-readme-modernization/nurgle`
-- `agent/2026-02-24-readme-modernization/claude`
-- `agent/2026-02-24-readme-modernization/consolidator`
+- `agent/TASK-0001-readme-modernization/khorne`
+- `agent/TASK-0001-readme-modernization/tzeentch`
+- `agent/TASK-0001-readme-modernization/slaanesh`
+- `agent/TASK-0001-readme-modernization/nurgle`
+- `agent/TASK-0001-readme-modernization/claude`
+- `agent/TASK-0001-readme-modernization/consolidator`
 
 ## Delivery Requirements (Each Engineer)
 
@@ -58,3 +64,4 @@ Rewrite the root `README.md` so a complete computer novice can understand what t
 
 - Consolidation waits for all five submissions by default.
 - Claude submission can be waived only by Project Director; record decision in `waiver.md`.
+
