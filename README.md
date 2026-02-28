@@ -142,3 +142,11 @@ When analyzing network protocols, game assets, structures, or looking for revers
 - **Remote**: Private GitHub repo `Shmerrick/WAR-RE-Toolkit`
 
 This toolkit contains essential companion tools like `WarClientTool`, `AssetHashHunter`, `Diffuser`, and various database scripts required for emulator improvement.
+
+### Database Modification Rules
+
+**CRITICAL RULE FOR ALL CONTRIBUTORS AND AI AGENTS:**
+
+1. **NEVER modify** the base `.sql` files located in the `Database/` folder (`war_accounts.sql`, `war_characters.sql`, `war_world.sql`). These are meant for the initial setup by end-users.
+2. If a source code change requires a database schema or data modification, you **MUST create a new update script** (e.g., `update_001.sql`).
+3. These update scripts should be provided alongside the code changes, and end-users must be prompted to apply them to their database prior to loading the emulator for the server to run correctly.
