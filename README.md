@@ -96,11 +96,7 @@ If your DB password is different, update:
 
 ### 5. Start server services
 
-```powershell
-.\start_servers.ps1
-```
-
-Checkpoint: these processes should be running:
+Ensure you are running the built executables in the `bin/Release/` directory:
 
 - `AccountCacher`
 - `LauncherServer`
@@ -109,13 +105,7 @@ Checkpoint: these processes should be running:
 
 ### 6. Start the game launcher
 
-1. Open `launch_client.ps1`.
-2. Replace the launcher path with your local WAR launcher path.
-3. Run:
-
-```powershell
-.\launch_client.ps1
-```
+Start your local Warhammer Online client.
 
 ## Quick health checks
 
@@ -123,12 +113,6 @@ Check running emulator services:
 
 ```powershell
 Get-Process | Where-Object { $_.Name -match 'AccountCacher|LauncherServer|LobbyServer|WorldServer' } | Select-Object Name, Id
-```
-
-Check recent application errors:
-
-```powershell
-.\check_crash.ps1
 ```
 
 ## Stop all services
@@ -151,8 +135,10 @@ Get-Process | Where-Object { $_.Name -match 'AccountCacher|LauncherServer|LobbyS
   - verify `deps/zones/` extraction.
   - rebuild so assets are copied into `bin/Release/zones/`.
 
-## Legacy reference
+## Development Resources
 
-The previous README is archived at:
+When analyzing network protocols, game assets, structures, or looking for reverse engineering findings, all contributors and AI agents should reference the **WAR-RE-Toolkit** repository:
+- **Local Path**: `C:\Users\Admin\source\repos\Shmerrick\WAR-RE-Toolkit`
+- **Remote**: Private GitHub repo `Shmerrick/WAR-RE-Toolkit`
 
-- `docs/archive/README-legacy-2026-02-24.md`
+This toolkit contains essential companion tools like `WarClientTool`, `AssetHashHunter`, `Diffuser`, and various database scripts required for emulator improvement.
