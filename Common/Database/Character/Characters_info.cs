@@ -37,6 +37,7 @@ namespace Common
 
         private string _masterySkills;
         private string _renownSkills;
+        private string _purchasedAbilities = "";
 
         private byte _gatheringSkill;
         private byte _gatheringSkillLevel;
@@ -231,6 +232,13 @@ namespace Common
         {
             get { return _masterySkills; }
             set { _masterySkills = value; Dirty = true; }
+        }
+
+        [DataElement(AllowDbNull = false)]
+        public string PurchasedAbilities
+        {
+            get { return _purchasedAbilities; }
+            set { _purchasedAbilities = value; Dirty = true; }
         }
 
         [DataElement] public ushort Morale1 { get; set; }

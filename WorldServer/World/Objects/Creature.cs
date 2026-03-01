@@ -698,6 +698,38 @@ namespace WorldServer.World.Objects
                         if (menu.Num == 6)
                             player.RenInterface.Respec();
                         break;
+                    case 6:
+                        // Career Trainer: send the player the list of abilities they can purchase
+                        if (InteractType == InteractType.INTERACTTYPE_TRAINER &&
+                            (Spawn.Proto.TitleId == CreatureTitle.CareerTrainer ||
+                             Spawn.Proto.TitleId == CreatureTitle.Trainer ||
+                             Spawn.Proto.TitleId == CreatureTitle.ApprenticeCareerTrainer))
+                        {
+                            SendCareerTrainerAbilityList(player);
+                        }
+                        break;
+                    case 43:
+                        // Career Trainer: player is purchasing a specific career ability
+                        // The ability entry is stored in the Count field of the interact menu
+                        if (InteractType == InteractType.INTERACTTYPE_TRAINER &&
+                            (Spawn.Proto.TitleId == CreatureTitle.CareerTrainer ||
+                             Spawn.Proto.TitleId == CreatureTitle.Trainer ||
+                             Spawn.Proto.TitleId == CreatureTitle.ApprenticeCareerTrainer))
+                        {
+                            ushort abilityEntry = menu.Count;
+                            if (!player.AbtInterface.PurchaseCareerAbility(abilityEntry))
+                            {
+                                player.SendClientMessage(
+                                    "You cannot purchase this ability.",
+                                    ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
+                            }
+                            else
+                            {
+                                // Refresh the trainer list so the purchased ability no longer shows
+                                SendCareerTrainerAbilityList(player);
+                            }
+                        }
+                        break;
                     default:
                         GenericInteract(player, menu);
                         break;
@@ -1129,6 +1161,92 @@ namespace WorldServer.World.Objects
         }
 
         #region Interactions
+
+        /// <summary>
+        /// Sends the player the list of career abilities they can purchase from this trainer.
+        /// Packets mirror the mastery F_CAREER_CATEGORY + F_CAREER_PACKAGE_INFO format exactly
+        /// (which is proven to work client-side), using CategoryID=1 for core career trainer.
+        /// </summary>
+        private void SendCareerTrainerAbilityList(Player player)
+        {
+            List<WorldServer.World.Abilities.Components.AbilityInfo> purchasable =
+                player.AbtInterface.GetPurchasableCareerAbilities();
+
+            if (purchasable == null || purchasable.Count == 0)
+            {
+                player.SendClientMessage(
+                    "You have already learned all abilities available to you at your current level.",
+                    ChatLogFilters.CHATLOGFILTERS_SAY);
+                return;
+            }
+
+            const byte CAT = 1; // CategoryID 1 = core career trainer abilities
+
+            // F_CAREER_CATEGORY: mirrors mastery category header exactly
+            // Mastery uses: cat(7), 1, 0, totalPoints, availPoints, 0,0,0, respecCost(uint32),
+            //               0, 0, 0x75, 0x30, PascalString, 0, 0x18, 0, [24 pairs of idx,0], 0,0
+            PacketOut cat = new PacketOut((byte)Opcodes.F_CAREER_CATEGORY, 128);
+            cat.WriteByte(CAT);
+            cat.WriteByte(1);
+            cat.WriteByte(0);
+            cat.WriteByte((byte)purchasable.Count);   // total packages
+            cat.WriteByte((byte)purchasable.Count);   // available
+            cat.Fill(0, 3);
+            cat.WriteUInt32(0);                        // respec cost
+            cat.WriteByte(0);
+            cat.WriteByte(0);
+            cat.WriteByte(0x75);
+            cat.WriteByte(0x30);
+            cat.WritePascalString("Career Trainer");
+            cat.WriteByte(0);
+            cat.WriteByte((byte)purchasable.Count);   // package list count
+            cat.WriteByte(0);
+            for (int i = 1; i <= purchasable.Count; i++)
+            {
+                cat.WriteByte((byte)i);
+                cat.WriteByte(0);
+            }
+            cat.Fill(0, 2);
+            player.SendPacket(cat);
+
+            // F_CAREER_PACKAGE_INFO per ability — mirrors mastery ability packet byte-for-byte
+            // Mastery ability format (lines ~1031-1057 AbilityInterface.cs):
+            //   cat(7), 1, 0, idx(byte), 0,0,0,0, trained(byte), 2, [14 zeros],
+            //   1, 1, 0, 0, 0x14, 0x32, 2(PackageType), 0, 0, entry(uint16), [18 zeros],
+            //   PascalString(name), 1, 0, tree(byte), pointCost(byte), 0,0,0,0
+            for (int i = 0; i < purchasable.Count; i++)
+            {
+                var ab = purchasable[i];
+
+                PacketOut pkg = new PacketOut((byte)Opcodes.F_CAREER_PACKAGE_INFO, 128);
+                pkg.WriteByte(CAT);                     // CategoryID
+                pkg.WriteByte(1);
+                pkg.WriteByte(0);
+                pkg.WriteByte((byte)(i + 1));            // PackageIndex (1-based, byte)
+                pkg.Fill(0, 4);                          // dword14, minLevel, minRenown, unk
+                pkg.WriteByte(0);                        // trained = false
+                pkg.WriteByte(0);                        // cost flags (CashCost=0 for all abilities)
+                pkg.Fill(0, 14);                         // skip bytes (no cost data)
+
+                pkg.WriteByte(1);                        // package count = 1
+                pkg.WriteByte(1);
+                pkg.Fill(0, 2);
+                pkg.WriteByte(0x14);
+                pkg.WriteByte(0x32);
+                pkg.WriteByte(2);                        // PackageType = 2 (ability)
+                pkg.Fill(0, 2);
+                pkg.WriteUInt16(ab.Entry);               // AbilityID
+                pkg.Fill(0, 18);
+                pkg.WritePascalString(ab.Name ?? "");    // Ability name
+
+                // No requirements (mastery uses tree+pointCost; career trainer has none)
+                pkg.WriteByte(0);
+                pkg.Fill(0, 4);
+
+                player.SendPacket(pkg);
+            }
+        }
+
 
         private void HealerInteract(Player player, InteractMenu menu)
         {

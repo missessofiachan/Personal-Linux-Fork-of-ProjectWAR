@@ -3,8 +3,9 @@ namespace WorldServer.NetWork
 {
     public enum Opcodes
     {
-        F_RRQ = 0x00,
-        F_UNK1 = 0x01,
+        F_UNK0 = 0x00,
+        F_SYNC = 0x01,
+        F_UNK1 = 0x01, // alias for F_SYNC, kept for handler compatibility
         F_QUEST = 0x02,
         F_UPDATE_SIEGE_LOOK_AT = 0x03,
         F_PLAYER_EXIT = 0x04,
@@ -16,7 +17,8 @@ namespace WorldServer.NetWork
         F_PING = 0x0B,
         F_PLAYER_QUIT = 0x0C,
         F_DUMP_STATICS = 0x0D,
-        F_WAR_REPORT = 0x0E,
+        F_CURRENT_EVENTS = 0x0E,
+        F_WAR_REPORT = 0x0E,    // alias for F_CURRENT_EVENTS, kept for BaseCommands compatibility
         F_CONNECT = 0x0F,
         F_DISCONNECT = 0x10,
         F_HEARTBEAT = 0x11,
@@ -29,6 +31,7 @@ namespace WorldServer.NetWork
         F_WORLD_ENTER = 0x19,
         F_CAMPAIGN_STATUS = 0x1A,
         F_REQ_CAMPAIGN_STATUS = 0x1B,
+        F_FRIEND_ADD = 0x1C,
         F_GUILD_DATA = 0x1D,
         F_MAX_VELOCITY = 0x1E,
         F_SWITCH_REGION = 0x1F,
@@ -43,10 +46,11 @@ namespace WorldServer.NetWork
         F_PLAYERORG_APPROVAL = 0x2A,
         F_QUEST_INFO = 0x2B,
         F_RANDOM_NAME_LIST_INFO = 0x2C,
+        F_ACCOUNT_PAYMENT = 0x2D,
         F_INVITE_GROUP = 0x2F,
         F_JOIN_GROUP = 0x30,
         F_PLAYER_DEATH = 0x31,
-        // 0x33 Frquent. Occurs globally
+        F_GROUP_STATUS_UPDATE = 0x33,
         F_DUMP_ARENAS_LARGE = 0x35,
         F_GROUP_COMMAND = 0x37,
         F_ZONEJUMP = 0x38,
@@ -77,7 +81,6 @@ namespace WorldServer.NetWork
         F_ENCRYPTKEY = 0x5C,
         F_PQLOOT_TRIGGER = 0x5D,
         F_SET_TARGET = 0x5E,
-        // 0x5F Last massive packet loaded before in game world
         F_MYSTERY_BAG = 0x60,
         F_PLAY_SOUND = 0x61,
         F_PLAYER_STATE2 = 0x62,
@@ -92,7 +95,7 @@ namespace WorldServer.NetWork
         F_CREATE_STATIC = 0x71,
         F_CREATE_MONSTER = 0x72,
         F_PLAYER_IMAGENUM = 0x73,
-        // 0x74 PvE T1 Dark Elves
+        F_RRQ = 0x74,
         F_TRANSFER_ITEM = 0x75,
         F_CRAFTING_STATUS = 0x79,
         F_REQUEST_LASTNAME = 0x7A,
@@ -120,8 +123,7 @@ namespace WorldServer.NetWork
         F_GFX_MOD = 0x93,
         F_INSTANCE_INFO = 0x94,
         F_BAG_INFO = 0x95,
-        F_ADVANCED_WAR_REPORT = 0x95,
-        F_CURRENT_EVENTS = 0x95, // Prob sub id?
+        F_ADVANCED_WAR_REPORT = 0x95, // custom server opcode alias, kept for BaseCommands compatibility
         F_KEEP_STATUS = 0x96,
         F_PLAY_TIME_STATS = 0x97,
         F_CATAPULT = 0x98,
