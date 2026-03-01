@@ -190,11 +190,8 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
             foreach (var flag in activeRegion.Campaign.Objectives)
             {
-                if (this.ActiveBattleFront.ZoneId == flag.ZoneId)
-                {
-                    flag.OwningRealm = realm;
-                    flag.SetObjectiveLocked();
-                }
+                flag.OwningRealm = realm;
+                flag.SetObjectiveLocked();
             }
 
             activeRegion.Campaign.LockBattleFront(realm);
@@ -254,8 +251,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                 ProgressionLogger.Info($"Unlocking objectives {activeRegion.RegionName} BF Id : {this.ActiveBattleFront.BattleFrontId} Zone : {this.ActiveBattleFront.ZoneId} {this.ActiveBattleFrontName}");
                 foreach (var flag in activeRegion.Campaign.Objectives)
                 {
-                    if (this.ActiveBattleFront.ZoneId == flag.ZoneId)
-                        flag.OpenBattleFront();
+                    flag.OpenBattleFront();
                 }
 
                 if (activeRegion.Campaign.Keeps == null)
@@ -267,11 +263,8 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                 ProgressionLogger.Info($"Unlocking keeps {activeRegion.RegionName} BF Id : {ActiveBattleFront.BattleFrontId} Zone : {ActiveBattleFront.ZoneId} {ActiveBattleFrontName}");
                 foreach (var keep in activeRegion.Campaign.Keeps)
                 {
-                    if (ActiveBattleFront.ZoneId == keep.ZoneId)
-                    {
-                        ProgressionLogger.Debug($"Notifying Pairing (OpenBattleFront) unlocked Name : {keep.Info.Name} Zone : {keep.ZoneId} ");
-                        keep.OpenBattleFront();
-                    }
+                    ProgressionLogger.Debug($"Notifying Pairing (OpenBattleFront) unlocked Name : {keep.Info.Name} Zone : {keep.ZoneId} ");
+                    keep.OpenBattleFront();
                 }
 
                 return ActiveBattleFront;

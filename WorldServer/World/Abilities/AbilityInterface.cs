@@ -266,10 +266,13 @@ namespace WorldServer.World.Abilities
                 plr.Info.CareerLine, 0, plr.Level);
 
             // Exclude abilities the player already has AND rank-1 abilities (auto-granted)
+            // Sort them by Rank, then Name, so the index perfectly matches the client's UI ordering
             return allAvailable
                 .Where(ab => !_abilitySet.Contains(ab.Entry)
                              && ab.ConstantInfo != null
                              && ab.ConstantInfo.MinimumRank > 1)
+                .OrderBy(ab => ab.ConstantInfo.MinimumRank)
+                .ThenBy(ab => ab.Name)
                 .ToList();
         }
 
