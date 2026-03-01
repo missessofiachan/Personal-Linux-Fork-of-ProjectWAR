@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell:*)",
+      "Bash(ls:*)",
+      "Bash(xargs grep:*)",
+      "Bash(timeout 30 ./WorldServer.exe:*)",
+      "Bash(mysql:*)"
+    ]
+  }
+}

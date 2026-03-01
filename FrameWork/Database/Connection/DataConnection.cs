@@ -258,8 +258,11 @@ namespace FrameWork
                     columnsToAdd.Add(colBuilder.ToString());
                 }
 
-                // Check that the DB type matches the data type
-                else if(systype != typeof(string) && systype != typeof(bool) && systype != typeof(float) && TypeDescStrings.ContainsKey(systype))
+                // Check that the DB type matches the data type.
+                // Skip AutoIncrement columns: .NET Framework silently converts their DataType to Int32
+                // when AutoIncrement=true is set, so the comparison would always be a false positive
+                // for columns originally declared as uint (INT UNSIGNED in DB).
+                else if(!table.Columns[i].AutoIncrement && systype != typeof(string) && systype != typeof(bool) && systype != typeof(float) && TypeDescStrings.ContainsKey(systype))
                 {
                     int colIndex = databaseColumns.IndexOf(table.Columns[i].ColumnName.ToLower());
 

@@ -257,13 +257,15 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
         public override void SendInteract(Player player, InteractMenu menu)
         {
+            BattlefrontLogger.Debug($"[BO:{Name}] SendInteract from {player.Name} State={State} OwningRealm={OwningRealm} AssaultingRealm={AssaultingRealm} IsPvp={player.CbtInterface.IsPvp}");
+
             if (OwningRealm == player.Realm && AssaultingRealm == Realms.REALMS_REALM_NEUTRAL)
             {
                 player.SendClientMessage("Your realm already owns this flag.", ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
                 return;
             }
 
-            if (OwningRealm != player.Realm && OwningRealm == player.Realm)
+            if (AssaultingRealm == player.Realm && AssaultingRealm != Realms.REALMS_REALM_NEUTRAL)
             {
                 player.SendClientMessage("Your realm is already assaulting this flag.", ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
                 return;
@@ -290,7 +292,11 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                 }
             }
 
-            if (AllowInteract(player) && InteractableFor(player))
+            bool canInteract = AllowInteract(player);
+            bool isInteractable = InteractableFor(player);
+            BattlefrontLogger.Debug($"[BO:{Name}] AllowInteract={canInteract} InteractableFor={isInteractable} Distance={GetDistanceToObject(player, true)}ft");
+
+            if (canInteract && isInteractable)
             {
                 if (_captureInProgress)  // cross realm fires here
                 {
@@ -298,12 +304,17 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                 }
                 else
                 {
+                    BattlefrontLogger.Debug($"[BO:{Name}] BeginInteraction for {player.Name}");
                     CapturingPlayer = null;
                     _captureInProgress = true;
                     BeginInteraction(player);
 
                     _secureProgress = Math.Abs(_captureProgress) * MAX_SECURE_PROGRESS / MAX_CONTROL_GAUGE;
                 }
+            }
+            else
+            {
+                BattlefrontLogger.Debug($"[BO:{Name}] Interaction blocked: AllowInteract={canInteract} InteractableFor={isInteractable}");
             }
         }
 

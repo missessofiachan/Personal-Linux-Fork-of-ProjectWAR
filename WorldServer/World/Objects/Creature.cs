@@ -716,17 +716,27 @@ namespace WorldServer.World.Objects
                              Spawn.Proto.TitleId == CreatureTitle.Trainer ||
                              Spawn.Proto.TitleId == CreatureTitle.ApprenticeCareerTrainer))
                         {
-                            ushort abilityEntry = menu.Count;
-                            if (!player.AbtInterface.PurchaseCareerAbility(abilityEntry))
+                            var purchasable = player.AbtInterface.GetPurchasableCareerAbilities();
+                            int pIndex = menu.Count - 1; // index is 1-based in packet
+
+                            if (purchasable == null || pIndex < 0 || pIndex >= purchasable.Count)
                             {
-                                player.SendClientMessage(
-                                    "You cannot purchase this ability.",
-                                    ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
+                                player.SendClientMessage("You cannot purchase this ability.", ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
                             }
                             else
                             {
-                                // Refresh the trainer list so the purchased ability no longer shows
-                                SendCareerTrainerAbilityList(player);
+                                ushort abilityEntry = purchasable[pIndex].Entry;
+                                if (!player.AbtInterface.PurchaseCareerAbility(abilityEntry))
+                                {
+                                    player.SendClientMessage(
+                                        "You cannot purchase this ability.",
+                                        ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
+                                }
+                                else
+                                {
+                                    // Refresh the trainer list so the purchased ability no longer shows
+                                    SendCareerTrainerAbilityList(player);
+                                }
                             }
                         }
                         break;

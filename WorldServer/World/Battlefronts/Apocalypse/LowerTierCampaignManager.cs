@@ -255,7 +255,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                 foreach (var flag in activeRegion.Campaign.Objectives)
                 {
                     if (this.ActiveBattleFront.ZoneId == flag.ZoneId)
-                        flag.SetObjectiveSafe();
+                        flag.OpenBattleFront();
                 }
 
                 if (activeRegion.Campaign.Keeps == null)
