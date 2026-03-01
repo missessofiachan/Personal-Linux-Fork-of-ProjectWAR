@@ -404,10 +404,14 @@ namespace WorldServer.Managers.Commands
                 TryParse(values[1], out npcupdateflag);
             }
 
-            byte flag = (byte)GetInt(ref values);
-            if (flag > 1)
-                flag = 1;
+            int inputFlag = GetInt(ref values);
+            if (inputFlag != 0 && inputFlag != 1)
+            {
+                plr.SendClientMessage("Usage: .fly <0|1> (0=disable, 1=enable)", ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
+                return true;
+            }
 
+            byte flag = (byte)inputFlag;
 
             if (plr.CbtInterface.GetCurrentTarget() != null && plr.CbtInterface.GetCurrentTarget().IsCreature() && npcupdateflag != 0)
             {
@@ -429,10 +433,11 @@ namespace WorldServer.Managers.Commands
                 return true;
             }
 
+            plr.FlightEnabled = flag;
             plr.SendUpdateState((byte)StateOpcode.Flight, flag, flag);
 
             if (flag == 1)
-                plr.SendClientMessage("Flight access has been enabled. Use # to toggle flight mode, WASD to move, hold Jump to rise and hold Z to descend.");
+                plr.SendClientMessage("Flight access has been enabled. Use \\ (Backslash, ASCII 92) to toggle flight mode, WASD to move, hold Jump to rise and hold Z to descend.");
             else
                 plr.SendClientMessage("Flight access has been disabled.");
             return true;

@@ -259,6 +259,7 @@ namespace WorldServer.World.Objects
         public bool IsAFK = false;
         public bool IsAutoAFK = false;
         public string AFKMessage = "";
+        public byte FlightEnabled { get; set; }
         // This is used by Halloween event
         public bool Spooky = false;
         public long deathTime = 0;
@@ -705,6 +706,10 @@ namespace WorldServer.World.Objects
                 BuffInterface.RemoveBuffByEntry(5968);
             }
 
+            if (FlightEnabled == 1)
+            {
+                SendUpdateState((byte)StateOpcode.Flight, 1, 1);
+            }
         }
 
         private void SetMaxActionPoints(byte valueRenownRank)
@@ -768,6 +773,7 @@ namespace WorldServer.World.Objects
                         GmMgr.NotifyGMOnline(this);
                     }
                 }
+
                 //if gm toggled invincibility and switched zone then it should still be active.
                 if (IsInvulnerable && GmLevel > 1)
                 {
@@ -2665,6 +2671,9 @@ namespace WorldServer.World.Objects
             Out.WriteByte(2);
             Out.Fill(0, 11);
             SendPacket(Out);
+
+            if (FlightEnabled == 1)
+                SendUpdateState((byte)StateOpcode.Flight, 1, 1);
         }
 
         #endregion
@@ -6140,6 +6149,9 @@ namespace WorldServer.World.Objects
 
             if (CurrentSiege is Siege)
                 CurrentSiege.SetPosition((ushort)X, (ushort)Y, worldZ, heading, newZone.ZoneId);
+
+            if (FlightEnabled == 1)
+                SendUpdateState((byte)StateOpcode.Flight, 1, 1);
         }
 
         public void Teleport(ushort zoneID, uint worldX, uint worldY, ushort worldZ, ushort worldO)
@@ -6370,7 +6382,7 @@ namespace WorldServer.World.Objects
             }
             */
 
-            if (!terminal && (!_apexHit || FallGuard || FallState >= 21))
+            if (!terminal && (!_apexHit || FallGuard || FallState >= 21 || FlightEnabled == 1))
                 return;
 
             uint fallDamage = (uint)(MaxHealth * Math.Pow((23 - FallState) * 0.5, 1.5) * 0.05f);
