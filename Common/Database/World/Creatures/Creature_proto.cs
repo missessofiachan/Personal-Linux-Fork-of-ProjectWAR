@@ -43,6 +43,7 @@ namespace Common
     [Serializable]
     public class Creature_proto : DataObject
     {
+
         public ushort[] _Unks = new ushort[7];
 
         public void SetCreatureTypesAndSubTypes()
@@ -1539,6 +1540,9 @@ namespace Common
 
         [DataElement(AllowDbNull = false)]
         public byte ImmuneToCC { get; set; }
+
+        [DataElement(AllowDbNull = false)]
+        public byte Source { get; set; }
 
         public InteractType InteractType = InteractType.INTERACTTYPE_IDLE_CHAT;
 

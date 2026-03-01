@@ -140,5 +140,8 @@ namespace Common
 
         [DataElement]
         public ushort Time { get; set; }
+
+        [DataElement(AllowDbNull = false)]
+        public byte Source { get; set; }
     }
 }

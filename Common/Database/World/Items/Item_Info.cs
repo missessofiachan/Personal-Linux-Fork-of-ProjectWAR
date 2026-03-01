@@ -319,5 +319,8 @@ namespace Common
         [DataElement(AllowDbNull = false)]
         public bool IsSiege { get; set; }
 
+        [DataElement(AllowDbNull = false)]
+        public byte Source { get; set; }
+
     }
 }

@@ -695,10 +695,11 @@ namespace WorldServer.World.Abilities
 
                     if (target != null && target.IsUnit())
                     {
-                        int chanceToBeCrit = 10 + damageInfo.CriticalHitRate + caster.StsInterface.GetTotalStat(Stats.CriticalHitRate) + caster.StsInterface.GetTotalStat(Stats.HealCritRate);
+                        int chanceToBeCrit = (int)((caster.EffectiveLevel * 7.5f + 50f) / 10f / Math.Max(1, (int)target.StsInterface.GetTotalStat(Stats.Willpower)) * 100f);
+                        chanceToBeCrit += damageInfo.CriticalHitRate + caster.StsInterface.GetTotalStat(Stats.CriticalHitRate) + caster.StsInterface.GetTotalStat(Stats.HealCritRate);
                         if (rand <= chanceToBeCrit)
                         {
-                            damageInfo.Damage *= 1.35f + (float)StaticRandom.Instance.NextDouble() * 0.2f;
+                            damageInfo.Damage *= 1.5f;
 
                             damageInfo.DamageEvent = (byte)CombatEvent.COMBATEVENT_ABILITY_CRITICAL;
                         }
@@ -1465,7 +1466,7 @@ namespace WorldServer.World.Abilities
 
             #endregion
 
-            float wSpeed = caster.ItmInterface.GetAttackTime(EquipSlot.MAIN_HAND) * 0.01f;
+            float wSpeed = caster.ItmInterface.GetAttackTime(EquipSlot.OFF_HAND) * 0.01f;
             float ohWdps = caster.ItmInterface.GetWeaponDamage(EquipSlot.OFF_HAND);
 
             damageInfo.Damage = wSpeed * ohWdps * OFFHAND_DAMAGE_PEN;
@@ -2263,7 +2264,7 @@ namespace WorldServer.World.Abilities
 
             if (rand <= chanceToBeCrit)
             {
-                float critDmgMult = 1.35f + (float)StaticRandom.Instance.NextDouble() * 0.2f + damageInfo.CriticalHitDamageBonus + (caster.StsInterface.GetTotalStat(Stats.CriticalDamage) * 0.01f) + (target.StsInterface.GetTotalStat(Stats.CriticalDamageTaken) * 0.01f);
+                float critDmgMult = 1.5f + damageInfo.CriticalHitDamageBonus + (caster.StsInterface.GetTotalStat(Stats.CriticalDamage) * 0.01f) + (target.StsInterface.GetTotalStat(Stats.CriticalDamageTaken) * 0.01f);
 
                 if (critDmgMult > 3.5f)
                     (caster as Player)?.SendClientMessage("Suspiciously high critical damage multiplier of " + (critDmgMult * 100) + "%.", ChatLogFilters.CHATLOGFILTERS_SHOUT);
