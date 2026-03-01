@@ -993,6 +993,42 @@ namespace WorldServer.Managers.Commands
 
         public static bool Reboot(Player plr, ref List<string> values)
         {
+            Log.Info("Shutdown", "Clean shutdown initiated by GM: " + plr.Name);
+
+            // Snapshot the current player list so we can safely iterate while the server winds down.
+            List<Player> snapshot = Player._Players.ToList();
+
+            // Step 1: Warn every connected player.
+            foreach (Player player in snapshot)
+                player.SendClientMessage("SERVER SHUTDOWN: All character data is being saved. You will be disconnected momentarily.");
+
+            // Step 2: Force-save every player to the database before anything is torn down.
+            foreach (Player player in snapshot)
+                player.ForceSave();
+
+            Log.Info("Shutdown", "All player data saved. Blocking new connections.");
+
+            // Step 3: Stop the TCP listener so no new clients can connect.
+            WorldServer.Program.Server?.Stop();
+
+            // Step 4: Send the disconnect packet to every connected client.
+            foreach (Player player in snapshot)
+            {
+                PacketOut Out = new PacketOut((byte)Opcodes.F_PLAYER_QUIT, 4);
+                Out.WriteHexStringBytes("01000000");
+                player.SendPacket(Out);
+            }
+
+            // Step 5: Brief pause to allow the disconnect packets to be transmitted before
+            //         the underlying connections are closed.
+            System.Threading.Thread.Sleep(2000);
+
+            // Step 6: Stop region and scenario managers.
+            WorldMgr.Stop();
+
+            Log.Info("Shutdown", "Server has shut down cleanly.");
+
+            // Step 7: Terminate the process.
             Environment.Exit(0);
             return true;
         }

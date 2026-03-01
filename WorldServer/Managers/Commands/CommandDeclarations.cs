@@ -382,7 +382,7 @@ namespace WorldServer.Managers.Commands
             new GmCommandHandler("nuke", Nuke, null, EGmLevel.EmpoweredStaff, 2,
                 "Slays everyone in radius. Takes 2 parameters, realm and radius in ft. Realm 0 - all, 1 - order, 2 - destro"),
 
-            new GmCommandHandler("boot", Reboot, null, EGmLevel.EmpoweredStaff, 0, "Reboots the server."),
+            new GmCommandHandler("boot", Reboot, null, EGmLevel.Management, 0, "Cleanly shuts the server down: saves all data, kicks all players, then exits."),
             new GmCommandHandler("clearboot", ClearServer, null, EGmLevel.AnyGM, 0, "Removes all players from server."),
             new GmCommandHandler("revive", Revive, null, EGmLevel.AnyGM, 0, "Resurrects the targeted Unit."),
             new GmCommandHandler("fly", SetFlightState, null, EGmLevel.GM, 0, "Grants the ability to fly (byte enableFlight)"),
