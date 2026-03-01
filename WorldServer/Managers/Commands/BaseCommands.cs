@@ -1029,6 +1029,8 @@ namespace WorldServer.Managers.Commands
             Log.Info("Shutdown", "Server has shut down cleanly.");
 
             // Step 7: Terminate the process.
+            CharMgr.Database.ForceSave();
+            WorldMgr.Database.ForceSave();
             Environment.Exit(0);
             return true;
         }

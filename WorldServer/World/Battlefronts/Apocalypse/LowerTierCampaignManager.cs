@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Common;
 using Common.Database.World.Battlefront;
 using GameData;
 using NLog;
@@ -52,6 +53,9 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 				this.BattleFrontStatuses.Clear();
 				foreach (var battleFrontProgression in battleFrontProgressions)
 				{
+					var keeps = Services.World.BattleFrontService.GetKeepInfos((uint)battleFrontProgression.RegionId);
+					var battlefieldObjectives = Services.World.BattleFrontService.GetBattleFrontObjectives((uint)battleFrontProgression.RegionId);
+
 					this.BattleFrontStatuses.Add(new BattleFrontStatus(this.ImpactMatrixManagerInstance, battleFrontProgression.BattleFrontId)
                     {
 						LockingRealm = (Realms)BattleFrontProgressions.Single(x => x.BattleFrontId == battleFrontProgression.BattleFrontId).LastOwningRealm,
@@ -60,7 +64,9 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 						LockTimeStamp = 0,
 						Locked = true,
 						RegionId = battleFrontProgression.RegionId,
-						Description = battleFrontProgression.Description
+						Description = battleFrontProgression.Description,
+						KeepList = keeps ?? new List<Keep_Info>(),
+						BattlefieldObjectives = battlefieldObjectives ?? new List<BattleFront_Objective>()
 					});
 				}
 			}
