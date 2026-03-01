@@ -211,16 +211,18 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                 lock (status)
                 {
                     BattlefrontLogger.Trace($"Checking RefreshObjectiveStatus...");
+                    // AI-AGENT (Gemini 3.0 Flash): For T1 pairings, announce to all players in the region matching the tier.
                     var playersToAnnounceTo = Player._Players.Where(x => !x.IsDisposed
                                                                          && x.IsInWorld()
                                                                          && x.CbtInterface.IsPvp
                                                                          && x.ScnInterface.Scenario == null
-                                                                         && x.ZoneId == status.ZoneId
+                                                                         && (Tier == 1 || x.ZoneId == status.ZoneId)
                                                                          && x.Region.RegionId == status.RegionId);
 
                     foreach (var player in playersToAnnounceTo)
                     {
-                        SendObjectives(player, Objectives.Where(x => x.ZoneId == status.ZoneId));
+                        // AI-AGENT (Gemini 3.0 Flash): For T1 pairings, send all objectives in the campaign.
+                        SendObjectives(player, Objectives.Where(x => Tier == 1 || x.ZoneId == status.ZoneId));
                     }
                 }
             }
@@ -349,30 +351,41 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             if (status.RegionId != Region.RegionId)
                 return;
 
-            if (BattleFrontManager.GetActiveCampaign().Tier != 4)
-                return;
+            // AI-AGENT (Gemini 3.0 Flash): Removed Tier == 4 restriction to allow T1 zone flipping via Domination.
+            // Since T1 zones lack keeps, they cannot naturally reach 1000 VP.
 
-            var objectives = BattleFrontManager.GetActiveCampaign().Objectives.Where(x => x.ZoneId == status.ZoneId);
+            // AI-AGENT (Gemini 3.0 Flash): For T1 pairings, check all objectives in the campaign for domination, not just one zone.
+            var objectives = BattleFrontManager.GetActiveCampaign().Objectives.Where(x => Tier == 1 || x.ZoneId == status.ZoneId);
             foreach (var battlefieldObjective in objectives)
             {
-                if (battlefieldObjective.State != StateFlags.Locked)
+                // AI-AGENT (Gemini 3.0 Flash): Domination requires objectives to be in the CAPTURED (Locked) or SECURED (Secure) state.
+                // Both states represent full control by a realm.
+                // We permit both because some objectives might have transitioned to 'Secured' (lockout expired) while others are still 'Captured' (lockout active).
+                if (battlefieldObjective.State != StateFlags.Locked && battlefieldObjective.State != StateFlags.Secure)
                 {
+                    BattlefrontLogger.Debug($"Destruction Domination Check: Objective {battlefieldObjective.Name} is in state {battlefieldObjective.State}, not Locked or Secure. Aborting.");
+                    DestructionDominationCounter = Program.Config.DestructionDominationTimerLength;
                     return;
                 }
                 if (battlefieldObjective.OwningRealm != Realms.REALMS_REALM_DESTRUCTION)
                 {
+                    BattlefrontLogger.Debug($"Destruction Domination Check: Objective {battlefieldObjective.Name} is owned by {battlefieldObjective.OwningRealm}, not Destruction. Aborting.");
+                    DestructionDominationCounter = Program.Config.DestructionDominationTimerLength;
                     return;
                 }
             }
-            var keeps = BattleFrontManager.GetActiveCampaign().Keeps.Where(x => x.ZoneId == status.ZoneId);
+            // AI-AGENT (Gemini 3.0 Flash): For T1 pairings, check all keeps in the campaign (though T1 has none).
+            var keeps = BattleFrontManager.GetActiveCampaign().Keeps.Where(x => Tier == 1 || x.ZoneId == status.ZoneId);
             foreach (var battleFrontKeep in keeps)
             {
                 if (battleFrontKeep.KeepStatus != KeepStatus.KEEPSTATUS_SAFE)
                 {
+                    DestructionDominationCounter = Program.Config.DestructionDominationTimerLength;
                     return;
                 }
                 if (battleFrontKeep.Realm != Realms.REALMS_REALM_DESTRUCTION)
                 {
+                    DestructionDominationCounter = Program.Config.DestructionDominationTimerLength;
                     return;
                 }
 
@@ -406,30 +419,41 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             if (status.RegionId != Region.RegionId)
                 return;
 
-            if (BattleFrontManager.GetActiveCampaign().Tier != 4)
-                return;
+            // AI-AGENT (Gemini 3.0 Flash): Removed Tier == 4 restriction to allow T1 zone flipping via Domination.
+            // Since T1 zones lack keeps, they cannot naturally reach 1000 VP.
 
-            var objectives = BattleFrontManager.GetActiveCampaign().Objectives.Where(x => x.ZoneId == status.ZoneId);
+            // AI-AGENT (Gemini 3.0 Flash): For T1 pairings, check all objectives in the campaign for domination, not just one zone.
+            var objectives = BattleFrontManager.GetActiveCampaign().Objectives.Where(x => Tier == 1 || x.ZoneId == status.ZoneId);
             foreach (var battlefieldObjective in objectives)
             {
-                if (battlefieldObjective.State != StateFlags.Locked)
+                // AI-AGENT (Gemini 3.0 Flash): Domination requires objectives to be in the CAPTURED (Locked) or SECURED (Secure) state.
+                // Both states represent full control by a realm.
+                // We permit both because some objectives might have transitioned to 'Secured' (lockout expired) while others are still 'Captured' (lockout active).
+                if (battlefieldObjective.State != StateFlags.Locked && battlefieldObjective.State != StateFlags.Secure)
                 {
+                    BattlefrontLogger.Debug($"Order Domination Check: Objective {battlefieldObjective.Name} is in state {battlefieldObjective.State}, not Locked or Secure. Aborting.");
+                    OrderDominationCounter = Program.Config.OrderDominationTimerLength;
                     return;
                 }
                 if (battlefieldObjective.OwningRealm != Realms.REALMS_REALM_ORDER)
                 {
+                    BattlefrontLogger.Debug($"Order Domination Check: Objective {battlefieldObjective.Name} is owned by {battlefieldObjective.OwningRealm}, not Order. Aborting.");
+                    OrderDominationCounter = Program.Config.OrderDominationTimerLength;
                     return;
                 }
             }
-            var keeps = BattleFrontManager.GetActiveCampaign().Keeps.Where(x => x.ZoneId == status.ZoneId);
+            // AI-AGENT (Gemini 3.0 Flash): For T1 pairings, check all keeps in the campaign.
+            var keeps = BattleFrontManager.GetActiveCampaign().Keeps.Where(x => Tier == 1 || x.ZoneId == status.ZoneId);
             foreach (var battleFrontKeep in keeps)
             {
                 if (battleFrontKeep.KeepStatus != KeepStatus.KEEPSTATUS_SAFE)
                 {
+                    OrderDominationCounter = Program.Config.OrderDominationTimerLength;
                     return;
                 }
                 if (battleFrontKeep.Realm != Realms.REALMS_REALM_ORDER)
                 {
+                    OrderDominationCounter = Program.Config.OrderDominationTimerLength;
                     return;
                 }
                 
@@ -468,7 +492,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                                                              && x.CbtInterface.IsPvp
                                                              && x.ScnInterface.Scenario == null
                                                              && x.Region.RegionId == status.RegionId
-                                                             && x.ZoneId == status.ZoneId);
+                                                             && (Tier == 1 || x.ZoneId == status.ZoneId));
 
             foreach (var player in playersToNotify)
             {
@@ -498,19 +522,20 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                         {
                             if (objective.BuffId != 0)
                             {
-                                if (objective.ZoneId == status.ZoneId)
+                                // AI-AGENT (Gemini 3.0 Flash): For T1 pairings, update buffs for all objectives in the campaign.
+                        if (Tier == 1 || objective.ZoneId == status.ZoneId)
                                 {
                                     if (objective.OwningRealm != Realms.REALMS_REALM_NEUTRAL)
                                     {
                                         var buffId = objective.BuffId;
                                         BattlefrontLogger.Trace($"Applying BuffId {buffId} to players.");
                                         var playersToApply = Player._Players.Where(x => !x.IsDisposed
-                                                                                        && x.IsInWorld()
-                                                                                        && x.CbtInterface.IsPvp
-                                                                                        && x.ScnInterface.Scenario == null
-                                                                                        && x.Region.RegionId == status.RegionId
-                                                                                        && x.ZoneId == status.ZoneId
-                                                                                        && x.Realm == objective.OwningRealm);
+                                                                                && x.IsInWorld()
+                                                                                && x.CbtInterface.IsPvp
+                                                                                && x.ScnInterface.Scenario == null
+                                                                                && x.Region.RegionId == status.RegionId
+                                                                                && (Tier == 1 || x.ZoneId == status.ZoneId)
+                                                                                && x.Realm == objective.OwningRealm);
 
                                         foreach (var player in playersToApply)
                                         {
@@ -522,12 +547,12 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                                         BattlefrontLogger.Trace($"Removing BuffId {buffId} from opposing players.");
 
                                         var playersToRemove = Player._Players.Where(x => !x.IsDisposed
-                                                                                         && x.IsInWorld()
-                                                                                         && x.CbtInterface.IsPvp
-                                                                                         && x.ScnInterface.Scenario == null
-                                                                                         && x.Region.RegionId == status.RegionId
-                                                                                         && x.ZoneId == status.ZoneId
-                                                                                         && x.Realm != objective.OwningRealm);
+                                                                                 && x.IsInWorld()
+                                                                                 && x.CbtInterface.IsPvp
+                                                                                 && x.ScnInterface.Scenario == null
+                                                                                 && x.Region.RegionId == status.RegionId
+                                                                                 && (Tier == 1 || x.ZoneId == status.ZoneId)
+                                                                                 && x.Realm != objective.OwningRealm);
 
                                         foreach (var player in playersToRemove)
                                         {
@@ -822,7 +847,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
         public void WriteCaptureStatus(PacketOut Out, Realms lockingRealm)
         {
             BattlefrontLogger.Trace(".");
-            Out.WriteByte(0);
+            Out.WriteByte((byte)ActiveBattleFrontStatus.LockStatus);
             float orderPercent, destroPercent = 0;
             switch (lockingRealm)
             {
@@ -1069,7 +1094,10 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
                 // Distribute RR, INF, etc to contributing players
                 // Get All players in the zone and if they are not in the eligible list, they receive minor awards
-                var allPlayersInZone = PlayerUtil.GetAllFlaggedPlayersInZone((ushort)zoneId);
+                // AI-AGENT (Gemini 3.0 Flash): In Tier 1, reward all players in the region (pairing) since the battlefront spans both zones.
+                var allPlayersToReward = Tier == 1 
+                    ? Region.Players.Where(x => x.CbtInterface.IsPvp).ToList() 
+                    : PlayerUtil.GetAllFlaggedPlayersInZone((ushort)zoneId);
 
                 Region.Campaign.GetActiveBattleFrontStatus().RewardManagerInstance.DistributeZoneFlipBaseRewards(
                     eligiblitySplits.Item3,
@@ -1077,7 +1105,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                     lockingRealm, 
                     Region.Campaign.GetActiveBattleFrontStatus().ContributionManagerInstance.GetMaximumContribution(), 
                     Tier == 1 ? 0.5f : 1f, 
-                    allPlayersInZone);
+                    allPlayersToReward);
 
                 var fortZones = new List<int> { 4, 10, 104, 110, 204, 210 };
                 if (fortZones.Contains((ushort)zoneId))

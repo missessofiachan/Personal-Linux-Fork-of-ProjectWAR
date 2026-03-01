@@ -9,11 +9,11 @@ namespace WorldServer.World.Battlefronts.Apocalypse
     {
         public enum ProcessState
         {
-            Neutral,
-            Capturing,
-            Captured,
-            Locked,
-            Guarded
+            Neutral,   // UNCLAIMED: Default state, no owner
+            Capturing, // CONTESTED: Claimed, countdown active, re-takeable
+            Captured,  // CAPTURED: Lockout state, enemy cannot interact
+            Guarded,   // SECURED: Open to conflict, enemy can interact
+            Locked     // Zone Lock (not part of the flag cycle)
         }
 
         public enum Command

@@ -61,8 +61,8 @@ namespace WorldServer.Configs
         public int FortDefenceTimer = 600000;   // Number of MS for a tick (there are 4 ticks) before a Fort Defends itself.
 
         public int DominationPointsRequired = 6;    // Number of domination points required to start the domination timer.
-        public int DestructionDominationTimerLength = 20;   // Number of minutes for Dest Domination to finish.
-        public int OrderDominationTimerLength = 20;   // Number of minutes for Order Domination to finish.
+        public int DestructionDominationTimerLength = 3;   // Number of minutes for Dest Domination to finish.
+        public int OrderDominationTimerLength = 3;   // Number of minutes for Order Domination to finish.
 
         public int DoorRepairTimerLength = 30 * 60;
         public int SeizedTimerLength = 1 * 2;

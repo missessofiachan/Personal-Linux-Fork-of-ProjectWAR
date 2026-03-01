@@ -257,6 +257,8 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                 ProgressionLogger.Info($"Unlocking objectives {activeRegion.RegionName} BF Id : {this.ActiveBattleFront.BattleFrontId} Zone : {this.ActiveBattleFront.ZoneId} {this.ActiveBattleFrontName}");
                 foreach (var flag in activeRegion.Campaign.Objectives)
                 {
+                    // AI-AGENT (Gemini 3.0 Flash): Changed from SetObjectiveSafe() to OpenBattleFront() 
+                    // to ensure the objective Finite State Machine actually starts for T1 zones.
                     flag.OpenBattleFront();
                 }
 

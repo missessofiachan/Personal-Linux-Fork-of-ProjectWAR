@@ -5958,6 +5958,14 @@ namespace WorldServer.World.Objects
         public void ForceSave()
         {
             UpdateWorldPosition();
+            
+            // AI-AGENT (Gemini 3.0 Flash): Manually sync world coordinates back to the database model (_Value).
+            // Normal movement updates these via SetPosition, but ForceSave (used by .boot) needs this sync.
+            _Value.WorldX = WorldPosition.X;
+            _Value.WorldY = WorldPosition.Y;
+            _Value.WorldZ = WorldPosition.Z;
+            _Value.WorldO = Heading;
+            
             CalculatePlayedTime();
             CharMgr.Database.SaveObject(_Value);
 

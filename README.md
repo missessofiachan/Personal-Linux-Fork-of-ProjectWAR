@@ -150,3 +150,26 @@ This toolkit contains essential companion tools like `WarClientTool`, `AssetHash
 1. **NEVER modify** the base `.sql` files located in the `Database/` folder (`war_accounts.sql`, `war_characters.sql`, `war_world.sql`). These are meant for the initial setup by end-users.
 2. If a source code change requires a database schema or data modification, you **MUST create a new update script** (e.g., `update_001.sql`).
 3. These update scripts should be provided alongside the code changes, and end-users must be prompted to apply them to their database prior to loading the emulator for the server to run correctly.
+
+## RvR Terminology
+
+### Global Concepts
+- **Battlefield Objective (BO)**: A location on the RvR section of a map (zone) that players must control. Typically represented by a flag.
+- **Keep**: A large-scale BO with deeper capture and hold mechanics (guards, doors, lords).
+- **Faction**: The two opposing sides: **Order** (Dwarf, Empire, High Elf) and **Destruction/Chaos** (Greenskin, Chaos, Dark Elf).
+- **Race**: Specific ethnic groups within factions (e.g., Dwarf vs Greenskin).
+- **Pairing**: A specific conflict between an Order race and its corresponding Destruction rival (e.g., Dwarf vs Greenskin).
+- **Tier**: Level-bracketed gameplay areas (1-4) consisting of one or more zones.
+- **Zone**: An individual map with a unique ID.
+- **Battlefront**: The active RvR area of a pairing and its associated tier. A battlefront can span one or multiple zones.
+
+### Flag States
+- **Unclaimed**: The default state; no faction holds the flag.
+- **Contested**: A faction has interacted with the flag, triggering a countdown timer. The opposing faction can attempt to reclaim it during this period.
+- **Captured**: The countdown timer has reached zero. The claiming faction now owns the flag. It enters a **lockout state** where the opposing faction cannot interact with it. This triggers a lockout countdown timer.
+- **Secured**: The lockout timer has reached zero. The faction still controls the flag, but it is now open for conflict and can be assaulted by the opposing faction.
+
+### Domination
+- **Domination Status**: Occurs when a single faction controls **all** Battlefield Objectives within a battlefront, and all those objectives are in the **Secured** state.
+- **Domination Victory**: Domination supersedes the Victory Point (VP) requirement for controlling and locking a battlefront.
+- **Rewards & Progression**: Achieving domination awards RvR lock rewards to the winning faction. The battlefront locks for 30 minutes before shifting to a new battlefront within the same tier.

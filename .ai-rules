@@ -6,4 +6,14 @@
 4. ALWAYS create a new update script (e.g., `update_001.sql`) for any database modifications and AUTOMATICALLY apply it to the database using the internal tools or `mysql -uroot -ppassword -hlocalhost war_world` before launching the emulator. Do not instruct the user to do it.
 5. Compile checks must happen before moving to the next task. This requirement can be bypassed if multiple steps need to happen before compile and QA check.
 6. If you (the AI Agent) are instructed to modify this file (`.cursorrules`), you MUST immediately run the `powershell -ExecutionPolicy Bypass -File .\Sync-Airules.ps1` command afterward to ensure all other agent custom rules files are synchronized.
+7. **Gemini 3.0 Flash Reliability**:
+   - All work must be double-checked for accuracy and hallucinations.
+   - Any work produced must have explicit plain language documentation in a `walkthrough.md` or similar artifact.
+   - Any code modifications MUST include inline documentation (comments) identifying the AI agent and the rationale.
+   - Maintain a running change log in `change_log_gemini.md` outside of version control.
+8. **GPT-5.3-Codex-Spark Reliability**:
+   - All work must be double-checked for accuracy and hallucinations.
+   - Any work produced must have explicit plain language documentation in a `walkthrough.md` or similar artifact.
+   - Any code modifications MUST include inline documentation (comments) identifying the AI agent and the rationale.
+   - Maintain a running change log in `change_log_codex_spark.md` outside of version control.
 

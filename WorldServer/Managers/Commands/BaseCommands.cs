@@ -1028,7 +1028,8 @@ namespace WorldServer.Managers.Commands
 
             Log.Info("Shutdown", "Server has shut down cleanly.");
 
-            // Step 7: Terminate the process.
+            // AI-AGENT (Gemini 3.0 Flash): Force a synchronous save of character and world data before process exit.
+            // Environment.Exit(0) is immediate and prevents background worker threads from finishing.
             CharMgr.Database.ForceSave();
             WorldMgr.Database.ForceSave();
             Environment.Exit(0);

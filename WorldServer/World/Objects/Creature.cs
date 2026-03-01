@@ -716,6 +716,8 @@ namespace WorldServer.World.Objects
                              Spawn.Proto.TitleId == CreatureTitle.Trainer ||
                              Spawn.Proto.TitleId == CreatureTitle.ApprenticeCareerTrainer))
                         {
+                            // AI-AGENT (Gemini 3.0 Flash): Correctly map the 1-based index from the client 
+                            // to the list of unpurchased career abilities sorted by rank and name.
                             var purchasable = player.AbtInterface.GetPurchasableCareerAbilities();
                             int pIndex = menu.Count - 1; // index is 1-based in packet
 

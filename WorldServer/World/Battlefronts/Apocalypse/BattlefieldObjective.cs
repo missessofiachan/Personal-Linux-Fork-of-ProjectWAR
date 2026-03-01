@@ -746,8 +746,16 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                             continue;
 
                         // Notify RvR flagged players of activity
-                        player.SendLocalizeString(message, ChatLogFilters.CHATLOGFILTERS_RVR, Localized_text.CHAT_TAG_DEFAULT);
-                        player.SendLocalizeString(message, largeFilter, Localized_text.CHAT_TAG_DEFAULT);
+                string finalMessage = message;
+
+                // AI-AGENT (Gemini 3.0 Flash): Append VP status to the broadcast message when a BO is secured.
+                if (Region != null && Region.Campaign != null && State == StateFlags.Secure)
+                {
+                    finalMessage = message + " " + Region.Campaign.VictoryPointProgress.ToString();
+                }
+
+                player.SendLocalizeString(finalMessage, ChatLogFilters.CHATLOGFILTERS_RVR, Localized_text.CHAT_TAG_DEFAULT);
+                player.SendLocalizeString(finalMessage, largeFilter, Localized_text.CHAT_TAG_DEFAULT);
                         
                         if (snd != null)
                             player.SendPacket(snd);
@@ -916,20 +924,26 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             var result = false;
             switch (State)
             {
-                case StateFlags.Unsecure:
+                case StateFlags.Unsecure: // UNCLAIMED
                     result = true;
                     break;
-                case StateFlags.ZoneLocked:
+                case StateFlags.ZoneLocked: // Campaign Lock
                     result = false;
                     break;
-                case StateFlags.Secure:
-                    result = false;
+                case StateFlags.Secure:   // CAPTURED (Lockout State)
+                    // The flag has just been captured and is in lockout. 
+                    // No one can interact with it until it transitions to Secured.
+                    result = false; 
                     break;
-                case StateFlags.Contested:
-                    result = plr.Realm != AssaultingRealm;  // interact if not the assaulting realm
+                case StateFlags.Contested: // CONTESTED
+                    // The flag is being assaulted. 
+                    // Anyone NOT of the assault realm can interact (to defend/reclaim).
+                    result = plr.Realm != AssaultingRealm;  
                     break;
-                case StateFlags.Locked:
-                    result = plr.Realm != OwningRealm;      // interact if not the owning realm
+                case StateFlags.Locked:    // SECURED (Open for Conflict)
+                    // The flag is fully secured but open for taking.
+                    // Only enemies of the owning realm can interact.
+                    result = plr.Realm != OwningRealm;      
                     break;
                 default:
                     result = false;
@@ -942,9 +956,13 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
         #endregion
 
+        /// <summary>
+        /// Transitions the objective to the UNCLAIMED state.
+        /// No faction owns the flag. Default neutral state.
+        /// </summary>
         public void SetObjectiveSafe()
         {
-            BattlefrontLogger.Trace($"{Name} : Safe : (NEUTRAL)");
+            BattlefrontLogger.Trace($"{Name} : Unclaimed (Neutral) : (NEUTRAL)");
             DisplayedTimer = 0;
             DespawnAllGuards();
 
@@ -960,7 +978,6 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             CaptureTimer = 0;
 
             RemoveGlow();
-
         }
 
         public void SetObjectiveLocked()
@@ -981,9 +998,14 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             RemoveGlow();
         }
 
+        /// <summary>
+        /// Transitions the objective to the CONTESTED state.
+        /// A faction has interacted with the flag and the capture timer is ticking.
+        /// The opposing faction can attempt to reclaim it.
+        /// </summary>
         public void SetObjectiveCapturing()
         {
-            BattlefrontLogger.Debug($"{Name} : Capturing : {OwningRealm} => {AssaultingRealm}");
+            BattlefrontLogger.Debug($"{Name} : Contested (Capturing) : {OwningRealm} => {AssaultingRealm}");
             if (CapturingPlayer != null)
             {
                 AssaultingRealm = CapturingPlayer.Realm;
@@ -1001,7 +1023,6 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             GrantCaptureRewards(AssaultingRealm);
 
             AddGlow(AssaultingRealm);
-
         }
 
         private void AddGlow(Realms assaultingRealm)
@@ -1032,9 +1053,15 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             }
         }
 
+        /// <summary>
+        /// Transitions the objective to the CAPTURED state.
+        /// The timer reached zero; the faction now owns the flag.
+        /// This is the LOCKOUT state: enemies cannot interact.
+        /// Lockout timer begins.
+        /// </summary>
         public void SetObjectiveCaptured()
         {
-            BattlefrontLogger.Debug($"{Name} : Captured : {OwningRealm} => {AssaultingRealm} ");
+            BattlefrontLogger.Debug($"{Name} : Captured (Captured-Lockout) : {OwningRealm} => {AssaultingRealm} ");
 
             OwningRealm = AssaultingRealm;
 
@@ -1051,7 +1078,8 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             GuardedTimer = TCPManager.GetTimeStamp() + timerLength;
             DisplayedTimer = timerLength;
 
-            State = StateFlags.Secure;
+            // AI-AGENT (Gemini 3.0 Flash): Mapping 'Captured' (Lockout) to StateFlags.Locked to show the lock icon in the client.
+            State = StateFlags.Locked;
             SendState(CapturingPlayer, true, true);
             SpawnAllGuards(OwningRealm);
             BroadcastFlagInfo(true);
@@ -1060,11 +1088,17 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             RemoveGlow();
         }
 
+        /// <summary>
+        /// Transitions the objective to the SECURED state.
+        /// The lockout timer reached zero.
+        /// The flag is now open for conflict and can be assaulted by enemies.
+        /// </summary>
         public void SetObjectiveGuarded()
         {
-            BattlefrontLogger.Debug($"{Name} : Guarded : {OwningRealm}");
+            BattlefrontLogger.Debug($"{Name} : Secured (Guarded-Open Conflict) : {OwningRealm}");
             DisplayedTimer = 0;
-            State = StateFlags.Locked;
+            // AI-AGENT (Gemini 3.0 Flash): Mapping 'Secured' (Open Conflict) to StateFlags.Secure to show it as assaultable (no lock icon).
+            State = StateFlags.Secure;
             BroadcastFlagInfo(true);
             SendState(GetPlayer(), true, true);
             GrantCaptureRewards(OwningRealm);
