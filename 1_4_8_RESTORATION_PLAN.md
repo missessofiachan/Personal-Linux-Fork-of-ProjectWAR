@@ -55,20 +55,12 @@ Pick a single, specific system to restore. Do not mix domains.
 
 If you are an AI Agent booting up this task, start with the lowest-risk, highest-yield domains that don't interfere with the heavily refactored RvR codebase:
 
-1.  **Item Restoration:**
-    *   **Goal:** Restore base item stats, requirements, and vendor prices.
-    *   **Data Source:** `C:\Users\Admin\Music\Warhammer\Warhammer\items\All_Items.xlsx` and `item Stats.xlsx`.
-    *   **Emulator Target:** `item_infos` table.
-
-2.  **Visuals & Art Mappings:**
-    *   **Goal:** Ensure creatures and NPCs load with the correct visual models and meshes.
-    *   **Data Source:** `character meshes.csv`, `character art.csv`, and `art switches.csv` in `C:\Users\Admin\Music\Warhammer\Warhammer\Warhammer Online`.
-    *   **Emulator Target:** `creature_protos` table.
-
-3.  **Abilities & Combat Formulas:**
-    *   **Goal:** Restore spell coefficients, cast times, and cooldowns.
-    *   **Data Source:** The parsed C# packets in `ProtocolServices` and the analysis in `RE_FINDINGS\combat_formulas.md`.
-    *   **Emulator Target:** `abilities` and `ability_damage_heals` tables.
+1.  **Item Restoration:** [DONE]
+2.  **Visuals & Art Mappings:** [DONE]
+3.  **Abilities & Combat Formulas:** [DONE]
+4.  **NPC Equipment:** [DONE]
+5.  **Quest Restoration:** [BLOCKED - Missing Truth Data]
+6.  **Vendor Items:** [BLOCKED - Missing Truth Data]
 
 ---
 
