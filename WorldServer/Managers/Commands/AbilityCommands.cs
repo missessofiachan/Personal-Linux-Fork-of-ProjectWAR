@@ -153,28 +153,6 @@ namespace WorldServer.Managers.Commands
         }
 
         /// <summary>
-        /// Enables experimental mode on the current target if the current class supports it.
-        /// </summary>
-        /// <param name="plr">Player that initiated the command</param>
-        /// <param name="values">List of command arguments (after command name)</param>
-        /// <returns>True if command was correctly handled, false if operation was canceled</returns>
-        public static bool ExperimentalMode(Player plr, ref List<string> values)
-        {
-         /*   if (plr.CbtInterface.IsInCombat)
-            {
-                plr.SendClientMessage("This command cannot be invoked if you are in combat.");
-                return true;
-            }
-
-            plr.CrrInterface.SetExperimentalMode(true);
-
-            return true;*/
-            plr.SendClientMessage("This command is no longer available");
-            return true;
-        }
-
-
-        /// <summary>
         /// Displays a list of changes made to the career.
         /// </summary>
         /// <param name="plr">Player that initiated the command</param>

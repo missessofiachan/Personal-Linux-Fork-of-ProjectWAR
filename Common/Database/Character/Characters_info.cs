@@ -360,14 +360,6 @@ namespace Common
             set { _craftingSkillLevel = value; Dirty = true; }
         }
 
-        private bool _experimentalMode;
-
-        [DataElement(AllowDbNull = false)]
-        public bool ExperimentalMode
-        {
-            get { return _experimentalMode; }
-            set { _experimentalMode = value; Dirty = true; }
-        }
 
         [DataElement(AllowDbNull = false)]
         public uint RVRKills

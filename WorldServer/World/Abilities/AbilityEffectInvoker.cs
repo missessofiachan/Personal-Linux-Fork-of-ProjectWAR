@@ -1176,8 +1176,6 @@ namespace WorldServer.World.Abilities
 
             if (plr != null)
             {
-                if ((cmd.Entry == 1906 || cmd.Entry == 9244) && !plr.CrrInterface.ExperimentalMode)
-                    return true;
                 if (cmd.PrimaryValue == 255)
                     plr.CrrInterface.AddResource((byte)Math.Abs(cmd.LastCommand.PrimaryValue), cmd.SecondaryValue == 1);
                 else if (cmd.PrimaryValue < 0)

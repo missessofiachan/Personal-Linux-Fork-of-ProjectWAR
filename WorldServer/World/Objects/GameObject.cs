@@ -624,7 +624,8 @@ namespace WorldServer.World.Objects
                     return;
                 }
             }
-            if (jump.Enabled || Utils.HasFlag(player.GmLevel, (int) EGmLevel.DatabaseDev))
+            // AI Agent (Antigravity): Refactored to use hierarchical >= comparison (Developer level).
+            if (jump.Enabled || player.GmLevel >= (int) EGmLevel.Developer)
                 player.Teleport(jump.ZoneID, jump.WorldX, jump.WorldY, jump.WorldZ, jump.WorldO);
         }
 

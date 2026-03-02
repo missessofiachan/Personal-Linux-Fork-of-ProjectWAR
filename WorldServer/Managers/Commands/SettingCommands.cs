@@ -20,7 +20,7 @@ namespace WorldServer.Managers.Commands
         /// <summary>Constant initials extractor<summary>
         private static readonly Regex INITIALS = new Regex(@"([A-Z])[A-Z1-9]*_?");
 
-        [CommandAttribute(EGmLevel.SourceDev, "Allows setting supply value scaler")]
+        [CommandAttribute(EGmLevel.Developer, "Allows setting supply value scaler")]
         public static void SuppliesScaler(Player plr, string targetString = null)
         {
             ushort scaler;
@@ -41,7 +41,7 @@ namespace WorldServer.Managers.Commands
             }
         }
 
-        [CommandAttribute(EGmLevel.SourceDev, "Allows setting Door Regen value")]
+        [CommandAttribute(EGmLevel.Developer, "Allows setting Door Regen value")]
         public static void DoorRegen(Player plr, string targetString = null)
         {
             int doorRegen;
@@ -62,7 +62,7 @@ namespace WorldServer.Managers.Commands
             }
         }
 
-        [CommandAttribute(EGmLevel.SourceDev, "Enables Movement Packet Throtle")]
+        [CommandAttribute(EGmLevel.Developer, "Enables Movement Packet Throtle")]
         public static void MovementThrottle(Player plr, string targetString = null)
         {
             int throtleValue;
@@ -88,7 +88,7 @@ namespace WorldServer.Managers.Commands
             }
         }
 
-        [CommandAttribute(EGmLevel.SourceDev, "Set amount of refreshed ammunition per 1 minute from 1 BattlefieldObjective, provided value is divided by 10 to allow for fractures")]
+        [CommandAttribute(EGmLevel.Developer, "Set amount of refreshed ammunition per 1 minute from 1 BattlefieldObjective, provided value is divided by 10 to allow for fractures")]
         public static void AmmoRefresh(Player plr, string targetString = null)
         {
             int ammoRefreshRate;
@@ -109,7 +109,7 @@ namespace WorldServer.Managers.Commands
             }
         }
 
-        [CommandAttribute(EGmLevel.SourceDev, "Set decay value for keeps")]
+        [CommandAttribute(EGmLevel.Developer, "Set decay value for keeps")]
         public static void KeepDecay(Player plr, string targetString = null)
         {
             int keepDecay;
@@ -129,7 +129,7 @@ namespace WorldServer.Managers.Commands
             }
         }
 
-        [CommandAttribute(EGmLevel.SourceDev, "Set minimum number of BOs to prevent decay")]
+        [CommandAttribute(EGmLevel.Developer, "Set minimum number of BOs to prevent decay")]
         public static void KeepDecayBOHold(Player plr, string targetString = null)
         {
             int boHold;
@@ -144,7 +144,7 @@ namespace WorldServer.Managers.Commands
             }
         }
 
-        [CommandAttribute(EGmLevel.SourceDev, "Enables (1) or disables (0) supplies from abandoned BOs")]
+        [CommandAttribute(EGmLevel.Developer, "Enables (1) or disables (0) supplies from abandoned BOs")]
         public static void SuppliesFromAbandonedBO(Player plr, string targetString = null)
         {
             int suppliesSwitch;
@@ -159,7 +159,7 @@ namespace WorldServer.Managers.Commands
             }
         }
 
-        [CommandAttribute(EGmLevel.SourceDev, "Enables (1) or disables (0) new aggro system, with aggro from healing")]
+        [CommandAttribute(EGmLevel.Developer, "Enables (1) or disables (0) new aggro system, with aggro from healing")]
         public static void HealAggro(Player plr, string targetString = null)
         {
             int aggroSwitch;
@@ -174,7 +174,7 @@ namespace WorldServer.Managers.Commands
             }
         }
 
-        [CommandAttribute(EGmLevel.SourceDev, "Sets the weights for Gold Bags")]
+        [CommandAttribute(EGmLevel.Developer, "Sets the weights for Gold Bags")]
         public static void SetGoldBagWeights (Player plr, string targetString = null)
         {
             int bagWeights;
@@ -189,7 +189,7 @@ namespace WorldServer.Managers.Commands
             }
         }
 
-        [CommandAttribute(EGmLevel.SourceDev, "Sets the weights for Purple Bags")]
+        [CommandAttribute(EGmLevel.Developer, "Sets the weights for Purple Bags")]
         public static void SetPurpleBagWeights(Player plr, string targetString = null)
         {
             int bagWeights;
@@ -204,7 +204,7 @@ namespace WorldServer.Managers.Commands
             }
         }
 
-        [CommandAttribute(EGmLevel.SourceDev, "Sets the weights for Blue Bags")]
+        [CommandAttribute(EGmLevel.Developer, "Sets the weights for Blue Bags")]
         public static void SetBlueBagWeights(Player plr, string targetString = null)
         {
             int bagWeights;
@@ -219,7 +219,7 @@ namespace WorldServer.Managers.Commands
             }
         }
 
-        [CommandAttribute(EGmLevel.SourceDev, "Sets the weights for Green Bags")]
+        [CommandAttribute(EGmLevel.Developer, "Sets the weights for Green Bags")]
         public static void SetGreenBagWeights(Player plr, string targetString = null)
         {
             int bagWeights;
@@ -234,7 +234,7 @@ namespace WorldServer.Managers.Commands
             }
         }
 
-        [CommandAttribute(EGmLevel.SourceDev, "Disables Personal Roll System if set to 1.")]
+        [CommandAttribute(EGmLevel.Developer, "Disables Personal Roll System if set to 1.")]
         public static void DisablePersonalRollSystem(Player plr, string targetString = null)
         {
             int Disabled;
@@ -249,7 +249,7 @@ namespace WorldServer.Managers.Commands
             }
         }
 
-        [CommandAttribute(EGmLevel.SourceDev, "Disables Group Fix System if set to 1.")]
+        [CommandAttribute(EGmLevel.Developer, "Disables Group Fix System if set to 1.")]
         public static void DisableGroupFixSystem(Player plr, string targetString = null)
         {
             int Disabled;
@@ -264,7 +264,7 @@ namespace WorldServer.Managers.Commands
             }
         }
 
-        [CommandAttribute(EGmLevel.SourceDev, "Disables Pet Anti-AOE Splash System if set to 1.")]
+        [CommandAttribute(EGmLevel.Developer, "Disables Pet Anti-AOE Splash System if set to 1.")]
         public static void DisableAntiPetSplash(Player plr, string targetString = null)
         {
             int Disabled;
@@ -279,7 +279,7 @@ namespace WorldServer.Managers.Commands
             }
         }
 
-        [CommandAttribute(EGmLevel.SourceDev, "Disables Pet Modifier System if set to 1.")]
+        [CommandAttribute(EGmLevel.Developer, "Disables Pet Modifier System if set to 1.")]
         public static void DisablePetModifiers(Player plr, string targetString = null)
         {
             int Disabled;
@@ -323,7 +323,7 @@ namespace WorldServer.Managers.Commands
             }
         }
 
-        [CommandAttribute(EGmLevel.SourceDev, "Disables PeekPet System if set to 1.")]
+        [CommandAttribute(EGmLevel.Developer, "Disables PeekPet System if set to 1.")]
         public static void DisablePeekPet(Player plr, string targetString = null)
         {
             int Disabled;

@@ -30,4 +30,5 @@ This document tracks fundamental differences in architecture, logic, and data re
 
 | Feature | 1.4.8 Retail (Truth) | Emulator (ProjectWAR) | Mapping/Translation Logic |
 | :--- | :--- | :--- | :--- |
-| **Merchant Inventory** | Linked via `ItemID` in `monsteritem`. | `vendor_items` table. | **Divergence:** Truth `monsteritem` often has NULL ItemIDs for visual gear, hiding the actual vendor inventory in another (currently missing) system. |
+| **Monster Faction Mapping** | Faction IDs usually raw (e.g. 128+) in dumps. | `FactionId = Faction/8`. Realm determined by `FactionId` ranges (Order: 8-15, Destro: 16-23). | **Divergence:** Applying raw 1.4.8 dumps (like Londos) directly to `creature_protos.Faction` results in misaligned Realms (e.g., High Elves becoming Destruction) because the emulator logic expects specific bit-shifted ID ranges. |
+| **NPC Scale** | Scale represented as 100 for normal. | Scale represented as 100 for normal. | **Divergence:** Some RE dumps use 50 as a base scale or normalized value, which appears as half-size in the ProjectWAR client. |

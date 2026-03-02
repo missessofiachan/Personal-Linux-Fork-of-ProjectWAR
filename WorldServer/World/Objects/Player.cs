@@ -447,21 +447,16 @@ namespace WorldServer.World.Objects
 
                 if (_broadcastRank)
                 {
-
-                    if (Utils.HasFlag(GmLevel, (int)EGmLevel.Management))
-                        UpdateLastName("[Lead]");
-
-                    else if (Utils.HasFlag(GmLevel, (int)EGmLevel.SourceDev))
+                    // AI Agent (Antigravity): Hierarchical GM tags based on new 1-5 level system (>= comparison).
+                    // Admin (5) > Developer (4) > GM (3) > Staff (2).
+                    if (GmLevel >= (int)EGmLevel.Admin)
+                        UpdateLastName("[Admin]");
+                    else if (GmLevel >= (int)EGmLevel.Developer)
                         UpdateLastName("[Dev]");
-
-                    else if (Utils.HasFlag(GmLevel, (int)EGmLevel.DatabaseDev))
-                        UpdateLastName("[DB]");
-
-                    else if (Utils.HasFlag(GmLevel, (int)EGmLevel.AnyGM))
+                    else if (GmLevel >= (int)EGmLevel.GM)
                         UpdateLastName("[GM]");
-
-                    else
-                        UpdateLastName("[Tester]");
+                    else if (GmLevel >= (int)EGmLevel.Staff)
+                        UpdateLastName("[Staff]");
                 }
                 else
                     UpdateLastName(Info.Surname ?? "");
@@ -693,7 +688,7 @@ namespace WorldServer.World.Objects
             {
 
                 //if the loaded player has the GM tag (though we exclude DB people) we make them avilable to the gmlist
-                if (GmLevel >= (int)EGmLevel.AnyGM && !GmMgr.GmList.Contains(this))
+                if (GmLevel >= (int)EGmLevel.GM && !GmMgr.GmList.Contains(this))
                 {
                     GmMgr.NotifyGMOnline(this);
                 }
@@ -768,7 +763,7 @@ namespace WorldServer.World.Objects
 
 
                     //if the loaded player has the GM tag (though we exclude DB people) we make them avilable to the gmlist
-                    if (GmLevel >= (int)EGmLevel.AnyGM && !GmMgr.GmList.Contains(this))
+                    if (GmLevel >= (int)EGmLevel.GM && !GmMgr.GmList.Contains(this))
                     {
                         GmMgr.NotifyGMOnline(this);
                     }
@@ -2554,8 +2549,6 @@ namespace WorldServer.World.Objects
 
             if (Info.TempLastName != null)
                 Out.WritePascalString(Info.TempLastName);
-            else if (CrrInterface.ExperimentalMode)
-                Out.WritePascalString(Info.Surname + "*^M");
             else
                 Out.WritePascalString(Info.Surname + "^M"); // Last name always takes ^M as its gender marker
 
@@ -3024,7 +3017,7 @@ namespace WorldServer.World.Objects
         {
             PacketOut Out = new PacketOut((byte)Opcodes.F_UPDATE_LASTNAME, 32);
             Out.WriteUInt16(Oid);
-            Out.WritePascalString(CrrInterface.ExperimentalMode ? lastName + "*" : lastName);
+            Out.WritePascalString(lastName);
             DispatchPacket(Out, true);
         }
 

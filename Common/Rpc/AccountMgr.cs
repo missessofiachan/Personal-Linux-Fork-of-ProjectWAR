@@ -42,14 +42,15 @@ namespace Common {
         private readonly Dictionary<string, Account> _accounts = new Dictionary<string, Account>();
         private readonly List<int> _pendingAccountIDs = new List<int>();
 
-        public Account LoadAccount(string username) {
+        public Account LoadAccount(string username, bool logError = true) {
             username = username.ToLower();
 
             try {
                 Account acct = Database.SelectObject<Account>("Username='" + Database.Escape(username) + "'");
 
                 if (acct == null) {
-                    Log.Error("LoadAccount", "Account " + username + " not found.");
+                    if (logError)
+                        Log.Error("LoadAccount", "Account " + username + " not found.");
                     return null;
                 }
 
@@ -78,7 +79,7 @@ namespace Common {
                     acct = _accounts[username];
 
             if (acct == null)
-                acct = LoadAccount(username);
+                acct = LoadAccount(username, false);
 
             return acct;
         }
@@ -499,6 +500,8 @@ namespace Common {
 
         private string[] _bannedNames = { "zyklon", "fuck", "hitler", "nigger", "nigga", "faggot", "jihad", "muhajid" };
 
+        // AI Agent (Antigravity): Hierarchy Simplification.
+        // Enforces hierarchical levels (1-5) and defaults to Level 1 (Player) if invalid.
         public bool CreateAccount(string username, string password, int gmLevel, string ip = "127.0.0.1") {
             Account Acct = GetAccount(username);
             if (Acct != null) {
@@ -516,6 +519,18 @@ namespace Common {
                     Log.Error("CreateAccount", "Invalid substring in name: " + bannedName);
                     return false;
                 }
+            }
+
+            // AI Agent (Antigravity): Clamp GM level between 1 (Player) and 5 (Admin).
+            if (gmLevel < 1)
+            {
+                Log.Info("CreateAccount", $"GM level {gmLevel} is below minimum. Defaulting to 1 (Player).");
+                gmLevel = 1;
+            }
+            else if (gmLevel > 5)
+            {
+                Log.Info("CreateAccount", $"GM level {gmLevel} is above maximum. Capping at 5 (Admin).");
+                gmLevel = 5;
             }
 
             Acct = new Account {

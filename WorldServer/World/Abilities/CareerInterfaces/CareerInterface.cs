@@ -39,19 +39,6 @@ namespace WorldServer.World.Abilities.CareerInterfaces
     {
         protected Player myPlayer;
 
-        private bool _experimentalMode;
-
-        public bool ExperimentalMode
-        {
-            get { return _experimentalMode; }
-            set
-            {
-                _experimentalMode = false;
-                myPlayer._Value.ExperimentalMode = false;
-
-                CharMgr.Database.SaveObject(myPlayer._Value);
-            }
-        }
 
         protected byte BUFF_ADD = 1;
         protected byte BUFF_REMOVE = 2;
@@ -122,14 +109,6 @@ namespace WorldServer.World.Abilities.CareerInterfaces
             }
         }
 
-        public virtual bool SetExperimentalMode(bool fullExplanation)
-        {
-            myPlayer.SendClientMessage("This class has no experimental modifications to activate.", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
-
-            ExperimentalMode = false;
-
-            return false;
-        }
 
         public virtual void DisplayChangeList()
         {
@@ -296,27 +275,9 @@ namespace WorldServer.World.Abilities.CareerInterfaces
             return EArchetype.ARCHETYPE_Tank;
         }
 
-        /// <summary>
-        /// Queried by the modifier check "Experimental Mode" to determine whether a given ability should be modified.
-        /// </summary>
-        public virtual bool ExperimentalModeCheckAbility(AbilityInfo abInfo)
-        {
-            return _experimentalMode;
-        }
-
-        public virtual void ExperimentalModeModifyBuff(BuffInfo buffInfo, Unit target)
-        {
-
-        }
-
-        public virtual void ExperimentalModeModifyAbility(AbilityInfo abInfo)
-        {
-        }
 
         public virtual void NotifyInitialized()
         {
-            if (myPlayer._Value.ExperimentalMode)
-                SetExperimentalMode(false);
         }
     }
 }

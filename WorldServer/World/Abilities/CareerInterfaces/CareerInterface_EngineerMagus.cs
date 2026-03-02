@@ -39,49 +39,6 @@ namespace WorldServer.World.Abilities.CareerInterfaces
             _resourceTimeout = 0;
         }
 
-        /*
-        public override bool SetExperimentalMode(bool fullExplanation)
-        {
-            if (myPlayer.GmLevel < 1)
-            { 
-                myPlayer.SendClientMessage("This career has no experimental modifications to activate.", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
-                return false;
-            }
-
-            ExperimentalMode = !ExperimentalMode;
-
-            Notify_PlayerLoaded();
-
-            if (!fullExplanation && ExperimentalMode)
-            {
-				_rangeBonusPct1 = 20f/8f;	
-                myPlayer.SendClientMessage("Experimental mode for Engineer and Magus is currently enabled.", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
-                return true;
-            }
-
-            if (_boostStacks > 0)
-            {
-                RemoveBonuses();
-                _boostStacks = 0;
-                SendBoostRemoval();
-            }
-
-            if (ExperimentalMode)
-            {
-                _rangeBonusPct1 = 20f/8f;
-                myPlayer.SendClientMessage("Experimental mode for Engineer and Magus has been enabled.", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
-                myPlayer.SendClientMessage("General changes:", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
-                myPlayer.SendClientMessage("- The range bonus for Rifleman and Havoc maxes at 20% instead of 40%.");
-            }
-
-            else
-            {
-                myPlayer.SendClientMessage("Experimental mode has been disabled.", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
-                _rangeBonusPct1 = 40f / 8f;
-            }
-
-            return true;
-        }*/
 
         public override void NotifyClientLoaded()
         {

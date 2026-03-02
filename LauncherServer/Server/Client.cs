@@ -109,11 +109,8 @@ namespace AuthenticationServer.Server
                 }
                 else
                 {
-                    if (account.CoreLevel == 0)
-                    {
-                        if (account.GmLevel == 0)
-                            result = LoginResult.LOGIN_PATCHER_NOT_ALLOWED;
-                    }
+                    // AI Agent (Antigravity): Removed legacy CoreLevel and GmLevel < 1 check.
+                    // Hierarchy is now 1-5, so any valid account has at least Level 1 access.
                 }
                 Out.WriteByte((byte)result);
                 Out.WriteUInt32((uint)Program.Config.ServerState);
@@ -421,7 +418,7 @@ namespace AuthenticationServer.Server
 
         public void OnSetPatchNotes(string notes)
         {
-            if (!VerifyGMLevel(EGmLevel.AllStaff))
+            if (!VerifyGMLevel(EGmLevel.Staff))
                 return;
 
             Program.Config.PatchNotes = notes;
@@ -432,17 +429,13 @@ namespace AuthenticationServer.Server
 
             ((TCPServer)Server).DispatchPatcket(Out);
         }
-
-        public bool VerifyGMLevel(params EGmLevel[] flags)
+        // AI Agent (Antigravity): Refactored to use hierarchical >= comparison instead of bitmask HasFlag.
+        public bool VerifyGMLevel(EGmLevel level)
         {
             if (_account != null)
             {
-                foreach (var flag in flags)
-                {
-                    if (_account != null && Utils.HasFlag(_account.GmLevel, (int)flag))
-                        return true;
-                }
-
+                if ((EGmLevel)_account.GmLevel >= level)
+                    return true;
             }
             else
                 Close(); //client has not sent login packet

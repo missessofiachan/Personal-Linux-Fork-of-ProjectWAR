@@ -14,7 +14,7 @@ namespace WorldServer.Managers.Commands
     internal class GoCommands
     {
 
-        [CommandAttribute(EGmLevel.DatabaseDev, "Spawn an Go")]
+        [CommandAttribute(EGmLevel.Developer, "Spawn an Go")]
         public static void Spawn(Player plr, uint entry)
         {
             GameObject_proto proto = GameObjectService.GetGameObjectProto(entry);
@@ -40,7 +40,7 @@ namespace WorldServer.Managers.Commands
             plr.Region.CreateGameObject(spawn);
         }
 
-        [CommandAttribute(EGmLevel.SourceDev, "Spawns a GameObject with the given proto entry at the local coordinates specified.")]
+        [CommandAttribute(EGmLevel.Developer, "Spawns a GameObject with the given proto entry at the local coordinates specified.")]
         public static void Local(Player plr, uint entry, int zoneX, int zoneY, int z, int heading)
         {
             if (plr.Zone == null)
@@ -78,7 +78,7 @@ namespace WorldServer.Managers.Commands
             plr.Teleport(plr.Zone.ZoneId, (uint)worldX, (uint)worldY, (ushort)z, 0);
         }
 
-        [CommandAttribute(EGmLevel.DatabaseDev, "Delete the target (0=World,1=Database)")]
+        [CommandAttribute(EGmLevel.Developer, "Delete the target (0=World,1=Database)")]
         public static void Remove(Player plr, bool database)
         {
             Object obj = GetObjectTarget(plr);
@@ -95,9 +95,9 @@ namespace WorldServer.Managers.Commands
         }
 
 #if !DEBUG
-        [CommandAttribute(EGmLevel.SourceDev, "Set the health of GO to value percent - 100 is 100%, 50 is 50%")]
+        [CommandAttribute(EGmLevel.Developer, "Set the health of GO to value percent - 100 is 100%, 50 is 50%")]
 #else
-        [CommandAttribute(EGmLevel.DatabaseDev, "Set the health of GO to value percent - 100 is 100%, 50 is 50%")]
+        [CommandAttribute(EGmLevel.Developer, "Set the health of GO to value percent - 100 is 100%, 50 is 50%")]
 #endif
         public static bool Health(Player plr, int healthPercent)
         {

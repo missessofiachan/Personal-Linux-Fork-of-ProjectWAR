@@ -26,7 +26,6 @@ namespace Common
         private int _lastLogged;
         private int _lastNameChange;
         private string _lastPatcherLog;
-        private int _coreLevel;
         private sbyte _noSurname;
 
         [PrimaryKey(AutoIncrement = true)]
@@ -90,6 +89,10 @@ namespace Common
             }
         }
 
+        /// <summary>
+        /// AI Agent (Antigravity): Hierarchical level (1-5).
+        /// Default is 1 (Player).
+        /// </summary>
         [DataElement(AllowDbNull=false)]
         public sbyte GmLevel
         {
@@ -149,16 +152,6 @@ namespace Common
             }
         }
 
-        [DataElement]
-        public int CoreLevel
-        {
-            get { return _coreLevel; }
-            set
-            {
-                _coreLevel = value;
-                Dirty = true;
-            }
-        }
 
 
         [DataElement]

@@ -19,12 +19,12 @@ namespace WorldServer.Managers.Commands
     /// Next parameters should be string, integers (uint, short, etc.) or bool (usage with .command 1 .command true .command on)
     /// Optional arguments are allowed.
     /// 
-    /// [CommandMethod(EGmLevel.EmpoweredStaff, "This is a test method")]
+    /// [CommandMethod(EGmLevel.Staff, "This is a test method")]
     /// public static void Test(Player plr, bool boolArg, string targetString = null)
     /// 
     /// Second argument, if exists, will be set to the current player's target.
     /// 
-    /// [CommandMethod(EGmLevel.EmpoweredStaff, "This is a test method")]
+    /// [CommandMethod(EGmLevel.Staff, "This is a test method")]
     /// public static void Other(Player plr, Unit aTarget, ushort anotherArg)
     /// 
     /// If necessary, methods CAN return a boolean (true if command was handled, false otherwise).

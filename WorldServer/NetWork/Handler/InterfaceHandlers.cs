@@ -306,7 +306,7 @@ namespace WorldServer.NetWork.Handler
         {
             PacketOut Out = new PacketOut((byte)Opcodes.F_UPDATE_LASTNAME, 32);
             Out.WriteUInt16(plr.Oid);
-            Out.WritePascalString(plr.CrrInterface.ExperimentalMode ? plr.Info.Surname + "*" : plr.Info.Surname);
+            Out.WritePascalString(plr.Info.Surname);
             plr.SendPacket(Out);
         }
 

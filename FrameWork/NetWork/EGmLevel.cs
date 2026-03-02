@@ -5,19 +5,16 @@ using System.Text;
 
 namespace FrameWork
 {
+    /// <summary>
+    /// AI Agent (Antigravity): Refined Hierarchy.
+    /// Strictly hierarchical: Player(1), Staff(2), GM(3), Developer(4), Admin(5).
+    /// </summary>
     public enum EGmLevel
     {
-        Anyone = 1,
+        Player = 1,
         Staff = 2,
         GM = 3,
-        TrustedGM = 4,
-        DatabaseDev = 8,
-        SourceDev = 16,
-
-        AnyGM = 6,
-        TrustedStaff = 28,
-        EmpoweredStaff = 30,
-        AllStaff = 31,
-        Management = 32
+        Developer = 4,
+        Admin = 5
     }
 }

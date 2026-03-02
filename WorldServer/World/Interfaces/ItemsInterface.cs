@@ -1870,12 +1870,6 @@ namespace WorldServer.World.Interfaces
                 }
             }
 
-            /*if (info.Type == 25 && (plr.Info.CareerLine == (int)CareerLine.CAREERLINE_WARRIOR_PRIEST || plr.Info.CareerLine == (int)CareerLine.CAREERLINE_DISCIPLE) && plr.CrrInterface.ExperimentalMode)
-            {
-                if (sendMessage)
-                    plr.SendClientMessage("You may not equip a tome or chalice when in Experimental Mode.", ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
-                return false;
-            }*/
 
             if (ignoreTempRestrictions)
                 return true;

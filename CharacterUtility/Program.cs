@@ -461,7 +461,7 @@ namespace CharacterUtility
 
                 var newCharacterValueSql =
                     $"insert into war_characters.characters_value (CharacterId, Level, Xp, XpMode, RestXp, Renown, RenownRank, Money, Speed, RegionId, ZoneId, WorldX, WorldY, WorldZ, WorldO, RallyPoint, BagBuy, Skills, Online, PlayedTime, LastSeen, BankBuy, GearShow, TitleId, " +
-                    $"RenownSkills, MasterySkills, GatheringSkill, GatheringSkillLevel, CraftingSkill, CraftingSkillLevel, ExperimentalMode, RVRKills, RVRDeaths, CraftingBags, Lockouts, DisconcetTime) " +
+                    $"RenownSkills, MasterySkills, GatheringSkill, GatheringSkillLevel, CraftingSkill, CraftingSkillLevel, RVRKills, RVRDeaths, CraftingBags, Lockouts, DisconcetTime) " +
                     $"values ({characterObject.MaxId + 1}, '{character.Level}', 0, 0, 0, 0, {character.RenownRank}, 500000, 100, " +
                     $"{character.BaseCharacterInfo.Region}, {character.BaseCharacterInfo.ZoneId}, {character.BaseCharacterInfo.WorldX}, " +
                     $"{character.BaseCharacterInfo.WorldY}, {character.BaseCharacterInfo.WorldZ}, {character.BaseCharacterInfo.WorldO}, " +

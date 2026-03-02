@@ -1259,7 +1259,7 @@ namespace WorldServer.World.Abilities
 
         public void RespecializeMastery(bool force)
         {
-            if (!force && !_playerOwner.CrrInterface.ExperimentalMode)
+            if (!force)
             {
                 if (_playerOwner.ItmInterface.HasItemCountInInventory(129841000, 1))
                 {

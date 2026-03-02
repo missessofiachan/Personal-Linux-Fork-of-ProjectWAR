@@ -24,7 +24,7 @@ namespace WorldServer.Managers.Commands
         /// <summary>Constant initials extractor<summary>
         private static readonly Regex INITIALS = new Regex(@"([A-Z])[A-Z1-9]*_?");
 
-        [CommandAttribute(EGmLevel.AnyGM, "Provides campaign diagnostic info. Usage: .campaign diag")]
+        [CommandAttribute(EGmLevel.GM, "Provides campaign diagnostic info. Usage: .campaign diag")]
         public static void Diag(Player plr, string targetString = null)
         {
             if (plr.Zone == null || plr.Region.Campaign == null)
@@ -67,7 +67,7 @@ namespace WorldServer.Managers.Commands
 
         }
 
-        [CommandAttribute(EGmLevel.EmpoweredStaff, "Updates some constant parameters. Give no arg to list constants.")]
+        [CommandAttribute(EGmLevel.Staff, "Updates some constant parameters. Give no arg to list constants.")]
         public static void Constants(Player plr, string nameOrShortcut = "", string newValue = "")
         {
             Type type = typeof(BattleFrontConstants);
@@ -117,7 +117,7 @@ namespace WorldServer.Managers.Commands
 
 
 
-        [CommandAttribute(EGmLevel.EmpoweredStaff, "Locks the pairing the player is in for the given realm (1 - Order, 2 - Dest). forceNumberOfBags = 0 for default.")]
+        [CommandAttribute(EGmLevel.Staff, "Locks the pairing the player is in for the given realm (1 - Order, 2 - Dest). forceNumberOfBags = 0 for default.")]
         public static void LockPairing(Player plr, Realms realm, int forceNumberOfBags = 0)
         {
             plr.SendClientMessage($"Attempting to lock the {plr.Region.Campaign.ActiveCampaignName} campaign... (call AdvancePairing <realm> <tier> to move ahead)");
@@ -131,7 +131,7 @@ namespace WorldServer.Managers.Commands
             WorldMgr.GetRegion(plr.Region.RegionId, false).Campaign.BattleFrontManager.LockActiveBattleFront(realm, (byte)forceNumberOfBags);
         }
 
-        [CommandAttribute(EGmLevel.EmpoweredStaff, "Advances the pairing the player is in ")]
+        [CommandAttribute(EGmLevel.Staff, "Advances the pairing the player is in ")]
         public static void AdvancePairing(Player plr, Realms realm, int tier)
         {
 
@@ -155,14 +155,14 @@ namespace WorldServer.Managers.Commands
             }
         }
 
-        [CommandAttribute(EGmLevel.EmpoweredStaff, "Updates the clients with current region capture status")]
+        [CommandAttribute(EGmLevel.Staff, "Updates the clients with current region capture status")]
         public static void UpdateRegionCaptureStatus(Player plr)
         {
             WorldMgr.UpdateRegionCaptureStatus(WorldMgr.LowerTierCampaignManager, WorldMgr.UpperTierCampaignManager);
         }
 
         //.campaign SetRegionCaptureStatus 111111110 9    -- lock all to order except Caledor. Make it the active BF
-        [CommandAttribute(EGmLevel.EmpoweredStaff, "Force lock and advance on all progressions. Params : T4progression string, activeBattlefrontId")]
+        [CommandAttribute(EGmLevel.Staff, "Force lock and advance on all progressions. Params : T4progression string, activeBattlefrontId")]
         public static void SetRegionCaptureStatus(Player plr, string T4Progression, int activeBattleFrontId)
         {
             var lockingRealm = Realms.REALMS_REALM_NEUTRAL;
@@ -239,7 +239,7 @@ namespace WorldServer.Managers.Commands
         }
 
         // Example : .campaign ResetProgressionCommunications 0 100 1 102102102
-        [CommandAttribute(EGmLevel.SourceDev, "Sends server commands to the client. forceT4 is a 9 char setting (1 order, 2 dest). eg 102110102")]
+        [CommandAttribute(EGmLevel.Developer, "Sends server commands to the client. forceT4 is a 9 char setting (1 order, 2 dest). eg 102110102")]
         public static void ResetProgressionCommunications(Player player, int destVP, int orderVP, int realm, string forceT4)
         {
             var vpp = new VictoryPointProgress();
@@ -265,7 +265,7 @@ namespace WorldServer.Managers.Commands
 
 
 
-        [CommandAttribute(EGmLevel.SourceDev, "Report on the status of the t4 progression")]
+        [CommandAttribute(EGmLevel.Developer, "Report on the status of the t4 progression")]
         public static void ProgressionStatus(Player plr)
         {
             var lockStr = $"BC :{WorldMgr.UpperTierCampaignManager.GetBattleFrontStatus(BattleFrontConstants.BATTLEFRONT_DWARF_GREENSKIN_TIER4_BLACK_CRAG).LockStatus.ToString()}";
@@ -282,7 +282,7 @@ namespace WorldServer.Managers.Commands
         }
 
 
-        [CommandAttribute(EGmLevel.EmpoweredStaff, "Locks a battle objective for the given realm (1 - Order, 2 - Dest), values = 0 (all), otherwise objectiveid")]
+        [CommandAttribute(EGmLevel.Staff, "Locks a battle objective for the given realm (1 - Order, 2 - Dest), values = 0 (all), otherwise objectiveid")]
         public static void LockObj(Player plr, Realms realm, int values)
         {
             plr.SendClientMessage($"Attempting to lock objective...");
@@ -302,7 +302,7 @@ namespace WorldServer.Managers.Commands
             }
         }
 
-        [CommandAttribute(EGmLevel.EmpoweredStaff, "Sets objectives in the players current realm as Guarded")]
+        [CommandAttribute(EGmLevel.Staff, "Sets objectives in the players current realm as Guarded")]
         public static void MarkObjectivesAsGuarded(Player plr)
         {
             plr.SendClientMessage($"Attempting to lock objective...");
@@ -324,7 +324,7 @@ namespace WorldServer.Managers.Commands
 
 
 
-        [CommandAttribute(EGmLevel.DatabaseDev, "Sets the number of VP for a realm")]
+        [CommandAttribute(EGmLevel.Developer, "Sets the number of VP for a realm")]
         public static void SetVictoryPoints(Player plr, Realms realm, int points)
         {
             if (plr.Zone == null || plr.Region.Campaign == null)
@@ -344,7 +344,7 @@ namespace WorldServer.Managers.Commands
         }
 
 
-        [CommandAttribute(EGmLevel.DatabaseDev, "Returns the World Campaign Status")]
+        [CommandAttribute(EGmLevel.Developer, "Returns the World Campaign Status")]
         public static void Status(Player plr)
         {
             if (plr.Zone == null || plr.Region.Campaign == null)
@@ -371,7 +371,7 @@ namespace WorldServer.Managers.Commands
         }
 
 
-        [CommandAttribute(EGmLevel.DatabaseDev, "Get or sets warcamp entrance, use realm parameter order|destruction or 1|2 to update entrance coordinate")]
+        [CommandAttribute(EGmLevel.Developer, "Get or sets warcamp entrance, use realm parameter order|destruction or 1|2 to update entrance coordinate")]
         public static void Warcamp(Player plr, string realm = "")
         {
             ushort zoneId = plr.Zone.ZoneId;
@@ -453,7 +453,7 @@ namespace WorldServer.Managers.Commands
             WorldMgr.Database.ForceSave();
         }
 
-        [CommandAttribute(EGmLevel.DatabaseDev, "Resets the World Campaign to default values")]
+        [CommandAttribute(EGmLevel.Developer, "Resets the World Campaign to default values")]
         public static void ResetAllCampaign(Player plr)
         {
             

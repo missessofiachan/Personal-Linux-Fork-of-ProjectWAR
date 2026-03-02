@@ -128,6 +128,7 @@ namespace WorldServer.Managers.Commands
 
         private static bool HasCommandAccess(Player plr, GmCommandHandler command)
         {
+            // AI Agent (Antigravity): Hierarchical comparison (AccessRequired <= PlayerLevel).
             return command != null && (command.AccessRequired == 0 || (int)command.AccessRequired <= plr.GmLevel);
         }
 
@@ -229,7 +230,7 @@ namespace WorldServer.Managers.Commands
 
         public static bool GmCommands(Player plr, ref List<string> values)
         {
-            if (plr.GmLevel < (int)EGmLevel.AnyGM)
+            if (plr.GmLevel < (int)EGmLevel.Staff)
             {
                 plr.SendClientMessage("This command requires GM access.", ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
                 return true;
@@ -1232,7 +1233,7 @@ namespace WorldServer.Managers.Commands
                 return true;
             }
 
-            if (!Utils.HasFlag(player.GmLevel, (int)EGmLevel.AllStaff) && (!(crea is Pet) || ((Pet)crea).Owner != player))
+            if (player.GmLevel < (int)EGmLevel.Staff && (!(crea is Pet) || ((Pet)crea).Owner != player))
             {
                 player.SendClientMessage("Non-staff members may only use this command to read the AI of their pet.");
                 return true;
@@ -1715,9 +1716,9 @@ namespace WorldServer.Managers.Commands
 
             if (target.IsPlayer())
             {
-                if (!Utils.HasFlag(player.GmLevel, (int)EGmLevel.TrustedStaff))
+                if (player.GmLevel < (int)EGmLevel.GM)
                 {
-                    player.SendClientMessage("KILL: Using this command on players requires trusted staff access.", ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
+                    player.SendClientMessage("KILL: Using this command on players requires GM access.", ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
                     return true;
                 }
             }
@@ -1771,9 +1772,9 @@ namespace WorldServer.Managers.Commands
 
             if (target.IsPlayer())
             {
-                if (!Utils.HasFlag(player.GmLevel, (int)EGmLevel.TrustedStaff))
+                if (player.GmLevel < (int)EGmLevel.GM)
                 {
-                    player.SendClientMessage("WOUND: Using this command on players requires trusted staff access.", ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
+                    player.SendClientMessage("WOUND: Using this command on players requires GM access.", ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
                     return true;
                 }
             }
@@ -1847,7 +1848,7 @@ namespace WorldServer.Managers.Commands
 
             foreach (Player plr in player.GetPlayersInRange(radius))
             {
-                if (!Utils.HasFlag(plr.GmLevel, (int)EGmLevel.Staff) && ((int)plr.Realm == realm || realm == 0))
+                if (plr.GmLevel < (int)EGmLevel.Staff && ((int)plr.Realm == realm || realm == 0))
                 {
                     plr.ReceiveDamage(player, int.MaxValue);
 
@@ -1961,41 +1962,6 @@ namespace WorldServer.Managers.Commands
             return true;
         }
 
-        public static bool SetCoreTester(Player plr, ref List<string> values)
-        {
-            string playerName = GetString(ref values);
-
-            Player target = Player.GetPlayer(playerName);
-
-            Account account = GetAccountForPlayer(playerName);
-
-            if (account == null)
-            {
-                plr.SendClientMessage("The specified player does not exist.");
-                return true;
-            }
-
-            if (account.GmLevel > 0)
-            {
-                plr.SendClientMessage(playerName + " is a staff member.");
-                return true;
-            }
-            if (account.CoreLevel == 0)
-            {
-                account.CoreLevel = 1;
-                CharMgr.Database.SaveObject(account);
-                CharMgr.Database.ForceSave();
-                plr.SendClientMessage("ADDED 'Core Tester' status set for " + playerName);
-            }
-            else
-            {
-                account.CoreLevel = 0;
-                CharMgr.Database.SaveObject(account);
-                CharMgr.Database.ForceSave();
-                plr.SendClientMessage("REMOVED 'Core Tester' status set for " + playerName);
-            }
-            return true;
-        }
 
         public static bool SetEffectState(Player plr, ref List<string> values)
         {
@@ -2635,7 +2601,7 @@ namespace WorldServer.Managers.Commands
                 default:
                     plr.SendClientMessage("===================================== Features =====================================\n", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
                     plr.SendClientMessage("Information about unique features", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
-                    plr.SendClientMessage("Usage: .ror (debolster|balance|items|exmode)", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
+                    plr.SendClientMessage("Usage: .ror (debolster|balance|items)", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
                     break;
             }
 
@@ -3071,8 +3037,6 @@ namespace WorldServer.Managers.Commands
 
             if (account.GmLevel > 0)
                 result += " GM_LEVEL:" + account.GmLevel;
-            else if (account.CoreLevel > 0)
-                result += " CORE_LEVEL:" + account.CoreLevel;
 
             result += "\n";
 
@@ -3472,7 +3436,7 @@ namespace WorldServer.Managers.Commands
                 return true;
             }
 
-            if (target.GmLevel > 1 && !Utils.HasFlag(plr.GmLevel, (int)EGmLevel.SourceDev))
+            if (target.GmLevel >= (int)EGmLevel.Staff && plr.GmLevel < (int)EGmLevel.Developer)
             {
                 plr.SendClientMessage("EJECT: " + playerName + " is a staff member.");
                 return true;
@@ -3516,7 +3480,7 @@ namespace WorldServer.Managers.Commands
                 return true;
             }
 
-            if (target.GmLevel > 1 && !Utils.HasFlag(plr.GmLevel, (int)EGmLevel.SourceDev))
+            if (target.GmLevel >= (int)EGmLevel.Staff && plr.GmLevel < (int)EGmLevel.Developer)
             {
                 plr.SendClientMessage("SEVER: " + playerName + " is a staff member.");
                 return true;
@@ -3620,7 +3584,7 @@ namespace WorldServer.Managers.Commands
                     return true;
                 }
 
-                if (account.GmLevel > 1 && !Utils.HasFlag(plr.GmLevel, (int)EGmLevel.SourceDev))
+                if (account.GmLevel >= (int)EGmLevel.Staff && plr.GmLevel < (int)EGmLevel.Developer)
                 {
                     plr.SendClientMessage("EXILE: " + playerName + " is a staff member.");
                     return true;
@@ -3970,7 +3934,7 @@ namespace WorldServer.Managers.Commands
                 return true;
             }
 
-            if (account.GmLevel > 1 && !Utils.HasFlag(plr.GmLevel, (int)EGmLevel.SourceDev))
+            if (account.GmLevel > 1 && plr.GmLevel < (int)EGmLevel.Developer)
             {
                 plr.SendClientMessage("NOSURNAME: " + playerName + " is a staff member.");
                 return true;
@@ -4019,7 +3983,7 @@ namespace WorldServer.Managers.Commands
                 return true;
             }
 
-            if (account.GmLevel > 1 && !Utils.HasFlag(plr.GmLevel, (int)EGmLevel.SourceDev))
+            if (account.GmLevel > 1 && plr.GmLevel < (int)EGmLevel.Developer)
             {
                 plr.SendClientMessage("ALLOWSURNAME: " + playerName + " is a staff member.");
                 return true;
@@ -4068,7 +4032,7 @@ namespace WorldServer.Managers.Commands
                 return true;
             }
 
-            if (account.GmLevel > 1 && !Utils.HasFlag(plr.GmLevel, (int)EGmLevel.SourceDev))
+            if (account.GmLevel > 1 && plr.GmLevel < (int)EGmLevel.Developer)
             {
                 plr.SendClientMessage("CLEARSURNAME: " + playerName + " is a staff member.");
                 return true;

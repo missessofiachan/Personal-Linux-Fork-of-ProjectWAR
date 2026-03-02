@@ -132,7 +132,6 @@ namespace WorldServer.World.Abilities
             CheckList.Add("RequiresResource", RequiresResource);
             CheckList.Add("CanDeploySiege", CanDeploySiege);
             CheckList.Add("IsOffensive", IsOffensive);
-            CheckList.Add("ExperimentalMode", ExperimentalMode);
             CheckList.Add("CanMount", CanMount);
             CheckList.Add("ItemInSlot", ItemInSlot);
 
@@ -633,12 +632,6 @@ namespace WorldServer.World.Abilities
             return mainHand?.Info != null && mainHand.Info.TwoHanded;
         }
 
-        private static bool ExperimentalMode(Unit caster, Unit target, AbilityInfo abInfo, AbilityModifierCheck myCheck)
-        {
-            Player player = caster as Player;
-
-            return player == null || player.CrrInterface.ExperimentalModeCheckAbility(abInfo);
-        }
 
         private static bool CanMount(Unit caster, Unit target, AbilityInfo abInfo, AbilityModifierCheck myCheck)
         {
@@ -1140,8 +1133,6 @@ namespace WorldServer.World.Abilities
                 if (myResource > 5)
                     return;
 
-                if (plr.CrrInterface.ExperimentalMode)
-                    abInfo.Cooldown = (ushort)(abInfo.Cooldown * 0.6f);
             }
 
             // Tranquility bonus - Force cools down faster
@@ -1150,8 +1141,6 @@ namespace WorldServer.World.Abilities
                 if (myResource < 6)
                     return;
 
-                if (plr.CrrInterface.ExperimentalMode)
-                    abInfo.Cooldown = (ushort)(abInfo.Cooldown * 0.6f);
             }
         }
 
@@ -1165,58 +1154,6 @@ namespace WorldServer.World.Abilities
             if (plr == null)
                 return;
 
-            /*
-            if (plr.CrrInterface.ExperimentalMode && myEffect.PrimaryValue == 1 && myEffect.PreOrPost == 1)
-            {
-                // Check for lifesteal abilities.
-                // These abilities, have reduced damage but significantly better health stealing.
-                switch (abInfo.Entry)
-                {
-                    case 1930: // I'll Take That!
-                    case 1935: // Fury of Da Green
-                    case 9257: // Balance Essence
-                    case 9274: // Energy of Vaul
-                        foreach (var cmdinfo in abInfo.CommandInfo)
-                        {
-                            for (var cmd = cmdinfo; cmd != null; cmd = cmd.NextCommand)
-                            {
-                                if (cmd.CommandName == "StealLife")
-                                {
-                                    // ITT and BE gain base healing of 250% of their base damage plus Willpower bonus
-                                    if (abInfo.Entry == 1930 || abInfo.Entry == 9257)
-                                    {
-                                        cmd.DamageInfo.MinDamage = (ushort) (cmd.LastCommand.DamageInfo.MinDamage*2.5);
-                                        cmd.DamageInfo.MaxDamage = (ushort) (cmd.LastCommand.DamageInfo.MaxDamage*2.5);
-                                        cmd.DamageInfo.StatUsed = 3;
-                                        cmd.DamageInfo.StatDamageScale = 2;
-                                    }
-
-                                    // Fury of Da Green and Energy of Vaul heal for their base damage per target struck
-                                    else
-                                    {
-                                        cmd.DamageInfo.MinDamage = 40;
-                                        cmd.DamageInfo.MaxDamage = 300;
-                                    }
-                                }
-
-                                if (cmd.DamageInfo == null)
-                                    continue;
-
-                                cmd.DamageInfo.Defensibility -= 20;
-
-                                if (cmd.CommandName != "StealLife")
-                                {
-                                    cmd.DamageInfo.NoCrits = true;
-                                    cmd.DamageInfo.StatDamageScale = 0f;
-                                }
-                                else if (abInfo.Entry == 1930 || abInfo.Entry == 9257)
-                                    cmd.DamageInfo.DamageType = DamageTypes.Healing;
-                            }
-                        }
-                        break;
-                }
-            }
-            */
 
             byte myResource = plr.CrrInterface.CareerResource;
 
@@ -1226,97 +1163,19 @@ namespace WorldServer.World.Abilities
             // Force bonus - Tranquility heal value increases
             if (myEffect.PrimaryValue == 0)
             {
-                if (myResource > 5 || !plr.CrrInterface.ExperimentalMode)
+                if (myResource > 5)
                     return;
 
                 abInfo.BoostLevel = plr.EffectiveLevel;
-
-                // Experimental - scale AM/Shaman mechanic-empowered spells by Item Stat Total
-                if (myEffect.PreOrPost == 1)
-                {
-                    foreach (var cmdinfo in abInfo.CommandInfo)
-                    {
-                        for (var cmd = cmdinfo; cmd != null; cmd = cmd.NextCommand)
-                        {
-                            if (cmd.DamageInfo == null)
-                                continue;
-
-                            cmd.DamageInfo.UseItemStatTotal = true;
-                        }
-                    }
-                }
             }
             // Tranquility bonus - Force effectiveness increases
             else
             {
-                if (myResource < 6 || !plr.CrrInterface.ExperimentalMode)
+                if (myResource < 6)
                     return;
 
                 abInfo.Level = plr.EffectiveLevel;
                 abInfo.BoostLevel = plr.EffectiveLevel; // necessary for secondary effects
-
-                // Experimental - scale AM/Shaman mechanic-empowered spells by Item Stat Total
-                if (myEffect.PreOrPost == 1)
-                {
-                    // Check for lifesteal abilities.
-                    // These abilities have reduced damage but significantly better health stealing.
-                    switch (abInfo.Entry)
-                    {
-                        case 1930: // I'll Take That!
-                        case 1935: // Fury of Da Green
-                        case 9257: // Balance Essence
-                        case 9274: // Energy of Vaul
-                            foreach (var cmdinfo in abInfo.CommandInfo)
-                            {
-                                for (var cmd = cmdinfo; cmd != null; cmd = cmd.NextCommand)
-                                {
-                                    if (cmd.CommandName == "StealLife")
-                                    {
-                                        // ITT and BE gain base healing of 250% of their base damage plus Willpower bonus
-                                        if (abInfo.Entry == 1930 || abInfo.Entry == 9257)
-                                        {
-                                            cmd.DamageInfo.MinDamage = (ushort)(cmd.LastCommand.DamageInfo.MinDamage * 2.5);
-                                            cmd.DamageInfo.MaxDamage = (ushort)(cmd.LastCommand.DamageInfo.MaxDamage * 2.5);
-                                            cmd.DamageInfo.StatUsed = 3;
-                                            cmd.DamageInfo.StatDamageScale = 2;
-                                        }
-
-                                        // Fury of Da Green and Energy of Vaul heal for their base damage per target struck
-                                        else
-                                        {
-                                            cmd.DamageInfo.MinDamage = 40;
-                                            cmd.DamageInfo.MaxDamage = 300;
-                                        }
-                                    }
-
-                                    if (cmd.DamageInfo == null)
-                                        continue;
-
-                                    cmd.DamageInfo.Defensibility -= 20;
-
-                                    if (cmd.CommandName != "StealLife")
-                                    {
-                                        cmd.DamageInfo.NoCrits = true;
-                                        cmd.DamageInfo.StatDamageScale = 0f;
-                                    }
-                                    else if (abInfo.Entry == 1930 || abInfo.Entry == 9257)
-                                        cmd.DamageInfo.DamageType = DamageTypes.Healing;
-                                }
-                            }
-                            break;
-                    }
-
-                    foreach (var cmdinfo in abInfo.CommandInfo)
-                    {
-                        for (var cmd = cmdinfo; cmd != null; cmd = cmd.NextCommand)
-                        {
-                            if (cmd.DamageInfo == null)
-                                continue;
-
-                            cmd.DamageInfo.UseItemStatTotal = true;
-                        }
-                    }
-                }
             }
         }
 
@@ -1341,16 +1200,7 @@ namespace WorldServer.World.Abilities
                     return;
 
                 // Experimental - scale AM/Shaman mechanic-empowered spells by Item Stat Total
-                if (plr.CrrInterface.ExperimentalMode)
-                {
-                    cmd.DamageInfo.DamageBonus += 0.25f;
-                    cmd.DamageInfo.UseItemStatTotal = true;
-
-                    abInfo.BoostLevel = plr.EffectiveLevel;
-                }
-
-                else
-                    cmd.DamageInfo.DamageBonus += 0.05f * myResource;
+                cmd.DamageInfo.DamageBonus += 0.05f * myResource;
 
 
             }
@@ -1361,16 +1211,7 @@ namespace WorldServer.World.Abilities
                     return;
 
                 // Experimental - scale AM/Shaman mechanic-empowered spells by Item Stat Total
-                if (plr.CrrInterface.ExperimentalMode)
-                {
-                    cmd.DamageInfo.DamageBonus += 0.25f;
-                    cmd.DamageInfo.UseItemStatTotal = true;
-
-                    abInfo.Level = plr.EffectiveLevel;
-                }
-
-                else
-                    cmd.DamageInfo.DamageBonus += 0.05f * (myResource - 5);
+                cmd.DamageInfo.DamageBonus += 0.05f * (myResource - 5);
             }
         }
 
@@ -1796,14 +1637,7 @@ namespace WorldServer.World.Abilities
                     return;
 
                 // Experimental - scale AM/Shaman mechanic-empowered spells by Item Stat Total
-                if (plr.CrrInterface.ExperimentalMode)
-                {
-                    cmd.DamageInfo.DamageBonus += 0.25f;
-                    cmd.DamageInfo.UseItemStatTotal = true;
-                }
-
-                else
-                    cmd.DamageInfo.DamageBonus += 0.05f * myResource;
+                cmd.DamageInfo.DamageBonus += 0.05f * myResource;
             }
             // Tranquility bonus - Force damage increases
             else
@@ -1812,14 +1646,7 @@ namespace WorldServer.World.Abilities
                     return;
 
                 // Experimental - scale AM/Shaman mechanic-empowered spells by Item Stat Total
-                if (plr.CrrInterface.ExperimentalMode)
-                {
-                    cmd.DamageInfo.DamageBonus += 0.25f;
-                    cmd.DamageInfo.UseItemStatTotal = true;
-                }
-
-                else
-                    cmd.DamageInfo.DamageBonus += 0.05f * (myResource - 5);
+                cmd.DamageInfo.DamageBonus += 0.05f * (myResource - 5);
             }
         }
 

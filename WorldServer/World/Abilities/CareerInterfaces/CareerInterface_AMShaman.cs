@@ -50,17 +50,13 @@ namespace WorldServer.World.Abilities.CareerInterfaces
             for (int i = 0; i < 5; ++i)
             { 
                 Out.WriteByte((byte)i);
-                if (ExperimentalMode)
-                    Out.WriteZigZag(-40);
-                else Out.WriteZigZag(-20 * (i + 1));
+                Out.WriteZigZag(-20 * (i + 1));
             }
 
             for (int i = 0; i < 5; ++i)
             {
                 Out.WriteByte((byte)(i + 5));
-                if (ExperimentalMode)
-                    Out.WriteZigZag(-40);
-                else Out.WriteZigZag(-20 * (i + 1));
+                Out.WriteZigZag(-20 * (i + 1));
             }
 
             Out.WriteByte(0);

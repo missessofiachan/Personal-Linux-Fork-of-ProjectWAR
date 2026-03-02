@@ -28,7 +28,7 @@ namespace WorldServer.Managers.Commands
         public static bool ModifySpeed(Player plr, ref List<string> values)
         {
             int speed = GetInt(ref values);
-            if (speed > 1000 && !Utils.HasFlag(plr.GmLevel, (int)EGmLevel.SourceDev))
+            if (speed > 1000 && plr.GmLevel < (int)EGmLevel.GM) // AI Agent (Antigravity): Hierarchical comparison (>= GM) for speed modification.
                 speed = 1000;
 
             plr = GetTargetOrMe(plr) as Player;

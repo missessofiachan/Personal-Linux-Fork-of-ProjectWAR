@@ -775,8 +775,6 @@ namespace WorldServer.World.Interfaces
                     modifier.ModifyAbility(_myPlayer, abInfo);
             }
 
-            if (_myPlayer.CrrInterface.ExperimentalMode)
-                _myPlayer.CrrInterface.ExperimentalModeModifyAbility(abInfo);
         }
 
         public void ModifyBuff(BuffInfo buffInfo, Unit target)
@@ -799,8 +797,6 @@ namespace WorldServer.World.Interfaces
                     modifier.ModifyBuff(_myPlayer, target, buffInfo);
             }
 
-            if (_myPlayer.CrrInterface.ExperimentalMode)
-                _myPlayer.CrrInterface.ExperimentalModeModifyBuff(buffInfo, target);
         }
     }
 }
