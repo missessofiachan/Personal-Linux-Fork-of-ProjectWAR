@@ -59,8 +59,12 @@ If you are an AI Agent booting up this task, start with the lowest-risk, highest
 2.  **Visuals & Art Mappings:** [DONE]
 3.  **Abilities & Combat Formulas:** [DONE]
 4.  **NPC Equipment:** [DONE]
-5.  **Quest Restoration:** [BLOCKED - Missing Truth Data]
-6.  **Vendor Items:** [BLOCKED - Missing Truth Data]
+5.  **Creature Spawns:** [DONE]
+6.  **Zone Respawn Points:** [DONE]
+7.  **Quest Restoration:** [BLOCKED - Missing Truth Data]
+7.  **Vendor Items:** [BLOCKED - Missing Truth Data]
+8.  **Career Base Stats:** [BLOCKED - Missing Truth Data]
+9.  **Loot Groups:** [BLOCKED - Missing Truth Data]
 
 ---
 
