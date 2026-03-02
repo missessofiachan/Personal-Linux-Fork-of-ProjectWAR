@@ -15,3 +15,4 @@ This file tracks all modifications and additions made by the Gemini 3.0 Flash AI
 | 2026-03-01 | Domain 2: Creature Art Update | Database/updates/update_148_restore_creature_art.sql | Generated SQL to restore 1,464 authentic visual models by parsing MYP character art.csv. |
 | 2026-03-01 | Domain 1: Item Restoration | Database/updates/update_148_restore_item_stats.sql | Re-mapped 2,617 existing item stats, vendor prices, and requirements by generating SQL from Londos 1.4.8 dump. |
 | 2026-03-01 | Domain 3: Item Sets Restoration | Database/updates/update_148_restore_item_sets.sql | Re-mapped 294 Item Sets with authentic 1.4.8 Item requirements (ItemsString) and stat/ability bonuses (BonusString) using Londos DB mappings. |
+| 2026-03-01 | Domain 4: Abilities Restoration | Database/updates/update_148_restore_abilities.sql | Re-mapped 2,629 Abilities with authentic 1.4.8 stats including Cast Time, Cooldowns, AP Cost, and Range using the Londos DB mappings. |
