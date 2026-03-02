@@ -90,10 +90,24 @@ namespace FrameWork
             }
         }
 
+        public static void ListAllCommands()
+        {
+            if (Instance == null)
+                return;
+
+            Log.Info("ConsoleMgr", "Available Console Commands:");
+            foreach (var handler in Instance.m_consoleHandlers)
+            {
+                var attribs = (ConsoleHandlerAttribute[])handler.Value.GetType().GetCustomAttributes(typeof(ConsoleHandlerAttribute), true);
+                if (attribs.Length > 0)
+                {
+                    Log.Info("ConsoleMgr", "  ." + attribs[0].Command + " - " + attribs[0].Description);
+                }
+            }
+        }
+
         private void LoadConsoleHandler()
         {
-            Log.Info("ConsoleMgr", "Commands list : ");
-
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
                 Log.Dump("ConsoleMgr", "Attempting to load : " +  assembly.FullName);
@@ -118,7 +132,7 @@ namespace FrameWork
                 {
                     if (type == null)
                         continue;
-                    Log.Dump("ConsoleMgr", "Attempting to load : " + type.FullName);
+
                     // Pick up a class
                     if (type.IsClass != true)
                         continue;
@@ -132,13 +146,12 @@ namespace FrameWork
 
                     if (consoleHandlerAttribs.Length > 0)
                     {
-                        Log.Dump("ConsoleMgr", "." + consoleHandlerAttribs[0].Command + " : " + consoleHandlerAttribs[0].Description);
                         RegisterHandler(consoleHandlerAttribs[0].Command, (IConsoleHandler)Activator.CreateInstance(type));
                     }
-                    Log.Dump("ConsoleMgr", type.FullName);
                 }
-                Log.Dump("ConsoleMgr", assembly.FullName);
             }
+
+            ListAllCommands();
         }
 
         private void RegisterHandler(string command, IConsoleHandler Handler)

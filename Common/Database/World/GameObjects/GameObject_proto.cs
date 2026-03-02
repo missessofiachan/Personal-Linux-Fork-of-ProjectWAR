@@ -32,7 +32,13 @@ namespace Common
         [DataElement(AllowDbNull = true)]
         public string TokUnlock { get; set; }
 
-        [DataElement(AllowDbNull = true)]
+        [DataElement(Varchar = 255, AllowDbNull = true)]
+        public string UnksString
+        {
+            get { return Utils.ConvertArrayToString(Unks); }
+            set { Unks = Utils.ConvertStringToArray<ushort>(value).ToArray(); }
+        }
+
         public ushort[] Unks { get; set; } = new ushort[6];
 
         public ushort GetUnk(int Id)

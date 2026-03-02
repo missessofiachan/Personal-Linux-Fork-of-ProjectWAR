@@ -459,7 +459,7 @@ namespace WorldServer.World.Abilities
                 }
                 else
                 {
-                    Log.Error("Entry: " + cAb.ProtoEntry, cAb.AbilityId + " ~ Failed loading");
+                    Log.Debug("Entry: " + cAb.ProtoEntry, cAb.AbilityId + " ~ Failed loading (Missing in abilities table)");
                 }
             }
 

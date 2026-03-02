@@ -280,5 +280,24 @@ namespace WorldServer.Managers.Commands
         {
             return parameters.Length >= 2 && typeof(Unit).IsAssignableFrom(parameters[1].ParameterType);
         }
+        /// <summary>
+        /// Lists all commands starting from the base command list.
+        /// </summary>
+        /// <param name="baseCommands"></param>
+        public static void ListAllCommands(List<GmCommandHandler> baseCommands, string prefix = "")
+        {
+            foreach (var handler in baseCommands)
+            {
+                if (handler.Handlers != null && handler.Handlers.Count > 0)
+                {
+                    Log.Info("GameCommands", $"{prefix}.{handler.Name} - {handler.Description}");
+                    ListAllCommands(handler.Handlers, $"{prefix}.{handler.Name}");
+                }
+                else
+                {
+                    Log.Info("GameCommands", $"{prefix}.{handler.Name} - {handler.Description}");
+                }
+            }
+        }
     }
 }

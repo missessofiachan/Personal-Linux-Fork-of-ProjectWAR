@@ -159,11 +159,25 @@ namespace Common
             {
                 EffectsList.Clear();
 
+                if (string.IsNullOrEmpty(value))
+                    return;
+
                 string[] effectStrArray = value.Split(';');
 
                 foreach (string effectStr in effectStrArray)
+                {
                     if (effectStr.Length != 0)
-                        EffectsList.Add(ushort.Parse(effectStr));
+                    {
+                        try
+                        {
+                            EffectsList.Add(ushort.Parse(effectStr));
+                        }
+                        catch (Exception)
+                        {
+                            Log.Error("Item_Info", "Invalid effect value: " + effectStr + " in item entry " + Entry);
+                        }
+                    }
+                }
             }
         }
 
@@ -180,11 +194,21 @@ namespace Common
             }
             set
             {
-                if (value.Length == 0)
+                if (string.IsNullOrEmpty(value))
                     return;
-                else if (value.Length < 3)
+
+                _Crafts.Clear();
+
+                if (value.Length < 3)
                 {
-                    _Crafts.Add(new KeyValuePair<byte, ushort>(byte.Parse(value), 0));
+                    try
+                    {
+                        _Crafts.Add(new KeyValuePair<byte, ushort>(byte.Parse(value), 0));
+                    }
+                    catch (Exception)
+                    {
+                        Log.Error("Item_Info", "Invalid craft single value: " + value + " in item entry " + Entry);
+                    }
                 }
                 else
                 {
@@ -192,7 +216,6 @@ namespace Common
                     byte type;
                     ushort Value;
                     string[] val;
-                    _Crafts.Clear();
 
                     foreach (string str in st)
                     {
@@ -201,13 +224,20 @@ namespace Common
                             val = str.Split(':');
                             if (val.Length < 2) continue;
 
-                            type = byte.Parse(val[0]);
-                            Value = ushort.Parse(val[1]);
+                            try
+                            {
+                                type = byte.Parse(val[0]);
+                                Value = ushort.Parse(val[1]);
 
-                            if (type <= 0 || Value <= 0)
-                                continue;
+                                if (type <= 0 || Value <= 0)
+                                    continue;
 
-                            _Crafts.Add(new KeyValuePair<byte, ushort>(type, Value));
+                                _Crafts.Add(new KeyValuePair<byte, ushort>(type, Value));
+                            }
+                            catch (Exception)
+                            {
+                                Log.Error("Item_Info", "Invalid craft entry: " + str + " in item entry " + Entry);
+                            }
                         }
                     }
                 }

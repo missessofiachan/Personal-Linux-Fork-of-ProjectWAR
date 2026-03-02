@@ -54,18 +54,27 @@ namespace FrameWork
                             if (typeof(T) == typeof(byte))
                             {
                                 byte result = 0;
-                                if (!byte.TryParse(Val, out result))
+                                try
                                 {
-                                    Log.Error("FrameWork.Utils.ConvertStringToArray", "Unable to convert to byte " + Val);
+                                    result = byte.Parse(Val);
+                                }
+                                catch
+                                {
+                                    result = 0;
                                 }
                                 L.Add((T)(object)result);
                             }
                             else if (typeof(T) == typeof(ushort))
                             {
                                 ushort result = 0;
-                                if (!ushort.TryParse(Val, out result))
+                                try
                                 {
-                                    Log.Error("FrameWork.Utils.ConvertStringToArray", "Unable to convert to ushort " + Val);
+                                    result = ushort.Parse(Val);
+                                }
+                                catch
+                                {
+                                    result = 0; // Return 0 on failure
+                                    // Avoid console spam as per instruction
                                 }
                                 L.Add((T)(object)result);
                             }
@@ -75,7 +84,6 @@ namespace FrameWork
                     }
                     catch
                     {
-                        Log.Error("FrameWork.Utils.ConvertStringToArray", "Overflow exception when attempting to cast to type " + typeof(T));
                         L.Add((T)Convert.ChangeType("0", typeof(T)));
                     }
                 }

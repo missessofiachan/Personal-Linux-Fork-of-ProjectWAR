@@ -60,7 +60,7 @@ namespace WorldServer.Services.World
                     Spawn.Proto = CreatureService.GetCreatureProto(Spawn.Entry);
                     if (Spawn.Proto == null)
                     {
-                        Log.Debug("LoadRegionSpawns", "Invalid Creature Proto (" + Spawn.Entry + "), spawn Guid(" + Spawn.Guid + ")");
+                        Log.Notice("LoadRegionSpawns", "Invalid Creature Proto (" + Spawn.Entry + "), spawn Guid(" + Spawn.Guid + ")");
                         ++InvalidSpawns;
                         continue;
                     }
@@ -80,7 +80,7 @@ namespace WorldServer.Services.World
                     }
                     else
                     {
-                        Log.Debug("LoadRegionSpawns", "ZoneId (" + Spawn.ZoneId + ") invalid, Spawn Guid(" + Spawn.Guid + ")");
+                        Log.Notice("LoadRegionSpawns", "ZoneId (" + Spawn.ZoneId + ") invalid, Spawn Guid(" + Spawn.Guid + ")");
                         ++InvalidSpawns;
                     }
                     
@@ -95,7 +95,7 @@ namespace WorldServer.Services.World
                     Spawn.Proto = GameObjectService.GetGameObjectProto(Spawn.Entry);
                     if (Spawn.Proto == null)
                     {
-                        Log.Debug("LoadRegionSpawns", "Invalid GameObject Proto (" + Spawn.Entry + "), spawn Guid(" + Spawn.Guid + ")");
+                        Log.Notice("LoadRegionSpawns", "Invalid GameObject Proto (" + Spawn.Entry + "), spawn Guid(" + Spawn.Guid + ")");
                         ++InvalidSpawns;
                         continue;
                     }
@@ -115,14 +115,14 @@ namespace WorldServer.Services.World
                     }
                     else
                     {
-                        Log.Debug("LoadRegionSpawns", "ZoneId (" + Spawn.ZoneId + ") invalid, Spawn Guid(" + Spawn.Guid + ")");
+                        Log.Notice("LoadRegionSpawns", "ZoneId (" + Spawn.ZoneId + ") invalid, Spawn Guid(" + Spawn.Guid + ")");
                         ++InvalidSpawns;
                     }
                 }
             }
 
             if (InvalidSpawns > 0)
-                Log.Error("LoadRegionSpawns", "[" + InvalidSpawns + "] Invalid Spawns");
+                Log.Notice("LoadRegionSpawns", "[" + InvalidSpawns + "] Invalid Spawns");
 
             foreach (KeyValuePair<string, int> Counts in RegionCount)
                 Log.Debug("Region", "[" + Counts.Key + "] : " + Counts.Value);

@@ -103,11 +103,18 @@ namespace Common
 
                     Items[0] = Items[0].Remove(0, 1);
 
-                    ushort Count = ushort.Parse(Items[0]);
-                    uint Entry = uint.Parse(Items[1]);
+                    try
+                    {
+                        ushort Count = ushort.Parse(Items[0]);
+                        uint Entry = uint.Parse(Items[1]);
 
-                    if (!ItemsReq.ContainsKey(Entry))
-                        ItemsReq.Add(Entry, Count);
+                        if (!ItemsReq.ContainsKey(Entry))
+                            ItemsReq.Add(Entry, Count);
+                    }
+                    catch (Exception)
+                    {
+                        Log.Error("Vendor_items", "Invalid ReqItem entry: " + Info + " in vendor " + VendorId);
+                    }
                 }
                 Dirty = true; 
             }

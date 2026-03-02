@@ -45,13 +45,21 @@ namespace Common
                         continue;
 
                     string[] St = Obj.Split(':');
+                    if (St.Length < 2) continue;
 
-                    uint bonusKey = uint.Parse(St[0]);
+                    try
+                    {
+                        uint bonusKey = uint.Parse(St[0]);
 
-                    if (Items.ContainsKey(bonusKey))
-                        Log.Error("Item set "+Name, "Duplicate bonus type in Items String ("+bonusKey+")");
-                    else
-                        Items.Add(bonusKey, St[1]);
+                        if (Items.ContainsKey(bonusKey))
+                            Log.Error("Item set " + Name, "Duplicate bonus type in Items String (" + bonusKey + ")");
+                        else
+                            Items.Add(bonusKey, St[1]);
+                    }
+                    catch (Exception)
+                    {
+                        Log.Error("Item_Set", "Invalid item key: " + St[0] + " in item set " + Entry);
+                    }
                 }
                 Dirty = true;
             }
@@ -80,16 +88,25 @@ namespace Common
                         continue;
 
                     string[] St = bonusString.Split(':');
+                    if (St.Length < 2) continue;
 
-                    Bonus.Add(byte.Parse(St[0]), St[1]);
+                    try
+                    {
+                        byte bonusId = byte.Parse(St[0]);
+                        Bonus.Add(bonusId, St[1]);
 
-                    // Update bonus list which is read by ItemsInterface
-                    string[] bonuses = St[1].Split(',');
+                        // Update bonus list which is read by ItemsInterface
+                        string[] bonuses = St[1].Split(',');
 
-                    if (bonuses.Length == 1)
-                        _bonusList.Add(new ItemSetBonusInfo(byte.Parse(St[0]), ushort.Parse(bonuses[0])));
-                    else
-                        _bonusList.Add(new ItemSetBonusInfo(byte.Parse(St[0]), ushort.Parse(bonuses[0]), ushort.Parse(bonuses[1]), ushort.Parse(bonuses[2])));
+                        if (bonuses.Length == 1)
+                            _bonusList.Add(new ItemSetBonusInfo(bonusId, ushort.Parse(bonuses[0])));
+                        else
+                            _bonusList.Add(new ItemSetBonusInfo(bonusId, ushort.Parse(bonuses[0]), ushort.Parse(bonuses[1]), ushort.Parse(bonuses[2])));
+                    }
+                    catch (Exception)
+                    {
+                        Log.Error("Item_Set", "Invalid bonus entry: " + bonusString + " in item set " + Entry);
+                    }
                 }
                 Dirty = true;
             }

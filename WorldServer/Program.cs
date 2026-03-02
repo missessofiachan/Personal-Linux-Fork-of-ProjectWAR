@@ -174,6 +174,9 @@ namespace WorldServer
             AcctMgr.UpdateRealm(Client.Info, Rm.RealmId);
             AcctMgr.UpdateRealmCharacters(Rm.RealmId, (uint)CharMgr.Database.GetObjectCount<Character>("Realm=1"), (uint)CharMgr.Database.GetObjectCount<Character>("Realm=2"));
 
+            Log.Info("GameCommands", "Available Game Commands:");
+            WorldServer.Managers.Commands.CommandsBuilder.ListAllCommands(WorldServer.Managers.Commands.CommandDeclarations.BaseCommand);
+
             ConsoleMgr.Start();
         }
 

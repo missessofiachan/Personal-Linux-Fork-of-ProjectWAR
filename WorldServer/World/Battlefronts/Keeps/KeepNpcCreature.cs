@@ -37,13 +37,16 @@ namespace WorldServer.World.Battlefronts.Keeps
             {
                 if (Info.DestroId == 0 && realm == Realms.REALMS_REALM_DESTRUCTION)
                     _logger.Trace($"Creature Id = 0, no spawning");
+                else if (Info.OrderId == 0 && realm == Realms.REALMS_REALM_ORDER)
+                    _logger.Trace($"Creature Id = 0, no spawning");
                 else
                 {
                     Creature_proto proto = CreatureService.GetCreatureProto(realm == Realms.REALMS_REALM_ORDER ? Info.OrderId : Info.DestroId);
 
                     if (proto == null)
                     {
-                        Log.Error("KeepNPC", "No FlagGuard Proto");
+                        if ((realm == Realms.REALMS_REALM_ORDER ? Info.OrderId : Info.DestroId) != 0)
+                            Log.Notice("KeepNPC", "No FlagGuard Proto (" + (realm == Realms.REALMS_REALM_ORDER ? Info.OrderId : Info.DestroId) + ") for keep id " + Info.KeepId);
                         return;
                     }
                     _logger.Trace($"Spawning Guard {proto.Name} ({proto.Entry})");
