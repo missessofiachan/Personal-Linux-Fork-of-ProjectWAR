@@ -16,4 +16,9 @@
    - Any work produced must have explicit plain language documentation in a `walkthrough.md` or similar artifact.
    - Any code modifications MUST include inline documentation (comments) identifying the AI agent and the rationale.
    - Maintain a running change log in `change_log_codex_spark.md` outside of version control.
+9. **PLANNING Mode Enforcement**:
+   - EVERY conversation with an AI agent MUST start in **PLANNING mode**.
+   - In PLANNING mode, the agent is restricted to **READ-ONLY** operations on the codebase. No code modifications or file creation (outside of planning artifacts) are allowed.
+   - The agent MUST create and get user approval for an `implementation_plan.md` before switching to **EXECUTION mode**.
+   - Only after explicit user approval of the plan can the agent proceed to modify code or the database.
 

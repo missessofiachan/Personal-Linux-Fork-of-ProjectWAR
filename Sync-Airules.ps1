@@ -1,5 +1,5 @@
-$sourceFile = ".cursorrules"
-$targetFiles = @(".ai-rules", "CLAUDE.md", "openai-instructions.md")
+$sourceFile = "AI_Documentation\.cursorrules"
+$targetFiles = @("AI_Documentation\.ai-rules", "AI_Documentation\CLAUDE.md", "AI_Documentation\openai-instructions.md")
 
 if (-not (Test-Path $sourceFile)) {
     Write-Host "Source file $sourceFile not found!"
