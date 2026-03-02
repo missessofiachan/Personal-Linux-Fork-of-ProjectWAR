@@ -6,14 +6,17 @@ This guide is written for complete beginners.
 
 ProjectWAR is a local server emulator for Warhammer Online. It lets you run the game server stack on your own computer so you can test and play in a private local environment.
 
+The current focus of the project is the **1.4.8 Restoration Plan**, which aims to restore the emulator's database and logic to the state of the final official patch (1.4.8) using authentic "Sources of Truth".
+
 ## How the emulator is organized
 
-When you start the emulator, these services work together:
+When you start the emulator, these services work together, managed by the **ServerLauncher**:
 
-- `AccountCacher`: account/login data and RPC hub
-- `LauncherServer`: patch/login handoff service
-- `LobbyServer`: client lobby connection
-- `WorldServer`: game world and gameplay logic
+- `ServerLauncher`: The central GUI application to start, monitor, and stop all server services.
+- `AccountCacher`: account/login data and RPC hub.
+- `LauncherServer`: patch/login handoff service.
+- `LobbyServer`: client lobby connection.
+- `WorldServer`: game world and gameplay logic.
 
 Your local launcher/client connects to these services on `127.0.0.1` (your own machine).
 
@@ -24,7 +27,7 @@ Install these first:
 - Windows
 - Visual Studio 2022 with `.NET desktop development`
 - .NET Framework 4.8 Developer Pack
-- MySQL or MariaDB (local)
+- MySQL
 - Warhammer Online client files
 
 ## Setup steps (follow in order)
@@ -96,12 +99,11 @@ If your DB password is different, update:
 
 ### 5. Start server services
 
-Ensure you are running the built executables in the `bin/Release/` directory:
+**IMPORTANT**: ALWAYS use `ServerLauncher.exe` to start the server stack. Do NOT start individual executables separately, as they will not initialize correctly.
 
-- `AccountCacher`
-- `LauncherServer`
-- `LobbyServer`
-- `WorldServer`
+1. Navigate to `bin/Release/`.
+2. Run `ServerLauncher.exe`.
+3. Click "Start All" (or individual start buttons in order: Account, Launcher, Lobby, World).
 
 ### 6. Start the game launcher
 
@@ -112,13 +114,15 @@ Start your local Warhammer Online client.
 Check running emulator services:
 
 ```powershell
-Get-Process | Where-Object { $_.Name -match 'AccountCacher|LauncherServer|LobbyServer|WorldServer' } | Select-Object Name, Id
+Get-Process | Where-Object { $_.Name -match 'AccountCacher|LauncherServer|LobbyServer|WorldServer|ServerLauncher' } | Select-Object Name, Id
 ```
 
 ## Stop all services
 
+Use the "Stop All" button in `ServerLauncher.exe`, or force stop via PowerShell:
+
 ```powershell
-Get-Process | Where-Object { $_.Name -match 'AccountCacher|LauncherServer|LobbyServer|WorldServer' } | Stop-Process -Force
+Get-Process | Where-Object { $_.Name -match 'AccountCacher|LauncherServer|LobbyServer|WorldServer|ServerLauncher' } | Stop-Process -Force
 ```
 
 ## Troubleshooting
@@ -129,11 +133,18 @@ Get-Process | Where-Object { $_.Name -match 'AccountCacher|LauncherServer|LobbyS
   - verify credentials in `Account.xml` and `World.xml`.
   - verify MySQL/MariaDB is running on `127.0.0.1:3306`.
 - Client cannot connect:
-  - verify all four services are running.
+  - verify all services are running via `ServerLauncher`.
   - verify config files still point to localhost values.
 - Missing terrain/zone data:
   - verify `deps/zones/` extraction.
   - rebuild so assets are copied into `bin/Release/zones/`.
+
+## Developer Documentation
+
+For contributors and AI agents, please refer to the following architectural and restoration documents:
+
+- **[1.4.8 Restoration Plan](1_4_8_RESTORATION_PLAN.md)**: Details the project's core mission and data restoration workflow.
+- **[Systemic Divergences](SYSTEMIC_DIVERGENCES.md)**: Maps differences between Retail and Emulator logic.
 
 ## Development Resources
 
