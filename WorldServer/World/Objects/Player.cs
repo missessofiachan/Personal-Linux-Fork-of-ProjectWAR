@@ -3045,7 +3045,7 @@ namespace WorldServer.World.Objects
             _Value.Level = newLevel;
             Dictionary<byte, ushort> values = ApplyLevel();
 
-            if (Loaded && _initialized)
+            if (Client != null && (Client.State == (int)eClientState.WorldEnter || Client.State == (int)eClientState.Playing))
             {
                 SendLevelUp(values);
                 SendXp();
