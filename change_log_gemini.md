@@ -11,3 +11,6 @@ This file tracks all modifications and additions made by the Gemini 3.0 Flash AI
 | 2026-03-01 | T1 Zone Locking & Map Icon Fixes | `Campaign.cs`, `WorldMgr.cs` | Fixed domination checks to include Secured state, expanded T1 rewards/notifications to pairings, and updated campaign status packet for map visibility. |
 | 2026-03-01 | Lowered Domination Time | `WorldConfigs.cs`, `Campaign.cs` | Reduced global domination timer to 3 minutes and added logic to reset the counter when domination is broken. |
 | 2026-03-01 | Timer & Map Visual Fixes | `WorldServer\bin\Release\Configs\World.xml`, `BattlefieldObjective.cs` | Fixed 20-minute timer override in XML and swapped StateFlags to correctly show lockout icons on the map. |
+| 2026-03-01 | Database Restoration Plan | 1_4_8_RESTORATION_PLAN.md | Created comprehensive domain-based strategy to strictly parse reverse-engineered 1.4.8 DB files instead of blindly merging legacy master dumps. |
+| 2026-03-01 | Domain 2: Creature Art Update | Database/updates/update_148_restore_creature_art.sql | Generated SQL to restore 1,464 authentic visual models by parsing MYP character art.csv. |
+| 2026-03-01 | Domain 1: Item Restoration | Database/updates/update_148_restore_item_stats.sql | Re-mapped 2,617 existing item stats, vendor prices, and requirements by generating SQL from Londos 1.4.8 dump. |
