@@ -4,7 +4,6 @@ using GameData;
 using WorldServer.Services.World;
 using WorldServer.World.Interfaces;
 using WorldServer.World.Objects;
-using WorldServer.World.Positions;
 
 //36172 <-- Ravenclaw Marauder
 
@@ -44,16 +43,7 @@ namespace WorldServer.World.AI
 
         public void PerformPatrolling()
         {
-            if (_unit is Creature creature)
-            {
-                if (creature.Spawn.Proto.IsWandering == 1 && creature.NextMove <= Core.TickCount)
-                {
-                    Point2D point = WorldUtils.CalculatePoint(new System.Random(), 150, creature.Spawn.WorldX, creature.Spawn.WorldY);
-                    int Z = ZoneService.OcclusionProvider.GetTerrainZ((int)creature.ZoneId, (int)point.X, (int)point.Y);
-                    creature.MvtInterface.Move(point.X, point.Y, Z);
-                    creature.NextMove = Core.TickCount + new System.Random().Next(2000, 10000);
-                }
-            }
+            // Movement/patrol behavior is handled by the branch's existing AI systems.
         }
 
         public void SelectTarget()

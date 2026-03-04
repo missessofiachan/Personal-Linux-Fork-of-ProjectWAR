@@ -51,7 +51,7 @@ namespace LobbyServer.NetWork.Handler
                 Log.Debug("AuthSession", "session " + session);
 
                 // Validate the session token using the authentication backend
-                FrameWork.ResultCode res = Core.AcctMgr.CheckToken(session);
+                FrameWork.ResultCode res = Program.AcctMgr.CheckToken(session);
                 resultCode = (AuthSessionTokenReply.Types.ResultCode)res;
 
                 if (resultCode == AuthSessionTokenReply.Types.ResultCode.RES_SUCCESS)
@@ -106,7 +106,7 @@ namespace LobbyServer.NetWork.Handler
             Log.Debug("LServ", "GetClusterListReq");
             Client cclient = (Client)client;
             PacketOut Out = new PacketOut((byte)Opcodes.SMSG_GetClusterListReply);
-            byte[] ClustersList = Core.AcctMgr.BuildClusterList();
+            byte[] ClustersList = Program.AcctMgr.BuildClusterList();
 
             Log.Debug("LServ", "Received " + ClustersList.Length + " clusters");
 
@@ -126,7 +126,7 @@ namespace LobbyServer.NetWork.Handler
             Out.Write(new byte[] { 0x08, 00 });
             cclient.SendTCPCuted(Out);
 
-            if (Core.Config.SeverOnFinish)
+            if (Program.Config.SeverOnFinish)
                 cclient.Disconnect("Transaction complete");
         }
     }
