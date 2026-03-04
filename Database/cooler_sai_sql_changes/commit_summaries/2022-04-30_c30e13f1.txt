@@ -1,0 +1,9 @@
+﻿commit=c30e13f1d200d189fa7efb779ea19898002a9fcb
+date=2022-04-30
+subject=Merge branch 'master' of https://github.com/Shmerrick/ProjectWAR
+files_changed=1
+insertions=0
+deletions=0
+sql_file_count=0
+
+[name-status under SQL/Database]

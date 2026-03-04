@@ -1,0 +1,11 @@
+﻿commit=884f1f268415d5ae1186bc32b1dac6762db5e537
+date=2020-04-09
+subject=DB/Spells: huge creature spells bases updated for future use
+files_changed=2
+insertions=7051
+deletions=0
+sql_file_count=2
+
+[name-status under SQL/Database]
+A	SQL/005Updates/2020_04_09_00_war_world_abilities_updated.sql
+A	SQL/005Updates/2020_04_09_00_war_world_ability_commands_updated.sql

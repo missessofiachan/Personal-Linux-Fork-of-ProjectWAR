@@ -1,0 +1,10 @@
+﻿commit=910c70eaff317d012e3551d2cd8274ab188b42c0
+date=2020-04-06
+subject=DB info
+files_changed=1
+insertions=7
+deletions=0
+sql_file_count=0
+
+[name-status under SQL/Database]
+A	SQL/README.md

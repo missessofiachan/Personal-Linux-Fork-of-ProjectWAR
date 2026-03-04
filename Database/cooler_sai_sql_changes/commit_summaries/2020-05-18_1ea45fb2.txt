@@ -1,0 +1,10 @@
+﻿commit=1ea45fb25fe860f6e1d54b3e53aa8a7c494119ae
+date=2020-05-18
+subject=DB/WP: many waypoints added in EKRUND zone
+files_changed=1
+insertions=6025
+deletions=0
+sql_file_count=1
+
+[name-status under SQL/Database]
+A	SQL/003Updates/2020_05_18_00_war_world_waypoints.sql

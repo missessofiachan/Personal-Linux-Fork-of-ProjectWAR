@@ -1,0 +1,10 @@
+﻿commit=f87d573c8f9b9b92a64ee30cef4606642015dad1
+date=2021-03-10
+subject=DB/Creature: fix Grifon Striker weapon hand
+files_changed=1
+insertions=1
+deletions=0
+sql_file_count=1
+
+[name-status under SQL/Database]
+A	SQL/002Updates/2021_03_10_01_war_world_creature_items.sql

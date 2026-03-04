@@ -1,3 +1,5 @@
+SET NAMES utf8mb4;
+
 UPDATE war_accounts.realms SET Port=51933;
 -- Note: 'war_world' is the default database name for the World Server.
 -- If your database is named differently, change the USE statement below.

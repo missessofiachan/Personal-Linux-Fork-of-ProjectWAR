@@ -1,0 +1,10 @@
+﻿commit=4ce146b310298666d48c4a11fe06c3d4131c750e
+date=2022-06-20
+subject=Revert "Common/GameObject_proto: added sql files for table"
+files_changed=1
+insertions=0
+deletions=2
+sql_file_count=1
+
+[name-status under SQL/Database]
+D	SQL/updates/war_world/2022_06_20_00_war_world_gameobject_protos.sql

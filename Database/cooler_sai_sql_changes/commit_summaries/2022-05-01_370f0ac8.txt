@@ -1,0 +1,10 @@
+﻿commit=370f0ac8fcccbe90c8785c2dd8cf63fa0b4442b7
+date=2022-05-01
+subject=DB/Wandering: enable move MONSTERS_CHAOS_BREEDS_TUSKGOR and ANIMALS_BEASTS_WOLF
+files_changed=1
+insertions=4
+deletions=0
+sql_file_count=1
+
+[name-status under SQL/Database]
+A	SQL/updates/war_world/2022_05_01_03_war_world_wandering.sql

@@ -1,0 +1,10 @@
+﻿commit=697ab486dcc58755685f449fcf43d2f9335b4422
+date=2022-04-29
+subject=DB/Waypoints: added huge pack for different zones
+files_changed=1
+insertions=6036
+deletions=0
+sql_file_count=1
+
+[name-status under SQL/Database]
+A	SQL/updates/war_world/2022_04_29_01_war_world_waypoints.sql

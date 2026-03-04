@@ -1,0 +1,10 @@
+﻿commit=c8725523711053121c8e70d70d3bf424209a538d
+date=2020-04-08
+subject=DB/Creature: fix Range attack distance
+files_changed=1
+insertions=1
+deletions=0
+sql_file_count=1
+
+[name-status under SQL/Database]
+A	SQL/005Updates/2020_04_08_00_war_world_creature_protos.sql

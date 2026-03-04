@@ -1,0 +1,10 @@
+﻿commit=d5a0c1f76292978bf8e4713a7cce1eba571b2ca5
+date=2022-05-17
+subject=AI/Spells: added ANIMALS_BEASTS_GIANT_BAT spells and  ANIMALS_BEASTS_GREAT_CAT wander
+files_changed=1
+insertions=5
+deletions=1
+sql_file_count=1
+
+[name-status under SQL/Database]
+M	SQL/updates/war_world/2022_05_17_00_war_world_wandering.sql

@@ -1,0 +1,10 @@
+﻿commit=c6771ec5751aa39000716e24239204316a9f4995
+date=2020-05-09
+subject=Core/Temp: readme added
+files_changed=1
+insertions=1
+deletions=0
+sql_file_count=0
+
+[name-status under SQL/Database]
+A	SQL/temp intro fix and career/README.txt

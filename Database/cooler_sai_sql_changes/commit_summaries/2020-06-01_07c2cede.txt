@@ -1,0 +1,11 @@
+﻿commit=07c2cede24d61ed64a18272e4cb91dcb5cc89b6e
+date=2020-06-01
+subject=Core/Abilities: fix intro and abilities by @wardev1
+files_changed=2
+insertions=0
+deletions=40746
+sql_file_count=0
+
+[name-status under SQL/Database]
+A	SQL/temp intro fix and career/Abilities.rar
+D	SQL/temp intro fix and career/intro.txt

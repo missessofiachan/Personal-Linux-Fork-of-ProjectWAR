@@ -1,0 +1,14 @@
+﻿commit=769ae1711ecd1532c034ec3357df0a83d78b45df
+date=2021-03-23
+subject=DB/SQL: typos fixed in SQL
+files_changed=5
+insertions=102
+deletions=102
+sql_file_count=5
+
+[name-status under SQL/Database]
+M	SQL/001Uploaded/2021/MARCH/LIVE_EVENT_Heavy_Metal.sql
+M	SQL/001Uploaded/2021/MARCH/LIVE_EVENT_Keg_End.sql
+M	SQL/001Uploaded/2021/MARCH/LIVE_EVENT_TASKS.SQL
+M	SQL/001Uploaded/2021/MARCH/LIVE_EVENT_THE_WILD_HUNT.sql
+M	SQL/001Uploaded/2021/MARCH/LIVE_EVENT_THE_Witching_Night.sql

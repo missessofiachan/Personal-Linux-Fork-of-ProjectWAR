@@ -1,0 +1,10 @@
+﻿commit=d7cf61675c3b4fb1d9fdc239376146c70df793f9
+date=2022-01-24
+subject=DB/World: fix creature_spawn timer, close https://github.com/Shmerrick/ProjectWAR/issues/56
+files_changed=1
+insertions=1
+deletions=0
+sql_file_count=1
+
+[name-status under SQL/Database]
+A	SQL/updates/war_world/2022_01_24_01_war_world_creature_spawns.sql

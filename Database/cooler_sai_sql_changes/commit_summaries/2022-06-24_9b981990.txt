@@ -1,0 +1,16 @@
+﻿commit=9b9819903ec6cb410b165613b58062e303eccaab
+date=2022-06-24
+subject=WorldServer/Abilities: added auto compile function
+files_changed=7
+insertions=0
+deletions=227993
+sql_file_count=0
+
+[name-status under SQL/Database]
+D	SQL/base/Abilities/Chaos humans login-logout all classes.txt
+D	SQL/base/Abilities/Dark elves login-logout all classes.txt
+D	SQL/base/Abilities/Dwarves and their classes login-logout.txt
+D	SQL/base/Abilities/High elves and their classes login-logout.txt
+D	SQL/base/Abilities/Humans and their classes login-logout.txt
+D	SQL/base/Abilities/Orcs login-logout all classes.txt
+D	SQL/base/Abilities/README.txt

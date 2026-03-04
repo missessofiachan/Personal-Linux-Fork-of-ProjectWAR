@@ -1,0 +1,10 @@
+﻿commit=9b2e43e05d0f98d297424218c542eef554909004
+date=2022-05-06
+subject=Core/AI: added DAEMONS_TZEENTCH_HORROR  scripts
+files_changed=1
+insertions=4
+deletions=0
+sql_file_count=1
+
+[name-status under SQL/Database]
+A	SQL/updates/war_world/2022_05_06_00_war_world_creature_smart_abilities.sql

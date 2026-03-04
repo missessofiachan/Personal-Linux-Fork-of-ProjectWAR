@@ -1,0 +1,10 @@
+﻿commit=a027eb0837a9590b8d2d2166d4349469941224ea
+date=2021-01-25
+subject=DB/abilities: addes spells for creatures in CHRACE zone ( all finished here)
+files_changed=1
+insertions=277
+deletions=0
+sql_file_count=1
+
+[name-status under SQL/Database]
+A	SQL/002Updates/2021_01_25_00_war_world_creature_abilities.sql

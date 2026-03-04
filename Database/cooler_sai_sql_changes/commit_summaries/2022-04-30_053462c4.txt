@@ -1,0 +1,10 @@
+﻿commit=053462c499a01710df132bdd0d84a8e144f48e48
+date=2022-04-30
+subject=DB/Ability: fixed damage for animals
+files_changed=1
+insertions=1
+deletions=0
+sql_file_count=1
+
+[name-status under SQL/Database]
+A	SQL/updates/war_world/2022_04_30_01_war_world_ability_damage_heals.sql

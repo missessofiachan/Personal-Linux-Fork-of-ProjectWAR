@@ -1,0 +1,10 @@
+﻿commit=d7b0f27ca6dc4a7fcd7d80f15321f3d2f4f9e90a
+date=2021-03-26
+subject=DB/abilities: addes spells for creatures in AVELORN zone ( part 2 all finished )
+files_changed=1
+insertions=817
+deletions=0
+sql_file_count=1
+
+[name-status under SQL/Database]
+A	SQL/002Updates/2021_03_26_01_war_world_creature_abilities.sql
