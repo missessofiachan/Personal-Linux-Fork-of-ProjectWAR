@@ -1,5 +1,5 @@
-﻿using System;
-using FrameWork;
+﻿using FrameWork;
+using System;
 
 namespace Common
 {
@@ -140,8 +140,5 @@ namespace Common
 
         [DataElement]
         public ushort Time { get; set; }
-
-        [DataElement(AllowDbNull = false)]
-        public byte Source { get; set; }
     }
 }

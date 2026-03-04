@@ -1,7 +1,7 @@
-﻿using System;
+﻿using FrameWork;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using FrameWork;
 
 namespace Common
 {
@@ -37,7 +37,6 @@ namespace Common
 
         private string _masterySkills;
         private string _renownSkills;
-        private string _purchasedAbilities = "";
 
         private byte _gatheringSkill;
         private byte _gatheringSkillLevel;
@@ -59,7 +58,7 @@ namespace Common
             set { _characterId = value; Dirty = true; }
         }
 
-        [DataElement(AllowDbNull=false)]
+        [DataElement(AllowDbNull = false)]
         public byte Level
         {
             get { return _level; }
@@ -219,7 +218,7 @@ namespace Common
             get { return _titleId; }
             set { _titleId = value; Dirty = true; }
         }
-        
+
         [DataElement(AllowDbNull = false)]
         public string RenownSkills
         {
@@ -234,13 +233,6 @@ namespace Common
             set { _masterySkills = value; Dirty = true; }
         }
 
-        [DataElement(AllowDbNull = false)]
-        public string PurchasedAbilities
-        {
-            get { return _purchasedAbilities; }
-            set { _purchasedAbilities = value; Dirty = true; }
-        }
-
         [DataElement] public ushort Morale1 { get; set; }
         [DataElement] public ushort Morale2 { get; set; }
         [DataElement] public ushort Morale3 { get; set; }
@@ -252,10 +244,13 @@ namespace Common
             {
                 case 1:
                     return Morale1;
+
                 case 2:
                     return Morale2;
+
                 case 3:
                     return Morale3;
+
                 case 4:
                     return Morale4;
             }
@@ -271,14 +266,17 @@ namespace Common
                     Morale1 = value;
                     Dirty = true;
                     break;
+
                 case 2:
                     Morale2 = value;
                     Dirty = true;
                     break;
+
                 case 3:
                     Morale3 = value;
                     Dirty = true;
                     break;
+
                 case 4:
                     Morale4 = value;
                     Dirty = true;
@@ -288,10 +286,13 @@ namespace Common
 
         [DataElement]
         public ushort Tactic1 { get; set; }
+
         [DataElement]
         public ushort Tactic2 { get; set; }
+
         [DataElement]
         public ushort Tactic3 { get; set; }
+
         [DataElement]
         public ushort Tactic4 { get; set; }
 
@@ -307,7 +308,7 @@ namespace Common
                 tacList.Add(Tactic4);
 
             return tacList;
-        } 
+        }
 
         public void SetTactic(byte index, ushort value)
         {
@@ -317,14 +318,17 @@ namespace Common
                     Tactic1 = value;
                     Dirty = true;
                     break;
+
                 case 2:
                     Tactic2 = value;
                     Dirty = true;
                     break;
+
                 case 3:
                     Tactic3 = value;
                     Dirty = true;
                     break;
+
                 case 4:
                     Tactic4 = value;
                     Dirty = true;
@@ -360,6 +364,14 @@ namespace Common
             set { _craftingSkillLevel = value; Dirty = true; }
         }
 
+        private bool _experimentalMode;
+
+        [DataElement(AllowDbNull = false)]
+        public bool ExperimentalMode
+        {
+            get { return _experimentalMode; }
+            set { _experimentalMode = value; Dirty = true; }
+        }
 
         [DataElement(AllowDbNull = false)]
         public uint RVRKills
@@ -418,14 +430,14 @@ namespace Common
         {
             List<string> lockouts = new List<string>();
 
-            if (_lockouts == null ||_lockouts.Length == 0)
+            if (_lockouts == null || _lockouts.Length == 0)
                 return lockouts;
-			
+
             for (int i = 1; i < _lockouts.Split('~').Length; i++)
-			{
-				lockouts.Add("~" + _lockouts.Split('~')[i]);
-			}
-                
+            {
+                lockouts.Add("~" + _lockouts.Split('~')[i]);
+            }
+
             return lockouts;
         }
 
@@ -434,13 +446,13 @@ namespace Common
             if (_lockouts == null)
                 return null;
             for (int i = 0; i < _lockouts.Split('~').Length; i++)
-                if(_lockouts.Split('~')[i].Split(':')[0] == "" + zone)
-				{
-					string ret = _lockouts.Split('~')[i];
-					if (!ret.StartsWith("~"))
-						ret = "~" + ret;
-					return ret;
-				}
+                if (_lockouts.Split('~')[i].Split(':')[0] == "" + zone)
+                {
+                    string ret = _lockouts.Split('~')[i];
+                    if (!ret.StartsWith("~"))
+                        ret = "~" + ret;
+                    return ret;
+                }
 
             return null;
         }
@@ -467,10 +479,10 @@ namespace Common
         }
 
         public void AddLockout(Instance_Lockouts Lockout)
-		{
-			// ~zoneID:timestamp:bossId:...~zoneID:timestamp:bossId:...~zoneID:timestamp:bossId:...
-			string newLockout = string.Empty;
-			
+        {
+            // ~zoneID:timestamp:bossId:...~zoneID:timestamp:bossId:...~zoneID:timestamp:bossId:...
+            string newLockout = string.Empty;
+
             if (string.IsNullOrEmpty(_lockouts))
             {
                 newLockout = Lockout.InstanceID + ":" + Lockout.Bosseskilled;
@@ -509,7 +521,7 @@ namespace Common
                 }
             }
 
-			Lockouts = newLockout;
+            Lockouts = newLockout;
             Dirty = true;
         }
     }

@@ -400,7 +400,7 @@ namespace FrameWork
         {
             foreach (string column in columnDefs)
             {
-                string alterTable = "ALTER TABLE `" + tableName + "` DROP COLUMN " + column + "";
+                string alterTable = "ALTER TABLE `" + tableName + "` DROP COLUMN `" + column + "`";
                 try
                 {
                     Log.Debug("DataConnection", alterTable);

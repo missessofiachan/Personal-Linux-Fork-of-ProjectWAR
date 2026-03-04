@@ -1,13 +1,11 @@
 ﻿//#define ABILITY_DEVELOPMENT
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using SystemData;
 using FrameWork;
 using GameData;
+using System;
+using System.Collections.Generic;
+using SystemData;
 using WorldServer.NetWork;
-using WorldServer.Managers;
 using WorldServer.World.Abilities.CareerInterfaces;
 using WorldServer.World.Abilities.Components;
 using WorldServer.World.Interfaces;
@@ -22,11 +20,15 @@ namespace WorldServer.World.Abilities
     public class AbilityInterface : BaseInterface
     {
         #region Static
-        const ushort GLOBAL_COOLDOWN = 1500;
+
+        private const ushort GLOBAL_COOLDOWN = 1500;
+
         // The client attempts to fire abilities 75% of the way through its global cooldown. This compensates for the fact.
-        const long COOLDOWN_GRACE = 400;
+        private const long COOLDOWN_GRACE = 400;
+
         public static bool PreventCasting;
-        #endregion
+
+        #endregion Static
 
         private Unit _unitOwner;
         private Player _playerOwner;
@@ -39,7 +41,11 @@ namespace WorldServer.World.Abilities
         private readonly ushort[] _morales = new ushort[4];
 
         private AbilityProcessor _abilityProcessor;
-        public AbilityProcessor GetAbiityProcessor() { return _abilityProcessor; }
+
+        public AbilityProcessor GetAbiityProcessor()
+        {
+            return _abilityProcessor;
+        }
 
         #region Init/Storage
 
@@ -79,53 +85,11 @@ namespace WorldServer.World.Abilities
 
         private void LoadCareerAbilities()
         {
-            // PurchasedAbilities field meanings:
-            //   NULL or "" = No abilities purchased yet (new character or not yet migrated).
-            //                Only rank-1 abilities are auto-granted.
-            //   "101,205," = Has purchased specific abilities. Load only those + rank-1.
-            //
-            // Note: NULL comes from pre-migration DB rows. We normalize it to "" on first load
-            // and save immediately so the character uses the trainer system going forward.
-            string saved = _playerOwner._Value.PurchasedAbilities ?? "";
+            _abilities = AbilityMgr.GetAvailableCareerAbilities(_playerOwner.Info.CareerLine, 0, _playerOwner.Level);
 
-            if (saved.Length > 0)
-            {
-                // Load only purchased abilities
-                foreach (string token in saved.Split(','))
-                {
-                    if (ushort.TryParse(token.Trim(), out ushort entry) && entry > 0)
-                    {
-                        AbilityInfo ab = AbilityMgr.GetAbilityInfo(entry);
-                        if (ab != null && !_abilitySet.Contains(entry))
-                        {
-                            _abilities.Add(ab);
-                            _abilitySet.Add(entry);
-                        }
-                    }
-                }
-            }
+            foreach (AbilityInfo ab in _abilities)
+                _abilitySet.Add(ab.Entry);
 
-            // Always auto-grant rank-1 abilities (given at character creation in original WAR)
-            List<AbilityInfo> rankOneAbilities = AbilityMgr.GetAvailableCareerAbilities(
-                _playerOwner.Info.CareerLine, 0, 1);
-
-            foreach (AbilityInfo ab in rankOneAbilities)
-            {
-                if (!_abilitySet.Contains(ab.Entry))
-                {
-                    _abilities.Add(ab);
-                    _abilitySet.Add(ab.Entry);
-                }
-            }
-
-            // If the DB had NULL, migrate it to "" now so next login skips this normalization
-            if (_playerOwner._Value.PurchasedAbilities == null)
-            {
-                _playerOwner._Value.PurchasedAbilities = "";
-                CharMgr.Database.SaveObject(_playerOwner._Value);
-            }
-
-            // Always load mastery abilities (governed by mastery points, not trainer)
             List<AbilityInfo> masteryAbilities = AbilityMgr.GetMasteryAbilities(_playerOwner.Info.CareerLine);
 
             foreach (AbilityInfo ab in masteryAbilities)
@@ -139,20 +103,7 @@ namespace WorldServer.World.Abilities
                     _abilitySet.Add(ab.Entry);
                 }
             }
-        }
 
-        /// <summary>Persists the set of purchased career abilities to the database.</summary>
-        private void SavePurchasedAbilities()
-        {
-            // Save all non-mastery career abilities.
-            // Mastery abilities (purchased with mastery points) have PointCost > 0. 
-            // Core career abilities have PointCost == 0 (even if MasteryTree > 0 to link them to a tree).
-            var purchased = _abilities
-                .Where(ab => ab.ConstantInfo != null && ab.ConstantInfo.PointCost == 0)
-                .Select(ab => ab.Entry.ToString());
-
-            _playerOwner._Value.PurchasedAbilities = string.Join(",", purchased);
-            CharMgr.Database.SaveObject(_playerOwner._Value);
         }
 
         public void SendAbilityLevels()
@@ -196,7 +147,7 @@ namespace WorldServer.World.Abilities
             GetPlayer().SendPacket(Out);
         }
 
-        #endregion
+        #endregion Init/Storage
 
         #region Events
 
@@ -207,23 +158,15 @@ namespace WorldServer.World.Abilities
         /// <param name="newLevel"></param>
         public void OnPlayerLeveled(byte oldLevel, byte newLevel)
         {
-            // In the original game, abilities are NOT automatically granted on level up.
-            // Players must visit a Career Trainer and purchase their newly available abilities.
-            // We still update mastery points (which track level-based availability) and
-            // re-send the current ability list so the client stays accurate.
+            List<AbilityInfo> newAbilities = AbilityMgr.GetAvailableCareerAbilities(((Player)_unitOwner).Info.CareerLine, oldLevel + 1, newLevel);
+
+            _abilities.AddRange(newAbilities);
+
+            foreach (AbilityInfo ab in newAbilities)
+                _abilitySet.Add(ab.Entry);
+
             SendMasteryPointsUpdate();
             SendAbilityLevels();
-
-            // Inform the player that new abilities may be available at the trainer.
-            List<AbilityInfo> newAbilities = AbilityMgr.GetAvailableCareerAbilities(
-                ((Player)_unitOwner).Info.CareerLine, oldLevel + 1, newLevel);
-
-            if (newAbilities != null && newAbilities.Count > 0)
-            {
-                ((Player)_unitOwner).SendClientMessage(
-                    "You have reached level " + newLevel + "! Visit a Career Trainer to purchase your new abilities.",
-                    ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
-            }
         }
 
         public bool OnPlayerMoved(Object sender, object args)
@@ -250,57 +193,49 @@ namespace WorldServer.World.Abilities
             _morales[slot - 1] = moraleEntry;
         }
 
-        /// <summary>
-        /// Returns the list of career abilities the player has unlocked by level
-        /// but has not yet purchased from a Career Trainer.
-        /// Rank-1 abilities are excluded as they are auto-granted.
-        /// </summary>
         public List<AbilityInfo> GetPurchasableCareerAbilities()
         {
             if (!HasPlayer())
                 return new List<AbilityInfo>();
 
             Player plr = GetPlayer();
-            // Get all abilities available up to this player's current level
-            List<AbilityInfo> allAvailable = AbilityMgr.GetAvailableCareerAbilities(
-                plr.Info.CareerLine, 0, plr.Level);
+            List<AbilityInfo> allAvailable = AbilityMgr.GetAvailableCareerAbilities(plr.Info.CareerLine, 0, plr.Level);
+            List<AbilityInfo> purchasable = new List<AbilityInfo>();
 
-            // Exclude abilities the player already has AND rank-1 abilities (auto-granted)
-            // Sort them by Rank, then Name, so the index perfectly matches the client's UI ordering
-            return allAvailable
-                .Where(ab => !_abilitySet.Contains(ab.Entry)
-                             && ab.ConstantInfo != null
-                             && ab.ConstantInfo.MinimumRank > 1)
-                .OrderBy(ab => ab.ConstantInfo.MinimumRank)
-                .ThenBy(ab => ab.Name)
-                .ToList();
+            foreach (AbilityInfo ab in allAvailable)
+            {
+                if (_abilitySet.Contains(ab.Entry))
+                    continue;
+
+                if (ab.ConstantInfo == null || ab.ConstantInfo.MinimumRank <= 1)
+                    continue;
+
+                purchasable.Add(ab);
+            }
+
+            purchasable.Sort((a, b) =>
+            {
+                int rankCompare = a.ConstantInfo.MinimumRank.CompareTo(b.ConstantInfo.MinimumRank);
+                return rankCompare != 0 ? rankCompare : string.Compare(a.Name, b.Name, StringComparison.Ordinal);
+            });
+
+            return purchasable;
         }
 
-        /// <summary>
-        /// Grants the player a specific career ability after purchasing it from a Career Trainer.
-        /// Deducts the CashCost from the player's wallet.
-        /// Returns true if the ability was successfully purchased, false if already owned, invalid, or unaffordable.
-        /// </summary>
         public bool PurchaseCareerAbility(ushort abilityEntry)
         {
-            if (!HasPlayer())
+            if (!HasPlayer() || _abilitySet.Contains(abilityEntry))
                 return false;
 
-            if (_abilitySet.Contains(abilityEntry))
-                return false;
-
-            List<AbilityInfo> purchasable = GetPurchasableCareerAbilities();
-            AbilityInfo abInfo = purchasable.FirstOrDefault(ab => ab.Entry == abilityEntry);
-
+            AbilityInfo abInfo = GetPurchasableCareerAbilities().Find(ab => ab.Entry == abilityEntry);
             if (abInfo == null)
                 return false;
 
-            // Deduct the ability's cash cost if one is set
             uint cost = abInfo.ConstantInfo?.CashCost ?? 0;
             if (cost > 0 && !_playerOwner.RemoveMoney(cost))
             {
                 _playerOwner.SendClientMessage(
-                    $"You cannot afford this ability. Cost: {cost} brass.",
+                    "You cannot afford this ability.",
                     ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
                 return false;
             }
@@ -308,16 +243,12 @@ namespace WorldServer.World.Abilities
             _abilities.Add(abInfo);
             _abilitySet.Add(abilityEntry);
 
-            // Persist to database so ability survives relog
-            SavePurchasedAbilities();
-
             SendAbilityLevels();
             ResendCooldown(abilityEntry);
-
             return true;
         }
 
-        #endregion
+        #endregion Events
 
         #region Validation
 
@@ -373,7 +304,7 @@ namespace WorldServer.World.Abilities
             return false;
         }
 
-        #endregion
+        #endregion Validation
 
         public bool IsCasting()
         {
@@ -432,7 +363,7 @@ namespace WorldServer.World.Abilities
             ((Player)_unitOwner).SendPacket(Out);
         }
 
-        #endregion
+        #endregion Granted Abilities
 
         #region NPC Abilities
 
@@ -456,7 +387,7 @@ namespace WorldServer.World.Abilities
             }
         }
 
-        #endregion
+        #endregion NPC Abilities
 
         #region AbilityCast
 
@@ -489,7 +420,6 @@ namespace WorldServer.World.Abilities
 
             try
             {
-
                 if (AbilityMgr.HasCommandsFor(abilityId) || abInfo.ConstantInfo.ChannelID != 0)
                 {
                     if (_abilityProcessor == null)
@@ -498,7 +428,7 @@ namespace WorldServer.World.Abilities
                     abInfo.Instigator = instigator;
                     abInfo.Level = overrideAbilityLevel;
 
-                        return _abilityProcessor.StartAbility(abInfo, castSequence, cooldownGroup, enemyVisible, friendlyVisible, moving);
+                    return _abilityProcessor.StartAbility(abInfo, castSequence, cooldownGroup, enemyVisible, friendlyVisible, moving);
                 }
                 if (_Owner is Player)
                 {
@@ -507,7 +437,6 @@ namespace WorldServer.World.Abilities
                 }
                 return false;
             }
-
             catch (Exception e)
             {
                 if (_Owner is Player)
@@ -557,7 +486,6 @@ namespace WorldServer.World.Abilities
                 }
                 return false;
             }
-
             catch (Exception e)
             {
                 if (_Owner is Player)
@@ -581,7 +509,7 @@ namespace WorldServer.World.Abilities
                 _abilityProcessor.NotifyCancelled((ushort)AbilityResult.ABILITYRESULT_INTERRUPTED);
         }
 
-        #endregion
+        #endregion AbilityCast
 
         #region Cooldowns
 
@@ -636,9 +564,8 @@ namespace WorldServer.World.Abilities
             if (abInfo.IgnoreCooldownReduction == 1 && (abInfo.Cooldown * 1000) >= duration)
             {
                 long nextTimestamp = 0;
-                if (abInfo.CDcap != null && abInfo.CDcap * 1000 > duration)
+                if (abInfo.CDcap != 0 && abInfo.CDcap * 1000 > duration)
                     nextTimestamp = (abInfo.CDcap * 1000) + TCPManager.GetTimeStampMS();
-
                 else
                     nextTimestamp = (abInfo.Cooldown * 1000) + TCPManager.GetTimeStampMS();
 
@@ -662,13 +589,12 @@ namespace WorldServer.World.Abilities
             {
                 long nextTimestamp = 0;
 
-                if (abInfo.CDcap != null && abInfo.CDcap * 1000 > duration)
+                if (abInfo.CDcap != 0 && abInfo.CDcap * 1000 > duration)
                     nextTimestamp = (abInfo.CDcap * 1000) + TCPManager.GetTimeStampMS();
-
                 else
                     nextTimestamp = (duration) + TCPManager.GetTimeStampMS();
 
-                if (duration == -1 && abInfo.CDcap == null)
+                if (duration == -1 && abInfo.CDcap == 0)
                     nextTimestamp = 0;
                 Cooldowns[abilityId] = nextTimestamp;
 
@@ -685,7 +611,6 @@ namespace WorldServer.World.Abilities
                 else
                     _playerOwner?.SendPacket(Out);
             }
-
         }
 
         /// <summary>
@@ -767,7 +692,7 @@ namespace WorldServer.World.Abilities
             item.CharSaveInfo.NextAllowedUseTime = curCooldownMS / 1000;
         }
 
-        #endregion
+        #endregion Cooldowns
 
         #region Mastery
 
@@ -849,7 +774,6 @@ namespace WorldServer.World.Abilities
                 _playerOwner.SendPacket(Out);
             }
 
-
             SaveMastery();
             ReloadMastery();
             SendMasteryPointsUpdate();
@@ -910,7 +834,6 @@ namespace WorldServer.World.Abilities
                             break;
                         masString += ";";
                     }
-
                     else masString += ",";
                 }
             _playerOwner._Value.MasterySkills = masString;
@@ -1001,6 +924,8 @@ namespace WorldServer.World.Abilities
                 _playerOwner.SendPacket(Out);
             }
 
+            List<AbilityInfo> activeMasterySkills = new List<AbilityInfo>();
+
             for (int i = 0; i < MAX_TREE_COUNT; i++)
             {
                 for (int j = 0; j < MAX_TREE_ABILITIES; j++)
@@ -1032,20 +957,25 @@ namespace WorldServer.World.Abilities
                     Out.Fill(0, 4);
                     _playerOwner.SendPacket(Out);
 
-#warning FIXME. This is a skill send packet, but it sends 5 skills - 4 empties and this mastery skill at rank 0. Why is it here? - Az
                     if (_activeSkillsInTree[i, j] == 1)
-                    {
-                        Out = new PacketOut((byte)Opcodes.F_CHARACTER_INFO, 48);
-                        Out.WriteByte(1);
-                        Out.WriteByte(5);
-                        Out.WriteByte(3); // Skills
-                        Out.Fill(0, 3);
-                        Out.Fill(0, 10);
-                        Out.WriteUInt16(_masteryAbilities[i, j].Entry);
-                        Out.WriteByte(0);
-                        _playerOwner.SendPacket(Out);
-                    }
+                        activeMasterySkills.Add(_masteryAbilities[i, j]);
                 }
+            }
+
+            if (activeMasterySkills.Count > 0)
+            {
+                Out = new PacketOut((byte)Opcodes.F_CHARACTER_INFO, 4 + activeMasterySkills.Count * 3);
+                Out.WriteByte(1);
+                Out.WriteByte((byte)activeMasterySkills.Count);
+                Out.WriteUInt16(0x300);
+
+                foreach (var ab in activeMasterySkills)
+                {
+                    Out.WriteUInt16(ab.Entry);
+                    Out.WriteByte(GetMasteryLevelFor(ab.ConstantInfo.MasteryTree));
+                }
+
+                _playerOwner.SendPacket(Out);
             }
         }
 
@@ -1136,9 +1066,9 @@ namespace WorldServer.World.Abilities
             byte curLevel = _unitOwner.Level;
             if (_unitOwner.AdjustedLevel < curLevel)
                 curLevel = _unitOwner.AdjustedLevel;
-            
+
             return (byte)(10 + ((curLevel - 10) >> 1) + (_unitOwner.EffectiveLevel - curLevel) + _pointsInTree[masteryTree - 1]);
-            
+
             //// The following correctly displays tooltip information.
             //return (byte)(curLevel + (_pointsInTree[masteryTree - 1] * 2));
         }
@@ -1155,86 +1085,41 @@ namespace WorldServer.World.Abilities
 
             AbilityInterface abInterface = cclient.Plr.AbtInterface;
 
-            // RE toolkit confirms the packet layout (F_BUY_CAREER_PACKAGE.cs):
-            //   ActionType  : byte
-            //   CategoryID  : byte  (CareerCategoryType enum)
-            //   PackageID   : uint16 (1-based index of package within the category)
-            byte actionType  = packet.GetUint8();
-            byte categoryId  = packet.GetUint8();
-            ushort packageId = packet.GetUint16();
+            byte value = packet.GetUint8();
+            byte resource = packet.GetUint8();
+            byte unk1 = packet.GetUint8();
+            byte tree = packet.GetUint8();
 
-            Log.Info("F_BUY_CAREER_PACKAGE",
-                $"Player={cclient.Plr.Name} actionType={actionType} categoryId={categoryId} packageId={packageId}");
-
-            // CategoryID == 7 : Mastery training
-            if (categoryId == 7)
+            if (resource != 7) // renown training
             {
-                ushort tree = packageId;
-                if (tree <= 3)
-                {
-                    if (!abInterface.AddPointToTree((byte)tree))
-                        return;
-                }
-                else if (tree <= 24)
-                {
-                    byte targetTree = 1;
-                    tree -= 3;
+                cclient.Plr.RenInterface.PurchaseRenownAbility(resource, tree);
+                return;
+            }
 
-                    while (tree > 7)
-                    {
-                        tree -= 7;
-                        targetTree++;
-                    }
-
-                    abInterface.ActivateSkillInTree(targetTree, (byte)tree);
-                }
-                else
+            if (tree <= 3)
+            {
+                if (!abInterface.AddPointToTree(tree))
                     return;
-
-                abInterface.SaveMastery();
-                abInterface.ReloadMastery();
-                abInterface.MasteryChanged = true;
-                return;
             }
-
-            // CategoryID 9-15 : Renown trainer trees
-            if (categoryId >= 9 && categoryId <= 15)
+            else if (tree <= 24)
             {
-                cclient.Plr.RenInterface.PurchaseRenownAbility(categoryId, (byte)packageId);
-                return;
-            }
+                byte targetTree = 1;
+                tree -= 3;
 
-            // All other CategoryIDs: career trainer core ability purchase.
-            // PackageID is the 1-based index of the ability in the player's purchasable list.
-            var purchasable = abInterface.GetPurchasableCareerAbilities();
-
-            Log.Info("F_BUY_CAREER_PACKAGE",
-                $"Career ability purchase. Purchasable count={purchasable.Count} packageId={packageId}");
-
-            if (packageId == 0 || packageId > purchasable.Count)
-            {
-                // packageId might be the direct ability entry ID — try matching by entry
-                var byEntry = purchasable.FirstOrDefault(ab => ab.Entry == packageId);
-                if (byEntry != null)
+                while (tree > 7)
                 {
-                    if (!abInterface.PurchaseCareerAbility(byEntry.Entry))
-                        cclient.Plr.SendClientMessage("You cannot purchase this ability.", ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
+                    tree -= 7;
+                    targetTree++;
                 }
-                else
-                {
-                    Log.Info("F_BUY_CAREER_PACKAGE",
-                        $"No purchasable career ability found for packageId={packageId}");
-                }
-                return;
+
+                abInterface.ActivateSkillInTree(targetTree, tree);
             }
+            else
+                return;
 
-            ushort abilityEntry = purchasable[(int)(packageId - 1)].Entry;
-
-            Log.Info("F_BUY_CAREER_PACKAGE",
-                $"Purchasing career ability entry={abilityEntry} name={AbilityMgr.GetAbilityNameFor(abilityEntry)}");
-
-            if (!abInterface.PurchaseCareerAbility(abilityEntry))
-                cclient.Plr.SendClientMessage("You cannot purchase this ability.", ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
+            abInterface.SaveMastery();
+            abInterface.ReloadMastery();
+            abInterface.MasteryChanged = true;
         }
 
         public bool AddPointToTree(byte tree)
@@ -1255,16 +1140,15 @@ namespace WorldServer.World.Abilities
             _abilitySet.Add(_masteryAbilities[tree - 1, skill - 1].Entry);
         }
 
-        #endregion
+        #endregion Mastery Purchasing
 
         public void RespecializeMastery(bool force)
         {
-            if (!force)
+            if (!force && !_playerOwner.CrrInterface.ExperimentalMode)
             {
                 if (_playerOwner.ItmInterface.HasItemCountInInventory(129841000, 1))
                 {
                     _playerOwner.ItmInterface.RemoveItems(129841000, 1);
-                    
                 }
                 else
                 {
@@ -1272,7 +1156,6 @@ namespace WorldServer.World.Abilities
                         return;
                     _playerOwner.RemoveMoney((uint)(GetTotalSpent() * 2000));
                 }
-
             }
 
             _playerOwner.BuffInterface.RemoveCasterBuffs();
@@ -1311,7 +1194,6 @@ namespace WorldServer.World.Abilities
                 _playerOwner.SendPacket(Out);
             }
 
-
             _playerOwner._Value.MasterySkills = (0 + _bonusMasteryPoints[0]) + ";" +
                                                 (0 + _bonusMasteryPoints[1]) + ";" +
                                                 (0 + _bonusMasteryPoints[2]) + ";" +
@@ -1345,5 +1227,6 @@ namespace WorldServer.World.Abilities
             }
         }
     }
-    #endregion
+
+    #endregion Mastery
 }

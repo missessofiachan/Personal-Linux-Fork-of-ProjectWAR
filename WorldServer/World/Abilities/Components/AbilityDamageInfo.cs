@@ -1,7 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using Common;
+﻿using Common;
 using FrameWork;
+using System;
+using System.Collections.Generic;
 using WorldServer.World.Objects;
 
 namespace WorldServer.World.Abilities.Components
@@ -16,6 +16,7 @@ namespace WorldServer.World.Abilities.Components
 
         // Damage
         public ushort MinDamage;
+
         public ushort MaxDamage;
         public ushort DamageVariance;
         public float PrecalcDamage;
@@ -36,8 +37,8 @@ namespace WorldServer.World.Abilities.Components
         public byte StatUsed;
         public float StatDamageScale;
 
-        public float DamageBonus = 1;
-        public float DamageReduction = 1;
+        public float DamageBonus = 1.0f;
+        public float DamageReduction = 1.0f;
 
         public byte CriticalHitRate;
         public float CriticalHitDamageBonus;
@@ -95,7 +96,7 @@ namespace WorldServer.World.Abilities.Components
         public byte MasteryTree;
 
         // Amount that this damage contributes for XP/RP sharing.
-        public float ContributoryFactor = 1f;
+        public float ContributoryFactor = 1.0f;
 
         // Set if this damage should use a fraction of the Item Stat Total for its stat contribution.
         public bool UseItemStatTotal;
@@ -108,7 +109,6 @@ namespace WorldServer.World.Abilities.Components
 
         public AbilityDamageInfo()
         {
-
         }
 
         public AbilityDamageInfo(DBAbilityDamageInfo dbObj)
@@ -150,7 +150,7 @@ namespace WorldServer.World.Abilities.Components
             return dmgInfo;
         }
 
-        #endregion
+        #endregion Load
 
         #region Interface
 
@@ -223,6 +223,6 @@ namespace WorldServer.World.Abilities.Components
             return cDmgInfo;
         }
 
-        #endregion
+        #endregion Interface
     }
 }
