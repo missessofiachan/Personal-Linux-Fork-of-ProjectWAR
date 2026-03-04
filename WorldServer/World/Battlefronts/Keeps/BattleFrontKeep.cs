@@ -727,6 +727,12 @@ namespace WorldServer.World.Battlefronts.Keeps
 
             foreach (var door in Doors)
             {
+                if (door?.GameObject == null)
+                {
+                    _logger.Warn($"Skipping door repair timer for {Info.Name}: keep door object missing (door id {door?.Info?.DoorId}).");
+                    continue;
+                }
+
                 if (!DoorRepairTimers.ContainsKey(door.GameObject.DoorId))
                 {
                     DoorRepairTimers.TryAdd(door.GameObject.DoorId, new KeepTimer($"Door {door.GameObject.DoorId} Repair Timer", 0, Program.Config.DoorRepairTimerLength));

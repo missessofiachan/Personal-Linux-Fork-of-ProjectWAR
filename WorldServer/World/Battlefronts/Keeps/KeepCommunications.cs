@@ -20,9 +20,14 @@ namespace WorldServer.World.Battlefronts.Keeps
             //var doors = keep.Doors.FindAll(x =>
             //    x.Info.Number != (int) KeepDoorType.None && x.Info.GameObjectId == 100 && x.GameObject.PctHealth > 0);
 
-            var doors = keep.Doors.FindAll(x => x.Info.GameObjectId == 100);
+            var doors = keep.Doors.FindAll(x => x?.Info != null && x.Info.GameObjectId == 100);
 
-            var innerDoor = keep.Doors.SingleOrDefault(x => x.Info.Number == (int)KeepDoorType.InnerMain);
+            var innerDoor = keep.Doors.SingleOrDefault(x => x?.Info != null && x.Info.Number == (int)KeepDoorType.InnerMain);
+            byte innerDoorHealth = 0;
+            if (innerDoor?.GameObject != null)
+                innerDoorHealth = (byte)innerDoor.GameObject.PctHealth;
+            else if (innerDoor != null)
+                _logger.Warn($"Inner keep door object missing for keep {keep.Info?.Name} (door id {innerDoor.Info?.DoorId}). Sending health=0.");
 
             var Out = new PacketOut((byte)Opcodes.F_KEEP_STATUS, 26);
             Out.WriteByte(keep.Info.KeepId);
@@ -34,7 +39,7 @@ namespace WorldServer.World.Battlefronts.Keeps
                 Out.WriteByte(keep.Rank); // Rank
                 if (doors.Count > 0)
                     if (innerDoor != null)
-                        Out.WriteByte((byte)((innerDoor.GameObject.PctHealth))); // Door health
+                        Out.WriteByte(innerDoorHealth); // Door health
                     else
                     {
                         Out.WriteByte(0);
