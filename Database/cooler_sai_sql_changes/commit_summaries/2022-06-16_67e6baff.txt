@@ -1,9 +1,0 @@
-﻿commit=67e6baff09fdf49cd510a9fd7d7417b293a00927
-date=2022-06-16
-subject=Merge pull request #87 from Shmerrick/development
-files_changed=1
-insertions=2
-deletions=0
-sql_file_count=0
-
-[name-status under SQL/Database]
