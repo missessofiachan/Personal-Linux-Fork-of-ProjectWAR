@@ -41,6 +41,10 @@ namespace WorldServer.World.Abilities
         // Career abilities
         public static List<AbilityInfo>[] CareerAbilities = new List<AbilityInfo>[24];
 
+        // Canonical entry maps used to resolve pseudo/alias ability and buff entries.
+        private static readonly Dictionary<ushort, ushort> AbilityEntryAliases = new Dictionary<ushort, ushort>();
+        private static readonly Dictionary<ushort, ushort> BuffEntryAliases = new Dictionary<ushort, ushort>();
+
         private const ushort RenownEmpoweredMasteryEntry = 27870;
         private const ushort RenownEternalMasteryEntry = 27871;
         private const ushort RenownInfiniteMasteryEntry = 27872;
@@ -65,6 +69,8 @@ namespace WorldServer.World.Abilities
             KnockbackInfos.Clear();
 
             ExtraDamage.Clear();
+            AbilityEntryAliases.Clear();
+            BuffEntryAliases.Clear();
 
             for (byte i = 0; i < 24; ++i)
                 CareerAbilities[i].Clear();
@@ -441,6 +447,7 @@ namespace WorldServer.World.Abilities
             }
 
             EnsureRenownTacticBuffs();
+            BuildCanonicalEntryAliases();
 
             #endregion Buff/Command linkage
 
@@ -650,31 +657,187 @@ namespace WorldServer.World.Abilities
             return shell;
         }
 
+        private static void BuildCanonicalEntryAliases()
+        {
+            AbilityEntryAliases.Clear();
+            BuffEntryAliases.Clear();
+
+            foreach (AbilityInfo ability in NewAbilityVolatiles.Values)
+            {
+                ushort canonicalEntry = GetEffectAliasTarget(ability);
+                if (canonicalEntry == 0 || canonicalEntry == ability.Entry)
+                    continue;
+
+                AbilityEntryAliases[ability.Entry] = canonicalEntry;
+            }
+
+            foreach (var aliasPair in AbilityEntryAliases)
+            {
+                if (!BuffInfos.ContainsKey(aliasPair.Key) && BuffInfos.ContainsKey(aliasPair.Value))
+                    BuffEntryAliases[aliasPair.Key] = aliasPair.Value;
+            }
+
+            foreach (AbilityInfo ability in NewAbilityVolatiles.Values)
+            {
+                ushort effectEntry = ability.ConstantInfo?.EffectID ?? 0;
+                if (effectEntry == 0 || effectEntry == ability.Entry)
+                    continue;
+
+                if (!BuffInfos.ContainsKey(ability.Entry) && BuffInfos.ContainsKey(effectEntry))
+                    BuffEntryAliases[ability.Entry] = effectEntry;
+            }
+
+            if (AbilityEntryAliases.Count > 0 || BuffEntryAliases.Count > 0)
+            {
+                Log.Info("AbilityMgr",
+                    $"Installed canonical ability aliases: {AbilityEntryAliases.Count}, buff aliases: {BuffEntryAliases.Count}.");
+            }
+        }
+
+        private static ushort GetEffectAliasTarget(AbilityInfo sourceAbility)
+        {
+            if (sourceAbility == null || sourceAbility.ConstantInfo == null)
+                return 0;
+
+            ushort sourceEntry = sourceAbility.Entry;
+            ushort effectEntry = sourceAbility.ConstantInfo.EffectID;
+            if (effectEntry == 0 || effectEntry == sourceEntry)
+                return 0;
+
+            if (!NewAbilityVolatiles.TryGetValue(effectEntry, out AbilityInfo targetAbility))
+                return 0;
+
+            if (HasDirectImplementation(sourceEntry))
+                return 0;
+
+            if (!HasDirectImplementation(effectEntry))
+                return 0;
+
+            if (!IsLikelyAliasPair(sourceAbility, targetAbility))
+                return 0;
+
+            return effectEntry;
+        }
+
+        private static bool IsLikelyAliasPair(AbilityInfo sourceAbility, AbilityInfo targetAbility)
+        {
+            if (sourceAbility?.ConstantInfo == null || targetAbility?.ConstantInfo == null)
+                return false;
+
+            if (sourceAbility.ConstantInfo.CareerLine != 0
+                && targetAbility.ConstantInfo.CareerLine != 0
+                && sourceAbility.ConstantInfo.CareerLine != targetAbility.ConstantInfo.CareerLine)
+            {
+                return false;
+            }
+
+            if (NamesEquivalent(sourceAbility.Name, targetAbility.Name))
+                return true;
+
+            return sourceAbility.ConstantInfo.MasteryTree == targetAbility.ConstantInfo.MasteryTree;
+        }
+
+        private static bool NamesEquivalent(string left, string right)
+        {
+            if (left == null || right == null)
+                return false;
+
+            return left.Trim().Equals(right.Trim(), StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool HasDirectImplementation(ushort entry)
+        {
+            if (AbilityCommandInfos.ContainsKey(entry))
+                return true;
+
+            return NewAbilityVolatiles.ContainsKey(entry) && NewAbilityVolatiles[entry].ConstantInfo?.ChannelID > 0;
+        }
+
+        private static ushort ResolveAlias(ushort entry, Dictionary<ushort, ushort> aliasMap)
+        {
+            ushort current = entry;
+            byte guard = 0;
+
+            while (guard < 8 && aliasMap.TryGetValue(current, out ushort next) && next != current)
+            {
+                current = next;
+                guard++;
+            }
+
+            return current;
+        }
+
+        public static ushort ResolveAbilityEntry(ushort entry)
+        {
+            return ResolveAlias(entry, AbilityEntryAliases);
+        }
+
+        public static ushort ResolveBuffEntry(ushort entry)
+        {
+            ushort resolved = ResolveAlias(entry, BuffEntryAliases);
+            if (resolved != entry)
+                return resolved;
+
+            if (BuffInfos.ContainsKey(entry))
+                return entry;
+
+            ushort resolvedAbility = ResolveAbilityEntry(entry);
+            if (resolvedAbility != entry && BuffInfos.ContainsKey(resolvedAbility))
+                return resolvedAbility;
+
+            if (NewAbilityVolatiles.TryGetValue(entry, out AbilityInfo ability))
+            {
+                ushort effectEntry = ability.ConstantInfo?.EffectID ?? 0;
+                if (effectEntry != 0 && BuffInfos.ContainsKey(effectEntry))
+                    return effectEntry;
+            }
+
+            return entry;
+        }
+
         #region Accessors
 
         public static bool HasPreCastModifiers(ushort entry)
         {
-            return AbilityPreCastModifiers.ContainsKey(entry);
+            if (AbilityPreCastModifiers.ContainsKey(entry))
+                return true;
+
+            return AbilityPreCastModifiers.ContainsKey(ResolveAbilityEntry(entry));
         }
 
         public static List<AbilityModifier> GetAbilityPreCastModifiers(ushort entry)
         {
-            return AbilityPreCastModifiers.ContainsKey(entry) ? AbilityPreCastModifiers[entry] : null;
+            if (AbilityPreCastModifiers.ContainsKey(entry))
+                return AbilityPreCastModifiers[entry];
+
+            ushort resolvedEntry = ResolveAbilityEntry(entry);
+            return AbilityPreCastModifiers.ContainsKey(resolvedEntry) ? AbilityPreCastModifiers[resolvedEntry] : null;
         }
 
         public static bool HasModifiers(ushort entry)
         {
-            return AbilityModifiers.ContainsKey(entry);
+            if (AbilityModifiers.ContainsKey(entry))
+                return true;
+
+            return AbilityModifiers.ContainsKey(ResolveAbilityEntry(entry));
         }
 
         public static List<AbilityModifier> GetAbilityModifiers(ushort entry)
         {
-            return AbilityModifiers.ContainsKey(entry) ? AbilityModifiers[entry] : null;
+            if (AbilityModifiers.ContainsKey(entry))
+                return AbilityModifiers[entry];
+
+            ushort resolvedEntry = ResolveAbilityEntry(entry);
+            return AbilityModifiers.ContainsKey(resolvedEntry) ? AbilityModifiers[resolvedEntry] : null;
         }
 
         public static List<AbilityModifier> GetAbilityDelayedModifiers(ushort entry)
         {
-            return AbilityDelayedModifiers.ContainsKey(entry) ? AbilityDelayedModifiers[entry] : null;
+            if (AbilityDelayedModifiers.ContainsKey(entry))
+                return AbilityDelayedModifiers[entry];
+
+            ushort resolvedEntry = ResolveAbilityEntry(entry);
+            return AbilityDelayedModifiers.ContainsKey(resolvedEntry) ? AbilityDelayedModifiers[resolvedEntry] : null;
         }
 
         public static List<AbilityInfo> GetAvailableCareerAbilities(byte careerLine, int minRank, int maxRank)
@@ -710,73 +873,96 @@ namespace WorldServer.World.Abilities
 
         public static AbilityInfo GetAbilityInfo(ushort entry)
         {
-            if (!NewAbilityVolatiles.ContainsKey(entry))
-                return null;
+            if (NewAbilityVolatiles.TryGetValue(entry, out AbilityInfo directInfo))
+                return directInfo.Clone();
 
-            return NewAbilityVolatiles[entry].Clone();
+            ushort resolvedEntry = ResolveAbilityEntry(entry);
+            if (resolvedEntry != entry && NewAbilityVolatiles.TryGetValue(resolvedEntry, out AbilityInfo resolvedInfo))
+                return resolvedInfo.Clone();
+
+            return null;
         }
 
         public static string GetAbilityNameFor(ushort abilityEntry)
         {
             if (NewAbilityVolatiles.ContainsKey(abilityEntry))
                 return NewAbilityVolatiles[abilityEntry].Name;
-            if (BuffInfos.ContainsKey(abilityEntry))
-                return BuffInfos[abilityEntry].Name;
+
+            ushort resolvedAbility = ResolveAbilityEntry(abilityEntry);
+            if (resolvedAbility != abilityEntry && NewAbilityVolatiles.ContainsKey(resolvedAbility))
+                return NewAbilityVolatiles[resolvedAbility].Name;
+
+            ushort resolvedBuff = ResolveBuffEntry(abilityEntry);
+            if (BuffInfos.ContainsKey(resolvedBuff))
+                return BuffInfos[resolvedBuff].Name;
+
             return "attack";
         }
 
         public static byte GetMasteryTreeFor(ushort entry)
         {
-            if (NewAbilityVolatiles.ContainsKey(entry))
-                return NewAbilityVolatiles[entry].ConstantInfo.MasteryTree;
+            ushort resolvedEntry = ResolveAbilityEntry(entry);
+            if (NewAbilityVolatiles.ContainsKey(resolvedEntry))
+                return NewAbilityVolatiles[resolvedEntry].ConstantInfo.MasteryTree;
             return 0;
         }
 
         public static ushort GetCooldownFor(ushort entry)
         {
-            if (NewAbilityVolatiles.ContainsKey(entry))
-                return NewAbilityVolatiles[entry].Cooldown;
+            ushort resolvedEntry = ResolveAbilityEntry(entry);
+            if (NewAbilityVolatiles.ContainsKey(resolvedEntry))
+                return NewAbilityVolatiles[resolvedEntry].Cooldown;
             return 0;
         }
 
         public static AbilityDamageInfo GetExtraDamageFor(ushort entry, byte id, byte index)
         {
+            ushort resolvedEntry = ResolveAbilityEntry(entry);
             try
             {
-                return ExtraDamage[entry][id][index].Clone();
+                return ExtraDamage[resolvedEntry][id][index].Clone();
             }
             catch (Exception)
             {
-                Log.Error("AbilityMgr", "Couldn't get damage info for Entry " + entry + " ID " + id + " Index " + index);
+                Log.Error("AbilityMgr", "Couldn't get damage info for Entry " + entry + " (resolved " + resolvedEntry + ") ID " + id + " Index " + index);
                 return null;
             }
         }
 
         public static bool RequiresResource(ushort entry)
         {
-            if (!NewAbilityVolatiles.ContainsKey(entry))
+            ushort resolvedEntry = ResolveAbilityEntry(entry);
+            if (!NewAbilityVolatiles.ContainsKey(resolvedEntry))
                 return false;
 
-            return NewAbilityVolatiles[entry].SpecialCost > 0;
+            return NewAbilityVolatiles[resolvedEntry].SpecialCost > 0;
         }
 
         public static AbilityKnockbackInfo GetKnockbackInfo(ushort entry, int id)
         {
-            return KnockbackInfos[entry][id];
+            ushort resolvedEntry = ResolveAbilityEntry(entry);
+            return KnockbackInfos[resolvedEntry][id];
         }
 
         public static bool HasCommandsFor(ushort abilityEntry)
         {
-            return AbilityCommandInfos.ContainsKey(abilityEntry);
+            if (AbilityCommandInfos.ContainsKey(abilityEntry))
+                return true;
+
+            return AbilityCommandInfos.ContainsKey(ResolveAbilityEntry(abilityEntry));
         }
 
         public static void GetCommandsFor(Unit caster, AbilityInfo abInfo)
         {
-            if (AbilityCommandInfos.ContainsKey(abInfo.Entry))
+            ushort commandEntry = AbilityCommandInfos.ContainsKey(abInfo.Entry)
+                ? abInfo.Entry
+                : ResolveAbilityEntry(abInfo.Entry);
+
+            if (AbilityCommandInfos.ContainsKey(commandEntry))
             {
                 // Add commands to the new info if they're applicable to the player.
                 // Has to be done here because of bloody tactics and career crap
-                foreach (AbilityCommandInfo abCommand in AbilityCommandInfos[abInfo.Entry])
+                foreach (AbilityCommandInfo abCommand in AbilityCommandInfos[commandEntry])
                 {
                     if (!abCommand.NoAutoUse)
                     {
@@ -794,12 +980,14 @@ namespace WorldServer.World.Abilities
 
         public static AbilityCommandInfo GetAbilityCommand(Unit caster, ushort entry, byte comIndex)
         {
-            return AbilityCommandInfos[entry][comIndex].Clone(caster);
+            ushort resolvedEntry = AbilityCommandInfos.ContainsKey(entry) ? entry : ResolveAbilityEntry(entry);
+            return AbilityCommandInfos[resolvedEntry][comIndex].Clone(caster);
         }
 
         public static AbilityCommandInfo GetAbilityCommand(Unit caster, ushort entry, byte comIndex, byte comSeq)
         {
-            return AbilityCommandInfos[entry][comIndex].GetSubcommand(comSeq).Clone(caster);
+            ushort resolvedEntry = AbilityCommandInfos.ContainsKey(entry) ? entry : ResolveAbilityEntry(entry);
+            return AbilityCommandInfos[resolvedEntry][comIndex].GetSubcommand(comSeq).Clone(caster);
         }
 
         #endregion Accessors
@@ -808,29 +996,38 @@ namespace WorldServer.World.Abilities
 
         public static bool HasBuffModifiers(ushort entry)
         {
-            return BuffModifiers.ContainsKey(entry);
+            if (BuffModifiers.ContainsKey(entry))
+                return true;
+
+            return BuffModifiers.ContainsKey(ResolveBuffEntry(entry));
         }
 
         public static List<AbilityModifier> GetBuffModifiers(ushort entry)
         {
-            return BuffModifiers.ContainsKey(entry) ? BuffModifiers[entry] : null;
+            if (BuffModifiers.ContainsKey(entry))
+                return BuffModifiers[entry];
+
+            ushort resolvedEntry = ResolveBuffEntry(entry);
+            return BuffModifiers.ContainsKey(resolvedEntry) ? BuffModifiers[resolvedEntry] : null;
         }
 
         public static BuffInfo GetBuffInfo(ushort entry)
         {
-            if (BuffInfos.ContainsKey(entry))
-                return BuffInfos[entry].Clone();
+            ushort resolvedEntry = ResolveBuffEntry(entry);
+            if (BuffInfos.ContainsKey(resolvedEntry))
+                return BuffInfos[resolvedEntry].Clone();
             Log.Error("GetBuffInfo(entry)", $"Nonexistent buff: {entry}");
             return null;
         }
 
         public static BuffInfo GetBuffInfo(ushort entry, Unit caster, Unit target)
         {
-            if (BuffInfos.ContainsKey(entry))
+            ushort resolvedEntry = ResolveBuffEntry(entry);
+            if (BuffInfos.ContainsKey(resolvedEntry))
             {
-                BuffInfo buffInfo = BuffInfos[entry].Clone();
+                BuffInfo buffInfo = BuffInfos[resolvedEntry].Clone();
 
-                List<AbilityModifier> myModifiers = GetBuffModifiers(entry);
+                List<AbilityModifier> myModifiers = GetBuffModifiers(resolvedEntry);
                 if (myModifiers != null)
                 {
                     foreach (var modifier in myModifiers)
@@ -848,12 +1045,14 @@ namespace WorldServer.World.Abilities
 
         public static BuffCommandInfo GetBuffCommand(ushort entry, byte commandIndex)
         {
-            return BuffCommandInfos[entry][commandIndex].CloneChain();
+            ushort resolvedEntry = BuffCommandInfos.ContainsKey(entry) ? entry : ResolveBuffEntry(entry);
+            return BuffCommandInfos[resolvedEntry][commandIndex].CloneChain();
         }
 
         public static BuffCommandInfo GetBuffCommand(ushort entry, byte commandIndex, byte comSeq)
         {
-            return BuffCommandInfos[entry][commandIndex].GetSubcommand(comSeq).CloneChain();
+            ushort resolvedEntry = BuffCommandInfos.ContainsKey(entry) ? entry : ResolveBuffEntry(entry);
+            return BuffCommandInfos[resolvedEntry][commandIndex].GetSubcommand(comSeq).CloneChain();
         }
 
         #endregion Buff Interface

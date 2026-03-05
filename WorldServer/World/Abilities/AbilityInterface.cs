@@ -411,10 +411,27 @@ namespace WorldServer.World.Abilities
                 return true;
 
             Player plr = GetPlayer();
+            ushort infoCanonicalEntry = AbilityMgr.ResolveAbilityEntry(info.Entry);
 
             // Lock out abilities the player shouldn't have access to
             if (!_abilitySet.Contains(info.Entry))
-                return false;
+            {
+                bool hasEquivalentEntry = _abilitySet.Contains(infoCanonicalEntry);
+                if (!hasEquivalentEntry)
+                {
+                    foreach (ushort ownedEntry in _abilitySet)
+                    {
+                        if (AbilityMgr.ResolveAbilityEntry(ownedEntry) == infoCanonicalEntry)
+                        {
+                            hasEquivalentEntry = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!hasEquivalentEntry)
+                    return false;
+            }
 
             if (info.ConstantInfo.MinimumRank > plr.AdjustedLevel || info.ConstantInfo.MinimumRenown > plr.RenownRank)
                 return false;
@@ -556,7 +573,9 @@ namespace WorldServer.World.Abilities
             }
 
             // Allow only interruption of channeled skills of a different ID to the skill being used
-            if (IsCasting() && (!_abilityProcessor.IsChannelling || _abilityProcessor.AbInfo.Entry == abilityId))
+            if (IsCasting()
+                && (!_abilityProcessor.IsChannelling
+                    || AbilityMgr.ResolveAbilityEntry(_abilityProcessor.AbInfo.Entry) == AbilityMgr.ResolveAbilityEntry(abilityId)))
                 return false;
 
             AbilityInfo abInfo = AbilityMgr.GetAbilityInfo(abilityId);
@@ -614,7 +633,9 @@ namespace WorldServer.World.Abilities
             }
 
             // Allow only interruption of channeled skills of a different ID to the skill being used
-            if (IsCasting() && (!_abilityProcessor.IsChannelling || _abilityProcessor.AbInfo.Entry == abilityID))
+            if (IsCasting()
+                && (!_abilityProcessor.IsChannelling
+                    || AbilityMgr.ResolveAbilityEntry(_abilityProcessor.AbInfo.Entry) == AbilityMgr.ResolveAbilityEntry(abilityID)))
                 return false;
 
             AbilityInfo abInfo = AbilityMgr.GetAbilityInfo(abilityID);
