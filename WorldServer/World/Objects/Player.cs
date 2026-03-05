@@ -712,18 +712,36 @@ namespace WorldServer.World.Objects
 
         private void SetMaxActionPoints(byte valueRenownRank)
         {
+            int baseMaxActionPoints;
+
             if (valueRenownRank >= 65 && valueRenownRank < 75)
             {
-                MaxActionPoints = 275;
+                baseMaxActionPoints = 275;
             }
             else if (valueRenownRank >= 75)
             {
-                MaxActionPoints = 300;
+                baseMaxActionPoints = 300;
             }
             else
             {
-                MaxActionPoints = 250;
+                baseMaxActionPoints = 250;
             }
+
+            int bonusFromStats = StsInterface?.GetBonusStat(Stats.MaxActionPoints) ?? 0;
+            int itemBonusFromStats = StsInterface?.GetItemStat(Stats.MaxActionPoints) ?? 0;
+            int reducedFromStats = StsInterface?.GetReducedStat(Stats.MaxActionPoints) ?? 0;
+
+            int computedMaxAp = baseMaxActionPoints + bonusFromStats + itemBonusFromStats - reducedFromStats;
+            if (computedMaxAp < 1)
+                computedMaxAp = 1;
+
+            ushort previousMaxActionPoints = MaxActionPoints;
+            MaxActionPoints = (ushort)Math.Min(ushort.MaxValue, computedMaxAp);
+
+            if (ActionPoints > MaxActionPoints)
+                ActionPoints = MaxActionPoints;
+            else if (previousMaxActionPoints != MaxActionPoints && Loaded && _initialized)
+                SendHealth();
         }
 
         public void StartInit()
@@ -3201,12 +3219,17 @@ namespace WorldServer.World.Objects
 
         public void SetRenownLevel(byte level)
         {
-            if (level < _Value.RenownRank)
+            byte oldRenownRank = _Value.RenownRank;
+
+            if (level < oldRenownRank)
                 _Value.Renown = 0;
 
             CurrentRenown = XpRenownService.GetRenown_Info(level);
             _Value.RenownRank = level;
             //_Value.Renown = 0;
+
+            AbtInterface?.OnPlayerRenownChanged(oldRenownRank, level);
+            SetMaxActionPoints(level);
 
             // Reset the bounty score for the player upon gaining an XP Level
             BountyManagerInstance?.ResetCharacterBounty(CharacterId, this);
@@ -3415,12 +3438,16 @@ namespace WorldServer.World.Objects
             if (_Value.RenownRank >= Program.Config.RenownCap || (_Value.Level < 32 && _Value.RenownRank >= (2 * _Value.Level)))
                 return;
 
+            byte oldRenownRank = _Value.RenownRank;
+
             CurrentRenown = XpRenownService.GetRenown_Info((byte)(_Value.RenownRank + 1));
             if (CurrentRenown == null)
                 return;
 
             _Value.RenownRank += 1;
             _Value.Renown = 0;
+            AbtInterface?.OnPlayerRenownChanged(oldRenownRank, _Value.RenownRank);
+            SetMaxActionPoints(_Value.RenownRank);
             if (remainder > 0)
                 InternalAddRenown(remainder, true);
             else SendRenown();
@@ -4603,6 +4630,45 @@ namespace WorldServer.World.Objects
         #endregion
 
         #region Stats
+
+        public byte GetCareerTacticSlots()
+        {
+            var slots = Level > 10 ? Level / 10 : 0;
+            if (slots > 4)
+                slots = 4;
+            return (byte)slots;
+        }
+
+        public byte GetRenownTacticSlots()
+        {
+            return Level >= 40 ? (byte)2 : (byte)0;
+        }
+
+        public byte GetTomeTacticSlots()
+        {
+            return Level >= 40 ? (byte)1 : (byte)0;
+        }
+
+        public int GetMaxTacticSlots()
+        {
+            return GetCareerTacticSlots() + GetRenownTacticSlots() + GetTomeTacticSlots();
+        }
+
+        public byte GetTacticSlotFlags()
+        {
+            byte careerSlots = GetCareerTacticSlots();
+            byte renownSlots = GetRenownTacticSlots();
+            byte tomeSlots = GetTomeTacticSlots();
+
+            if (careerSlots > 7)
+                careerSlots = 7;
+            if (renownSlots > 3)
+                renownSlots = 3;
+            if (tomeSlots > 3)
+                tomeSlots = 3;
+
+            return (byte)(careerSlots | (renownSlots << 3) | (tomeSlots << 5));
+        }
 
         public void SendStats()
         {

@@ -1507,6 +1507,9 @@ namespace WorldServer.Managers
 
             foreach (var regionMgr in _Regions)
             {
+                if (regionMgr?.Campaign != null)
+                    continue;
+
                 var objectiveList = LoadObjectives(regionMgr);
                 switch (regionMgr.RegionId)
                 {

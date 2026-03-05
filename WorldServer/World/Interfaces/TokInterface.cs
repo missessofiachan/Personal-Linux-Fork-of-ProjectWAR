@@ -302,12 +302,12 @@ namespace WorldServer.World.Interfaces
 
         public void AddKill(ushort type)
         {
-            Tok_Bestary TB = TokService.GetTokBestary(type);
+            Tok_Bestiary TB = TokService.GetTokBestiary(type);
             if (TB == null)
                 return;
 
             Character_tok_kills kills;
-            if (_tokKillCount.TryGetValue(TB.Bestary_ID, out kills))
+            if (_tokKillCount.TryGetValue(TB.Bestiary_ID, out kills))
             {
                 kills.Count++;
                 kills.Dirty = true;
@@ -318,19 +318,19 @@ namespace WorldServer.World.Interfaces
             {
                 kills = new Character_tok_kills
                 {
-                    NPCEntry = TB.Bestary_ID,
+                    NPCEntry = TB.Bestiary_ID,
                     CharacterId = GetPlayer().CharacterId,
                     Count = 1
                 };
-                _tokKillCount.Add(TB.Bestary_ID, kills);
+                _tokKillCount.Add(TB.Bestiary_ID, kills);
                 GetPlayer().Info.TokKills = _tokKillCount.Values.ToList();
                 CharMgr.Database.AddObject(kills);
             }
             uint kill = kills.Count;
 
-            //Log.Info("creature type", "" + type+"  bestid "+ TB.Bestary_ID + " kills "+ kill);
+            //Log.Info("creature type", "" + type+"  bestid "+ TB.Bestiary_ID + " kills "+ kill);
 
-            SendActionCounterUpdate(TB.Bestary_ID, kill);
+            SendActionCounterUpdate(TB.Bestiary_ID, kill);
 
             // total kill counter
 
@@ -373,7 +373,7 @@ namespace WorldServer.World.Interfaces
 
         public void CheckTokKills(ushort type, uint count)
         {
-            Tok_Bestary TB = TokService.GetTokBestary(type);
+            Tok_Bestiary TB = TokService.GetTokBestiary(type);
             if (TB == null)
                 return;
 

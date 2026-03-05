@@ -269,7 +269,13 @@ namespace WorldServer.World.Battlefronts.Apocalypse
         {
             try
             {
-                var activeRegion = RegionMgrs.Single(x => x.RegionId == ActiveBattleFront.RegionId);
+                var activeRegion = ResolveActiveRegion();
+                if (activeRegion?.Campaign == null)
+                {
+                    ProgressionLogger.Error($"OpenActiveBattlefront aborted because campaign is unavailable for region {ActiveBattleFront?.RegionId}.");
+                    return ActiveBattleFront;
+                }
+
                 ProgressionLogger.Info($"Opening Active battlefront in {activeRegion.RegionName} Zone : {ActiveBattleFront.ZoneId} {ActiveBattleFrontName}");
 
                 activeRegion.Campaign.VictoryPointProgress.Reset(activeRegion.Campaign);
@@ -295,7 +301,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                             // Reset the population for the battle front status
                             ProgressionLogger.Info(
                                 $"InitializePopulationList {activeRegion.RegionName} BF Id : {ActiveBattleFront.BattleFrontId} Zone : {ActiveBattleFront.ZoneId} {ActiveBattleFrontName}");
-                            GetActiveCampaign().InitializePopulationList(ActiveBattleFront.BattleFrontId);
+                            activeRegion.Campaign.InitializePopulationList(ActiveBattleFront.BattleFrontId);
 
                             //GetActiveCampaign().StartWanderingMobs(ActiveBattleFront.ZoneId);
                         }
@@ -356,10 +362,22 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
         public RVRProgression LockActiveBattleFront(Realms realm, int forceNumberBags = 0)
         {
-            var activeRegion = RegionMgrs.Single(x => x.RegionId == ActiveBattleFront.RegionId);
+            var activeRegion = ResolveActiveRegion();
+            if (activeRegion?.Campaign == null)
+            {
+                ProgressionLogger.Error($"LockActiveBattleFront aborted because campaign is unavailable for region {ActiveBattleFront?.RegionId}.");
+                return ActiveBattleFront;
+            }
+
             ProgressionLogger.Info($" Locking battlefront in {activeRegion.RegionName} Zone : {ActiveBattleFront.ZoneId} {ActiveBattleFrontName}");
 
             LockBattleFrontStatus(ActiveBattleFront.BattleFrontId, realm, activeRegion.Campaign.VictoryPointProgress);
+
+            if (activeRegion.Campaign.Objectives == null)
+            {
+                ProgressionLogger.Warn($"LockActiveBattleFront skipped objective updates because objectives are null for region {activeRegion.RegionId}.");
+                return ActiveBattleFront;
+            }
 
             foreach (var flag in activeRegion.Campaign.Objectives)
             {
@@ -369,6 +387,12 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                     flag.SetObjectiveLocked();
                 }
                 
+            }
+
+            if (activeRegion.Campaign.Keeps == null)
+            {
+                ProgressionLogger.Warn($"LockActiveBattleFront skipped keep updates because keeps are null for region {activeRegion.RegionId}.");
+                return ActiveBattleFront;
             }
 
             foreach (BattleFrontKeep keep in activeRegion.Campaign.Keeps)
@@ -400,6 +424,50 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
             // Use Locking Realm in the BFM, not the BF (BF applies to region)
             return ActiveBattleFront;
+        }
+
+        private RegionMgr ResolveActiveRegion()
+        {
+            if (ActiveBattleFront == null)
+            {
+                ProgressionLogger.Error("ResolveActiveRegion failed because ActiveBattleFront is null.");
+                return null;
+            }
+
+            var activeRegion = RegionMgrs.FirstOrDefault(x => x.RegionId == ActiveBattleFront.RegionId);
+            if (activeRegion?.Campaign != null)
+                return activeRegion;
+
+            var regionId = (ushort)ActiveBattleFront.RegionId;
+            var regionName = ResolveRegionName(regionId);
+            if (activeRegion == null)
+            {
+                activeRegion = WorldMgr.GetRegion(regionId, true, regionName);
+
+                if (activeRegion == null)
+                    ProgressionLogger.Error($"ResolveActiveRegion could not load region {regionId} ({regionName}) for {ActiveBattleFrontName}.");
+                else
+                    ProgressionLogger.Warn($"ResolveActiveRegion lazy-loaded region {regionId} ({regionName}) for {ActiveBattleFrontName}.");
+            }
+
+            if (activeRegion?.Campaign == null)
+            {
+                ProgressionLogger.Warn($"ResolveActiveRegion found region {regionId} without campaign. Attempting to reattach campaigns.");
+                WorldMgr.AttachCampaignsToRegions();
+
+                if (activeRegion?.Campaign == null)
+                    ProgressionLogger.Error($"ResolveActiveRegion could not attach a campaign to region {regionId} ({regionName}).");
+            }
+
+            return activeRegion;
+        }
+
+        private static string ResolveRegionName(ushort regionId)
+        {
+            if (regionId < Constants.RegionName.Length)
+                return Constants.RegionName[regionId];
+
+            return $"Region {regionId}";
         }
 
         public void LockBattleFrontStatus(int battleFrontId, Realms lockingRealm, VictoryPointProgress vpp)

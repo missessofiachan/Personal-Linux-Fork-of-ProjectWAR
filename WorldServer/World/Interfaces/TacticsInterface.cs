@@ -72,6 +72,20 @@ namespace WorldServer.World.Interfaces
             _myPlayer = owner as Player;
         }
 
+        private int GetMaxAllowedTactics()
+        {
+            if (_myPlayer == null)
+                return 0;
+
+            int maxAllowedTactics = _myPlayer.AdjustedLevel / 10;
+            if (maxAllowedTactics < 0)
+                maxAllowedTactics = 0;
+            if (maxAllowedTactics > 4)
+                maxAllowedTactics = 4;
+
+            return maxAllowedTactics;
+        }
+
         public void LoadTactics()
         {
             var list = new List<ushort>();
@@ -102,7 +116,7 @@ namespace WorldServer.World.Interfaces
             if (_myPlayer._Value.Tactic4 != 0 && !tacList.Contains(_myPlayer._Value.Tactic4))
                 tacList.Add(_myPlayer._Value.Tactic4);
 
-            int maxAllowedTactics = _myPlayer.AdjustedLevel / 10;
+            int maxAllowedTactics = GetMaxAllowedTactics();
 
             while (tacList.Count > maxAllowedTactics)
             {
@@ -228,7 +242,7 @@ namespace WorldServer.World.Interfaces
             _myPlayer._Value.SetTactic(3, 0);
             _myPlayer._Value.SetTactic(4, 0);
 
-            int maxAllowedTactics = _myPlayer.AdjustedLevel / 10;
+            int maxAllowedTactics = GetMaxAllowedTactics();
 
             while (tacList.Count > maxAllowedTactics)
             {

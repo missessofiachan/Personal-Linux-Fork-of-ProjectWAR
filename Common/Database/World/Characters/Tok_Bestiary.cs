@@ -20,15 +20,15 @@ using FrameWork;
 
 namespace Common
 {
-    [DataTable(PreCache = false, TableName = "tok_bestary", DatabaseName = "World", BindMethod = EBindingMethod.StaticBound)]
+    [DataTable(PreCache = false, TableName = "tok_bestiary", DatabaseName = "World", BindMethod = EBindingMethod.StaticBound)]
     [Serializable]
-    public class Tok_Bestary : DataObject
+    public class Tok_Bestiary : DataObject
     {
         [PrimaryKey]
         public ushort Creature_Sub_Type { get; set; }
 
         [DataElement]
-        public ushort Bestary_ID { get; set; }
+        public ushort Bestiary_ID { get; set; }
 
         [DataElement(Varchar = 50)]
         public string Kill1 { get; set; }

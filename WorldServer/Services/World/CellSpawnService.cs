@@ -93,6 +93,10 @@ namespace WorldServer.Services.World
                 {
                     Spawn = Kp.Value;
                     Spawn.Proto = GameObjectService.GetGameObjectProto(Spawn.Entry);
+
+                    if (Spawn.Proto == null && GameObjectService.ShouldCreateRuntimeDoorProto(Spawn))
+                        Spawn.Proto = GameObjectService.GetOrCreateRuntimeDoorProto(Spawn);
+
                     if (Spawn.Proto == null)
                     {
                         Log.Notice("LoadRegionSpawns", "Invalid GameObject Proto (" + Spawn.Entry + "), spawn Guid(" + Spawn.Guid + ")");

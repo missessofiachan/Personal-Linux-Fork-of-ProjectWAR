@@ -9,7 +9,7 @@ namespace WorldServer.Services.World
     {
         public static Dictionary<ushort, Tok_Info> _Toks;
         public static List<Tok_Info> DiscoveringToks;
-        public static Dictionary<ushort, Tok_Bestary> _ToksBestary;
+        public static Dictionary<ushort, Tok_Bestiary> _ToksBestiary;
 
         [LoadingFunction(true)]
         public static void LoadTok_Infos()
@@ -37,25 +37,25 @@ namespace WorldServer.Services.World
         }
 
         [LoadingFunction(true)]
-        public static void LoadTok_Bestary()
+        public static void LoadTok_Bestiary()
         {
-            Log.Debug("WorldMgr", "Loading LoadTok_Bestary...");
+            Log.Debug("WorldMgr", "Loading LoadTok_Bestiary...");
 
-            _ToksBestary = new Dictionary<ushort, Tok_Bestary>();
+            _ToksBestiary = new Dictionary<ushort, Tok_Bestiary>();
 
 
 
-            IList<Tok_Bestary> IToks = Database.SelectAllObjects<Tok_Bestary>();
+            IList<Tok_Bestiary> IToks = Database.SelectAllObjects<Tok_Bestiary>();
 
             if (IToks != null)
             {
-                foreach (Tok_Bestary Info in IToks)
+                foreach (Tok_Bestiary Info in IToks)
                 {
-                    _ToksBestary.Add(Info.Creature_Sub_Type, Info);
+                    _ToksBestiary.Add(Info.Creature_Sub_Type, Info);
                 }
             }
 
-            Log.Success("LoadTok_Bestary", "Loaded " + _ToksBestary.Count + " Tok_Bestary");
+            Log.Success("LoadTok_Bestiary", "Loaded " + _ToksBestiary.Count + " Tok_Bestiary");
         }
 
         public static Tok_Info GetTok(ushort Entry)
@@ -65,10 +65,10 @@ namespace WorldServer.Services.World
             return tok;
         }
 
-        public static Tok_Bestary GetTokBestary(ushort subTypeId)
+        public static Tok_Bestiary GetTokBestiary(ushort subTypeId)
         {
-            Tok_Bestary bestiary;
-            _ToksBestary.TryGetValue(subTypeId, out bestiary);
+            Tok_Bestiary bestiary;
+            _ToksBestiary.TryGetValue(subTypeId, out bestiary);
             return bestiary;
         }
 

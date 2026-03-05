@@ -90,6 +90,7 @@ namespace WorldServer.World.Battlefronts.Keeps
 
         public byte Tier;
         public int PlayersKilledInRange { get; set; }
+        private byte _lastBroadcastLordHealth = byte.MaxValue;
         public Realms PendingRealm { get; set; }
         public Realms AttackingRealm
         {
@@ -276,18 +277,24 @@ namespace WorldServer.World.Battlefronts.Keeps
                         new Point3D(Info.PQuest.GoldChestWorldX, Info.PQuest.GoldChestWorldY, Info.PQuest.GoldChestWorldZ),
                         (ushort)ZoneId);
 
-                    orderLootChest.Title = $"Fort Defence {Info.Name}";
-                    orderLootChest.Content = $"Fort Defence Rewards";
-                    orderLootChest.SenderName = $"{Info.Name}";
+                    if (orderLootChest != null)
+                    {
+                        orderLootChest.Title = $"Fort Defence {Info.Name}";
+                        orderLootChest.Content = $"Fort Defence Rewards";
+                        orderLootChest.SenderName = $"{Info.Name}";
+                    }
 
                     var destructionLootChest = LootChest.Create(
                         Region,
                         new Point3D(Info.PQuest.GoldChestWorldX, Info.PQuest.GoldChestWorldY, Info.PQuest.GoldChestWorldZ),
                         (ushort)ZoneId);
 
-                    destructionLootChest.Title = $"Fort Defence {Info.Name}";
-                    destructionLootChest.Content = $"Fort Defence Rewards";
-                    destructionLootChest.SenderName = $"{Info.Name}";
+                    if (destructionLootChest != null)
+                    {
+                        destructionLootChest.Title = $"Fort Defence {Info.Name}";
+                        destructionLootChest.Content = $"Fort Defence Rewards";
+                        destructionLootChest.SenderName = $"{Info.Name}";
+                    }
 
                     _logger.Info($"FORT DEFENCE TIMER complete. CountdownFortDefenceTimer {(Realms)Info.Realm}");
 
@@ -506,6 +513,28 @@ namespace WorldServer.World.Battlefronts.Keeps
             return false;
         }
 
+        private bool AreAllCaptureMainDoorsDestroyed(out int destroyedMainDoors, out int requiredMainDoors)
+        {
+            destroyedMainDoors = 0;
+            requiredMainDoors = 0;
+
+            foreach (var keepDoor in Doors)
+            {
+                if (keepDoor?.Info == null)
+                    continue;
+
+                if (keepDoor.Info.Number != INNER_DOOR && keepDoor.Info.Number != OUTER_DOOR)
+                    continue;
+
+                requiredMainDoors++;
+
+                if (keepDoor.GameObject != null && keepDoor.GameObject.IsDead)
+                    destroyedMainDoors++;
+            }
+
+            return requiredMainDoors == 0 || destroyedMainDoors >= requiredMainDoors;
+        }
+
         public void SetDoorRepaired(uint doorId)
         {
 
@@ -540,6 +569,7 @@ namespace WorldServer.World.Battlefronts.Keeps
             SendRegionMessage(Info.Name + "'s inner sanctum door has been destroyed!", (int)Realms.REALMS_REALM_DESTRUCTION);
             SendRegionMessage(Info.Name + "'s inner sanctum door has been destroyed!", (int)Realms.REALMS_REALM_ORDER);
             _logger.Debug($"{Info.Name} : Inner door destroyed by realm {AttackingRealm}. Door Id : {doorId}");
+            _lastBroadcastLordHealth = byte.MaxValue;
 
             var door = Doors.Single(x => x.GameObject.DoorId == doorId);
 
@@ -708,8 +738,8 @@ namespace WorldServer.World.Battlefronts.Keeps
             RemoveAllAttackingKeepSiege();
 
 
-            // Update all players within 200 range - update the map.
-            foreach (var plr in GetInRange<Player>(300))
+            // Update all players in the region so map/objective state reflects ownership and door reset.
+            foreach (var plr in Region.Players)
             {
                 SendKeepInfo(plr);
             }
@@ -956,6 +986,24 @@ namespace WorldServer.World.Battlefronts.Keeps
 
         public void OnLordKilled()
         {
+            if (!Fortress && !AreAllCaptureMainDoorsDestroyed(out int deadMainDoors, out int requiredMainDoors))
+            {
+                _logger.Warn(
+                    $"{Info.Name} lord kill ignored: capture requirement not met ({deadMainDoors}/{requiredMainDoors} main doors destroyed).");
+
+                SendRegionMessage($"{Info.Name} cannot change ownership until all keep doors are destroyed.", (int)Realms.REALMS_REALM_ORDER);
+                SendRegionMessage($"{Info.Name} cannot change ownership until all keep doors are destroyed.", (int)Realms.REALMS_REALM_DESTRUCTION);
+
+                KeepLord?.SpawnGuard(Realm);
+                _lastBroadcastLordHealth = byte.MaxValue;
+
+                foreach (var regionPlayer in Region.Players)
+                    SendKeepInfo(regionPlayer);
+
+                KeepCommunications.SendKeepStatus(null, this);
+                return;
+            }
+
             if (!Fortress)
                 fsm.Fire(SM.Command.OnLordKilled);
             else
@@ -1139,7 +1187,11 @@ namespace WorldServer.World.Battlefronts.Keeps
                 ProgressionLogger.Trace($"Keep Lord attacked health remaining {pctHealth}%");
             }
 
-            
+            if (_lastBroadcastLordHealth != pctHealth)
+            {
+                _lastBroadcastLordHealth = pctHealth;
+                KeepCommunications.SendKeepStatus(null, this);
+            }
 
         }
 
@@ -1841,9 +1893,12 @@ namespace WorldServer.World.Battlefronts.Keeps
                     (ushort)ZoneId,
                     false);
 
-                lootChest.Title = $"Fort Assault {Info.Name}";
-                lootChest.Content = $"Fort Assault Rewards";
-                lootChest.SenderName = $"{Info.Name}";
+                if (lootChest != null)
+                {
+                    lootChest.Title = $"Fort Assault {Info.Name}";
+                    lootChest.Content = $"Fort Assault Rewards";
+                    lootChest.SenderName = $"{Info.Name}";
+                }
 
                 _logger.Info($"*** FORCE LOCK ZONE from {Info.Name}");
 
@@ -1999,158 +2054,189 @@ namespace WorldServer.World.Battlefronts.Keeps
         /// </summary>
         public void GenerateKeepTakeRewards()
         {
-            bool isFortress = false;
-          
-            var zone = ZoneService.GetZone_Info((ushort)ZoneId);
-            var fortZones = new List<int> { 4, 10, 104, 110, 204, 210 };
-            if (fortZones.Contains((ushort)ZoneId))
+            try
             {
-                isFortress = true;
+                bool isFortress = false;
 
-                // Add contribution for players in fort zone.
-                foreach (var player in PlayerUtil.GetAllFlaggedPlayersInZone((int) ZoneId))
+                var zone = ZoneService.GetZone_Info((ushort)ZoneId);
+                var zoneName = zone?.Name ?? $"Zone {ZoneId}";
+                var pquestLocation = Info?.PQuest != null
+                    ? new Point3D(Info.PQuest.GoldChestWorldX, Info.PQuest.GoldChestWorldY, Info.PQuest.GoldChestWorldZ)
+                    : new Point3D(X, Y, Z);
+
+                if (Info?.PQuest == null)
+                    _logger.Warn($"Keep {Info?.Name} is missing PQuest data; using keep center for reward chest fallback.");
+
+                var activeBattleFrontStatus = Region?.Campaign?.GetActiveBattleFrontStatus();
+                var contributionManager = activeBattleFrontStatus?.ContributionManagerInstance;
+                var rewardManager = activeBattleFrontStatus?.RewardManagerInstance;
+                if (contributionManager == null || rewardManager == null)
                 {
-                    try
+                    _logger.Error($"GenerateKeepTakeRewards aborted for {Info?.Name}: campaign reward state is unavailable.");
+                    return;
+                }
+
+                var fortZones = new List<int> { 4, 10, 104, 110, 204, 210 };
+                if (fortZones.Contains((ushort)ZoneId))
+                {
+                    isFortress = true;
+
+                    // Add contribution for players in fort zone.
+                    foreach (var player in PlayerUtil.GetAllFlaggedPlayersInZone((int)ZoneId))
                     {
-                        Region.Campaign.GetActiveBattleFrontStatus().ContributionManagerInstance.UpdateContribution(
-                            player.CharacterId, (byte) ContributionDefinitions.FORT_ZONE_LOCK_PRESENCE);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                        throw;
+                        try
+                        {
+                            contributionManager.UpdateContribution(player.CharacterId, (byte)ContributionDefinitions.FORT_ZONE_LOCK_PRESENCE);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.Warn($"Failed fort presence contribution update for player {player?.Name} ({player?.CharacterId}): {ex.Message}");
+                        }
                     }
                 }
-            }
-            
-            var eligiblitySplits =
-                Region.Campaign.GetActiveBattleFrontStatus().ContributionManagerInstance.DetermineEligiblePlayers(_logger, PendingRealm);
 
-            RecordKeepEligibilityHistory(eligiblitySplits.Item1, zone, Info, PendingRealm);
+                var eligiblitySplits = contributionManager.DetermineEligiblePlayers(_logger, PendingRealm);
+                if (zone != null)
+                    RecordKeepEligibilityHistory(eligiblitySplits.Item1, zone, Info, PendingRealm);
+                else
+                    _logger.Warn($"Skipping keep eligibility history for {Info?.Name}: zone info for {ZoneId} is missing.");
 
-            LootChest orderLootChest = null;
-            LootChest destructionLootChest = null;
+                LootChest orderLootChest = null;
+                LootChest destructionLootChest = null;
 
-            if (PendingRealm == Realms.REALMS_REALM_DESTRUCTION)
-            {
+                if (PendingRealm == Realms.REALMS_REALM_DESTRUCTION)
+                {
+                    if (isFortress)
+                    {
+                        var spawnConfig = PlayerSpawnLocation.Value;
+                        var orderWCId = spawnConfig?.OrderFeedZoneId ?? 0;
+                        var wc = orderWCId > 0 ? BattleFrontService.GetWarcampEntrance((ushort)orderWCId, Realms.REALMS_REALM_ORDER) : null;
+                        var orderWCZone = orderWCId > 0 ? ZoneService.GetZone_Info((ushort)orderWCId) : null;
+
+                        if (wc != null && orderWCZone != null)
+                        {
+                            var target = ZoneService.GetWorldPosition(orderWCZone, (ushort)wc.X, (ushort)wc.Y, (ushort)wc.Z);
+                            orderLootChest = LootChest.Create(Region, target, (ushort)orderWCZone.ZoneId, false);
+                        }
+                    }
+                    else
+                    {
+                        var wc = BattleFrontService.GetWarcampEntrance((ushort)ZoneId, Realms.REALMS_REALM_ORDER);
+                        orderLootChest = wc != null
+                            ? LootChest.Create(Region, wc, (ushort)ZoneId, true)
+                            : LootChest.Create(Region, pquestLocation, (ushort)ZoneId, false);
+                    }
+
+                    if (orderLootChest != null)
+                        orderLootChest.SenderName = $"{zoneName} defence";
+
+                    destructionLootChest = LootChest.Create(Region, pquestLocation, (ushort)ZoneId, false);
+
+                    if (destructionLootChest != null)
+                    {
+                        destructionLootChest.SenderName = $"{zoneName} assault";
+                        destructionLootChest.Title = "Successful assault";
+                    }
+                }
+
+                if (PendingRealm == Realms.REALMS_REALM_ORDER)
+                {
+                    if (isFortress)
+                    {
+                        var spawnConfig = PlayerSpawnLocation.Value;
+                        if (spawnConfig != null && Zone != null)
+                        {
+                            var spawnPoint = new SpawnPoint(Zone.ZoneId, spawnConfig.DefenderKeepSafeX, spawnConfig.DefenderKeepSafeY, spawnConfig.DefenderKeepSafeZ);
+                            destructionLootChest = LootChest.Create(Region, spawnPoint.As3DPoint(), (ushort)spawnPoint.ZoneId, false);
+                        }
+                    }
+                    else
+                    {
+                        var wc = BattleFrontService.GetWarcampEntrance((ushort)ZoneId, Realms.REALMS_REALM_ORDER);
+                        destructionLootChest = wc != null
+                            ? LootChest.Create(Region, wc, (ushort)ZoneId, true)
+                            : LootChest.Create(Region, pquestLocation, (ushort)ZoneId, false);
+                    }
+
+                    if (destructionLootChest != null)
+                        destructionLootChest.SenderName = $"{zoneName} defence";
+
+                    orderLootChest = LootChest.Create(Region, pquestLocation, (ushort)ZoneId, false);
+
+                    if (orderLootChest != null)
+                    {
+                        orderLootChest.SenderName = $"{zoneName} assault";
+                        orderLootChest.Content = "RVR Rewards";
+                        orderLootChest.Title = "Successful assault";
+                    }
+                }
+
+                if (orderLootChest == null)
+                    _logger.Warn($"Order Loot chest is null");
+                if (destructionLootChest == null)
+                    _logger.Warn($"Destruction Loot chest is null");
+
+                _logger.Debug($"Placing Order Chest at {(orderLootChest != null ? orderLootChest.ToString() : "NULL")}");
+                _logger.Debug($"Placing Destruction Chest at {(destructionLootChest != null ? destructionLootChest.ToString() : "NULL")}");
+
+                _logger.Debug($"Generating rewards for Keep {Info.Name} Zone {ZoneId}");
+
                 if (isFortress)
                 {
-                    var orderWCId = PlayerSpawnLocation.Value.OrderFeedZoneId;
-                    var wc = BattleFrontService.GetWarcampEntrance((ushort)orderWCId, Realms.REALMS_REALM_ORDER);
-                    var orderWCZone = ZoneService.GetZone_Info((ushort) orderWCId);
-                    var target = ZoneService.GetWorldPosition(ZoneService.GetZone_Info((ushort)orderWCId), (ushort)wc.X, (ushort)wc.Y, (ushort)wc.Z);
-                    
-                    //// There is no WC in Fort zone - look for the feedin zone.
-                    //var spawnPoint = new SpawnPoint(Zone.ZoneId, PlayerSpawnLocation.Value.DefenderKeepSafeX,
-                    //    PlayerSpawnLocation.Value.DefenderKeepSafeY,
-                    //    PlayerSpawnLocation.Value.DefenderKeepSafeZ);
+                    // Give all eligible players in the zone WLC.
+                    foreach (var player in eligiblitySplits.Item1)
+                    {
+                        try
+                        {
+                            _logger.Debug($"Assigning Warlord Crests for Fort Zone Flip {player.Key.Name}");
+                            player.Key.SendClientMessage("You have been awarded 5 Warlord Crests - check your mail.", ChatLogFilters.CHATLOGFILTERS_LOOT);
+                            rewardManager.MailItem(player.Key.CharacterId, ItemService.GetItem_Info(208454), 5, Info.Name, "Fortress Battle", "Warlord crests");
+                        }
+                        catch (Exception)
+                        {
+                            _logger.Warn($"Could not mail warlord crests (5) to {player.Key.CharacterId}");
+                        }
+                    }
 
-                    orderLootChest = LootChest.Create(Region, target, (ushort)orderWCZone.ZoneId, isFortress);
+                    rewardManager.GenerateKeepTakeLootBags(
+                        _logger,
+                        eligiblitySplits.Item1,
+                        eligiblitySplits.Item2,
+                        eligiblitySplits.Item3,
+                        PendingRealm,
+                        (ushort)ZoneId,
+                        RVRZoneRewardService.RVRRewardFortItems,
+                        destructionLootChest,
+                        orderLootChest,
+                        Info,
+                        PlayersKilledInRange);
                 }
                 else
                 {
-                    var wc = BattleFrontService.GetWarcampEntrance((ushort)ZoneId, Realms.REALMS_REALM_ORDER);
-                    orderLootChest = LootChest.Create(Region, wc, (ushort)ZoneId, !isFortress);
+                    rewardManager.GenerateKeepTakeLootBags(
+                        _logger,
+                        eligiblitySplits.Item1, // all
+                        eligiblitySplits.Item2, //winning
+                        eligiblitySplits.Item3, //losing
+                        PendingRealm,
+                        (ushort)ZoneId,
+                        RVRZoneRewardService.RVRRewardKeepItems,
+                        destructionLootChest,
+                        orderLootChest,
+                        Info,
+                        PlayersKilledInRange);
                 }
-
-                orderLootChest.SenderName = $"{zone.Name} defence";
-
-                destructionLootChest = LootChest.Create(
-                    Region,
-                    new Point3D(Info.PQuest.GoldChestWorldX, Info.PQuest.GoldChestWorldY, Info.PQuest.GoldChestWorldZ),
-                    (ushort)ZoneId, false);
-
-                destructionLootChest.SenderName = $"{zone.Name} assault";
-                destructionLootChest.Title = "Successful assault";
-
-                
             }
-            if (PendingRealm == Realms.REALMS_REALM_ORDER)
+            catch (Exception ex)
             {
-
-                if (isFortress)
-                {
-                    // There is no WC in Fort zone - look for the feedin zone.
-                    var spawnPoint = new SpawnPoint(Zone.ZoneId, PlayerSpawnLocation.Value.DefenderKeepSafeX,
-                        PlayerSpawnLocation.Value.DefenderKeepSafeY,
-                        PlayerSpawnLocation.Value.DefenderKeepSafeZ);
-
-                    destructionLootChest = LootChest.Create(Region, spawnPoint.As3DPoint(), (ushort)spawnPoint.ZoneId, !isFortress);
-
-                }
-                else
-                {
-                    var wc = BattleFrontService.GetWarcampEntrance((ushort)ZoneId, Realms.REALMS_REALM_ORDER);
-                    destructionLootChest = LootChest.Create(Region, wc, (ushort)ZoneId, !isFortress);
-
-                }
-                destructionLootChest.SenderName = $"{zone.Name} defence";
-
-
-                orderLootChest = LootChest.Create(
-                    Region,
-                    new Point3D(Info.PQuest.GoldChestWorldX, Info.PQuest.GoldChestWorldY, Info.PQuest.GoldChestWorldZ),
-                    (ushort)ZoneId, false);
-
-                orderLootChest.SenderName = $"{zone.Name} assault";
-                orderLootChest.Content = "RVR Rewards";
-                orderLootChest.Title = "Successful assault";
+                _logger.Error($"GenerateKeepTakeRewards failed for keep {Info?.Name}: {ex.Message} {ex.StackTrace}");
             }
-
-            if (orderLootChest == null)
-                _logger.Warn($"Order Loot chest is null");
-            if (destructionLootChest == null)
-                _logger.Warn($"Destruction Loot chest is null");
-
-            _logger.Debug($"Placing Order Chest at {orderLootChest.ToString()}");
-            _logger.Debug($"Placing Destruction Chest at {destructionLootChest.ToString()}");
-
-            _logger.Debug($"Generating rewards for Keep {Info.Name} Zone {ZoneId}");
-
-            if (isFortress)
-            {
-                
-
-                // Give all eligible players in the zone WLC.
-                foreach (var player in eligiblitySplits.Item1)
-                {
-                    try
-                    {
-                        _logger.Debug($"Assigning Warlord Crests for Fort Zone Flip {player.Key.Name}");
-                        player.Key.SendClientMessage($"You have been awarded 5 Warlord Crests - check your mail.", ChatLogFilters.CHATLOGFILTERS_LOOT);
-                        Region.Campaign.GetActiveBattleFrontStatus().RewardManagerInstance.MailItem(player.Key.CharacterId, ItemService.GetItem_Info(208454), 5, Info.Name, "Fortress Battle", "Warlord crests");
-                    }
-                    catch (Exception)
-                    {
-                        _logger.Warn($"Could not mail warlord crests (5) to {player.Key.CharacterId}");
-                    }
-                }
-
-
-                Region.Campaign.GetActiveBattleFrontStatus().RewardManagerInstance.GenerateKeepTakeLootBags(
-                    _logger,
-                    eligiblitySplits.Item1,
-                    eligiblitySplits.Item2,
-                    eligiblitySplits.Item3,
-                    PendingRealm,
-                    (ushort)ZoneId, RVRZoneRewardService.RVRRewardFortItems, destructionLootChest, orderLootChest, Info, this.PlayersKilledInRange);
-            }
-            else
-            {
-                Region.Campaign.GetActiveBattleFrontStatus().RewardManagerInstance.GenerateKeepTakeLootBags(
-                    _logger,
-                    eligiblitySplits.Item1, // all
-                    eligiblitySplits.Item2, //winning
-                    eligiblitySplits.Item3, //losing
-                    PendingRealm,
-                    (ushort)ZoneId, RVRZoneRewardService.RVRRewardKeepItems, destructionLootChest, orderLootChest, Info, PlayersKilledInRange);
-
-            }
-
         }
 
         private void RecordKeepEligibilityHistory(ConcurrentDictionary<Player, int> eligiblePlayers, Zone_Info zone, Keep_Info info, Realms lockingRealm)
         {
+            if (eligiblePlayers == null || info == null || zone == null)
+                return;
 
             foreach (var eligiblePlayer in eligiblePlayers)
             {

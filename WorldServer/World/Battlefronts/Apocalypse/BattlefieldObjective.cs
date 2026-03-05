@@ -1027,6 +1027,12 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
         private void AddGlow(Realms assaultingRealm)
         {
+            if (Region == null)
+            {
+                BattlefrontLogger.Warn($"{Name} : AddGlow skipped because Region is null.");
+                return;
+            }
+
             GameObject_proto glowProto = GameObjectService.GetGameObjectProto(99858); //99858
 
             if (glowProto != null)
@@ -1108,6 +1114,12 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
         private void RemoveGlow()
         {
+            if (Region == null)
+            {
+                BattlefrontLogger.Warn($"{Name} : RemoveGlow skipped because Region is null.");
+                return;
+            }
+
             var goList = Region.GetObjects<GameObject>().Where(x => x.Entry == 99858);
             foreach (var gameObject in goList)
             {

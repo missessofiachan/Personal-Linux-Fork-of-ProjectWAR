@@ -17,17 +17,43 @@ namespace WorldServer.World.Battlefronts.Keeps
             if (keep.Region == null)
                 return;
 
-            //var doors = keep.Doors.FindAll(x =>
-            //    x.Info.Number != (int) KeepDoorType.None && x.Info.GameObjectId == 100 && x.GameObject.PctHealth > 0);
+            var aliveMainDoors = keep.Doors
+                .Where(x =>
+                    x?.Info != null
+                    && x.Info.GameObjectId == 100
+                    && (x.Info.Number == (int)KeepDoorType.OuterMain || x.Info.Number == (int)KeepDoorType.InnerMain)
+                    && x.GameObject != null
+                    && !x.GameObject.IsDead
+                    && x.GameObject.PctHealth > 0)
+                .ToList();
 
-            var doors = keep.Doors.FindAll(x => x?.Info != null && x.Info.GameObjectId == 100);
+            byte trackedObjectiveCount = (byte)aliveMainDoors.Count;
+            byte trackedObjectiveHealth = 0;
 
-            var innerDoor = keep.Doors.SingleOrDefault(x => x?.Info != null && x.Info.Number == (int)KeepDoorType.InnerMain);
-            byte innerDoorHealth = 0;
-            if (innerDoor?.GameObject != null)
-                innerDoorHealth = (byte)innerDoor.GameObject.PctHealth;
-            else if (innerDoor != null)
-                _logger.Warn($"Inner keep door object missing for keep {keep.Info?.Name} (door id {innerDoor.Info?.DoorId}). Sending health=0.");
+            if (keep.KeepStatus == KeepStatus.KEEPSTATUS_KEEP_LORD_UNDER_ATTACK)
+            {
+                var keepLord = keep.KeepLord?.Creature;
+                if (keepLord != null && !keepLord.IsDead)
+                {
+                    trackedObjectiveCount = 1;
+                    trackedObjectiveHealth = keepLord.PctHealth;
+                }
+                else
+                {
+                    trackedObjectiveCount = 0;
+                    trackedObjectiveHealth = 0;
+                }
+            }
+            else if (trackedObjectiveCount > 0)
+            {
+                // During door phases, prefer the inner door once it is the current objective.
+                var trackedDoor = aliveMainDoors.SingleOrDefault(x => x.Info.Number == (int)KeepDoorType.InnerMain)
+                                 ?? aliveMainDoors.SingleOrDefault(x => x.Info.Number == (int)KeepDoorType.OuterMain)
+                                 ?? aliveMainDoors.FirstOrDefault();
+
+                if (trackedDoor?.GameObject != null)
+                    trackedObjectiveHealth = trackedDoor.GameObject.PctHealth;
+            }
 
             var Out = new PacketOut((byte)Opcodes.F_KEEP_STATUS, 26);
             Out.WriteByte(keep.Info.KeepId);
@@ -35,17 +61,9 @@ namespace WorldServer.World.Battlefronts.Keeps
                 Out.WriteByte(keep.KeepStatus == KeepStatus.KEEPSTATUS_LOCKED ? (byte)1 : (byte)keep.KeepStatus);
                 Out.WriteByte(0); // ?
                 Out.WriteByte((byte)keep.Realm);
-                Out.WriteByte((byte)doors.Count);
+                Out.WriteByte(trackedObjectiveCount);
                 Out.WriteByte(keep.Rank); // Rank
-                if (doors.Count > 0)
-                    if (innerDoor != null)
-                        Out.WriteByte(innerDoorHealth); // Door health
-                    else
-                    {
-                        Out.WriteByte(0);
-                    }
-                else
-                    Out.WriteByte(0);
+                Out.WriteByte(trackedObjectiveHealth); // Door/Lord health
                 Out.WriteByte(0); // Next rank %
             }
 

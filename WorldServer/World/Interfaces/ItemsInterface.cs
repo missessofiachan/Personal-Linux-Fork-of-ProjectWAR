@@ -1155,8 +1155,8 @@ namespace WorldServer.World.Interfaces
         public void BuildStats(ref PacketOut Out)
         {
             Out.WriteByte((byte)Stats.BaseStatCount);
-            // This is for tactic slots. (Career slots + Renown slots << 2 + Tome slots << 4)
-            Out.WriteByte((GetPlayer().Level > 10) ? (byte)(GetPlayer().Level / 10) : (byte)0);
+            // This value controls the number of available tactic slots in the client.
+            Out.WriteByte(GetPlayer().GetTacticSlotFlags());
             //Out.WriteByte(127);  shows 7 slots
             Out.WriteByte(1);
             Out.WriteByte(0xF4);

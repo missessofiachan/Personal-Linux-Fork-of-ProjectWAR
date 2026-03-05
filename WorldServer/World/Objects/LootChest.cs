@@ -65,14 +65,38 @@ namespace WorldServer.World.Objects
                 Log.Error("LootChest", "Attempt to create for NULL region");
                 return null;
             }
+
+            if (location == null)
+            {
+                Log.Error("LootChest", $"Attempt to create loot chest with NULL location in zone {zoneId}");
+                return null;
+            }
             
             GameObject_proto proto = GameObjectService.GetGameObjectProto(188);
+            if (proto == null)
+            {
+                Log.Error("LootChest", "Cannot create loot chest: GameObject proto 188 is missing.");
+                return null;
+            }
+
             GameObject_spawn spawn = new GameObject_spawn();
 
             if (convertPin)  // Non-fort zone location points are PIN position system, forts are worldposition.
             {
-                var targetPosition = ZoneService.GetWorldPosition(ZoneService.GetZone_Info(zoneId), (ushort) location.X,
+                var zoneInfo = ZoneService.GetZone_Info(zoneId);
+                if (zoneInfo == null)
+                {
+                    Log.Error("LootChest", $"Cannot create loot chest: zone info {zoneId} is missing.");
+                    return null;
+                }
+
+                var targetPosition = ZoneService.GetWorldPosition(zoneInfo, (ushort) location.X,
                     (ushort) location.Y, (ushort) location.Z);
+                if (targetPosition == null)
+                {
+                    Log.Error("LootChest", $"Cannot create loot chest: failed to convert pin location {location} in zone {zoneId}.");
+                    return null;
+                }
 
                 spawn.Guid = (uint)GameObjectService.GenerateGameObjectSpawnGUID();
                 spawn.WorldO = 0;
@@ -94,6 +118,12 @@ namespace WorldServer.World.Objects
 
             spawn.BuildFromProto(proto);
             var chest = region.CreateLootChest(spawn);
+            if (chest == null)
+            {
+                Log.Error("LootChest", $"Failed to spawn loot chest in zone {zoneId} at {location}.");
+                return null;
+            }
+
             chest.LootBags = new Dictionary<uint, KeyValuePair<Item_Info, List<Talisman>>>();
             
             
@@ -110,6 +140,9 @@ namespace WorldServer.World.Objects
 
             try
             {
+                if (LootBags == null)
+                    return;
+
                 foreach (var lootBag in LootBags)
                 {
                     var character = CharMgr.GetCharacter(lootBag.Key, false);

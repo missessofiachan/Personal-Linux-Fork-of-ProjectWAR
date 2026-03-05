@@ -282,7 +282,9 @@ namespace WorldServer.World.Battlefronts.Keeps
             GameObject_proto proto = GameObjectService.GetGameObjectProto(Info.GameObjectId);
             if (proto == null)
             {
-                Log.Error("KeepDoor", "No Door Proto");
+                Log.Error("KeepDoor", $"No Door Proto for entry={Info.GameObjectId}, keep={Keep?.Info?.KeepId}:{Keep?.Info?.Name}, doorId={Info?.DoorId}");
+                if (Info != null && Info.DoorId != 0)
+                    Occlusion.SetFixtureVisible(Info.DoorId, true);
                 return;
             }
 

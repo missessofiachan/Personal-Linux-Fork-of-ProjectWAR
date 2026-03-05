@@ -1900,9 +1900,8 @@ namespace WorldServer.Managers.Commands
             return true;
         }
 
-        public static bool AllTokbestary(Player plr, ref List<string> values)
+        public static bool AllTokBestiary(Player plr, ref List<string> values)
         {
-
             for (int i = 1; i < 1000; i++)
             {
                 plr.TokInterface.SendActionCounterUpdate((ushort)i, (uint)i);
