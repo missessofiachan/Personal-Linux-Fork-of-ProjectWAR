@@ -1,5 +1,6 @@
 ﻿using Common;
 using FrameWork;
+using GameData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,6 +40,15 @@ namespace WorldServer.World.Abilities
 
         // Career abilities
         public static List<AbilityInfo>[] CareerAbilities = new List<AbilityInfo>[24];
+
+        private const ushort RenownEmpoweredMasteryEntry = 27870;
+        private const ushort RenownEternalMasteryEntry = 27871;
+        private const ushort RenownInfiniteMasteryEntry = 27872;
+        private const ushort RenownAugmentVigorEntry = 27873;
+        private const ushort RenownSilentBonusRankOneEntry = 22275;
+        private const ushort RenownSilentBonusRankTwoEntry = 27875;
+        private const ushort RenownSilentActionPointBonus = 50;
+        private const ushort ImDaBiggestBuffEntry = 734;
 
         public static void ReloadAbilities()
         {
@@ -430,6 +440,8 @@ namespace WorldServer.World.Abilities
                     buffInfo.MasteryTree = abConstants[buffInfo.Entry].MasteryTree;
             }
 
+            EnsureRenownTacticBuffs();
+
             #endregion Buff/Command linkage
 
             Log.Success("AbilityMgr", "Finished loading " + NewAbilityVolatiles.Count + " abilities and " + BuffInfos.Count + " buffs!");
@@ -480,6 +492,163 @@ namespace WorldServer.World.Abilities
         #endregion Creature Abilities
 
         #endregion Ability System Setup
+
+        private static void EnsureRenownTacticBuffs()
+        {
+            EnsureMasteryBonusTacticBuff(RenownEmpoweredMasteryEntry, "Empowered Mastery", Stats.Mastery1Bonus);
+            EnsureMasteryBonusTacticBuff(RenownEternalMasteryEntry, "Eternal Mastery", Stats.Mastery2Bonus);
+            EnsureMasteryBonusTacticBuff(RenownInfiniteMasteryEntry, "Infinite Mastery", Stats.Mastery3Bonus);
+            EnsureAugmentVigorBuff();
+            EnsureRenownSilentBonusBuffs();
+        }
+
+        private static void EnsureRenownSilentBonusBuffs()
+        {
+            EnsureRenownSilentBonusBuff(RenownSilentBonusRankOneEntry, "Booster Renown Bonuses", true);
+            EnsureRenownSilentBonusBuff(RenownSilentBonusRankTwoEntry, "Booster Renown Bonuses II", false);
+        }
+
+        private static void EnsureRenownSilentBonusBuff(ushort entry, string name, bool addsActionPoints)
+        {
+            BuffInfo buffInfo = CreatePersistentSilentBuffShell(entry, name);
+            byte buffLine = buffInfo.StackLine == 0 ? (byte)1 : buffInfo.StackLine;
+            buffInfo.StackLine = buffLine;
+
+            if (addsActionPoints)
+            {
+                buffInfo.CommandInfo.Add(new BuffCommandInfo
+                {
+                    Entry = entry,
+                    Name = name,
+                    CommandID = 0,
+                    CommandSequence = 0,
+                    CommandName = "ModifyStat",
+                    BuffClass = BuffClass.Persist,
+                    PrimaryValue = (int)Stats.MaxActionPoints,
+                    SecondaryValue = RenownSilentActionPointBonus,
+                    InvokeOn = 5,
+                    TargetType = CommandTargetTypes.Host,
+                    BuffLine = buffLine
+                });
+            }
+
+            BuffInfos[entry] = buffInfo;
+            Log.Info("AbilityMgr", addsActionPoints
+                ? $"Installed renown silent buff {entry} ({name}) with +{RenownSilentActionPointBonus} AP."
+                : $"Installed renown silent buff {entry} ({name}) as a persistent mastery marker.");
+        }
+
+        private static void EnsureMasteryBonusTacticBuff(ushort entry, string name, Stats masteryBonusStat)
+        {
+            BuffInfo buffInfo = CreateTacticBuffShell(entry, name);
+            byte buffLine = buffInfo.StackLine == 0 ? (byte)1 : buffInfo.StackLine;
+            buffInfo.StackLine = buffLine;
+            buffInfo.CommandInfo.Add(new BuffCommandInfo
+            {
+                Entry = entry,
+                Name = name,
+                CommandID = 0,
+                CommandSequence = 0,
+                CommandName = "ModifyStat",
+                BuffClass = BuffClass.Tactic,
+                PrimaryValue = (int)masteryBonusStat,
+                SecondaryValue = 1,
+                InvokeOn = 5,
+                TargetType = CommandTargetTypes.Host,
+                BuffLine = buffLine
+            });
+
+            BuffInfos[entry] = buffInfo;
+            Log.Info("AbilityMgr", $"Installed mastery tactic buff {entry} ({name}) using {masteryBonusStat}.");
+        }
+
+        private static void EnsureAugmentVigorBuff()
+        {
+            if (BuffInfos.ContainsKey(RenownAugmentVigorEntry))
+                return;
+
+            if (!BuffInfos.ContainsKey(ImDaBiggestBuffEntry))
+            {
+                Log.Error("AbilityMgr", $"Unable to generate fallback buff for tactic {RenownAugmentVigorEntry} (Augment Vigor): source buff {ImDaBiggestBuffEntry} missing.");
+                return;
+            }
+
+            BuffInfo augmentVigor = BuffInfos[ImDaBiggestBuffEntry].Clone();
+            augmentVigor.Entry = RenownAugmentVigorEntry;
+            augmentVigor.Name = "Augment Vigor";
+            augmentVigor.MasteryTree = 0;
+
+            if (augmentVigor.CommandInfo != null)
+            {
+                foreach (BuffCommandInfo command in augmentVigor.CommandInfo)
+                {
+                    command.Entry = RenownAugmentVigorEntry;
+                    command.Name = augmentVigor.Name;
+                }
+            }
+            else
+            {
+                augmentVigor.CommandInfo = new List<BuffCommandInfo>();
+            }
+
+            BuffInfos[RenownAugmentVigorEntry] = augmentVigor;
+            Log.Info("AbilityMgr", $"Generated fallback tactic buff {RenownAugmentVigorEntry} ({augmentVigor.Name}) from {ImDaBiggestBuffEntry}.");
+        }
+
+        private static BuffInfo CreateTacticBuffShell(ushort entry, string name)
+        {
+            BuffInfo shell = BuffInfos.ContainsKey(ImDaBiggestBuffEntry)
+                ? BuffInfos[ImDaBiggestBuffEntry].Clone()
+                : new BuffInfo();
+
+            shell.Entry = entry;
+            shell.Name = name;
+            shell.BuffClass = BuffClass.Tactic;
+            shell.Type = BuffTypes.None;
+            shell.Group = 0;
+            shell.MaxCopies = 0;
+            shell.MaxStack = 1;
+            shell.InitialStacks = 1;
+            shell.StacksFromCaster = false;
+            shell.Duration = 0;
+            shell.LeadInDelay = 0;
+            shell.Interval = 0;
+            shell.BuffIntervals = 0;
+            shell.PersistsOnDeath = 1;
+            shell.CanRefresh = false;
+            shell.MasteryTree = 0;
+            shell.CommandInfo = new List<BuffCommandInfo>();
+            return shell;
+        }
+
+        private static BuffInfo CreatePersistentSilentBuffShell(ushort entry, string name)
+        {
+            BuffInfo shell = BuffInfos.ContainsKey(entry)
+                ? BuffInfos[entry].Clone()
+                : (BuffInfos.ContainsKey(ImDaBiggestBuffEntry) ? BuffInfos[ImDaBiggestBuffEntry].Clone() : new BuffInfo());
+
+            shell.Entry = entry;
+            shell.Name = name;
+            shell.BuffClass = BuffClass.Persist;
+            shell.Type = BuffTypes.None;
+            shell.Group = 0;
+            shell.MaxCopies = 0;
+            shell.MaxStack = 1;
+            shell.InitialStacks = 1;
+            shell.StacksFromCaster = false;
+            shell.Duration = 0;
+            shell.LeadInDelay = 0;
+            shell.Interval = 0;
+            shell.BuffIntervals = 0;
+            shell.PersistsOnDeath = 1;
+            shell.CanRefresh = false;
+            shell.MasteryTree = 0;
+            shell.FriendlyEffectID = 0;
+            shell.EnemyEffectID = 0;
+            shell.EffectType = 0;
+            shell.CommandInfo = new List<BuffCommandInfo>();
+            return shell;
+        }
 
         #region Accessors
 

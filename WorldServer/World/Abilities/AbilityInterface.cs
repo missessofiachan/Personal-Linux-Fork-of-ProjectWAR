@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using SystemData;
 using WorldServer.NetWork;
+using WorldServer.World.Abilities.Buffs;
 using WorldServer.World.Abilities.CareerInterfaces;
 using WorldServer.World.Abilities.Components;
 using WorldServer.World.Interfaces;
@@ -27,6 +28,11 @@ namespace WorldServer.World.Abilities
         private const long COOLDOWN_GRACE = 400;
 
         public static bool PreventCasting;
+        private static readonly ushort[] RenownMasteryTactics = { 27870, 27871, 27872, 27873 };
+        private const byte RenownSilentBonusRankOne = 70;
+        private const byte RenownSilentBonusRankTwo = 80;
+        private const ushort RenownSilentBonusRankOneEntry = 22275;
+        private const ushort RenownSilentBonusRankTwoEntry = 27875;
 
         #endregion Static
 
@@ -104,6 +110,131 @@ namespace WorldServer.World.Abilities
                 }
             }
 
+            SyncRenownMasteryTactics();
+            SyncRenownSilentBonuses();
+
+        }
+
+        private bool MeetsRenownMasteryRequirements(AbilityConstants constants)
+        {
+            if (_playerOwner == null || constants == null)
+                return false;
+
+            return _playerOwner.Level >= constants.MinimumRank && _playerOwner.RenownRank >= constants.MinimumRenown;
+        }
+
+        private bool SyncRenownMasteryTactics()
+        {
+            if (_playerOwner == null)
+                return false;
+
+            bool changed = false;
+
+            foreach (ushort tacticEntry in RenownMasteryTactics)
+            {
+                AbilityInfo tacticInfo = AbilityMgr.GetAbilityInfo(tacticEntry);
+                AbilityConstants constants = tacticInfo?.ConstantInfo;
+                if (constants == null)
+                    continue;
+
+                bool shouldHave = MeetsRenownMasteryRequirements(constants);
+                bool hasInSet = _abilitySet.Contains(tacticEntry);
+                bool hasInList = _abilities.Exists(ab => ab.Entry == tacticEntry);
+
+                if (shouldHave)
+                {
+                    if (!hasInSet)
+                    {
+                        _abilitySet.Add(tacticEntry);
+                        changed = true;
+                    }
+
+                    if (!hasInList)
+                    {
+                        _abilities.Add(tacticInfo);
+                        changed = true;
+                    }
+                }
+                else
+                {
+                    if (hasInSet)
+                    {
+                        _abilitySet.Remove(tacticEntry);
+                        changed = true;
+                    }
+
+                    if (hasInList)
+                    {
+                        _abilities.RemoveAll(ab => ab.Entry == tacticEntry);
+                        changed = true;
+                    }
+                }
+            }
+
+            return changed;
+        }
+
+        private bool SyncRenownSilentBonuses()
+        {
+            if (_playerOwner == null)
+                return false;
+
+            bool changed = false;
+            changed |= EnsureRenownSilentBuff(RenownSilentBonusRankOneEntry, _playerOwner.RenownRank >= RenownSilentBonusRankOne);
+            changed |= EnsureRenownSilentBuff(RenownSilentBonusRankTwoEntry, _playerOwner.RenownRank >= RenownSilentBonusRankTwo);
+            return changed;
+        }
+
+        private bool HasRenownSilentBuff(ushort buffEntry)
+        {
+            return _playerOwner?.BuffInterface?.GetBuff(buffEntry, _playerOwner) != null;
+        }
+
+        private bool QueueRenownSilentBuff(ushort buffEntry)
+        {
+            BuffInfo buffInfo = AbilityMgr.GetBuffInfo(buffEntry, _playerOwner, _playerOwner);
+            if (buffInfo == null)
+            {
+                Log.Error("AbilityInterface", $"Unable to queue renown silent buff {buffEntry} for {_playerOwner?.Name ?? "unknown"}.");
+                return false;
+            }
+
+            _playerOwner.BuffInterface.QueueBuff(new BuffQueueInfo(_playerOwner, _playerOwner.EffectiveLevel, buffInfo));
+            return true;
+        }
+
+        private bool EnsureRenownSilentBuff(ushort buffEntry, bool shouldHave)
+        {
+            bool hasBuff = HasRenownSilentBuff(buffEntry);
+
+            if (shouldHave)
+            {
+                if (hasBuff)
+                    return false;
+
+                return QueueRenownSilentBuff(buffEntry);
+            }
+
+            if (!hasBuff)
+                return false;
+
+            _playerOwner.BuffInterface.RemoveBuffByEntry(buffEntry);
+            return true;
+        }
+
+        private byte GetRenownSilentMasteryBonus()
+        {
+            if (_playerOwner == null)
+                return 0;
+
+            byte bonus = 0;
+            if (HasRenownSilentBuff(RenownSilentBonusRankOneEntry))
+                ++bonus;
+
+            if (HasRenownSilentBuff(RenownSilentBonusRankTwoEntry))
+                ++bonus;
+
+            return bonus;
         }
 
         public void SendAbilityLevels()
@@ -165,8 +296,29 @@ namespace WorldServer.World.Abilities
             foreach (AbilityInfo ab in newAbilities)
                 _abilitySet.Add(ab.Entry);
 
+            bool tacticsChanged = SyncRenownMasteryTactics();
+            if (tacticsChanged && _playerOwner?.TacInterface != null && _playerOwner.TacInterface.Loaded)
+                _playerOwner.TacInterface.ValidateTactics();
+
             SendMasteryPointsUpdate();
             SendAbilityLevels();
+        }
+
+        public void OnPlayerRenownChanged(byte oldRenownRank, byte newRenownRank)
+        {
+            if (_playerOwner == null)
+                return;
+
+            bool tacticsChanged = SyncRenownMasteryTactics();
+            bool silentBonusesChanged = SyncRenownSilentBonuses();
+
+            if (!tacticsChanged && !silentBonusesChanged)
+                return;
+
+            SendAbilityLevels();
+
+            if (tacticsChanged && _playerOwner.TacInterface != null && _playerOwner.TacInterface.Loaded)
+                _playerOwner.TacInterface.ValidateTactics();
         }
 
         public bool OnPlayerMoved(Object sender, object args)
@@ -285,9 +437,12 @@ namespace WorldServer.World.Abilities
 
         public bool IsValidTactic(ushort tacticEntry)
         {
-            AbilityConstants constInfo = AbilityMgr.GetAbilityInfo(tacticEntry).ConstantInfo;
+            AbilityInfo tacticInfo = AbilityMgr.GetAbilityInfo(tacticEntry);
+            AbilityConstants constInfo = tacticInfo?.ConstantInfo;
+            if (constInfo == null)
+                return false;
 
-            if (constInfo.MinimumRank > _unitOwner.AdjustedLevel)
+            if (constInfo.MinimumRank > _unitOwner.AdjustedLevel || constInfo.MinimumRenown > _unitOwner.RenownRank)
                 return false;
 
             if (constInfo.MasteryTree == 0)
@@ -1060,14 +1215,22 @@ namespace WorldServer.World.Abilities
             if (pet?.Owner != null)
                 return pet.Owner.AbtInterface.GetMasteryLevelFor(masteryTree);
 
-            if (masteryTree == 0 || _unitOwner.EffectiveLevel < 11)
-                return _unitOwner.EffectiveLevel;
+            byte effectiveLevel = _unitOwner.EffectiveLevel;
+            byte renownSilentBonus = GetRenownSilentMasteryBonus();
+            if (masteryTree != 0 && renownSilentBonus > 0)
+            {
+                int boostedLevel = effectiveLevel + renownSilentBonus;
+                effectiveLevel = (byte)Math.Min(byte.MaxValue, boostedLevel);
+            }
+
+            if (masteryTree == 0 || effectiveLevel < 11)
+                return effectiveLevel;
 
             byte curLevel = _unitOwner.Level;
             if (_unitOwner.AdjustedLevel < curLevel)
                 curLevel = _unitOwner.AdjustedLevel;
 
-            return (byte)(10 + ((curLevel - 10) >> 1) + (_unitOwner.EffectiveLevel - curLevel) + _pointsInTree[masteryTree - 1]);
+            return (byte)(10 + ((curLevel - 10) >> 1) + (effectiveLevel - curLevel) + _pointsInTree[masteryTree - 1]);
 
             //// The following correctly displays tooltip information.
             //return (byte)(curLevel + (_pointsInTree[masteryTree - 1] * 2));
