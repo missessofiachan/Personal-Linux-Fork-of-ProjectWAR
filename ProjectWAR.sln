@@ -1,7 +1,6 @@
-
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28124.53
+# Visual Studio Version 18
+VisualStudioVersion = 18.3.11520.95 d18.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{8BC085CD-429B-41D1-BB47-9621FD32EC23}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -42,16 +41,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerLauncher", "ServerLau
 		{D5C98F3A-D5D2-4AED-A5A7-06D2DE095095} = {D5C98F3A-D5D2-4AED-A5A7-06D2DE095095}
 	EndProjectSection
 EndProject
-
-
-
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sql", "sql", "{BC0B5C1C-1695-447E-A1D0-C3635E1D783C}"
-	ProjectSection(SolutionItems) = preProject
-		CharValueDump.sql = CharValueDump.sql
-		CreateCharValueDump.sql = CreateCharValueDump.sql
-	EndProjectSection
-EndProject
-
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -90,7 +79,6 @@ Global
 		{391C546A-4DFB-4A9D-A3DF-419128D308A2}.Debug|x64.Build.0 = Debug|x64
 		{391C546A-4DFB-4A9D-A3DF-419128D308A2}.Release|x64.ActiveCfg = Release|x64
 		{391C546A-4DFB-4A9D-A3DF-419128D308A2}.Release|x64.Build.0 = Release|x64
-
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

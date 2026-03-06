@@ -132,6 +132,7 @@ namespace FrameWork
             List<string> databasePrimaryKeys = new List<string>();
 
             bool createNewTable = false;
+            bool hasSyntheticPrimaryKey = table.ExtendedProperties.ContainsKey("FRAMEWORK_SYNTHETIC_PK");
 
             // Check for existing table.
             try
@@ -262,7 +263,7 @@ namespace FrameWork
                 // Skip AutoIncrement columns: .NET Framework silently converts their DataType to Int32
                 // when AutoIncrement=true is set, so the comparison would always be a false positive
                 // for columns originally declared as uint (INT UNSIGNED in DB).
-                else if(!table.Columns[i].AutoIncrement && systype != typeof(string) && systype != typeof(bool) && systype != typeof(float) && TypeDescStrings.ContainsKey(systype))
+                else if(databaseColumns.Count > 0 && !table.Columns[i].AutoIncrement && systype != typeof(string) && systype != typeof(bool) && systype != typeof(float) && TypeDescStrings.ContainsKey(systype))
                 {
                     int colIndex = databaseColumns.IndexOf(table.Columns[i].ColumnName.ToLower());
 
@@ -372,7 +373,8 @@ namespace FrameWork
                 if (columnsToAdd.Count > 0)
                     AddColumnsToDatabase(table.TableName, columnsToAdd);
 
-                if (primaryKeysDirty)
+                // Do not force PK migrations for legacy/source tables that only use synthetic framework PKs.
+                if (primaryKeysDirty && !(hasSyntheticPrimaryKey && !createNewTable))
                     UpdatePrimaryKeys(table.TableName, primaryKeys.ToList(), databasePrimaryKeys.Count > 0);
 
                 if (columnsToRemove.Count > 0)

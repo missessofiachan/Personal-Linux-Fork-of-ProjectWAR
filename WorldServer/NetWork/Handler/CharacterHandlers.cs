@@ -5,6 +5,7 @@ using System.Text;
 using Common;
 using FrameWork;
 using WorldServer.Managers;
+using WorldServer.Services.World;
 using WorldServer.World.Objects;
 
 namespace WorldServer.NetWork.Handler
@@ -115,7 +116,7 @@ namespace WorldServer.NetWork.Handler
                             Money = 2000,
                             Online = false,
                             RallyPoint = CharInfo.RallyPt,
-                            RegionId = CharInfo.Region,
+                            RegionId = ZoneService.GetZone_Info(CharInfo.ZoneId)?.Region ?? CharInfo.Region,
                             Renown = 0,
                             RenownRank = 1,
                             RestXp = 0,

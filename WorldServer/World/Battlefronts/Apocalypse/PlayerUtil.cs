@@ -5,7 +5,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using SystemData;
-using Common.Database.World.Battlefront;
 using WorldServer.Managers;
 using WorldServer.World.Battlefronts.Bounty;
 using WorldServer.World.Objects;
@@ -15,7 +14,6 @@ namespace WorldServer.World.Battlefronts.Apocalypse
     public static class PlayerUtil
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-        public static readonly float HONOR_REDUCTION_PERCENT = 0.998f;
 
 
         public static byte CalculateRenownBand(byte playerRenown)
@@ -88,69 +86,18 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             }
         }
 
-        public static void UpdateHonorRankAllPlayers(bool announce)
-        {
-            var eligiblePlayers = CharMgr.Chars.Where(x => x.Value.HonorPoints >= 10);
-
-            foreach (var player in eligiblePlayers)
-            {
-               
-                try
-                {
-                    var currentHonorPoints = player.Value.HonorPoints;
-                    // Reduce honor points by X%, unless they are < 10 - in which case make it 0
-                    var newHonorPoints = 0;
-                    if (currentHonorPoints < 10)
-                        newHonorPoints = 0;
-                    else
-                        newHonorPoints = (int) (currentHonorPoints * HONOR_REDUCTION_PERCENT);
-
-                    player.Value.HonorPoints = (ushort) newHonorPoints;
-                    var oldHonorRank = player.Value.HonorRank;
-
-                    // Recalculate Honor Rank
-                    var honorLevel = new Common.HonorCalculation().GetHonorLevel((int) newHonorPoints);
-                    player.Value.HonorRank = (ushort) honorLevel;
-                    Logger.Trace(
-                        $"Updating honor for {player.Value.Name} [{currentHonorPoints-newHonorPoints}] ({player.Value.CharacterId}) Current => New Honor Pts: {currentHonorPoints} => {player.Value.HonorPoints} ({player.Value.HonorRank}) ");
-                    
-                    CharMgr.Database.SaveObject(player.Value);
-
-                    PlayerUtil.RecordHonorHistory(currentHonorPoints, (ushort) newHonorPoints, 
-                        player.Value.CharacterId, player.Value.Name);
-
-                    if (announce)
-                    {
-                        if (honorLevel > oldHonorRank)
-                        {
-                            var playerToAnnounce = Player.GetPlayer((uint) player.Value.CharacterId);
-                            if (playerToAnnounce.CharacterId == player.Value.CharacterId)
-                            {
-                                playerToAnnounce.SendClientMessage($"You have reached Honor Rank {honorLevel}", ChatLogFilters.CHATLOGFILTERS_C_ORANGE_L);
-                            }
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    Logger.Error($"{e.Message} {e.StackTrace}");
-                }
-            }
-
-        }
-
         /// <summary>
         /// Given contributing players and their contributions, split out the eligible, the contributing winning realm and contributing losing realm players.
         /// </summary>
         /// <param name="allContributingPlayers"></param>
         /// <param name="lockingRealm"></param>
         /// <param name="contributionManager"></param>
-        /// <param name="updateHonor"></param>
+        /// <param name="applyLegacyPoints"></param>
         /// <param name="updateAnalytics"></param>
         /// <returns></returns>
         public static Tuple<ConcurrentDictionary<Player, int>, ConcurrentDictionary<Player, int>, ConcurrentDictionary<Player, int>>
             SegmentEligiblePlayers(
-                IEnumerable<KeyValuePair<uint, int>> allContributingPlayers, Realms lockingRealm, IContributionManager contributionManager, bool updateHonor = true, bool updateAnalytics = true)
+                IEnumerable<KeyValuePair<uint, int>> allContributingPlayers, Realms lockingRealm, IContributionManager contributionManager, bool applyLegacyPoints = true, bool updateAnalytics = true)
         {
             var winningRealmPlayers = new ConcurrentDictionary<Player, int>();
             var losingRealmPlayers = new ConcurrentDictionary<Player, int>();
@@ -163,17 +110,8 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                 var player = Player.GetPlayer(contributingPlayer.Key);
                 if (player != null)
                 {
-                    if (updateHonor)
-                    {
-                        // Update the Honor Points of the Contributing Players
-                        var oldHonorPoints = player.Info.HonorPoints;
-                        player.Info.HonorPoints += (ushort)contributingPlayer.Value;
-                        Logger.Debug($"Updating honor for {player.Info.Name} ({player.Info.CharacterId}) {oldHonorPoints} => {player.Info.HonorPoints} ({player.Info.HonorRank})");
-                        CharMgr.Database.SaveObject(player.Info);
-
-
-                        PlayerUtil.RecordHonorHistory(oldHonorPoints, player.Info.HonorPoints, player.CharacterId, player.Name);
-                    }
+                    if (applyLegacyPoints)
+                        Logger.Trace("Legacy point update path is disabled.");
 
                     if (player.Realm == lockingRealm)
                     {
@@ -197,27 +135,8 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
                 }
             }
-            // Update and inform players of change in Honor Rank.
-            UpdateHonorRankAllPlayers(false);
-
             return new Tuple<ConcurrentDictionary<Player, int>, ConcurrentDictionary<Player, int>, ConcurrentDictionary<Player, int>>(allEligiblePlayerDictionary, winningRealmPlayers, losingRealmPlayers);
 
-        }
-
-        private static void RecordHonorHistory(ushort oldHonorPoints, ushort infoHonorPoints, uint playerCharacterId, string playerName)
-        {
-            var roc = (infoHonorPoints - oldHonorPoints);
-            
-            var honorHistory = new HonorHistory
-            {
-                CharacterId = playerCharacterId,
-                CharacterName = playerName,
-                CurrentHonorPoints = (uint) infoHonorPoints,
-                OldHonorPoints = oldHonorPoints,
-                RateOfChange = roc,
-                Timestamp = DateTime.UtcNow
-            };
-            WorldMgr.Database.AddObject(honorHistory);
         }
 
         public static void SendGMBroadcastMessage(List<Player> players, string message)

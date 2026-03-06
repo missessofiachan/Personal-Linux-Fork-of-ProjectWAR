@@ -591,12 +591,6 @@ namespace WorldServer.World.Objects
                                 WorldMgr.SendDynamicVendorItems(player,blackMarketVendor.GetBlackMarketItems(player));
                                 break;
                             }
-                            case 10002:  // Honor Vendor
-                            {
-                                WorldMgr.SendDynamicVendorItems(player,
-                                    new HonorVendorItem(player).items);
-                                break;
-                            }
                             case 10001:  // Realm Captain Vendor
                             {
                                 WorldMgr.SendDynamicVendorItems(player,
@@ -632,36 +626,23 @@ namespace WorldServer.World.Objects
                             break;
                         }
 
-                        // Dynamic Vendor -- Honor vendor
-                        if (Spawn.Proto.VendorID == 10002)
+                        if (Spawn.Proto.VendorID == 10001)
                         {
-                            var items = new HonorVendorItem(player).items;
-                            WorldMgr.BuyItemHonorDynamicVendor(player, menu, items);
-                            // Refresh the available item list.
-                            WorldMgr.SendDynamicVendorItems(player,
-                                new HonorVendorItem(player).items);
+                            var items = new RealmCaptainVendorItem(player).items;
+                            WorldMgr.BuyItemRealmCaptainDynamicVendor(player, menu, items);
                         }
                         else
                         {
-                            // realm captain vendor
-                            if (Spawn.Proto.VendorID == 10001)
+                            if (Spawn.Proto.VendorID == 10000)
                             {
-                                var items = new RealmCaptainVendorItem(player).items;
-                                WorldMgr.BuyItemRealmCaptainDynamicVendor(player, menu, items);
+                                //WorldMgr.BuyItemDynamicVendor(player, menu,
+                                //    new RenownLevelVendorItem(player._Value.RenownRank, player._Value.Level).items);
                             }
                             else
                             {
-                                if (Spawn.Proto.VendorID == 10000)
-                                {
-                                    //WorldMgr.BuyItemDynamicVendor(player, menu,
-                                    //    new RenownLevelVendorItem(player._Value.RenownRank, player._Value.Level).items);
-                                }
-                                else
-                                {
-                                    if (Spawn.Proto.VendorID > 0)
-                                        WorldMgr.BuyItemVendor(player, menu, Spawn.Proto.VendorID);
-                                }
-                            }                            
+                                if (Spawn.Proto.VendorID > 0)
+                                    WorldMgr.BuyItemVendor(player, menu, Spawn.Proto.VendorID);
+                            }
                         }
 
                         break;

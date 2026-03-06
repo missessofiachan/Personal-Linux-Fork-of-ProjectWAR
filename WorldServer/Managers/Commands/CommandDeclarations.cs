@@ -174,8 +174,7 @@ namespace WorldServer.Managers.Commands
             new GmCommandHandler("gatheringskill", ModifyGath, null, EGmLevel.GM, 1, "Changes your proficiency in your current gathering skill (byte Skill)"),
             new GmCommandHandler("craftingskill", ModifyCraf, null, EGmLevel.GM,1, "Changes your proficiency in your current crafting skill (byte Skill)"),
             new GmCommandHandler("keepguild", ModifyKeepGuild, null, EGmLevel.GM, 1, "Claims or removes claim on keep for a guild"),
-            new GmCommandHandler("contribution", ModifyContribution, null, EGmLevel.GM, 0, "Sets a players contribution."),
-            new GmCommandHandler("honorrank", ModifyHonorRank, null, EGmLevel.GM, 1, "Sets a players honor rank.")
+            new GmCommandHandler("contribution", ModifyContribution, null, EGmLevel.GM, 0, "Sets a players contribution.")
         };
 
         /// <summary>Mount commands under .mount</summary>
@@ -484,7 +483,6 @@ namespace WorldServer.Managers.Commands
             new GmCommandHandler("summonorcapult", SummonOrcapult, null, EGmLevel.Developer, 0, "Its flying time"),
             new GmCommandHandler("creategoldchest", CreateGoldChest, null, EGmLevel.Developer, 0, "Summon a GoldChest"),
             new GmCommandHandler("forcelockzone", ForceLockZone, null, EGmLevel.Developer, 0, "Force Lock a Fort Zone"),
-            new GmCommandHandler("honor", CheckPlayerHonor, null, EGmLevel.Player, 0, "Checks a player's honor rank"),
             new GmCommandHandler("mailitem", MailItem, null, EGmLevel.Developer, 3, "Mail an item to a character"),
             new GmCommandHandler("testscoreboard", Scoreboard, null, EGmLevel.Developer, 0, "test scoreboard"),
             new GmCommandHandler("title", SetTitle, null, EGmLevel.Developer, 1, "Set player title"),

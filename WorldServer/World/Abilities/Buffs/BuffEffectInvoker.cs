@@ -3589,7 +3589,7 @@ namespace WorldServer.World.Abilities.Buffs
             hostBuff.Target.BuffInterface.QueueBuff(new BuffQueueInfo(hostBuff.Caster, hostBuff.BuffLevel, AbilityMgr.GetBuffInfo((ushort)cmd.PrimaryValue, hostBuff.Caster, hostBuff.Caster)));
         }
 
-        // Honor Restored
+        // Legacy restoration effect
         private static void DealDamageOnFinisherUse(NewBuff hostBuff, BuffCommandInfo cmd, AbilityInfo abInfo)
         {
             if (abInfo.SpecialCost == 25)

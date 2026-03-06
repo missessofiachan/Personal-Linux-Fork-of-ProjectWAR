@@ -521,6 +521,19 @@ namespace FrameWork
         }
         
 
+        private static Type GetMemberColumnType(MemberInfo memberInfo)
+        {
+            Type memberType;
+
+            if (memberInfo is PropertyInfo propertyInfo)
+                memberType = propertyInfo.PropertyType;
+            else
+                memberType = ((FieldInfo)memberInfo).FieldType;
+
+            // DataTable/DataSet columns can't be declared as Nullable<T>.
+            return Nullable.GetUnderlyingType(memberType) ?? memberType;
+        }
+
         public void RegisterDataObject(Type objType)
         {
             if (TableDatasets.ContainsKey(GetTableOrViewName(objType)))
@@ -542,10 +555,7 @@ namespace FrameWork
 
                 if (myAttributes.Length > 0)
                 {
-                    if (memberInfo is PropertyInfo)
-                        table.Columns.Add(memberInfo.Name, ((PropertyInfo)memberInfo).PropertyType);
-                    else
-                        table.Columns.Add(memberInfo.Name, ((FieldInfo)memberInfo).FieldType);
+                    table.Columns.Add(memberInfo.Name, GetMemberColumnType(memberInfo));
 
                     table.Columns[memberInfo.Name].AutoIncrement = ((PrimaryKey)myAttributes[0]).AutoIncrement;
                     table.Columns[memberInfo.Name].AutoIncrementSeed = ((PrimaryKey)myAttributes[0]).IncrementValue;
@@ -558,10 +568,7 @@ namespace FrameWork
 
                 if (myAttributes.Length > 0)
                 {
-                    if (memberInfo is PropertyInfo)
-                        table.Columns.Add(memberInfo.Name, ((PropertyInfo)memberInfo).PropertyType);
-                    else
-                        table.Columns.Add(memberInfo.Name, ((FieldInfo)memberInfo).FieldType);
+                    table.Columns.Add(memberInfo.Name, GetMemberColumnType(memberInfo));
 
                     table.Columns[memberInfo.Name].AllowDBNull = ((DataElement)myAttributes[0]).AllowDbNull;
 
@@ -590,6 +597,7 @@ namespace FrameWork
             else // Add a primary key column to use
             {
                 table.Columns.Add(tableName + "_ID", typeof(string));
+                table.ExtendedProperties["FRAMEWORK_SYNTHETIC_PK"] = true;
 
                 DataColumn[] index = new DataColumn[1];
                 index[0] = table.Columns[tableName + "_ID"];

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 using Common;
 using FrameWork;
@@ -27,6 +28,9 @@ namespace WorldServer
         public static TCPServer Server;
         public static Realm Rm;
         private static Timer _timer;
+
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern bool SetDllDirectory(string lpPathName);
         
         private static void ResetBattlefrontProgressionsOnStartup()
         {
@@ -89,6 +93,11 @@ namespace WorldServer
             // Loading all configs files
             ConfigMgr.LoadConfigs();
             Config = ConfigMgr.GetConfig<WorldConfigs>();
+
+            // Ensure native dependencies moved under /libs are discoverable by DllImport.
+            string libsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "libs");
+            if (Directory.Exists(libsPath))
+                SetDllDirectory(libsPath);
 
             // Loading log level from file
             if (!Log.InitLog(Config.LogLevel, "WorldServer"))

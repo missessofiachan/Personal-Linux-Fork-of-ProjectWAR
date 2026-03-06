@@ -147,7 +147,6 @@
     <Compile Include="Database\World\Ability\BuffCommands.cs" />
     <Compile Include="Database\World\Ability\DBAbilityInfo.cs" />
     <Compile Include="Database\World\Battlefront\ContributionAnalytics.cs" />
-    <Compile Include="Database\World\Battlefront\HonorHistory.cs" />
     <Compile Include="Database\World\Battlefront\RVRPlayerBagBonus.cs" />
     <Compile Include="Database\World\Battlefront\KillTracking.cs" />
     <Compile Include="Database\World\Battlefront\BattlefrontObject.cs" />
@@ -184,11 +183,9 @@
     <Compile Include="Database\World\Characters\CharacterInfo.cs" />
     <Compile Include="Database\World\Characters\CharacterInfo_item.cs" />
     <Compile Include="Database\World\Characters\CharacterInfo_renown.cs" />
-    <Compile Include="Database\World\Characters\HonorRewardCooldon.cs" />
     <Compile Include="Database\World\Characters\PetStatOverride.cs" />
     <Compile Include="Database\World\Characters\PetMasteryModifiers.cs" />
     <Compile Include="Database\World\Characters\CharacterInfo_stats.cs" />
-    <Compile Include="Database\World\Characters\HonorReward.cs" />
     <Compile Include="Database\World\Characters\Tok_Bestiary.cs" />
     <Compile Include="Database\World\Creatures\Boss_Spawn.cs" />
     <Compile Include="Database\World\Creatures\Boss_Phases.cs" />
@@ -261,7 +258,6 @@
     <Compile Include="Database\World\Waypoint.cs" />
     <Compile Include="Database\World\World_Settings.cs" />
     <Compile Include="FastRandom.cs" />
-    <Compile Include="HonorCalculation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rpc\AccountMgr.cs" />
   </ItemGroup>

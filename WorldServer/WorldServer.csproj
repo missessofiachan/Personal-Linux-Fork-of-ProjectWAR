@@ -357,7 +357,6 @@
     <Compile Include="Services\World\RewardService.cs" />
     <Compile Include="Services\World\BountyService.cs" />
     <Compile Include="Services\World\RVRProgressionService.cs" />
-    <Compile Include="Services\World\HonorService.cs" />
     <Compile Include="Services\World\RVRZoneRewardService.cs" />
     <Compile Include="Services\World\ScenarioService.cs" />
     <Compile Include="Services\World\TokService.cs" />
@@ -557,7 +556,6 @@
     <Compile Include="World\Objects\DynamicVendor.cs" />
     <Compile Include="World\Objects\Boss.cs" />
     <Compile Include="World\Objects\BlackMarketVendorItem.cs" />
-    <Compile Include="World\Objects\HonorVendorItem.cs" />
     <Compile Include="World\Objects\LootChest.cs" />
     <Compile Include="World\Objects\Instances\Bloodwrought Enclave\SimpleBarakustheGodslayer.cs" />
     <Compile Include="World\Objects\Instances\Bloodwrought Enclave\SimpleCuliusEmbervine.cs" />
@@ -831,18 +829,15 @@
   <PropertyGroup>
     <PostBuildEvent>if not exist $(TargetDir)\PatcherFilesDirectory mkdir $(TargetDir)\PatcherFilesDirectory
 if not exist $(TargetDir)\TempFilesDirectory mkdir $(TargetDir)\TempFilesDirectory
-if not exist $(TargetDir)\Abilities mkdir $(TargetDir)\Abilities
 </PostBuildEvent>
   </PropertyGroup>
   <Target Name="AfterBuild">
     <ItemGroup>
       <DepsLosFiles Include="$(ProjectDir)..\deps\los\**\*.*" />
       <DepsZonesFiles Include="$(ProjectDir)..\deps\zones\**\*.*" />
-      <DepsAbilitiesFiles Include="$(ProjectDir)..\deps\Abilities\**\*.*" />
     </ItemGroup>
     <Copy SourceFiles="@(DepsLosFiles)" DestinationFolder="$(TargetDir)los\%(RecursiveDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(DepsZonesFiles)" DestinationFolder="$(TargetDir)zones\%(RecursiveDir)" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="@(DepsAbilitiesFiles)" DestinationFolder="$(TargetDir)Abilities\%(RecursiveDir)" SkipUnchangedFiles="true" />
   </Target>
   <Import Project="..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets" Condition="Exists('..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

@@ -1951,9 +1951,12 @@ namespace WorldServer.World.Objects
         }
         public void SendRenown(RewardType type = RewardType.None, string text = null)
         {
+            if (CurrentRenown == null)
+                CurrentRenown = XpRenownService.GetRenown_Info(_Value.RenownRank);
+
             PacketOut Out = new PacketOut((byte)Opcodes.F_PLAYER_RENOWN, 12);
             Out.WriteUInt32(_Value.Renown);
-            Out.WriteUInt32(CurrentRenown.Renown);
+            Out.WriteUInt32(CurrentRenown?.Renown ?? 0);
             Out.WriteByte(_Value.RenownRank);
             Out.WriteByte((byte)type);
             Out.WriteByte(RenInterface.GetAvailablePoints());

@@ -1,11 +1,14 @@
 <Project>
   <Target Name="MoveLibrariesToLibs" AfterTargets="Build" Condition="'$(OutputType)' == 'Exe' Or '$(OutputType)' == 'WinExe'">
     <ItemGroup>
-      <!-- Collect all DLLs/PDBs/XMLs but exclude the project's own output and first-party project DLLs -->
-      <FilesToMove Include="$(OutDir)*.dll;$(OutDir)*.pdb;$(OutDir)*.xml"
-                   Exclude="$(OutDir)$(TargetName).pdb;$(OutDir)$(TargetName).xml;$(OutDir)FrameWork.dll;$(OutDir)Common.dll" />
+      <!-- Move runtime libraries/symbols while keeping app XML config files beside executables. -->
+      <FilesToCopy Include="$(OutDir)*.dll;$(OutDir)*.pdb;$(OutDir)*.xml"
+                   Exclude="$(OutDir)$(TargetName).pdb;$(OutDir)$(TargetName).xml;$(OutDir)FrameWork.dll;$(OutDir)Common.dll;$(OutDir)*config.xml" />
     </ItemGroup>
-    <MakeDir Directories="$(OutDir)libs" />
-    <Move SourceFiles="@(FilesToMove)" DestinationFolder="$(OutDir)libs" />
+    <MakeDir Directories="$(OutDir)libs" Condition="'@(FilesToCopy)' != ''" />
+    <Copy SourceFiles="@(FilesToCopy)"
+          DestinationFolder="$(OutDir)libs"
+          SkipUnchangedFiles="true"
+          Condition="'@(FilesToCopy)' != ''" />
   </Target>
 </Project>

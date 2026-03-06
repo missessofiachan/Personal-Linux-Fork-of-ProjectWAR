@@ -191,17 +191,6 @@ namespace WorldServer.NetWork.Handler
                 Plr.ItmInterface.DeleteItem(slot, 1);
             }
 
-            // Honor rewards
-            var honorReward = HonorService.HonorRewards.SingleOrDefault(x => x.ItemId == item.Info.Entry);
-            if (honorReward !=null)
-            {
-                if (Plr.Info.HonorRank < honorReward.HonorRank)
-                {
-                    Plr.SendClientMessage("You can no longer use this item, as you do not have a high enough Honor Rank.");
-                    return;
-                }
-            }
-
             if ((item.Info.Entry == 208477) || (item.Info.Entry == 208474))
             {
                 Plr.ItmInterface.CreateItem(208470, 6);

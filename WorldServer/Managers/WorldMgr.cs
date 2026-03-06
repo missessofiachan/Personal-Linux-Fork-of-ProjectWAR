@@ -1,5 +1,4 @@
 ﻿using Common;
-using Common.Database.World.Characters;
 using FrameWork;
 using GameData;
 using NLog;
@@ -486,64 +485,6 @@ namespace WorldServer.Managers
             {
 
             }
-        }
-
-        public static void BuyItemHonorDynamicVendor(Player plr, InteractMenu Menu, List<Vendor_items> items)
-        {
-            int Num = (Menu.Page * VendorService.MAX_ITEM_PAGE) + Menu.Num;
-            ushort Count = Menu.Packet.GetUint16();
-            if (Count == 0)
-                Count = 1;
-
-            if (items.Count <= Num)
-                return;
-
-
-            var honorVendor = new HonorVendorItem(plr);
-            var reward = HonorService.HonorRewards.SingleOrDefault(x => x.ItemId == items[Num].Info.Entry);
-            if (reward == null)
-                return;
-            if (!honorVendor.IsValidItemForPlayer(plr, reward))
-                return;
-
-            ItemResult result = plr.ItmInterface.CreateItem(items[Num].Info, (ushort)reward.ItemCount);
-            if (result == ItemResult.RESULT_OK)
-            {
-                plr.RemoveMoney(items[Num].Price * Count);
-                foreach (KeyValuePair<uint, ushort> Kp in items[Num].ItemsReq)
-                    plr.ItmInterface.RemoveItems(Kp.Key, (ushort)(Kp.Value * Count));
-
-                items.Remove(items[Num]);
-
-                // Set the Honor Reward Cooldown
-                // Remove all existing Honor Reward Cooldowns for this item
-                var existingRewards = plr.Info.HonorCooldowns?.Where(x => x.ItemId == reward.ItemId);
-                foreach (var existingReward in existingRewards)
-                {
-                    plr.Info.HonorCooldowns.Remove(existingReward);
-                    CharMgr.Database.DeleteObject(existingReward);
-                }
-
-                // Add the definitive reward cooldown for this item
-                var honorRewardCooldown = new HonorRewardCooldown
-                {
-                    CharacterId = plr.CharacterId,
-                    Cooldown = FrameWork.TCPManager.GetTimeStamp() + reward.Cooldown,
-                    ItemId = reward.ItemId
-                };
-
-                plr.Info.HonorCooldowns.Add(honorRewardCooldown);
-                CharMgr.Database.AddObject(honorRewardCooldown);
-            }
-            else if (result == ItemResult.RESULT_MAX_BAG)
-            {
-                plr.SendLocalizeString("", ChatLogFilters.CHATLOGFILTERS_USER_ERROR, Localized_text.TEXT_MERCHANT_INSUFFICIENT_SPACE_TO_BUY);
-            }
-            else if (result == ItemResult.RESULT_ITEMID_INVALID)
-            {
-
-            }
-
         }
 
         public static void BuyItemRealmCaptainDynamicVendor(Player plr, InteractMenu Menu, List<Vendor_items> items)

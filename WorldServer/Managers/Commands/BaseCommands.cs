@@ -5197,43 +5197,6 @@ namespace WorldServer.Managers.Commands
 
         }
 
-        public static bool CheckPlayerHonor(Player plr, ref List<string> values)
-        {
-            plr.SendClientMessage(
-                $"Honor Rank for Player {plr.Name} is {plr.Info.HonorRank}");
-
-            var percent = 0;
-
-            switch (plr.Info.HonorRank)
-            {
-                case 0:
-                    percent = HonorCalculation.CalculateRank0Percent(plr.Info.HonorPoints);
-
-                    break;
-
-                case 1:
-                    percent = HonorCalculation.CalculateRank1Percent(plr.Info.HonorPoints);
-                    break;
-
-                case 2:
-                    percent = HonorCalculation.CalculateRank2Percent(plr.Info.HonorPoints);
-                    break;
-
-                case 3:
-                    percent = HonorCalculation.CalculateRank3Percent(plr.Info.HonorPoints);
-                    break;
-
-                case 4:
-                    plr.SendClientMessage($"-----MAX-----");
-                    return true;
-
-            }
-            plr.SendClientMessage($"-----{percent:00}%-----");
-
-            return true;
-        }
-
-
         public static bool MakeRealmCaptain(Player plr, ref List<string> values)
         {
             Unit playerTarget = GetTargetOrMe(plr);

@@ -71,7 +71,7 @@ namespace WorldServer.World.Interfaces
         {
             ResetTrainingState();
 
-            if (_player._Value.RenownSkills?.Length <= 0)
+            if (string.IsNullOrWhiteSpace(_player._Value.RenownSkills))
                 return;
 
             string command = "";
