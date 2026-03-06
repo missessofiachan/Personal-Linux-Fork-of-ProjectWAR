@@ -1,0 +1,123 @@
+State,State,,,,
+ID,Name,StartList,DurationList,EndList,IMA Swap
+1,Current Target,0,1472,0,0
+2,Quest Offer Off,0,1001,0,0
+3,Quest Offer On,0,1002,0,0
+4,Quest Complete Off,0,1003,0,0
+5,Quest Complete On,0,1004,0,0
+6,Influence Rewards Avail,0,1020,0,0
+7,Berserk 1,0,0,0,0
+8,Berserk 2,0,0,0,0
+9,Berserk 3,0,0,0,0
+10,Waagh 1 Orc,1009,1010,0,0
+11,Waagh 2 Orc,0,1012,0,0
+12,Waagh 1 Goblin,1009,1011,0,0
+13,Waagh 2 Goblin,0,1013,0,0
+14,Banner Carrying CES,0,1726,0,0
+15,Ebon Keep IMA Swap,0,0,0,16
+16,empty,0,0,0,0
+17,Actor is scaled up,0,0,0,0
+18,Merchant,0,1019,0,0
+19,Carrying Flag,0,0,0,0
+20,Chaos Chicken,0,0,0,1
+21,Order Chicken,0,0,0,2
+22,Squig Armor,0,0,0,3
+23,Marauder Mutation,0,0,0,0
+24,Influence Not Avail,0,2287,0,0
+25,Scenario Gatekeper NPC,0,744,0,0
+26,Trainer NPC,0,1018,0,0
+27,Travel Order NPC,0,637,0,0
+28,Travel Destr NPC,0,636,0,0
+29,Kill Collector off,0,1003,0,0
+30,Kill Collector on,0,1004,0,0
+31,Auction House NPC,0,747,0,0
+32,Vault Keeper NPC,0,746,0,0
+33,Librarian NPC,0,743,0,0
+34,Guild Registrar NPC,0,740,0,0
+35,Bounty Hunter Offer Off,0,750,0,0
+36,Bounty Hunter Offer On,0,750,0,0
+37,Bounty Hunter Complete Off,0,749,0,0
+38,Bounty Hunter Complete On.,0,748,0,0
+39,Marauder Mutation Claw,0,0,0,4
+40,Marauder Mutation Blade,0,0,0,5
+41,Marauder Mutation Crush,0,0,0,6
+42,Healer,0,0,0,0
+43,Stealth,0,1569,0,0
+44,Current Target Hostile,0,1440,0,0
+45,Current Target Friendly,0,1438,0,0
+46,MARAUDER_MUTATION_CLAW_2  ,0,0,0,7
+47,MARAUDER_MUTATION_BLADE_2 ,0,0,0,10
+48,MARAUDER_MUTATION_CRUSH_2,0,0,0,13
+49,MARAUDER_MUTATION_CLAW_3,0,0,0,8
+50,MARAUDER_MUTATION_BLADE_3,0,0,0,11
+51,MARAUDER_MUTATION_CRUSH_3,0,0,0,14
+52,MARAUDER_MUTATION_CLAW_4,0,0,0,9
+53,MARAUDER_MUTATION_BLADE_4,0,0,0,12
+54,MARAUDER_MUTATION_CRUSH_4,0,0,0,15
+55,Skaven_Marketing Item,0,0,0,17
+56, Skeleton Marketing Item,0,0,0,18
+57,Bear Marketing Item,0,0,0,19
+58,Mummy Marketing Item,0,0,0,20
+59,Quest offer repeatable,0,1927,0,0
+60,Male Magus - No Disk,0,0,0,21
+61,Female Magus - No Disk,0,0,0,22
+62,Skeleton_on_Death,0,0,0,23
+63,Event IMA Swap 1,0,0,0,24
+64,Event IMA Swap 2,0,0,0,25
+65,Event IMA Swap 3,0,0,0,26
+66,Event IMA Swap 4,0,0,0,27
+67,Quest offer repeatable,0,3131,0,0
+68,Equipment Upgrade NPC,0,3131,0,0
+69,PAM: Order Skaven Packmaster,0,0,0,28
+70,PAM: Order Skaven Rat Ogre,0,0,0,29
+71,PAM: Order Skaven Gutter Runner,0,0,0,30
+72,PAM: Order Skaven Warlock Engineer,0,0,0,31
+73,PAM: Destro Skaven Packmaster,0,0,0,32
+74,PAM: Destro Skaven Rat Ogre,0,0,0,33
+75,PAM: Destro Skaven Gutter Runner,0,0,0,34
+76,PAM: Destro Skaven Warlock Engineer,0,0,0,35
+77,Incursion IMA Swap Rat,0,0,0,36
+78,PAM: College of Corruption Aspect of Fire,0,0,0,37
+79,PAM: Male HE Shadow Warrior ,0,0,0,38
+80,PAM: Female HE Shadow Warrior ,0,0,0,39
+81,PAM: Male HE White Lion,0,0,0,40
+82,PAM: Female HE White Lion,0,0,0,41
+83,PAM: Male HE Swordmaster,0,0,0,42
+84,PAM: Female HE Swordmaster,0,0,0,43
+85,PAM: Male HE Archmage,0,0,0,44
+86,PAM: Female HE Archmage,0,0,0,45
+87,PAM: Male DE Blackguard,0,0,0,46
+88,PAM: Female DE Blackguard,0,0,0,47
+89,PAM: Male DE Disciple of Khaine,0,0,0,48
+90,PAM: Female DE Disciple of Khaine,0,0,0,49
+91,PAM: Male DE Sorceress,0,0,0,50
+92,PAM: Female DE Sorceress,0,0,0,51
+93,PAM: Female DE Witch Elf,0,0,0,52
+94,PAM: Male EM Warrior Priest,0,0,0,53
+95,PAM: Female EM Warrior Priest,0,0,0,54
+96,PAM: Male EM Knight of the Blazing Sun,0,0,0,55
+97,PAM: Female EM Knight of the Blazing Sun,0,0,0,56
+98,PAM: Male EM Bright Wizard,0,0,0,57
+99,PAM: Female EM Bright Wizard,0,0,0,58
+100,PAM: Male EM Witch Hunter,0,0,0,59
+101,PAM: Female EM Witch Hunter,0,0,0,60
+102,PAM: Male CH Magus,0,0,0,61
+103,PAM: Female CH Magus,0,0,0,62
+104,PAM: Male CH Zealot,0,0,0,63
+105,PAM: Female CH Zealot,0,0,0,64
+106,PAM: Male CH Marauder with Claw,0,0,0,65
+107,PAM: Male CH Chosen,0,0,0,66
+108,PAM: Male DW Slayer,0,0,0,67
+109,PAM: Male DW Engineer,0,0,0,68
+110,PAM: Female DW Engineer,0,0,0,69
+111,PAM: Male DW Ironbreaker,0,0,0,70
+112,PAM: Female DW Ironbreaker,0,0,0,71
+113,PAM: Male DW Runepriest,0,0,0,72
+114,PAM: Female DW Runepriest,0,0,0,73
+115,PAM: Male GS Black Orc,0,0,0,74
+116,PAM: Male GS Shaman,0,0,0,75
+117,PAM: Male GS Squig Herder,0,0,0,76
+118,PAM: Male GS Choppa,0,0,0,77
+119,PAM: Invading Flesh Hound,0,0,0,78
+120,PAM: Invading Bloodletter,0,0,0,79
+121,PAM: Invading Juggernaut,0,0,0,80

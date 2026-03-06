@@ -3,6 +3,7 @@ using FrameWork;
 using GameData;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using WorldServer.Managers;
 using WorldServer.World.Abilities.Components;
@@ -44,6 +45,8 @@ namespace WorldServer.World.Abilities
         // Canonical entry maps used to resolve pseudo/alias ability and buff entries.
         private static readonly Dictionary<ushort, ushort> AbilityEntryAliases = new Dictionary<ushort, ushort>();
         private static readonly Dictionary<ushort, ushort> BuffEntryAliases = new Dictionary<ushort, ushort>();
+        private static readonly Dictionary<ushort, ushort> MythicCsvAbilityEffects = new Dictionary<ushort, ushort>();
+        private static readonly Dictionary<ushort, ushort[]> MythicCsvEffectLinks = new Dictionary<ushort, ushort[]>();
 
         private const ushort RenownEmpoweredMasteryEntry = 27870;
         private const ushort RenownEternalMasteryEntry = 27871;
@@ -71,6 +74,8 @@ namespace WorldServer.World.Abilities
             ExtraDamage.Clear();
             AbilityEntryAliases.Clear();
             BuffEntryAliases.Clear();
+            MythicCsvAbilityEffects.Clear();
+            MythicCsvEffectLinks.Clear();
 
             for (byte i = 0; i < 24; ++i)
                 CareerAbilities[i].Clear();
@@ -84,23 +89,68 @@ namespace WorldServer.World.Abilities
             Log.Info("AbilityMgr", "Loading New Ability Info...");
 
             IObjectDatabase db = WorldMgr.Database;
+            bool useMythicSourceTables = Program.Config != null && Program.Config.UseMythicActionCoverageTables;
+
+            Log.Info("AbilityMgr",
+                useMythicSourceTables
+                    ? "Ability loader source: mythic_src_* tables (UseMythicActionCoverageTables=true)."
+                    : "Ability loader source: legacy ability tables (UseMythicActionCoverageTables=false).");
 
             #region Database
 
-            List<DBAbilityInfo> dbAbilities = (List<DBAbilityInfo>)db.SelectAllObjects<DBAbilityInfo>();
+            List<DBAbilityInfo> dbAbilities = useMythicSourceTables
+                ? db.SelectAllObjects<MythicSourceAbilityInfo>().Cast<DBAbilityInfo>().ToList()
+                : db.SelectAllObjects<DBAbilityInfo>().ToList();
 
             List<AbilityInfo> abVolatiles = AbilityInfo.Convert(dbAbilities);
             Dictionary<ushort, AbilityConstants> abConstants = AbilityConstants.Convert(dbAbilities).ToDictionary(key => key.Entry);
-            List<AbilityDamageInfo> abDmgHeals = AbilityDamageInfo.Convert(db.SelectAllObjects<DBAbilityDamageInfo>().OrderBy(dmg => dmg.ParentCommandID).ThenBy(dmg => dmg.ParentCommandSequence).ToList());
-            List<AbilityCommandInfo> abCommands = AbilityCommandInfo.Convert(db.SelectAllObjects<DBAbilityCommandInfo>().OrderBy(cmd => cmd.CommandID).ToList());
+            IEnumerable<DBAbilityDamageInfo> dbAbilityDamageInfos = useMythicSourceTables
+                ? db.SelectAllObjects<MythicSourceAbilityDamageInfo>().Cast<DBAbilityDamageInfo>()
+                : db.SelectAllObjects<DBAbilityDamageInfo>();
+            List<AbilityDamageInfo> abDmgHeals = AbilityDamageInfo.Convert(dbAbilityDamageInfos
+                .OrderBy(dmg => dmg.ParentCommandID)
+                .ThenBy(dmg => dmg.ParentCommandSequence)
+                .ToList());
 
-            IList<AbilityModifierCheck> abChecks = db.SelectAllObjects<AbilityModifierCheck>().OrderBy(check => check.ID).ToList();
-            IList<AbilityModifierEffect> abMods = db.SelectAllObjects<AbilityModifierEffect>().OrderBy(mod => mod.Sequence).ToList();
+            IEnumerable<DBAbilityCommandInfo> dbAbilityCommands = useMythicSourceTables
+                ? db.SelectAllObjects<MythicSourceAbilityCommandInfo>().Cast<DBAbilityCommandInfo>()
+                : db.SelectAllObjects<DBAbilityCommandInfo>();
+            List<AbilityCommandInfo> abCommands = AbilityCommandInfo.Convert(dbAbilityCommands
+                .OrderBy(cmd => cmd.CommandID)
+                .ToList());
 
-            List<BuffInfo> buffInfos = BuffInfo.Convert((List<DBBuffInfo>)db.SelectAllObjects<DBBuffInfo>());
-            List<BuffCommandInfo> buffCommands = BuffCommandInfo.Convert(db.SelectAllObjects<DBBuffCommandInfo>().OrderBy(buffcmd => buffcmd.CommandID).ToList());
+            IEnumerable<AbilityModifierCheck> dbAbilityChecks = useMythicSourceTables
+                ? db.SelectAllObjects<MythicSourceAbilityModifierCheck>().Cast<AbilityModifierCheck>()
+                : db.SelectAllObjects<AbilityModifierCheck>();
+            IList<AbilityModifierCheck> abChecks = dbAbilityChecks
+                .OrderBy(check => check.ID)
+                .ToList();
 
-            IList<AbilityKnockbackInfo> knockbackInfos = db.SelectAllObjects<AbilityKnockbackInfo>().OrderBy(kbinfo => kbinfo.Id).ToList();
+            IEnumerable<AbilityModifierEffect> dbAbilityModifiers = useMythicSourceTables
+                ? db.SelectAllObjects<MythicSourceAbilityModifierEffect>().Cast<AbilityModifierEffect>()
+                : db.SelectAllObjects<AbilityModifierEffect>();
+            IList<AbilityModifierEffect> abMods = dbAbilityModifiers
+                .OrderBy(mod => mod.Sequence)
+                .ToList();
+
+            IEnumerable<DBBuffInfo> dbBuffInfos = useMythicSourceTables
+                ? db.SelectAllObjects<MythicSourceBuffInfo>().Cast<DBBuffInfo>()
+                : db.SelectAllObjects<DBBuffInfo>();
+            List<BuffInfo> buffInfos = BuffInfo.Convert(dbBuffInfos.ToList());
+
+            IEnumerable<DBBuffCommandInfo> dbBuffCommands = useMythicSourceTables
+                ? db.SelectAllObjects<MythicSourceBuffCommandInfo>().Cast<DBBuffCommandInfo>()
+                : db.SelectAllObjects<DBBuffCommandInfo>();
+            List<BuffCommandInfo> buffCommands = BuffCommandInfo.Convert(dbBuffCommands
+                .OrderBy(buffcmd => buffcmd.CommandID)
+                .ToList());
+
+            IEnumerable<AbilityKnockbackInfo> dbKnockbackInfos = useMythicSourceTables
+                ? db.SelectAllObjects<MythicSourceAbilityKnockbackInfo>().Cast<AbilityKnockbackInfo>()
+                : db.SelectAllObjects<AbilityKnockbackInfo>();
+            IList<AbilityKnockbackInfo> knockbackInfos = dbKnockbackInfos
+                .OrderBy(kbinfo => kbinfo.Id)
+                .ToList();
 
             List<AbilityCommandInfo> slaveCommands = new List<AbilityCommandInfo>();
             List<BuffCommandInfo> slaveBuffCommands = new List<BuffCommandInfo>();
@@ -108,6 +158,33 @@ namespace WorldServer.World.Abilities
             Dictionary<ushort, int> damageTypeDictionary = new Dictionary<ushort, int>();
 
             #endregion Database
+
+            bool useMythicAbilityGraphTables = Program.Config != null && Program.Config.UseMythicAbilityGraphTables;
+            bool mythicAbilityGraphOverride = Program.Config != null && Program.Config.MythicAbilityGraphOverrideExistingCommands;
+
+            if (useMythicAbilityGraphTables)
+            {
+                HashSet<ushort> knownAbilityEntries = new HashSet<ushort>(dbAbilities.Select(x => x.Entry));
+                MythicAbilityGraphTranslator graphTranslator = new MythicAbilityGraphTranslator(db, mythicAbilityGraphOverride);
+                MythicAbilityGraphTranslationReport graphReport;
+
+                if (graphTranslator.TryTranslate(
+                    knownAbilityEntries,
+                    abCommands,
+                    abDmgHeals,
+                    buffInfos,
+                    buffCommands,
+                    out graphReport))
+                {
+                    Log.Info("AbilityMgr", graphReport.ToLogLine());
+                }
+                else if (graphReport != null && !string.IsNullOrWhiteSpace(graphReport.Note))
+                {
+                    Log.Info("AbilityMgr", "Mythic ability graph translation skipped: " + graphReport.Note);
+                }
+            }
+
+            ApplyPerAbilityLevelScalars(db, dbAbilities, abDmgHeals);
 
             for (byte i = 0; i < 24; ++i)
                 CareerAbilities[i] = new List<AbilityInfo>();
@@ -279,8 +356,9 @@ namespace WorldServer.World.Abilities
 
             foreach (AbilityCommandInfo slaveCommand in slaveCommands)
             {
-                if (AbilityCommandInfos.ContainsKey(slaveCommand.Entry))
-                    AbilityCommandInfos[slaveCommand.Entry][slaveCommand.CommandID].AddCommandToChain(slaveCommand);
+                AbilityCommandInfo masterCommand = FindAbilityCommandRoot(slaveCommand.Entry, slaveCommand.CommandID);
+                if (masterCommand != null)
+                    masterCommand.AddCommandToChain(slaveCommand);
                 else
                     Log.Debug("AbilityMgr", "Slave command with entry " + slaveCommand.Entry + " and depending upon master command ID " + slaveCommand.CommandID + " has no master!");
             }
@@ -303,8 +381,9 @@ namespace WorldServer.World.Abilities
 
             foreach (BuffCommandInfo slaveBuffCommand in slaveBuffCommands)
             {
-                if (BuffCommandInfos.ContainsKey(slaveBuffCommand.Entry))
-                    BuffCommandInfos[slaveBuffCommand.Entry][slaveBuffCommand.CommandID].AddCommandToChain(slaveBuffCommand);
+                BuffCommandInfo masterBuffCommand = FindBuffCommandRoot(slaveBuffCommand.Entry, slaveBuffCommand.CommandID);
+                if (masterBuffCommand != null)
+                    masterBuffCommand.AddCommandToChain(slaveBuffCommand);
                 else
                     Log.Debug("AbilityMgr", "Slave buff command with entry " + slaveBuffCommand.Entry + " and depending upon master command ID " + slaveBuffCommand.CommandID + " has no master!");
             }
@@ -323,7 +402,8 @@ namespace WorldServer.World.Abilities
                     case 0:
                         if (AbilityCommandInfos.ContainsKey(abDmgHeal.Entry))
                         {
-                            AbilityCommandInfo desiredCommand = AbilityCommandInfos[abDmgHeal.Entry][abDmgHeal.ParentCommandID].GetSubcommand(abDmgHeal.ParentCommandSequence);
+                            AbilityCommandInfo desiredCommand =
+                                FindAbilityCommandSubcommand(abDmgHeal.Entry, abDmgHeal.ParentCommandID, abDmgHeal.ParentCommandSequence);
                             if (desiredCommand != null)
                                 desiredCommand.DamageInfo = abDmgHeal;
                         }
@@ -335,16 +415,13 @@ namespace WorldServer.World.Abilities
                     case 1:
                         if (BuffCommandInfos.ContainsKey(abDmgHeal.Entry))
                         {
-                            try
-                            {
-                                BuffCommandInfo desiredCommand = BuffCommandInfos[abDmgHeal.Entry][abDmgHeal.ParentCommandID].GetSubcommand(abDmgHeal.ParentCommandSequence);
-                                if (desiredCommand != null)
-                                    desiredCommand.DamageInfo = abDmgHeal;
-                            }
-                            catch
-                            {
-                                Log.Error("AbilityMgr", "Failed Load: " + abDmgHeal.Entry + " " + abDmgHeal.ParentCommandID);
-                            }
+                            BuffCommandInfo desiredCommand =
+                                FindBuffCommandSubcommand(abDmgHeal.Entry, abDmgHeal.ParentCommandID, abDmgHeal.ParentCommandSequence);
+                            if (desiredCommand != null)
+                                desiredCommand.DamageInfo = abDmgHeal;
+                            else
+                                Log.Error("AbilityMgr",
+                                    "Failed Load: " + abDmgHeal.Entry + " " + abDmgHeal.ParentCommandID + " " + abDmgHeal.ParentCommandSequence);
 
                             if (!damageTypeDictionary.ContainsKey(abDmgHeal.Entry))
                                 damageTypeDictionary.Add(abDmgHeal.Entry, (int)abDmgHeal.DamageType);
@@ -386,9 +463,15 @@ namespace WorldServer.World.Abilities
 
                 if (AbilityCommandInfos.ContainsKey(abVolatile.Entry))
                 {
-                    abVolatile.TargetType = AbilityCommandInfos[abVolatile.Entry][0].TargetType;
-                    if (AbilityCommandInfos[abVolatile.Entry][0].AoESource != 0)
-                        abVolatile.TargetType = AbilityCommandInfos[abVolatile.Entry][0].AoESource;
+                    AbilityCommandInfo primaryCommand = FindAbilityCommandRoot(abVolatile.Entry, 0)
+                        ?? AbilityCommandInfos[abVolatile.Entry].FirstOrDefault();
+
+                    if (primaryCommand != null)
+                    {
+                        abVolatile.TargetType = primaryCommand.TargetType;
+                        if (primaryCommand.AoESource != 0)
+                            abVolatile.TargetType = primaryCommand.AoESource;
+                    }
                 }
             }
 
@@ -447,13 +530,279 @@ namespace WorldServer.World.Abilities
             }
 
             EnsureRenownTacticBuffs();
-            BuildCanonicalEntryAliases();
+            LoadCanonicalEntryResolvers();
+            LoadMythicCsvAbilityLinks();
 
             #endregion Buff/Command linkage
 
             Log.Success("AbilityMgr", "Finished loading " + NewAbilityVolatiles.Count + " abilities and " + BuffInfos.Count + " buffs!");
 
             LoadCreatureAbilities();
+        }
+
+        private static void ApplyPerAbilityLevelScalars(
+            IObjectDatabase db,
+            IList<DBAbilityInfo> dbAbilities,
+            List<AbilityDamageInfo> abilityDamageInfos)
+        {
+            if (db == null || dbAbilities == null || abilityDamageInfos == null || abilityDamageInfos.Count == 0)
+                return;
+
+            string sourceName;
+            Dictionary<ushort, float> upgradeLevelScalars = BuildMythicUpgradeLevelScalars(db, out sourceName);
+            if (upgradeLevelScalars.Count == 0)
+                return;
+
+            Dictionary<ushort, float> abilityLevelScalars = BuildAbilityLevelScalars(dbAbilities, upgradeLevelScalars);
+            if (abilityLevelScalars.Count == 0)
+            {
+                Log.Info("AbilityMgr",
+                    $"Per-ability level scaling skipped: no ability entries matched upgrade scalars (source={sourceName}, upgrades={upgradeLevelScalars.Count}).");
+                return;
+            }
+
+            int appliedRows = 0;
+            int unresolvedRows = 0;
+            HashSet<ushort> appliedEntries = new HashSet<ushort>();
+
+            foreach (AbilityDamageInfo damageInfo in abilityDamageInfos)
+            {
+                if (damageInfo.MaxDamage != 0)
+                    continue;
+
+                float levelScalar;
+                if (!abilityLevelScalars.TryGetValue(damageInfo.Entry, out levelScalar))
+                {
+                    unresolvedRows++;
+                    continue;
+                }
+
+                damageInfo.LevelScalingFactor = levelScalar;
+                appliedRows++;
+                appliedEntries.Add(damageInfo.Entry);
+            }
+
+            Log.Info("AbilityMgr",
+                $"Per-ability level scaling applied: source={sourceName}, upgrades={upgradeLevelScalars.Count}, ability_entries={abilityLevelScalars.Count}, applied_rows={appliedRows}, applied_entries={appliedEntries.Count}, unresolved_rows={unresolvedRows}.");
+        }
+
+        private static Dictionary<ushort, float> BuildAbilityLevelScalars(
+            IList<DBAbilityInfo> dbAbilities,
+            Dictionary<ushort, float> upgradeLevelScalars)
+        {
+            Dictionary<ushort, float> abilityLevelScalars = new Dictionary<ushort, float>();
+            if (dbAbilities == null || upgradeLevelScalars == null || upgradeLevelScalars.Count == 0)
+                return abilityLevelScalars;
+
+            foreach (DBAbilityInfo ability in dbAbilities)
+            {
+                if (ability == null)
+                    continue;
+
+                float levelScalar;
+                if (ability.EffectID != 0 && upgradeLevelScalars.TryGetValue(ability.EffectID, out levelScalar))
+                {
+                    abilityLevelScalars[ability.Entry] = levelScalar;
+                    continue;
+                }
+
+                if (upgradeLevelScalars.TryGetValue(ability.Entry, out levelScalar))
+                    abilityLevelScalars[ability.Entry] = levelScalar;
+            }
+
+            return abilityLevelScalars;
+        }
+
+        private static Dictionary<ushort, float> BuildMythicUpgradeLevelScalars(
+            IObjectDatabase db,
+            out string sourceName)
+        {
+            sourceName = "none";
+            Dictionary<ushort, float> upgradeScalars = new Dictionary<ushort, float>();
+            if (db == null)
+                return upgradeScalars;
+
+            List<MythicBinAbilityUpgradeBinRow> upgradeBins = null;
+            List<MythicBinAbilityUpgradeEntryRow> upgradeEntries = null;
+
+            IList<MythicBinAbilityUpgradeBinRow> mythicBins = TrySelectAllRows<MythicBinAbilityUpgradeBinRow>(db);
+            IList<MythicBinAbilityUpgradeEntryRow> mythicEntries = TrySelectAllRows<MythicBinAbilityUpgradeEntryRow>(db);
+            if (mythicBins != null && mythicBins.Count > 0 && mythicEntries != null && mythicEntries.Count > 0)
+            {
+                sourceName = "mythic_bin_*";
+                upgradeBins = mythicBins.ToList();
+                upgradeEntries = mythicEntries.ToList();
+            }
+            else
+            {
+                IList<LondoAbilityUpgradeBinRow> londoBins = TrySelectAllRows<LondoAbilityUpgradeBinRow>(db);
+                IList<LondoAbilityUpgradeEntryRow> londoEntries = TrySelectAllRows<LondoAbilityUpgradeEntryRow>(db);
+                if (londoBins != null && londoBins.Count > 0 && londoEntries != null && londoEntries.Count > 0)
+                {
+                    sourceName = "Londo AbilityUpgrade*";
+                    upgradeBins = londoBins.Cast<MythicBinAbilityUpgradeBinRow>().ToList();
+                    upgradeEntries = londoEntries.Cast<MythicBinAbilityUpgradeEntryRow>().ToList();
+                }
+            }
+
+            if (upgradeBins == null || upgradeEntries == null || upgradeBins.Count == 0 || upgradeEntries.Count == 0)
+                return upgradeScalars;
+
+            Dictionary<long, List<MythicBinAbilityUpgradeEntryRow>> entriesByBin = upgradeEntries
+                .Where(x => x.AbilityUpgradeBinID.HasValue)
+                .GroupBy(x => x.AbilityUpgradeBinID.Value)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.OrderBy(x => x.Index ?? int.MaxValue).ToList());
+
+            foreach (MythicBinAbilityUpgradeBinRow upgradeBin in upgradeBins)
+            {
+                if (upgradeBin == null || !upgradeBin.UpgradeID.HasValue)
+                    continue;
+
+                long rawUpgradeId = upgradeBin.UpgradeID.Value;
+                if (rawUpgradeId <= 0 || rawUpgradeId > ushort.MaxValue)
+                    continue;
+
+                List<MythicBinAbilityUpgradeEntryRow> entries;
+                if (!entriesByBin.TryGetValue(upgradeBin.ID, out entries) || entries == null || entries.Count == 0)
+                    continue;
+
+                float candidateScalar;
+                if (!TryExtractUpgradeLevelScalar(entries, out candidateScalar))
+                    continue;
+
+                ushort upgradeId = (ushort)rawUpgradeId;
+                float existingScalar;
+                if (upgradeScalars.TryGetValue(upgradeId, out existingScalar))
+                    upgradeScalars[upgradeId] = SelectPreferredLevelScalar(existingScalar, candidateScalar);
+                else
+                    upgradeScalars.Add(upgradeId, candidateScalar);
+            }
+
+            return upgradeScalars;
+        }
+
+        private static bool TryExtractUpgradeLevelScalar(IList<MythicBinAbilityUpgradeEntryRow> entries, out float levelScalar)
+        {
+            levelScalar = 0f;
+            if (entries == null || entries.Count == 0)
+                return false;
+
+            List<float> candidates = new List<float>();
+
+            foreach (MythicBinAbilityUpgradeEntryRow entry in entries)
+            {
+                if (entry == null)
+                    continue;
+
+                float decodedScalar;
+                if (TryDecodeUpgradeRowScalar(entry, out decodedScalar) && IsPlausibleLevelScalar(decodedScalar))
+                    candidates.Add(decodedScalar);
+
+                float decodedStringScalar;
+                if (TryDecodeUpgradeValuesScalar(entry.Values, out decodedStringScalar) && IsPlausibleLevelScalar(decodedStringScalar))
+                    candidates.Add(decodedStringScalar);
+            }
+
+            if (candidates.Count == 0)
+                return false;
+
+            foreach (float candidate in candidates)
+            {
+                if (candidate > 0f && candidate < 1f)
+                {
+                    levelScalar = candidate;
+                    return true;
+                }
+            }
+
+            foreach (float candidate in candidates)
+            {
+                if (Math.Abs(candidate - 1f) < 0.0001f)
+                {
+                    levelScalar = 1f;
+                    return true;
+                }
+            }
+
+            foreach (float candidate in candidates)
+            {
+                if (candidate > 1f && candidate <= 2f)
+                {
+                    levelScalar = candidate;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static float SelectPreferredLevelScalar(float existingScalar, float candidateScalar)
+        {
+            bool existingFractional = existingScalar > 0f && existingScalar < 1f;
+            bool candidateFractional = candidateScalar > 0f && candidateScalar < 1f;
+
+            if (candidateFractional && !existingFractional)
+                return candidateScalar;
+
+            return existingScalar;
+        }
+
+        private static bool TryDecodeUpgradeRowScalar(MythicBinAbilityUpgradeEntryRow entry, out float levelScalar)
+        {
+            levelScalar = 0f;
+            if (entry == null || !entry.V1.HasValue || !entry.V2.HasValue)
+                return false;
+
+            uint lowBits = (uint)(entry.V1.Value & 0xFFFF);
+            uint highBits = (uint)(entry.V2.Value & 0xFFFF);
+            uint rawBits = (highBits << 16) | lowBits;
+            levelScalar = BitConverter.ToSingle(BitConverter.GetBytes(rawBits), 0);
+
+            return !(float.IsNaN(levelScalar) || float.IsInfinity(levelScalar));
+        }
+
+        private static bool TryDecodeUpgradeValuesScalar(string valuesField, out float levelScalar)
+        {
+            levelScalar = 0f;
+            if (string.IsNullOrWhiteSpace(valuesField))
+                return false;
+
+            string[] tokens = valuesField.Split(new[] { ',', ';', '|', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (string token in tokens)
+            {
+                float parsed;
+                if (float.TryParse(token, NumberStyles.Float, CultureInfo.InvariantCulture, out parsed))
+                {
+                    levelScalar = parsed;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsPlausibleLevelScalar(float levelScalar)
+        {
+            return !(float.IsNaN(levelScalar) || float.IsInfinity(levelScalar))
+                && levelScalar > 0f
+                && levelScalar <= 2f;
+        }
+
+        private static IList<T> TrySelectAllRows<T>(IObjectDatabase db) where T : DataObject
+        {
+            if (db == null)
+                return null;
+
+            try
+            {
+                return db.SelectAllObjects<T>();
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         #region Creature Abilities
@@ -657,100 +1006,238 @@ namespace WorldServer.World.Abilities
             return shell;
         }
 
-        private static void BuildCanonicalEntryAliases()
+        private static void LoadCanonicalEntryResolvers()
         {
             AbilityEntryAliases.Clear();
             BuffEntryAliases.Clear();
 
-            foreach (AbilityInfo ability in NewAbilityVolatiles.Values)
+            IObjectDatabase db = WorldMgr.Database;
+            IList<AbilityEntryResolver> resolvers;
+
+            try
             {
-                ushort canonicalEntry = GetEffectAliasTarget(ability);
-                if (canonicalEntry == 0 || canonicalEntry == ability.Entry)
+                resolvers = db.SelectAllObjects<AbilityEntryResolver>();
+            }
+            catch (Exception e)
+            {
+                Log.Error("AbilityMgr", $"Failed to load ability_entry_resolver table: {e.Message}");
+                return;
+            }
+
+            if (resolvers == null || resolvers.Count == 0)
+            {
+                Log.Info("AbilityMgr", "No canonical ability resolver rows found.");
+                return;
+            }
+
+            int appliedAbilityAliases = 0;
+            int appliedBuffAliases = 0;
+            int skippedRows = 0;
+
+            foreach (AbilityEntryResolver resolver in resolvers)
+            {
+                if (!resolver.Enabled)
                     continue;
 
-                AbilityEntryAliases[ability.Entry] = canonicalEntry;
+                ushort sourceEntry = resolver.SourceEntry;
+                ushort canonicalAbilityEntry = resolver.CanonicalAbilityEntry;
+
+                if (sourceEntry == 0
+                    || canonicalAbilityEntry == 0
+                    || sourceEntry == canonicalAbilityEntry
+                    || !NewAbilityVolatiles.ContainsKey(sourceEntry)
+                    || !NewAbilityVolatiles.ContainsKey(canonicalAbilityEntry))
+                {
+                    skippedRows++;
+                    continue;
+                }
+
+                AbilityEntryAliases[sourceEntry] = canonicalAbilityEntry;
+                appliedAbilityAliases++;
+
+                ushort canonicalBuffEntry = resolver.CanonicalBuffEntry;
+                if (canonicalBuffEntry != 0 && BuffInfos.ContainsKey(canonicalBuffEntry))
+                {
+                    BuffEntryAliases[sourceEntry] = canonicalBuffEntry;
+                    appliedBuffAliases++;
+                }
+                else if (BuffInfos.ContainsKey(canonicalAbilityEntry))
+                {
+                    BuffEntryAliases[sourceEntry] = canonicalAbilityEntry;
+                    appliedBuffAliases++;
+                }
             }
 
-            foreach (var aliasPair in AbilityEntryAliases)
+            Log.Info("AbilityMgr",
+                $"Installed canonical ability aliases: {appliedAbilityAliases}, buff aliases: {appliedBuffAliases}, skipped resolver rows: {skippedRows}.");
+        }
+
+        private static void LoadMythicCsvAbilityLinks()
+        {
+            MythicCsvAbilityEffects.Clear();
+            MythicCsvEffectLinks.Clear();
+
+            IObjectDatabase db = WorldMgr.Database;
+
+            IList<MythicCsvAbility> mythicAbilities;
+            try
             {
-                if (!BuffInfos.ContainsKey(aliasPair.Key) && BuffInfos.ContainsKey(aliasPair.Value))
-                    BuffEntryAliases[aliasPair.Key] = aliasPair.Value;
+                mythicAbilities = db.SelectAllObjects<MythicCsvAbility>();
+            }
+            catch (Exception e)
+            {
+                Log.Info("AbilityMgr", $"Mythic CSV ability table unavailable ({e.Message}). Skipping mythic ability link load.");
+                return;
             }
 
-            foreach (AbilityInfo ability in NewAbilityVolatiles.Values)
+            IList<MythicCsvEffect> mythicEffects;
+            try
             {
-                ushort effectEntry = ability.ConstantInfo?.EffectID ?? 0;
-                if (effectEntry == 0 || effectEntry == ability.Entry)
+                mythicEffects = db.SelectAllObjects<MythicCsvEffect>();
+            }
+            catch (Exception e)
+            {
+                Log.Info("AbilityMgr", $"Mythic CSV effects table unavailable ({e.Message}). Skipping mythic effect link load.");
+                return;
+            }
+
+            foreach (MythicCsvAbility row in mythicAbilities)
+            {
+                if (!TryToUShort(row.AbilityId, out ushort abilityEntry))
+                    continue;
+                if (!TryToUShort(row.EffectId, out ushort effectEntry))
+                    continue;
+                if (abilityEntry == effectEntry)
                     continue;
 
-                if (!BuffInfos.ContainsKey(ability.Entry) && BuffInfos.ContainsKey(effectEntry))
-                    BuffEntryAliases[ability.Entry] = effectEntry;
+                MythicCsvAbilityEffects[abilityEntry] = effectEntry;
             }
 
-            if (AbilityEntryAliases.Count > 0 || BuffEntryAliases.Count > 0)
+            foreach (MythicCsvEffect row in mythicEffects)
             {
-                Log.Info("AbilityMgr",
-                    $"Installed canonical ability aliases: {AbilityEntryAliases.Count}, buff aliases: {BuffEntryAliases.Count}.");
+                if (!TryToUShort(row.EffectId, out ushort effectEntry))
+                    continue;
+
+                List<ushort> links = new List<ushort>(8);
+                TryAddMythicEffectLink(links, effectEntry, row.ActivateId);
+                TryAddMythicEffectLink(links, effectEntry, row.CastId);
+                TryAddMythicEffectLink(links, effectEntry, row.ImpactId);
+                TryAddMythicEffectLink(links, effectEntry, row.AoeId);
+                TryAddMythicEffectLink(links, effectEntry, row.ChannelingId);
+                TryAddMythicEffectLink(links, effectEntry, row.BuildUpId);
+                TryAddMythicEffectLink(links, effectEntry, row.ProjectileId);
+
+                if (links.Count > 0)
+                    MythicCsvEffectLinks[effectEntry] = links.ToArray();
             }
+
+            Log.Info("AbilityMgr",
+                $"Loaded Mythic CSV links: ability_effect_links={MythicCsvAbilityEffects.Count}, effect_link_rows={MythicCsvEffectLinks.Count}.");
         }
 
-        private static ushort GetEffectAliasTarget(AbilityInfo sourceAbility)
+        private static bool TryToUShort(uint value, out ushort entry)
         {
-            if (sourceAbility == null || sourceAbility.ConstantInfo == null)
-                return 0;
-
-            ushort sourceEntry = sourceAbility.Entry;
-            ushort effectEntry = sourceAbility.ConstantInfo.EffectID;
-            if (effectEntry == 0 || effectEntry == sourceEntry)
-                return 0;
-
-            if (!NewAbilityVolatiles.TryGetValue(effectEntry, out AbilityInfo targetAbility))
-                return 0;
-
-            if (HasDirectImplementation(sourceEntry))
-                return 0;
-
-            if (!HasDirectImplementation(effectEntry))
-                return 0;
-
-            if (!IsLikelyAliasPair(sourceAbility, targetAbility))
-                return 0;
-
-            return effectEntry;
-        }
-
-        private static bool IsLikelyAliasPair(AbilityInfo sourceAbility, AbilityInfo targetAbility)
-        {
-            if (sourceAbility?.ConstantInfo == null || targetAbility?.ConstantInfo == null)
-                return false;
-
-            if (sourceAbility.ConstantInfo.CareerLine != 0
-                && targetAbility.ConstantInfo.CareerLine != 0
-                && sourceAbility.ConstantInfo.CareerLine != targetAbility.ConstantInfo.CareerLine)
+            if (value == 0 || value > ushort.MaxValue)
             {
+                entry = 0;
                 return false;
             }
 
-            if (NamesEquivalent(sourceAbility.Name, targetAbility.Name))
-                return true;
-
-            return sourceAbility.ConstantInfo.MasteryTree == targetAbility.ConstantInfo.MasteryTree;
+            entry = (ushort)value;
+            return true;
         }
 
-        private static bool NamesEquivalent(string left, string right)
+        private static bool TryToUShort(int value, out ushort entry)
         {
-            if (left == null || right == null)
+            if (value <= 0 || value > ushort.MaxValue)
+            {
+                entry = 0;
                 return false;
+            }
 
-            return left.Trim().Equals(right.Trim(), StringComparison.OrdinalIgnoreCase);
+            entry = (ushort)value;
+            return true;
         }
 
-        private static bool HasDirectImplementation(ushort entry)
+        private static void TryAddMythicEffectLink(List<ushort> links, ushort sourceEntry, int targetValue)
         {
-            if (AbilityCommandInfos.ContainsKey(entry))
-                return true;
+            if (!TryToUShort(targetValue, out ushort targetEntry))
+                return;
 
-            return NewAbilityVolatiles.ContainsKey(entry) && NewAbilityVolatiles[entry].ConstantInfo?.ChannelID > 0;
+            targetEntry = ResolveAbilityEntry(targetEntry);
+            if (targetEntry == 0 || targetEntry == sourceEntry || links.Contains(targetEntry))
+                return;
+
+            links.Add(targetEntry);
+        }
+
+        private static void AddLinkedAbilityCandidate(List<ushort> candidates, ushort sourceEntry, ushort candidateEntry)
+        {
+            if (candidateEntry == 0 || candidateEntry == sourceEntry)
+                return;
+
+            ushort resolvedCandidate = ResolveAbilityEntry(candidateEntry);
+            if (resolvedCandidate == 0 || resolvedCandidate == sourceEntry || candidates.Contains(resolvedCandidate))
+                return;
+
+            candidates.Add(resolvedCandidate);
+        }
+
+        private static List<ushort> GetLinkedAbilityCandidates(ushort entry)
+        {
+            List<ushort> candidates = new List<ushort>(8);
+
+            if (NewAbilityVolatiles.TryGetValue(entry, out AbilityInfo worldAbility))
+            {
+                ushort worldEffect = worldAbility.ConstantInfo?.EffectID ?? 0;
+                AddLinkedAbilityCandidate(candidates, entry, worldEffect);
+            }
+
+            if (MythicCsvAbilityEffects.TryGetValue(entry, out ushort mythicEffect))
+                AddLinkedAbilityCandidate(candidates, entry, mythicEffect);
+
+            if (MythicCsvEffectLinks.TryGetValue(entry, out ushort[] effectLinks))
+            {
+                foreach (ushort linkedEntry in effectLinks)
+                    AddLinkedAbilityCandidate(candidates, entry, linkedEntry);
+            }
+
+            return candidates;
+        }
+
+        private static ushort FindLinkedAbilityEntry(ushort startEntry, Func<ushort, bool> predicate)
+        {
+            ushort resolvedStart = ResolveAbilityEntry(startEntry);
+            if (resolvedStart == 0)
+                return 0;
+
+            Queue<ushort> pending = new Queue<ushort>();
+            HashSet<ushort> visited = new HashSet<ushort>();
+            pending.Enqueue(resolvedStart);
+            visited.Add(resolvedStart);
+
+            byte depth = 0;
+
+            while (pending.Count > 0 && depth < 8)
+            {
+                int width = pending.Count;
+                for (int i = 0; i < width; ++i)
+                {
+                    ushort current = pending.Dequeue();
+                    foreach (ushort candidate in GetLinkedAbilityCandidates(current))
+                    {
+                        if (predicate(candidate))
+                            return candidate;
+
+                        if (visited.Add(candidate))
+                            pending.Enqueue(candidate);
+                    }
+                }
+
+                depth++;
+            }
+
+            return 0;
         }
 
         private static ushort ResolveAlias(ushort entry, Dictionary<ushort, ushort> aliasMap)
@@ -770,6 +1257,22 @@ namespace WorldServer.World.Abilities
         public static ushort ResolveAbilityEntry(ushort entry)
         {
             return ResolveAlias(entry, AbilityEntryAliases);
+        }
+
+        private static ushort ResolveAbilityCommandEntry(ushort entry)
+        {
+            if (AbilityCommandInfos.ContainsKey(entry))
+                return entry;
+
+            ushort resolvedEntry = ResolveAbilityEntry(entry);
+            if (AbilityCommandInfos.ContainsKey(resolvedEntry))
+                return resolvedEntry;
+
+            ushort linkedCommandEntry = FindLinkedAbilityEntry(resolvedEntry, candidate => AbilityCommandInfos.ContainsKey(candidate));
+            if (linkedCommandEntry != 0)
+                return linkedCommandEntry;
+
+            return resolvedEntry;
         }
 
         public static ushort ResolveBuffEntry(ushort entry)
@@ -792,7 +1295,99 @@ namespace WorldServer.World.Abilities
                     return effectEntry;
             }
 
+            ushort linkedBuffEntry = FindLinkedAbilityEntry(entry, candidate =>
+            {
+                if (BuffInfos.ContainsKey(candidate))
+                    return true;
+
+                ushort aliasCandidate = ResolveAlias(candidate, BuffEntryAliases);
+                return aliasCandidate != candidate && BuffInfos.ContainsKey(aliasCandidate);
+            });
+
+            if (linkedBuffEntry != 0)
+            {
+                if (BuffInfos.ContainsKey(linkedBuffEntry))
+                    return linkedBuffEntry;
+
+                ushort aliasCandidate = ResolveAlias(linkedBuffEntry, BuffEntryAliases);
+                if (BuffInfos.ContainsKey(aliasCandidate))
+                    return aliasCandidate;
+            }
+
             return entry;
+        }
+
+        private static ushort ResolveBuffCommandEntry(ushort entry)
+        {
+            if (BuffCommandInfos.ContainsKey(entry))
+                return entry;
+
+            ushort resolvedEntry = ResolveBuffEntry(entry);
+            if (BuffCommandInfos.ContainsKey(resolvedEntry))
+                return resolvedEntry;
+
+            ushort linkedBuffAbilityEntry = FindLinkedAbilityEntry(entry, candidate =>
+            {
+                if (BuffCommandInfos.ContainsKey(candidate))
+                    return true;
+
+                ushort aliasCandidate = ResolveAlias(candidate, BuffEntryAliases);
+                return aliasCandidate != candidate && BuffCommandInfos.ContainsKey(aliasCandidate);
+            });
+
+            if (linkedBuffAbilityEntry != 0)
+            {
+                if (BuffCommandInfos.ContainsKey(linkedBuffAbilityEntry))
+                    return linkedBuffAbilityEntry;
+
+                ushort aliasCandidate = ResolveAlias(linkedBuffAbilityEntry, BuffEntryAliases);
+                if (BuffCommandInfos.ContainsKey(aliasCandidate))
+                    return aliasCandidate;
+            }
+
+            return resolvedEntry;
+        }
+
+        private static AbilityCommandInfo FindAbilityCommandRoot(ushort entry, byte commandId)
+        {
+            if (!AbilityCommandInfos.TryGetValue(entry, out List<AbilityCommandInfo> commands) || commands == null || commands.Count == 0)
+                return null;
+
+            if (commandId < commands.Count)
+            {
+                AbilityCommandInfo byIndex = commands[commandId];
+                if (byIndex != null && byIndex.CommandID == commandId)
+                    return byIndex;
+            }
+
+            return commands.FirstOrDefault(command => command != null && command.CommandID == commandId);
+        }
+
+        private static AbilityCommandInfo FindAbilityCommandSubcommand(ushort entry, byte commandId, byte commandSequence)
+        {
+            AbilityCommandInfo root = FindAbilityCommandRoot(entry, commandId);
+            return root?.GetSubcommand(commandSequence);
+        }
+
+        private static BuffCommandInfo FindBuffCommandRoot(ushort entry, byte commandId)
+        {
+            if (!BuffCommandInfos.TryGetValue(entry, out List<BuffCommandInfo> commands) || commands == null || commands.Count == 0)
+                return null;
+
+            if (commandId < commands.Count)
+            {
+                BuffCommandInfo byIndex = commands[commandId];
+                if (byIndex != null && byIndex.CommandID == commandId)
+                    return byIndex;
+            }
+
+            return commands.FirstOrDefault(command => command != null && command.CommandID == commandId);
+        }
+
+        private static BuffCommandInfo FindBuffCommandSubcommand(ushort entry, byte commandId, byte commandSequence)
+        {
+            BuffCommandInfo root = FindBuffCommandRoot(entry, commandId);
+            return root?.GetSubcommand(commandSequence);
         }
 
         #region Accessors
@@ -949,14 +1544,14 @@ namespace WorldServer.World.Abilities
             if (AbilityCommandInfos.ContainsKey(abilityEntry))
                 return true;
 
-            return AbilityCommandInfos.ContainsKey(ResolveAbilityEntry(abilityEntry));
+            return AbilityCommandInfos.ContainsKey(ResolveAbilityCommandEntry(abilityEntry));
         }
 
         public static void GetCommandsFor(Unit caster, AbilityInfo abInfo)
         {
             ushort commandEntry = AbilityCommandInfos.ContainsKey(abInfo.Entry)
                 ? abInfo.Entry
-                : ResolveAbilityEntry(abInfo.Entry);
+                : ResolveAbilityCommandEntry(abInfo.Entry);
 
             if (AbilityCommandInfos.ContainsKey(commandEntry))
             {
@@ -980,14 +1575,28 @@ namespace WorldServer.World.Abilities
 
         public static AbilityCommandInfo GetAbilityCommand(Unit caster, ushort entry, byte comIndex)
         {
-            ushort resolvedEntry = AbilityCommandInfos.ContainsKey(entry) ? entry : ResolveAbilityEntry(entry);
-            return AbilityCommandInfos[resolvedEntry][comIndex].Clone(caster);
+            ushort resolvedEntry = AbilityCommandInfos.ContainsKey(entry) ? entry : ResolveAbilityCommandEntry(entry);
+            AbilityCommandInfo rootCommand = FindAbilityCommandRoot(resolvedEntry, comIndex);
+            if (rootCommand == null)
+            {
+                Log.Error("AbilityMgr", $"Missing ability command root: entry={entry} resolved={resolvedEntry} commandId={comIndex}");
+                return null;
+            }
+
+            return rootCommand.Clone(caster);
         }
 
         public static AbilityCommandInfo GetAbilityCommand(Unit caster, ushort entry, byte comIndex, byte comSeq)
         {
-            ushort resolvedEntry = AbilityCommandInfos.ContainsKey(entry) ? entry : ResolveAbilityEntry(entry);
-            return AbilityCommandInfos[resolvedEntry][comIndex].GetSubcommand(comSeq).Clone(caster);
+            ushort resolvedEntry = AbilityCommandInfos.ContainsKey(entry) ? entry : ResolveAbilityCommandEntry(entry);
+            AbilityCommandInfo subcommand = FindAbilityCommandSubcommand(resolvedEntry, comIndex, comSeq);
+            if (subcommand == null)
+            {
+                Log.Error("AbilityMgr", $"Missing ability command subcommand: entry={entry} resolved={resolvedEntry} commandId={comIndex} seq={comSeq}");
+                return null;
+            }
+
+            return subcommand.Clone(caster);
         }
 
         #endregion Accessors
@@ -1045,14 +1654,28 @@ namespace WorldServer.World.Abilities
 
         public static BuffCommandInfo GetBuffCommand(ushort entry, byte commandIndex)
         {
-            ushort resolvedEntry = BuffCommandInfos.ContainsKey(entry) ? entry : ResolveBuffEntry(entry);
-            return BuffCommandInfos[resolvedEntry][commandIndex].CloneChain();
+            ushort resolvedEntry = BuffCommandInfos.ContainsKey(entry) ? entry : ResolveBuffCommandEntry(entry);
+            BuffCommandInfo rootCommand = FindBuffCommandRoot(resolvedEntry, commandIndex);
+            if (rootCommand == null)
+            {
+                Log.Error("AbilityMgr", $"Missing buff command root: entry={entry} resolved={resolvedEntry} commandId={commandIndex}");
+                return null;
+            }
+
+            return rootCommand.CloneChain();
         }
 
         public static BuffCommandInfo GetBuffCommand(ushort entry, byte commandIndex, byte comSeq)
         {
-            ushort resolvedEntry = BuffCommandInfos.ContainsKey(entry) ? entry : ResolveBuffEntry(entry);
-            return BuffCommandInfos[resolvedEntry][commandIndex].GetSubcommand(comSeq).CloneChain();
+            ushort resolvedEntry = BuffCommandInfos.ContainsKey(entry) ? entry : ResolveBuffCommandEntry(entry);
+            BuffCommandInfo subcommand = FindBuffCommandSubcommand(resolvedEntry, commandIndex, comSeq);
+            if (subcommand == null)
+            {
+                Log.Error("AbilityMgr", $"Missing buff command subcommand: entry={entry} resolved={resolvedEntry} commandId={commandIndex} seq={comSeq}");
+                return null;
+            }
+
+            return subcommand.CloneChain();
         }
 
         #endregion Buff Interface

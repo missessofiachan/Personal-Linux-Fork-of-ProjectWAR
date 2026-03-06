@@ -1,0 +1,1124 @@
+;,,,,,,,,,,,,,,,,,
+;,Tracking Shit Goes Here,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,
+,,,;,,,,,,,,,,,,,,
+ID,name,Description,;,Anim,Motion Description,Status,,67,Auto1,,,,,,,,
+1,Swing,A basic melee attack.,;,68,,,,68,Auto2,,,,,,,,
+2,Zap,A basic magical attack.,;,73,,,,69,Rude_Shout,,,,,,,,
+3,Shoot,A basic ranged attack.,;,67,,,,70,Rude_Stomp,,,,,,,,
+,,,;,,,,,71,Spl_S_Base,,,,,,,,
+100,Shoulder Bash (Iron breaker),Extra career-specific starting ability.,;,72,Shield Bash,5,,72,Spl_T_Base,,,,,,,,
+101,Ancestral Fury (Hammerer),Extra career-specific starting ability.,;,69,,2,,73,Rude_Brandish,,,,,,,,
+102,Touch of the Mountain (Rune Priest),Extra career-specific starting ability.,;,72,,,,74,Rude_Beckon,,,,,,,,
+103,;Engineer Unique (Engineer),Extra career-specific starting ability.,;,68,,,,75,Rude_Halt,,,,,,,,
+104,Ead Butt (Black Orc),Extra career-specific starting ability.,;,72,,,,,,,,,,,,,
+105,Frenzied Hit (Berzerker),Extra career-specific starting ability.,;,68,,,,,,,,,,,,,
+106,Cloud of Gork (Shaman),Extra career-specific starting ability.,;,71,,,,21,kneel,,,,,,,,
+107,;Squig Herder Unique (Squig Herder),Extra career-specific starting ability.,;,68,,,,23,Throw
+,,,;,,,,,24,Kick
+150,Sprint (All Careers),,;,,,,,26,AA-
+151,Get Stronga (All Greenskin Morale),,;,69,,,,28,AB-
+152,Tough as Nails (All Dwarf Morale),,;,69,,,,29,AC-
+153,;High Elf Morale,,;,,,,,33,BB-
+154,;Dark Elf Morale,,;,,,,,34,BA-
+155,;Empire Morale,,;,,,,,35,BD-
+156,;Chaos Morale,,;,,,,,38,CC
+,,,;,,,,,39,CA
+,;Ironbreaker T1 Core,,;,,,,,40,CD
+250,Harden Armor,,;,73,,,,47,DD-
+251,Fist of Damador,A moderate melee attack that has a low action point cost,;,67,,,,48,DC
+252,*Shield Ram,,;,69,,,,49,DB-
+253,*Feel No Pain,,;,70,,,,,
+254,*Improved Strategy,,;,,,,,,
+255,Tough to Kill,,;,73,,, 
+256,*Scathing Retort,,;,,,,
+257,*Medium Armor,,;,,,,
+258,*,,;,,,,
+259,*,,;,,,,
+,,,;,,,,
+,;Black Orc T1 Core,,;,,,,
+260,*Improved Strategy,,;,,,,
+261,Grapple,"A melee attack that deals no damage, but roots the target",;,70,,,
+262,*Noogie of Mork,,;,,,,
+263,*Low Blow,,;,,,,
+264,*Ead Banger,,;,,,,
+265,*Engage,,;,,,,
+266,*Brawler,,;,,,,
+267,*Medium Armor,*Medium Armor,;,,,,
+268,*,,;,,,,
+269,*,,;,
+,,,;,
+,;Ironbreaker T1 Spec,,;,
+270,Leading with the Shield,Moderate increase to block rate,;,70
+271,*Strategy Slot,,;,
+272,Guarded Attack,An average melee attack that moderately increases your block rate,;,67
+273,Don't Let it Show,"Everytime you take damage, the player dealing damage to you gets a brief debuff that slows down their rate of morale gain",;,69
+274,Over Here!,"A shout that deals no damage, but puts a slight damage debuff on your target if they don't attack you and increases NPC hate",;,69
+275,Hard Headed,,;,70
+276,*Focused Defense,,;,70
+277,Thundering Block,"Everytime you block an opponent, they receive a brief moderate debuff to their Weapon Skill and Strength",;,70
+278,*Catch 'Em by Surprise,,;,69
+279,*In the Thick,,;,73
+280,Shyish Tolerance,,;,73
+281,*,,;,
+282,Aqshy Tolerance,,;,
+283,*,,;,73
+284,*Intercept,,;,70
+285,*Retributive Strike,,;,34
+286,*Perfect Patient,,;,73
+287,Hard to Kill,Significant self heal,;,70
+288,Uncanny Disruption,,;,70
+289,*,,;,
+290,*,,;,
+,,,;,
+,;Black Orc T1 Spec,,;,
+291,Taunting Strike,,;,67
+292,*Strategy Slot,,;,
+293,Defensive Minded,Moderate increase to parry rate,;,69
+294,*,,;,
+295,*,,;,
+296,Hard to Hit,,;,69
+297,Blooded Reactions,"Everytime you parry, you automatically strike back causing a weak damage over time bleed",;,73
+298,Nerve Strike,,;,68
+299,*Intercept,,;,70
+300,*Lingering Anger,,;,
+301,*Unshakable Faith,,;,69
+302,*,,;,
+303,Chamon Tolerance,,;,73
+304,Ghur Tolerance,,;,73
+305,*,,;,
+306,*Retributive Strike,,;,34
+307,Hard to Kill,Significant self heal,;,70
+308,*Quick Recovery,,;,
+309,Counter Sweep,"A melee attack that deals no damage, but knocks the target down briefly",;,70
+310,Reverberating Blow,"A melee attack that deals no damage, but increases the buildup time of the targets next action slightly",;,68
+311,*Uplifting Cry,,;,69
+,,,;,
+,;Ironbreaker T1 Second,,;,
+312,*Death Wish,,;,
+313,*Directed Attack,,;,
+314,Hamstring,An average melee attack that slightly snares the target,;,67
+315,*Strategy Slot,,;,
+316,*Sharpen Blade,,;,73
+317,*Concentration,,;,70
+318,Sudden Strike,A melee attack that does strong damage for no action cost,;,70
+319,Seeing Red,"Damage done is significantly increased, damage taken is also slightly increased",;,69
+320,Ancestral Hatred,,;,69
+321,*,,;,
+322,*,,;,
+323,*Forced Fumble,,;,
+324,*,,;,
+325,*Press the Attack,,;,
+326,*Ancestral Vengeance,,;,69
+,,,;,
+,;Black Orc T1 Second,,;,
+327,*Brawling Stance,,;,73
+328,*Strategy Slot,,;,
+329,Tendon Ripper,A long duration snare that can be used from range,;,69
+330,*'Ard Stance,,;,70
+331,Power Strikes,,;,73
+332,*Mighty Chop,,;,68
+333,Ancestral Hatred,,;,69
+334,Seeing Red,"Damage done is significantly increased, damage taken is also slightly increased",;,73
+335,Furious Attacks,,;,70
+336,*Great Weapons,,;,
+337,*,,;,
+338,Whirlwind Attack,Two back to back melee attacks that deals damage to everyone around you,;,70
+339,*,,;,
+340,*Momentum,,;,
+341,*Directed Attacks,,;,69
+,,,;,
+,;Hammerer T1 Core,,;,
+342,Stout,,;,67
+343,Crushing Blow,,;,67
+344,*Rebounding,,;,
+345,Foot Smash,,;,67
+346,*Impacting Smash,,;,28
+347,*Dazing Blows,,;,28
+348,*,,;,
+349,*Great Weapons / Dual Wield,,;,
+350,*,,;,
+351,*Improved Strategy,,;,
+,,,;,
+,;Berserker T1 Core,,;,
+352,Stomp 'Em,,;,67
+353,Back at ya!,,;,73
+354,*Blood Lust,,;,
+355,*,,;,
+356,Vicious Strike,,;,67
+357,*,,;,
+358,*Might of Arms,,;,
+359,*Great Weapons / Dual Wield,,;,
+360,Shredder,,;,67
+361,*Improved Strategy,,;,
+,,,;,
+,;Hammerer T1 Spec,,;,
+362,Noggin' Knocker,,;,67
+363,Hammer Bash,,;,67
+364,Sundering Blow,,;,67
+365,*Joy of Battle,,;,
+366,*Critical Strike,,;,73
+367,*Concentration,,;,70
+368,*,,;,67
+369,*,,;,67
+370,Ancestral Hatred,,;,69
+371,Swift Strikes,,;,67
+372,Jarring Blows,,;,70
+373,Crushing Blows,,;,70
+374,*Great Hammer Specialist,,;,
+375,*,,;,
+376,*Momentum,,;,
+377,*,,;,
+378,*Directed Attack,,;,73
+379,Crushing Momentum,,;,67
+380,Sudden Strike,,;,67
+381,Whirlwind Attack,,;,70
+382,*Improved Strategy,,;,
+,,,;,
+,;Berserker T1 Spec,,;,
+383,*Unstoppable,,;,
+384,*Petrifying Glare,,;,
+385,Bloody Cut,,;,68
+386,Grand Cleave,,;,68
+387,*Mighty Chop,,;,67
+388,Haft Smash,,;,70
+389,*Joy of Battle,,;,
+390,*,,;,
+391,*,,;,
+392,*,,;,
+393,Ancestral Hatred,,;,69
+394,Taking Advantage,,;,73
+395,*Press the Attack,,;,
+396,*Choppa Specialist,,;,
+397,*,,;,67
+398,*Momentum,,;,
+399,*Unexpected Follow-ups,,;,
+400,Sudden Strike,,;,67
+401,Distracting Shout,,;,69
+402,Whirlwind Attack,,;,70
+403,*Improved Strategy,,;,
+,,,;,
+,;Hammerer T1 Second,,;,
+404,Nerve Strike,,;,68
+405,*Focused Defense,,;,70
+406,Cautious Attack,,;,67
+407,Magic Resistance,,;,73
+408,*,,;,
+409,*,,;,
+410,Defensive Minded,,;,73
+411,*Quick Recovery,,;,
+412,Hard Headed,,;,70
+413,*,,;,
+414,Aqshy Tolerance,,;,73
+415,Dodger,,;,73
+416,Uncanny Disruption,,;,69
+417,Hard to Hit,,;,69
+418,*Improved Strategy,,;,
+,,,;,
+,;Berserker T1 Second,,;,
+419,Choppa Hurl,,;,69
+420,*We's Winning!,,;,
+421,*Unshakable Faith,,;,69
+422,Wind Up,,;,73
+423,Reach,,;,69
+424,*,,;,
+425,*,,;,
+426,*,,;,
+427,*In the Thick,,;,73
+428,Blooded Reactions,,;,68
+429,*Catch 'Em by Surprise,,;,69
+430,Dodger,,;,73
+431,Hard to Hit,,;,69
+432,*Improved Strategy,,;,
+433,*Thrown Weapon Specialist,,;,
+,,,;,
+,;Rune Priest T1 Core,,;,
+434,*Rune of Theft,,;,70
+435,*Rune of Life,,;,71
+436,*Rune of Cancellation,,;,71
+437,Rune of Smelting,,;,71
+438,*Efficient Criticals,,;,
+439,*Rune Smithing,,;,
+440,*Improved Strategy,,;,
+441,*Rapid Smithing,,;,
+442,*,,;,
+443,*,,;,
+,,,;,
+,;Shaman T1 Core,,;,
+444,*Fists of Gork,,;,71
+445,*Mork'l Fix It,,;,72
+446,*Waaagh Busta,,;,
+447,*Gedup!,,;,71
+448,*Waaagh Healin,,;,
+449,*Big Mojo,,;,
+450,*Better Boys,,;,71
+451,*Strategy Slot,,;,
+452,*,,;,
+453,*,,;,
+,,,;,
+,;Rune Priest T1 Spec,,;,
+454,Medium Heal,,;,72
+455,Detaunt Spell,,;,71
+456,Melee and HoT,,;,72
+457,*Basic DoT Cure,,;,72
+458,Basic Resurrection,,;,73
+459,Toughness Buff,,;,70
+460,*Group Even Health,,;,72
+461,PBAE All Stat Buff,,;,73
+462,Damage Resistance Boost,,;,72
+463,75% Heal,,;,72
+464,*Improved Strategy,,;,
+465,*HoT Proc Tactic,,;,
+466,*Heal Dispelling,,;,
+467,*Morale Rezzing,,;,
+468,*Critical Heals,,;,
+469,*Increased Maximum AP,,;,
+470,*Morale Boosters,,;,
+471,*,,;,
+472,*,,;,
+473,*,,;,
+474,*,,;,
+,,,;,
+,;Shaman T1 Spec,,;,
+475,Life Transfer,,;,72
+476,Anchor Pulse Heal,,;,72
+477,Baby Lifetap,,;,72
+478,*GTAE Pulse Heal,,;,72
+479,AP Gain Proc Buff,,;,70
+480,Strength Buff,,;,69
+481,*HoT Proc Tactic,,;,72
+482,*Heal Dispelling,,;,72
+483,*Morale Boosters,,;,72
+484,*Health Rezzing,,;,72
+485,*Group Spell Turn,,;,72
+486,50% Heal,,;,72
+487,PBAE All Stat Buff,,;,71
+488,*25% Group Heal,,;,72
+489,*Strategy Slot,,;,72
+490,*Master Healer,,;,
+491,*Necromancer,,;,
+492,*,,;,
+493,*,,;,
+494,*,,;,
+495,*,,;,
+,,,;,
+,;Rune Priest T1 Secondary,,;,
+496,Long Duration DoT,,;,72
+497,*LAE DD,,;,72
+498,Reduce Build Times Buff,,;,70
+499,Critical Shear,,;,71
+500,*Crits add DoT,,;,
+501,*Willpower Buff,,;,69
+502,*Improved Strategy,,;,
+503,*Cool Down Debuff,,;,70
+504,*Offensive Duration Increase,,;,
+505,*Damage Shield,,;,
+506,*AE Buff Shear,,;,70
+507,*Withering Defense,,;,73
+508,*,,;,
+509,*,,;,
+510,*,,;,
+,,,;,
+,;Shaman T1 Secondary,,;,
+511,DoT Lifetap,,;,72
+512,Critical Shear,,;,71
+513,Lower Resists,,;,69
+514,*Death Master,,;,
+515,*Backfire,,;,72
+516,Feedback,,;,69
+517,*Energize,,;,69
+518,*Critical Debuff Chance,,;,
+519,*Jumping Debuffs,,;,
+520,*Blind,,;,73
+521,Daze,,;,72
+522,*Improved Strategy,,;,
+523,*,,;,
+524,*,,;,
+525,*,,;,
+,,,;,
+,,,;,
+,;Ironbreaker T2 Core,,;,
+526,***IB Core 1,,;,73
+527,***IB Core 2,,;,73
+528,***IB Core 3,,;,73
+529,***IB Core 4,,;,73
+530,***IB Core 5,,;,73
+531,***IB Core 6,,;,73
+532,***IB Core 7,,;,73
+533,***IB Core 8,,;,73
+534,Core Stat Package #1,,;,73
+535,Core Stat Package #2,,;,73
+536,,,;,73
+537,,,;,73
+,;Black Orc T2 Core,,;,
+538,,,;,73
+539,,,;,73
+540,,,;,73
+541,,,;,73
+542,,,;,73
+543,,,;,73
+544,,,;,73
+545,,,;,73
+546,Core Stat Package #1,,;,73
+547,Core Stat Package #2,,;,73
+548,,,;,73
+549,,,;,73
+,;Ironbreaker T2 Spec,,;,
+550,**Shield Rush,,;,73
+551,**Shield Bash,,;,73
+552,**Deflection,,;,73
+553,**Weapon Strike,,;,73
+554,**Sword Breaker,,;,73
+555,**Profound Warding,,;,73
+556,**Retaliation,,;,73
+557,**Shield Spin,,;,73
+558,**Inner Fire,,;,73
+559,**Shield Wall,,;,73
+560,**Disarming Parry,,;,73
+561,**Protection,,;,73
+562,**Don't Let it Show,,;,73
+563,**Confidence,,;,73
+564,**Better than Ever,,;,73
+565,**Ready for It,,;,73
+566,Improved Tactics,,;,73
+567,Specialization Stat Package #1,,;,73
+568,Specialization Stat Package #2,,;,73
+569,Specialization Stat Package #3,,;,73
+570,Specialization Stat Package #4,,;,73
+571,,,;,73
+572,,,;,73
+573,,,;,73
+574,,,;,73
+,;Black Orc T2 Spec,,;,
+575,,,;,73
+576,,,;,73
+577,,,;,73
+578,,,;,73
+579,,,;,73
+580,,,;,73
+581,,,;,73
+582,,,;,73
+583,,,;,73
+584,,,;,73
+585,,,;,73
+586,,,;,73
+587,,,;,73
+588,,,;,73
+589,,,;,73
+590,,,;,73
+591,,,;,73
+592,Specialization Stat Package #1,,;,73
+593,Specialization Stat Package #2,,;,73
+594,Specialization Stat Package #3,,;,73
+595,Specialization Stat Package #4,,;,73
+596,,,;,73
+597,,,;,73
+598,,,;,73
+599,,,;,73
+,;Ironbreaker T2 Second,,;,
+600,***Low Blow,,;,73
+601,***Fury of the Warrior,,;,73
+602,***Immunity,,;,73
+603,***Enhanced Initiative,,;,73
+604,***Deep Mastery,,;,73
+605,***Vindicating Blows,,;,73
+606,***Armor Master,,;,73
+607,***War Oath,,;,73
+608,***Rage of Ages,,;,73
+609,***Ready Weapon,,;,73
+610,***Dazing Strike,,;,73
+611,Improved Tactics,,;,73
+612,Secondary Stat Package #1,,;,73
+613,Secondary Stat Package #2,,;,73
+614,Secondary Stat Package #2b,,;,73
+615,Secondary Stat Package #3,,;,73
+616,Secondary Stat Package #3b,,;,73
+617,,,;,73
+,;Black Orc T2 Second,,;,
+618,,,;,73
+619,,,;,73
+620,,,;,73
+621,,,;,73
+622,,,;,73
+623,,,;,73
+624,,,;,73
+625,,,;,73
+626,,,;,73
+627,,,;,73
+628,,,;,73
+629,,,;,73
+630,Secondary Stat Package #1,,;,73
+631,Secondary Stat Package #2,,;,73
+632,Secondary Stat Package #2b,,;,73
+633,Secondary Stat Package #3,,;,73
+634,Secondary Stat Package #3b,,;,73
+635,,,;,73
+,;Hammerer T2 Core,,;,
+636,***Hammerer Core 1,,;,73
+637,***Hammerer Core 2,,;,73
+638,***Hammerer Core 3,,;,73
+639,***Hammerer Core 4,,;,73
+640,***Hammerer Core 5,,;,73
+641,***Hammerer Core 6,,;,73
+642,***Hammerer Core 7,,;,73
+643,***Hammerer Core 8,,;,73
+644,Core Stat Package #1,,;,73
+645,Core Stat Package #2,,;,73
+646,,,;,73
+647,,,;,73
+,;Berserker T2 Core,,;,
+648,***Zerker Core 1,,;,73
+649,***Zerker Core 2,,;,73
+650,***Zerker Core 3,,;,73
+651,***Zerker Core 4,,;,73
+652,***Zerker Core 5,,;,73
+653,***Zerker Core 6,,;,73
+654,***Zerker Core 7,,;,73
+655,***Zerker Core 8,,;,73
+656,Core Stat Package #1,,;,73
+657,Core Stat Package #2,,;,73
+658,,,;,73
+659,,,;,73
+,;Hammerer T2 Spec,,;,
+660,***Seam in the Armor,,;,73
+661,***Tendon Mash,,;,73
+662,***Tear,,;,73
+663,***Stand Ready,,;,73
+664,***Fury of the Warrior,,;,73
+665,***Enhanced Initiative,,;,73
+666,***Critical Knockdown,,;,73
+667,***Inertia,,;,73
+668,***Blooded Reactions,,;,73
+669,***Confidence,,;,73
+670,***Crushing Momentum,,;,73
+671,***War Oath,,;,73
+672,***Ready Weapon,,;,73
+673,***Knockout Blow,,;,73
+674,***Dazing Strike,,;,73
+675,***Backstabber's Bane,,;,73
+676,Improved Tactics,,;,73
+677,Specialization Stat Package #1,,;,73
+678,Specialization Stat Package #2,,;,73
+679,Specialization Stat Package #3,,;,73
+680,Specialization Stat Package #4,,;,73
+681,,,;,73
+682,,,;,73
+683,,,;,73
+684,,,;,73
+,;Berserker T2 Spec,,;,
+685,***Bloody Cut,,;,73
+686,***Seam in the Armor,,;,73
+687,***Tendon Mash,,;,73
+688,***Forced Fumble,,;,73
+689,***Rile,,;,73
+690,***Unstoppable,,;,73
+691,***Deep Mastery,,;,73
+692,***Inertia,,;,73
+693,***Infallibility,,;,73
+694,***Jagged Wounds,,;,73
+695,***Critical Initiative,,;,73
+696,***Renewed Anger,,;,73
+697,***Desperate Strike,,;,73
+698,***Perfect Combinations,,;,73
+699,***Immaculate Strike,,;,73
+700,***Rush of Battle,,;,73
+701,Improved Tactics,,;,73
+702,Specialization Stat Package #1,,;,73
+703,Specialization Stat Package #2,,;,73
+704,Specialization Stat Package #3,,;,73
+705,Specialization Stat Package #4,,;,73
+706,,,;,73
+707,,,;,73
+708,,,;,73
+709,,,;,73
+,;Hammerer T2 Second,,;,
+710,**Painful Strike,,;,73
+711,**Counterattack,,;,73
+712,**Shatter Weapons,,;,73
+713,**Fightin' Words,,;,73
+714,**Incapacitating Blows,,;,73
+715,**Covered Advance,,;,73
+716,**Inner Fire,,;,73
+717,**Critical Vulnerability,,;,73
+718,**Critical Disarm,,;,73
+719,**Reactive Warding,,;,73
+720,**Centered,,;,73
+721,Improved Tactics,,;,73
+722,Secondary Stat Package #1,,;,73
+723,Secondary Stat Package #2,,;,73
+724,Secondary Stat Package #2b,,;,73
+725,Secondary Stat Package #3,,;,73
+726,Secondary Stat Package #3b,,;,73
+727,,,;,73
+,;Berserker T2 Second,,;,
+728,**Overwhelming Attack,,;,73
+729,**Cunning Attacks,,;,73
+730,**Irresistible Force,,;,73
+731,**Critical Vulnerability,,;,73
+732,**Chaotic Warding,,;,73
+733,***Basic Snaring Shot,,;,73
+734,***Dash,,;,73
+735,***Quick Cool-downs,,;,73
+736,***Escape Artist,,;,73
+737,***Refresh,,;,73
+738,***Pacifying Volley,,;,73
+739,Improved Tactics,,;,73
+740,Secondary Stat Package #1,,;,73
+741,Secondary Stat Package #2,,;,73
+742,Secondary Stat Package #2b,,;,73
+743,Secondary Stat Package #3,,;,73
+744,Secondary Stat Package #3b,,;,73
+,,,;,73
+,;Ironbreaker T3 Core,,;,
+745,***IB T3 Core 1,,;,73
+746,***IB T3 Core 2,,;,73
+747,***IB T3 Core 3,,;,73
+748,***IB T3 Core 4,,;,73
+749,***IB T3 Core 5,,;,73
+750,***IB T3 Core 6,,;,73
+751,***IB T3 Core 7,,;,73
+752,***IB T3 Core 8,,;,73
+753,Core Stat Package #1,,;,73
+754,Core Stat Package #2,,;,73
+755,,,;,73
+756,,,;,73
+,;Black Orc T3 Core,,;,
+757,,,;,73
+758,,,;,73
+759,,,;,73
+760,,,;,73
+761,,,;,73
+762,,,;,73
+763,,,;,73
+764,,,;,73
+765,Core Stat Package #1,,;,73
+766,Core Stat Package #2,,;,73
+767,,,;,73
+768,,,;,73
+,;Ironbreaker T3 Spec,,;,
+769,**Misdirecting Blow,,;,73
+770,**Readiness,,;,73
+771,**Prepared Response,,;,73
+772,**Iron Mind,,;,73
+773,**Tight Formation,,;,73
+774,**Quick Recovery,,;,73
+775,**Deflection Mark II,,;,73
+776,**Physical Toughness,,;,73
+777,**Kneecapping,,;,73
+778,**Glorious Reflection,,;,73
+779,**Pinning Counterblow,,;,73
+780,**Disrupting Counterblow,,;,73
+781,**Defensive,,;,73
+782,**Shield Riposte,,;,73
+783,**Defensive Weapon Master,,;,73
+784,**Reciprocity,,;,73
+785,Improved Tactics,,;,73
+786,Specialization Stat Package #1,,;,73
+787,Specialization Stat Package #2,,;,73
+788,Specialization Stat Package #3,,;,73
+789,Specialization Stat Package #4,,;,73
+790,,,;,73
+791,,,;,73
+792,,,;,73
+793,,,;,73
+,;Black Orc T3 Spec,,;,
+794,,,;,73
+795,,,;,73
+796,,,;,73
+797,,,;,73
+798,,,;,73
+799,,,;,73
+800,,,;,73
+801,,,;,73
+802,,,;,73
+803,,,;,73
+804,,,;,73
+805,,,;,73
+806,,,;,73
+807,,,;,73
+808,,,;,73
+809,,,;,73
+810,,,;,73
+811,Specialization Stat Package #1,,;,73
+812,Specialization Stat Package #2,,;,73
+813,Specialization Stat Package #3,,;,73
+814,Specialization Stat Package #4,,;,73
+815,,,;,73
+816,,,;,73
+817,,,;,73
+818,,,;,73
+,;Ironbreaker T3 Second,,;,
+819,**Head Cracker,,;,73
+820,**Extra Effort,,;,73
+821,**Attack of Opportunity,,;,73
+822,**Battle Master,,;,73
+823,**Diminutive Fighting,,;,73
+824,**Counterpoise,,;,73
+825,**Deadly Flurry,,;,73
+826,**Flailing Fury,,;,73
+827,**Warrior's Arm,,;,73
+828,**Concussing Blows,,;,73
+829,**Survival,,;,73
+830,Improved Tactics,,;,73
+831,Secondary Stat Package #1,,;,73
+832,Secondary Stat Package #2,,;,73
+833,Secondary Stat Package #2b,,;,73
+834,Secondary Stat Package #3,,;,73
+835,Secondary Stat Package #3b,,;,73
+836,,,;,73
+,;Black Orc T3 Second,,;,
+837,,,;,73
+838,,,;,73
+839,,,;,73
+840,,,;,73
+841,,,;,73
+842,,,;,73
+843,,,;,73
+844,,,;,73
+845,,,;,73
+846,,,;,73
+847,,,;,73
+848,,,;,73
+849,Secondary Stat Package #1,,;,73
+850,Secondary Stat Package #2,,;,73
+851,Secondary Stat Package #2b,,;,73
+852,Secondary Stat Package #3,,;,73
+853,Secondary Stat Package #3b,,;,73
+854,,,;,73
+,;Hammerer T3 Core,,;,
+855,***Hammerer T3 Core 1,,;,73
+856,***Hammerer T3 Core 2,,;,73
+857,***Hammerer T3 Core 3,,;,73
+858,***Hammerer T3 Core 4,,;,73
+859,***Hammerer T3 Core 5,,;,73
+860,***Hammerer T3 Core 6,,;,73
+861,***Hammerer T3 Core 7,,;,73
+862,***Hammerer T3 Core 8,,;,73
+863,Core Stat Package #1,,;,73
+864,Core Stat Package #2,,;,73
+865,,,;,73
+866,,,;,73
+,;Berserker T3 Core,,;,
+867,***Zerker T3 Core 1,,;,73
+868,***Zerker T3 Core 2,,;,73
+869,***Zerker T3 Core 3,,;,73
+870,***Zerker T3 Core 4,,;,73
+871,***Zerker T3 Core 5,,;,73
+872,***Zerker T3 Core 6,,;,73
+873,***Zerker T3 Core 7,,;,73
+874,***Zerker T3 Core 8,,;,73
+875,Core Stat Package #1,,;,73
+876,Core Stat Package #2,,;,73
+877,,,;,73
+878,,,;,73
+,;Hammerer T3 Spec,,;,
+879,**Head Cracker,,;,73
+880,**Crippling Strike,,;,73
+881,**Hemorrhaging Strikes,,;,73
+882,**Attack of Opportunity,,;,73
+883,**Focused Headshot,,;,73
+884,**Flanking Maneuver,,;,73
+885,**Critical Ease,,;,73
+886,**Diminutive Fighting,,;,73
+887,**Critical Concussion,,;,73
+888,**Combination,,;,73
+889,**Swathe Cutter,,;,73
+890,**Tumbling Strike,,;,73
+891,**Critical Disorientation,,;,73
+892,**Aggressive Disorientation,,;,73
+893,**Jarring Strike,,;,73
+894,**Survival,,;,73
+895,Improved Tactics,,;,73
+896,Specialization Stat Package #1,,;,73
+897,Specialization Stat Package #2,,;,73
+898,Specialization Stat Package #3,,;,73
+899,Specialization Stat Package #4,,;,73
+900,,,;,73
+901,,,;,73
+902,,,;,73
+903,,,;,73
+,;Berserker T3 Spec,,;,
+904,**Setup,,;,73
+905,**Distracting Stroke,,;,73
+906,**Hemorrhaging Strikes,,;,73
+907,**Focused Headshot,,;,73
+908,**Razor Sharp,,;,73
+909,**Practiced Blows,,;,73
+910,**Critical Ease,,;,73
+911,**Tactical Mastermind,,;,73
+912,**Critical Impairment,,;,73
+913,**Critical Concussion,,;,73
+914,**Combined Strike,,;,73
+915,**Deadly Flurry,,;,73
+916,**Flailing Fury,,;,73
+917,**Jarring Strike,,;,73
+918,**Critical Disorientation,,;,73
+919,**Aggressive Disorientation,,;,73
+920,Improved Tactics,,;,73
+921,Specialization Stat Package #1,,;,73
+922,Specialization Stat Package #2,,;,73
+923,Specialization Stat Package #3,,;,73
+924,Specialization Stat Package #4,,;,73
+925,,,;,73
+926,,,;,73
+927,,,;,73
+928,,,;,73
+,;Hammerer T3 Second,,;,
+929,**Staggering Blow,,;,73
+930,**Bloody Mindedness,,;,73
+931,**Back to Back,,;,73
+932,**Disruptive Defenses,,;,73
+933,**Brief Pursuit,,;,73
+934,**Distraction,,;,73
+935,**Critical Reflection,,;,73
+936,**Reciprocity,,;,73
+937,**Kneecapping,,;,73
+938,**Impeding Strike,,;,73
+939,**Implacability,,;,73
+940,Improved Tactics,,;,73
+941,Secondary Stat Package #1,,;,73
+942,Secondary Stat Package #2,,;,73
+943,Secondary Stat Package #2b,,;,73
+944,Secondary Stat Package #3,,;,73
+945,Secondary Stat Package #3b,,;,73
+946,,,;,73
+,;Berserker T3 Second,,;,
+947,**Tripping Strike,,;,73
+948,**Back to Back,,;,73
+949,**Disruptive Defenses,,;,73
+950,**Critical Setback,,;,73
+951,**Head to Head,,;,73
+952,**War Bellow,,;,73
+953,**Eagle Eyes,,;,73
+954,**Rooting Criticals,,;,73
+955,**Unexpected Grace,,;,73
+956,**Concealment,,;,73
+957,**Take Cover,,;,73
+958,Improved Tactics,,;,73
+959,Secondary Stat Package #1,,;,73
+960,Secondary Stat Package #2,,;,73
+961,Secondary Stat Package #2b,,;,73
+962,Secondary Stat Package #3,,;,73
+963,Secondary Stat Package #3b,,;,73
+,,,;,73
+,,,;,
+,,,;,
+,,,;,
+,,,;,
+,,,;,
+,,,;,
+,,,;,
+,,,;,
+,,,;,
+,,,;,
+,,,;,
+,,,;,
+,;Iron Breaker Stat Packages,,;,
+1500,Core Stat Package #1,,;
+1501,Core Stat Package #2,,;
+1502,Specialization Stat Package #1,,;
+1503,Specialization Stat Package #2,,;
+1504,Specialization Stat Package #3,,;
+1505,Specialization Stat Package #4,,;
+1506,Secondary Stat Package #1,,;
+1507,Secondary Stat Package #2,,;
+1508,Secondary Stat Package #2b,,;
+1509,Secondary Stat Package #3,,;
+1510,Secondary Stat Package #3b,,;
+,;Black Orc Stat Packages,,;
+1511,Core Stat Package #1,,;
+1512,Core Stat Package #2,,;
+1513,Specialization Stat Package #1,,;
+1514,Specialization Stat Package #2,,;
+1515,Specialization Stat Package #3,,;
+1516,Specialization Stat Package #4,,;
+1517,Secondary Stat Package #1,,;
+1518,Secondary Stat Package #2,,;
+1519,Secondary Stat Package #2b,,;
+1520,Secondary Stat Package #3,,;
+1521,Secondary Stat Package #3b,,;
+,;Hammerer Stat Packages,,;
+1522,Core Stat Package #1,,;
+1523,Core Stat Package #2,,;
+1524,Specialization Stat Package #1,,;
+1525,Specialization Stat Package #2,,;
+1526,Specialization Stat Package #3,,;
+1527,Specialization Stat Package #4,,;
+1528,Secondary Stat Package #1,,;
+1529,Secondary Stat Package #2,,;
+1530,Secondary Stat Package #2b,,;
+1531,Secondary Stat Package #3,,;
+1532,Secondary Stat Package #3b,,;
+,;Berzerker Stat Packages,,;
+1534,Core Stat Package #1,,;
+1535,Core Stat Package #2,,;
+1536,Specialization Stat Package #1,,;
+1537,Specialization Stat Package #2,,;
+1538,Specialization Stat Package #3,,;
+1539,Specialization Stat Package #4,,;
+1540,Secondary Stat Package #1,,;
+1541,Secondary Stat Package #2,,;
+1542,Secondary Stat Package #2b,,;
+1543,Secondary Stat Package #3,,;
+1544,Secondary Stat Package #3b,,;
+,;Rune Priest Stat Packages,,;
+1545,Core Stat Package #1,,;
+1546,Core Stat Package #2,,;
+1547,Specialization Stat Package #1,,;
+1548,Specialization Stat Package #2,,;
+1549,Specialization Stat Package #3,,;
+1550,Specialization Stat Package #4,,;
+1551,Secondary Stat Package #1,,;
+1552,Secondary Stat Package #2,,;
+1553,Secondary Stat Package #2b,,;
+1554,Secondary Stat Package #3,,;
+1555,Secondary Stat Package #3b,,;
+,;Shaman Stat Packages,,;
+1556,Core Stat Package #1,,;
+1557,Core Stat Package #2,,;
+1558,Specialization Stat Package #1,,;
+1559,Specialization Stat Package #2,,;
+1560,Specialization Stat Package #3,,;,
+1561,Specialization Stat Package #4,,;,
+1562,Secondary Stat Package #1,,;,
+1563,Secondary Stat Package #2,,;,
+1564,Secondary Stat Package #2b,,;,
+1565,Secondary Stat Package #3,,;,
+1566,Secondary Stat Package #3b,,;,
+,,,;,
+,,,;,
+1900,Melee Auto Attack 1,A basic melee attack.,;,67
+1901,Melee Auto Attack 2,A basic melee attack.,;,67
+1902,Bow Auto Attack 1,A basic bow attack.,;,67
+1903,Bow Auto Attack 2,A basic bow attack.,;,67
+1904,Gun Auto Attack 1,A basic gun attack.,;,67
+1905,Gun Auto Attack 2,A basic gun attack.,;,67
+,,,;,
+,,,;,
+,,,;,
+1950,AnimTest_Auto1,Horizontal Oneshot,;,67
+1951,AnimTest_Auto2,Vertical Oneshot,;,68
+1952,AnimTest_Shout,Shout/Spit/Vomit,;,69
+1953,AnimTest_Stomp,Stomp/'Eadbutt/Buff,;,70
+1954,AnimTest_S,Class/Grip-AOE Buff/Melee/Dmg,;,71
+1955,AnimTest_T,Class/Grip-Targeted Buff/Melee/Dmg,;,72
+1956,AnimTest_Brandish,Buff,;,73
+1957,AnimTest_Beckon,Taunt,;,74
+1958,AnimTest_AB,,;,28
+1959,AnimTest_BD,,;,35
+1960,AnimTest_DB,,;,49
+1961,AnimTest_BA,,;,34
+1962,AnimTest,,;,67
+1963,AnimTestMeleeSpecial_Life,,;,68
+1964,AnimTestMorale_AOE_Life,,;,69
+1965,AnimTestShout_Life,,;,70
+1966,AnimTestSplTarget_Life,,;,71
+1967,AnimTestSplSelf_Life,,;,72
+1968,AnimTestMeleeBase_death,,;,67
+1969,AnimTestMeleeSpecial_death,,;,68
+1970,AnimTestMorale_AOE_death,,;,69
+1971,AnimTestShout_death,,;,70
+1972,AnimTestSplTarget_death,,;,71
+1973,AnimTestSplSelf_death,,;,72
+1974,MonMeleeBase_Beast,,;,67
+1975,MonMeleeSpecial_Beast,,;,
+1976,MonMorale_AOE_Beast,,;,68
+1977,MonShout_Beast,,;,69
+1978,MonSplTarget_Beast,,;,70
+1979,MonSplSelf_Beast,,;,71
+1980,MonMeleeBase_06,,;,72
+1981,MonMeleeSpecial_06,,;,67
+,,,;,
+6000,MonMeleeBase_Mundane,,;,67
+6001,MonMeleeSpecial_Mundane,,;,68
+6002,MonMorale_AOE_Mundane,,;,69
+6003,MonShout_Mundane,,;,70
+6004,MonSplTarget_Mundane,,;,71
+6005,MonSplSelf_Mundane,,;,72
+6006,MonMeleeBase_02,,;,67
+6007,MonMeleeSpecial_02,,;,68
+6008,MonMorale_AOE_02,,;,69
+6009,MonShout_02,,;,70
+6010,MonSplTarget_02,,;,71
+6011,MonSplSelf_02,,;,72
+6012,MonMeleeBase_Life,,;,67
+6013,MonMeleeSpecial_Life,,;,68
+6014,MonMorale_AOE_Life,,;,69
+6015,MonShout_Life,,;,70
+6016,MonSplTarget_Life,,;,71
+6017,MonSplSelf_Life,,;,72
+6018,MonMeleeBase_death,,;,67
+6019,MonMeleeSpecial_death,,;,68
+6020,MonMorale_AOE_death,,;,69
+6021,MonShout_death,,;,70
+6022,MonSplTarget_death,,;,71
+6023,MonSplSelf_death,,;,72
+6024,MonMeleeBase_Beast,,;,67
+6025,MonMeleeSpecial_Beast,,;,
+6026,MonMorale_AOE_Beast,,;,68
+6027,MonShout_Beast,,;,69
+6028,MonSplTarget_Beast,,;,70
+6029,MonSplSelf_Beast,,;,71
+6030,MonMeleeBase_06,,;,72
+6031,MonMeleeSpecial_06,,;,67
+6032,MonMorale_AOE_06,,;,68
+6033,MonShout_06,,;,69
+6034,MonSplTarget_06,,;,70
+6035,MonSplSelf_06,,;,71
+6036,MonMeleeBase_Heavens,,;,72
+6037,MonMeleeSpecial_Heavens,,;,
+6038,MonMorale_AOE_Heavens,,;,67
+6039,MonShout_Heavens,,;,68
+6040,MonSplTarget_Heavens,,;,69
+6041,MonSplSelf_Heavens,,;,70
+6042,MonMeleeBase_Light,,;,71
+6043,MonMeleeSpecial_Light,,;,72
+6044,MonMorale_AOE_Light,,;,67
+6045,MonShout_Light,,;,68
+6046,MonSplTarget_Light,,;,69
+6047,MonSplSelf_Light,,;,70
+6048,MonMeleeBase_Metal,,;,71
+6049,MonMeleeSpecial_Metal,,;,72
+6050,MonMorale_AOE_Metal,,;,67
+6051,MonShout_Metal,,;,68
+6052,MonSplTarget_Metal,,;,
+6053,MonSplSelf_Metal,,;,69
+6054,MonMeleeBase_Shadow,,;,70
+6055,MonMeleeSpecial_Shadow,,;,71
+6056,MonMorale_AOE_Shadow,,;,72
+6057,MonShout_Shadow,,;,67
+6058,MonSplTarget_Shadow,,;,68
+6059,MonSplSelf_Shadow,,;,69
+,,,;,70
+,,,;,71
+,,,;,
+,,,;,
+,,,;,
+,,,;,
+,,,;,
+,,,;,
+,,,;,
+,,,;,
+,,,;,
+,,,;,
+,,,;,
+,,,;,
+,,,;,
+,,,;,
+,,,;,
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;
+,,,;

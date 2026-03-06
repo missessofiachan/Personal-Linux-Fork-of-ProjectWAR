@@ -302,7 +302,16 @@ namespace WorldServer.NetWork.Handler
                 return;
             }
 
-            if (!Plr.AbtInterface.StartCast(Plr, item.Info.SpellId, 1, item.Info.Unk27?[19] ?? 0, item.Info.ObjectLevel))
+            byte castLevel = item.Info.ObjectLevel;
+            if (castLevel == 0)
+            {
+                // Legacy item rows sometimes omit ObjectLevel; fall back to rank/effective level so scaling aligns with tooltips.
+                castLevel = item.Info.MinRank;
+                if (castLevel == 0)
+                    castLevel = Plr.EffectiveLevel > 0 ? Plr.EffectiveLevel : (byte)1;
+            }
+
+            if (!Plr.AbtInterface.StartCast(Plr, item.Info.SpellId, 1, item.Info.Unk27?[19] ?? 0, castLevel))
                 return;
 
             if (item.Info.MaxStack > 1)

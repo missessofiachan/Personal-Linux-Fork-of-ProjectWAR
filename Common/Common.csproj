@@ -138,6 +138,11 @@
     <Compile Include="Database\World\Ability\AbilityModifierChecks.cs" />
     <Compile Include="Database\World\Ability\AbilityDamageHeals.cs" />
     <Compile Include="Database\World\Ability\AbilityCommands.cs" />
+    <Compile Include="Database\World\Ability\AbilityEntryResolver.cs" />
+    <Compile Include="Database\World\Ability\MythicAbilityGraphTables.cs" />
+    <Compile Include="Database\World\Ability\MythicCsvAbility.cs" />
+    <Compile Include="Database\World\Ability\MythicCsvEffect.cs" />
+    <Compile Include="Database\World\Ability\MythicSourceAbilityTables.cs" />
     <Compile Include="Database\World\Ability\DB_BuffInfo.cs" />
     <Compile Include="Database\World\Ability\BuffCommands.cs" />
     <Compile Include="Database\World\Ability\DBAbilityInfo.cs" />
@@ -218,6 +223,7 @@
     <Compile Include="Database\World\Items\MailItem.cs" />
     <Compile Include="Database\World\Items\Dye_Info.cs" />
     <Compile Include="Database\World\Items\Item_Info.cs" />
+    <Compile Include="Database\World\Items\MythicSourceItemTables.cs" />
     <Compile Include="Database\World\Characters\Random_names.cs" />
     <Compile Include="Database\World\Items\Item_Set.cs" />
     <Compile Include="Database\World\Items\Mount_Info.cs" />

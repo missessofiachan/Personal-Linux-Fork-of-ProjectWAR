@@ -15,6 +15,8 @@ namespace WorldServer.World.Interfaces
 {
     public class RenownInterface : BaseInterface
     {
+        private const int MAX_SPENDABLE_RENOWN_POINTS = 100;
+
         private ushort[][] _trained = new ushort[7][];
         public int PointsSpent { get; private set; }
 
@@ -60,68 +62,78 @@ namespace WorldServer.World.Interfaces
 
         public void LoadSkills()
         {
-            if (_player._Value.RenownSkills?.Length > 0)
+            ResetTrainingState();
+
+            if (_player._Value.RenownSkills?.Length <= 0)
+                return;
+
+            string command = "";
+            byte stat = 0;
+            int value = 0;
+
+            string[] temp = _player._Value.RenownSkills.Split(';');
+            foreach (string str in temp)
             {
-                string command = "";
-                byte stat = 0;
-                int value = 0;
+                if (string.IsNullOrWhiteSpace(str))
+                    continue;
 
-                string[] temp = _player._Value.RenownSkills.Split(';');
-                foreach (string str in temp)
+                string[] parts = str.Split(':');
+                if (parts.Length != 2)
+                    continue;
+
+                if (!int.TryParse(parts[0], out int tree) || !int.TryParse(parts[1], out int pos))
+                    continue;
+
+                if (tree < 0 || tree >= 7 || pos < 0 || pos >= 20)
+                    continue;
+
+                byte dbTree = (byte)(tree + 9);
+                if (!CharMgr.RenownAbilityInfo.TryGetValue(dbTree, out List<CharacterInfoRenown> treeEntries))
+                    continue;
+                if (pos >= treeEntries.Count)
+                    continue;
+
+                CharacterInfoRenown ren = treeEntries[pos];
+
+                _trained[tree][pos] = ren.SpellId;
+                PointsSpent += ren.Renown_Costs;
+
+                if (ren.Slotreq == 0 || !ren.Passive)
                 {
-                    if (str.Length > 0)
+                    if (value != 0 || (!string.IsNullOrEmpty(command) && !ren.Passive))
                     {
-                        int tree = int.Parse(str.Split(':')[0]);
-                        int pos = int.Parse(str.Split(':')[1]);
-
-                        CharacterInfoRenown ren = CharMgr.RenownAbilityInfo[(byte)(tree + 9)][pos];
-
-                        _trained[tree][pos] = ren.SpellId;
-                        PointsSpent += ren.Renown_Costs;
-
-                        if (ren.Slotreq == 0 || !ren.Passive)
-                        {
-                            if (value != 0 || (!string.IsNullOrEmpty(command) && !ren.Passive))
-                            {
-                                ExecuteCommand(command, stat, value);
-                               
-                                _savedCommandInfo.Add(new Tuple<string, byte, int>(command, stat, value));
-                            }
-
-                            command = ren.CommandName;
-                            stat = ren.Stat;
-                            value = ren.Value;
-                        }
-
-                        else
-                            value += ren.Value;
-
-                        if (ren.Passive)
-                            _passiveIds.Add(ren.SpellId);
-                        else
-                            _activeIds.Add(ren.SpellId);
+                        ExecuteCommand(command, stat, value);
+                        _savedCommandInfo.Add(new Tuple<string, byte, int>(command, stat, value));
                     }
-                }
 
-                if (command != null)
-                {
-                    ExecuteCommand(command, stat, value);
-                  
-                    _savedCommandInfo.Add(new Tuple<string, byte, int>(command, stat, value));
+                    command = ren.CommandName;
+                    stat = ren.Stat;
+                    value = ren.Value;
                 }
-
-                if (PointsSpent > GetMaxPoints() || PointsSpent > 80)
-                {
-                    _player.SendClientMessage("Your renown point spend exceeds the number of points available to you. Your renown specialization has been reset.", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
-                    Respec();
-                }
-
                 else
-                {
-                    _player.StsInterface.ApplyStats();
-                    _player.StsInterface.SendRenownStats();
-                }
+                    value += ren.Value;
+
+                if (ren.Passive)
+                    _passiveIds.Add(ren.SpellId);
+                else
+                    _activeIds.Add(ren.SpellId);
             }
+
+            if (!string.IsNullOrEmpty(command))
+            {
+                ExecuteCommand(command, stat, value);
+                _savedCommandInfo.Add(new Tuple<string, byte, int>(command, stat, value));
+            }
+
+            if (PointsSpent > GetMaxPoints())
+            {
+                _player.SendClientMessage("Your renown point spend exceeds the number of points available to you. Your renown specialization has been reset.", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
+                Respec();
+                return;
+            }
+
+            _player.StsInterface.ApplyStats();
+            _player.StsInterface.SendRenownStats();
         }
 
         private void ExecuteCommand(string cmd, byte stat, int value)
@@ -229,39 +241,75 @@ namespace WorldServer.World.Interfaces
             CharMgr.Database.SaveObject(_player._Value);
         }
 
+        private void ResetTrainingState()
+        {
+            PointsSpent = 0;
+
+            for (int i = 0; i < _trained.Length; ++i)
+            {
+                if (_trained[i] == null || _trained[i].Length != 20)
+                    _trained[i] = new ushort[20];
+                else
+                    Array.Clear(_trained[i], 0, _trained[i].Length);
+            }
+
+            _passiveIds.Clear();
+            _activeIds.Clear();
+            _activeAbilities.Clear();
+            _savedCommandInfo.Clear();
+        }
+
+        private static byte ClampToByte(int value)
+        {
+            if (value < 0)
+                return 0;
+            if (value > byte.MaxValue)
+                return byte.MaxValue;
+            return (byte)value;
+        }
+
+        private int GetAvailablePointsInt()
+        {
+            int pointsAvailable = GetMaxPoints() - PointsSpent;
+            return pointsAvailable < 0 ? 0 : pointsAvailable;
+        }
+
         public byte GetAvailablePoints()
         {
-            return (byte)(GetMaxPoints() - PointsSpent);
+            return ClampToByte(GetAvailablePointsInt());
         }
 
         public void PurchaseRenownAbility(byte tree,byte skillPos)
         {
-            if (!CharMgr.RenownAbilityInfo.ContainsKey(tree) || CharMgr.RenownAbilityInfo[tree].Count < skillPos)
+            if (tree < 9 || tree > 15 || skillPos == 0 || !CharMgr.RenownAbilityInfo.TryGetValue(tree, out List<CharacterInfoRenown> treeEntries) || treeEntries.Count < skillPos)
             {
                 _player.SendClientMessage("This ability is not implemented.");
                 return;
             }
-            // RB   6/18/2016   Limiting spendable renown points to character level, instead of locking renown growth
-            int pointsAvailable = GetMaxPoints();
 
-            pointsAvailable -= PointsSpent;
+            int treeIndex = tree - 9;
+            int skillIndex = skillPos - 1;
+            CharacterInfoRenown selected = treeEntries[skillIndex];
 
-            if (pointsAvailable < CharMgr.RenownAbilityInfo[tree][skillPos - 1].Renown_Costs)
+            // Duplicate buys are invalid and can corrupt point accounting.
+            if (_trained[treeIndex][skillIndex] != 0)
                 return;
 
-            if (CharMgr.RenownAbilityInfo[tree][skillPos - 1].Slotreq > 0)
-                if (!_passiveIds.Contains(CharMgr.RenownAbilityInfo[tree][skillPos - 2].SpellId) && !_activeIds.Contains(CharMgr.RenownAbilityInfo[tree][skillPos - 2].SpellId))
+            int pointsAvailable = GetAvailablePointsInt();
+            if (pointsAvailable < selected.Renown_Costs)
+                return;
+
+            if (selected.Slotreq > 0)
+            {
+                int requiredIndex = selected.Slotreq - 1;
+                if (requiredIndex < 0 || requiredIndex >= treeEntries.Count)
                     return;
+                ushort requiredSpellId = treeEntries[requiredIndex].SpellId;
+                if (!_passiveIds.Contains(requiredSpellId) && !_activeIds.Contains(requiredSpellId))
+                    return;
+            }
 
-            _trained[tree-9][skillPos-1] = CharMgr.RenownAbilityInfo[tree][skillPos - 1].SpellId;
-
-            PointsSpent += CharMgr.RenownAbilityInfo[tree][skillPos - 1].Renown_Costs;
-            pointsAvailable -= CharMgr.RenownAbilityInfo[tree][skillPos - 1].Renown_Costs;
-
-            if (CharMgr.RenownAbilityInfo[tree][skillPos - 1].Passive)
-                _passiveIds.Add(CharMgr.RenownAbilityInfo[tree][skillPos - 1].SpellId);
-            else
-                _activeIds.Add(CharMgr.RenownAbilityInfo[tree][skillPos - 1].SpellId);
+            _trained[treeIndex][skillIndex] = selected.SpellId;
 
 
             uint respeccost = 58000;   // (uint)PointsSpend * 1000;
@@ -275,7 +323,6 @@ namespace WorldServer.World.Interfaces
             List<ushort> lastActives = new List<ushort>(_activeAbilities);
 
             ReverseAllCommands();
-            PointsSpent = 0;
             LoadSkills();
 
             if (lastActives.Count > 0)
@@ -301,14 +348,17 @@ namespace WorldServer.World.Interfaces
                 }
             }
 
-            SendRenownAbility(CharMgr.RenownAbilityInfo[tree][skillPos-1],1);
+            SendRenownAbility(selected,1);
+
+            byte pointsSpentByte = ClampToByte(PointsSpent);
+            byte pointsAvailableByte = ClampToByte(GetAvailablePointsInt());
 
             PacketOut Out = new PacketOut((byte)Opcodes.F_CAREER_PACKAGE_UPDATE, 20);
             Out.WriteByte(9);
             Out.WriteByte(1);
             Out.WriteByte(0);
-            Out.WriteByte((byte)PointsSpent);
-            Out.WriteByte((byte)pointsAvailable);
+            Out.WriteByte(pointsSpentByte);
+            Out.WriteByte(pointsAvailableByte);
             Out.Fill(0, 7);
             Out.WriteUInt32(respeccost);
             Out.WriteUInt32(0);
@@ -326,16 +376,8 @@ namespace WorldServer.World.Interfaces
             // RB   6/18/2016   Limiting spendable renown points to character level, instead of locking renown growth
             byte pointsAvailable = GetMaxPoints();
 
-            PointsSpent = 0;
-            _trained = new ushort[7][];
-
-            for (int i = 0; i < 7; ++i)
-                _trained[i] = new ushort[20];
-
-            _passiveIds.Clear();
-            _activeIds.Clear();
-
             Clear();
+            ResetTrainingState();
 
             _player._Value.RenownSkills = "";
             _player._Value.Dirty = true;
@@ -365,9 +407,9 @@ namespace WorldServer.World.Interfaces
             */
 
             // RB   6/18/2016   Limiting spendable renown points to character level, instead of locking renown growth
-            int pointsAvailable = GetMaxPoints();
-
-            pointsAvailable -= PointsSpent;
+            int pointsAvailable = GetAvailablePointsInt();
+            byte pointsSpentByte = ClampToByte(PointsSpent);
+            byte pointsAvailableByte = ClampToByte(pointsAvailable);
 
             uint respecCost = (uint)PointsSpent * 1000;
 
@@ -380,8 +422,8 @@ namespace WorldServer.World.Interfaces
             Out.WriteByte(0x09);
             Out.WriteByte(1);
             Out.WriteByte(0);
-            Out.WriteByte((byte)PointsSpent);
-            Out.WriteByte((byte)pointsAvailable);
+            Out.WriteByte(pointsSpentByte);
+            Out.WriteByte(pointsAvailableByte);
             Out.Fill(0, 3);
             Out.WriteUInt32(respecCost);     //?
             Out.WriteByte(0);
@@ -408,8 +450,8 @@ namespace WorldServer.World.Interfaces
             Out = new PacketOut((byte)Opcodes.F_CAREER_CATEGORY, 48);
             Out.WriteUInt16(0x0A01);
             Out.WriteByte(0);
-            Out.WriteByte((byte)PointsSpent);
-            Out.WriteByte((byte)pointsAvailable);
+            Out.WriteByte(pointsSpentByte);
+            Out.WriteByte(pointsAvailableByte);
             Out.Fill(0, 3);
             Out.WriteUInt32(respecCost);
             Out.WriteHexStringBytes("000182B80E52656E6F776E20537461747320420014000100020003000400050006000700080009000A000B000C000D000E000F00100011001200130014000000");
@@ -427,8 +469,8 @@ namespace WorldServer.World.Interfaces
 
             Out.WriteUInt16(0x0B01);
             Out.WriteByte(0);
-            Out.WriteByte((byte)PointsSpent);
-            Out.WriteByte((byte)pointsAvailable);
+            Out.WriteByte(pointsSpentByte);
+            Out.WriteByte(pointsAvailableByte);
             Out.Fill(0, 3);
             Out.WriteUInt32(respecCost);
             Out.WriteHexStringBytes("000138801952656E6F776E204F6666656E7369766520437269746963616C0010000100020003000400050006000700080009000A000B000C000D000E000F0010000000");
@@ -444,8 +486,8 @@ namespace WorldServer.World.Interfaces
 
             Out.WriteUInt16(0x0C01);
             Out.WriteByte(0);
-            Out.WriteByte((byte)PointsSpent);
-            Out.WriteByte((byte)pointsAvailable);
+            Out.WriteByte(pointsSpentByte);
+            Out.WriteByte(pointsAvailableByte);
             Out.Fill(0, 3);
             Out.WriteUInt32(respecCost);
             Out.WriteHexStringBytes("000075301952656E6F776E20446566656E7369766520437269746963616C000700010002000300040005000600070008000000");
@@ -460,8 +502,8 @@ namespace WorldServer.World.Interfaces
             Out = new PacketOut((byte)Opcodes.F_CAREER_CATEGORY, 48);
             Out.WriteUInt16(0x0D01);
             Out.WriteByte(0);
-            Out.WriteByte((byte)PointsSpent);
-            Out.WriteByte((byte)pointsAvailable);
+            Out.WriteByte(pointsSpentByte);
+            Out.WriteByte(pointsAvailableByte);
             Out.Fill(0, 3);
             Out.WriteUInt32(respecCost);
             Out.WriteHexStringBytes("000138801752656E6F776E2047656E65726963205061737369766573000B000100020003000400050006000700080009000A000B000000");
@@ -475,8 +517,8 @@ namespace WorldServer.World.Interfaces
             Out = new PacketOut((byte)Opcodes.F_CAREER_CATEGORY, 48);
             Out.WriteUInt16(0x0E01);
             Out.WriteByte(0);
-            Out.WriteByte((byte) PointsSpent);
-            Out.WriteByte((byte) pointsAvailable);
+            Out.WriteByte(pointsSpentByte);
+            Out.WriteByte(pointsAvailableByte);
             Out.Fill(0, 3);
             Out.WriteUInt32(respecCost);
             Out.WriteHexStringBytes("000138801952656E6F776E20446566656E736976652050617373697665730011000100020003000400050006000700080009000A000B000C000D000E000F00100011000000");
@@ -490,8 +532,8 @@ namespace WorldServer.World.Interfaces
             Out = new PacketOut((byte)Opcodes.F_CAREER_CATEGORY, 48);
             Out.WriteUInt16(0x0F01);
             Out.WriteByte(0);
-            Out.WriteByte((byte)PointsSpent);
-            Out.WriteByte((byte)pointsAvailable);
+            Out.WriteByte(pointsSpentByte);
+            Out.WriteByte(pointsAvailableByte);
             Out.Fill(0, 3);
             Out.WriteUInt32(respecCost);
             Out.WriteHexStringBytes("000138801052656E6F776E20416374697661746573000A000100020003000400050006000700080009000A000000");
@@ -521,7 +563,7 @@ namespace WorldServer.World.Interfaces
             Out.WriteByte(0);
             Out.WriteByte(0);
             Out.WriteUInt16(ren.SpellId);    // ability id
-            if (ren.Unk.Length > 0)
+            if (!string.IsNullOrEmpty(ren.Unk))
                 Out.WriteHexStringBytes(ren.Unk.Replace(" ",""));
 
             else
@@ -547,9 +589,16 @@ namespace WorldServer.World.Interfaces
 
         private byte GetMaxPoints()
         {
-            if (_player.Level >= 36 || _player.Level >= _player.RenownRank)
-                return _player.RenownRank;
-            return _player.Level;
+            int points = _player.Level >= 36 || _player.Level >= _player.RenownRank
+                ? _player.RenownRank
+                : _player.Level;
+
+            if (points > MAX_SPENDABLE_RENOWN_POINTS)
+                points = MAX_SPENDABLE_RENOWN_POINTS;
+            if (points < 0)
+                points = 0;
+
+            return (byte)points;
         }
     }
 }

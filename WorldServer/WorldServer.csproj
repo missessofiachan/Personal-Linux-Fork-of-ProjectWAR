@@ -422,6 +422,7 @@
     <Compile Include="NetWork\Handler\F_UNK1.cs" />
     <Compile Include="World\Abilities\AbilityInterface.cs" />
     <Compile Include="World\Abilities\AbilityMgr.cs" />
+    <Compile Include="World\Abilities\MythicAbilityGraphTranslator.cs" />
     <Compile Include="World\Abilities\AbilityEffectInvoker.cs" />
     <Compile Include="World\Abilities\Buffs\BuffEffectInvoker.cs" />
     <Compile Include="World\Abilities\Buffs\LinkedBuffInteraction.cs" />

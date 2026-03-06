@@ -8,6 +8,8 @@ namespace WorldServer.World.Abilities.Components
 {
     public class AbilityDamageInfo
     {
+        public const float DefaultLevelScalingFactor = 0.16667f;
+
         public ushort Entry;
 
         public ushort DisplayEntry;
@@ -18,6 +20,7 @@ namespace WorldServer.World.Abilities.Components
         public ushort MinDamage;
 
         public ushort MaxDamage;
+        public float LevelScalingFactor = DefaultLevelScalingFactor;
         public ushort DamageVariance;
         public float PrecalcDamage;
         public float Damage;
@@ -156,7 +159,23 @@ namespace WorldServer.World.Abilities.Components
 
         public uint GetDamageForLevel(byte level)
         {
-            uint damage = (uint)(MinDamage + (MaxDamage - MinDamage) * ((level - 1) / 39.0f));
+            // Mythic component-derived rows often have MaxDamage unset (0). In that case,
+            // scale from MinDamage using per-ability level scalar data when available,
+            // and fall back to legacy behavior if no scalar was resolved.
+            byte effectiveLevel = level == 0 ? (byte)1 : level;
+
+            uint damage;
+            if (MaxDamage == 0)
+            {
+                float levelScalingFactor = LevelScalingFactor;
+                if (levelScalingFactor <= 0f || float.IsNaN(levelScalingFactor) || float.IsInfinity(levelScalingFactor))
+                    levelScalingFactor = DefaultLevelScalingFactor;
+
+                damage = (uint)((((effectiveLevel - 1) * levelScalingFactor) * MinDamage) + MinDamage);
+            }
+            else
+                damage = (uint)(MinDamage + (MaxDamage - MinDamage) * ((effectiveLevel - 1) / 39.0f));
+
             if (DamageVariance == 0)
                 return damage;
 

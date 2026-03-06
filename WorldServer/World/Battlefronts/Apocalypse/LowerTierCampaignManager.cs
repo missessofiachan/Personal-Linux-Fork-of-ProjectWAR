@@ -120,7 +120,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
         }
 
         /// <summary>
-        /// Log the status of all battlefronts. , bool forceDefaultRealm = false ignored in lower tier.
+        /// Lock battlefronts across all lower-tier regions.
         /// </summary>
         public void LockBattleFrontsAllRegions(int tier, bool forceDefaultRealm = false)
         {
@@ -133,7 +133,10 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                     {
 						apocBattleFrontStatus.Locked = true;
 						apocBattleFrontStatus.OpenTimeStamp = FrameWork.TCPManager.GetTimeStamp();
-				        apocBattleFrontStatus.LockingRealm = (Realms)BattleFrontProgressions.Single(x => x.BattleFrontId == apocBattleFrontStatus.BattleFrontId).LastOwningRealm;
+                        if (forceDefaultRealm)
+                            apocBattleFrontStatus.LockingRealm = (Realms)BattleFrontProgressions.Single(x => x.BattleFrontId == apocBattleFrontStatus.BattleFrontId).DefaultRealmLock;
+                        else
+                            apocBattleFrontStatus.LockingRealm = (Realms)BattleFrontProgressions.Single(x => x.BattleFrontId == apocBattleFrontStatus.BattleFrontId).LastOwningRealm;
 						apocBattleFrontStatus.FinalVictoryPoint = new VictoryPointProgress();
 						apocBattleFrontStatus.LockTimeStamp = FrameWork.TCPManager.GetTimeStamp();
 					}
@@ -146,10 +149,13 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
 					foreach (var objective in regionMgr.Campaign.Objectives)
 					{
-					    objective.OwningRealm = (Realms) regionMgr.Campaign.BattleFrontManager.ActiveBattleFront.LastOwningRealm;
+                        if (forceDefaultRealm)
+                            objective.OwningRealm = (Realms)regionMgr.Campaign.BattleFrontManager.ActiveBattleFront.DefaultRealmLock;
+                        else
+                            objective.OwningRealm = (Realms)regionMgr.Campaign.BattleFrontManager.ActiveBattleFront.LastOwningRealm;
 
                         objective.SetObjectiveLocked();
-				        ProgressionLogger.Debug($" Locking BattlefieldObjective to {(Realms)regionMgr.Campaign.BattleFrontManager.ActiveBattleFront.LastOwningRealm} {objective.Name} {objective.State} {objective.State}");
+				        ProgressionLogger.Debug($" Locking BattlefieldObjective to {objective.OwningRealm} {objective.Name} {objective.State} {objective.State}");
 					}
 
                 }

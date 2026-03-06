@@ -28,6 +28,30 @@ namespace WorldServer
         public static Realm Rm;
         private static Timer _timer;
         
+        private static void ResetBattlefrontProgressionsOnStartup()
+        {
+            ResetBattlefrontProgressions(WorldMgr.UpperTierCampaignManager);
+            ResetBattlefrontProgressions(WorldMgr.LowerTierCampaignManager);
+
+            RVRProgressionService.SaveRVRProgression(WorldMgr.UpperTierCampaignManager.BattleFrontProgressions);
+            RVRProgressionService.SaveRVRProgression(WorldMgr.LowerTierCampaignManager.BattleFrontProgressions);
+        }
+
+        private static void ResetBattlefrontProgressions(IBattleFrontManager manager)
+        {
+            foreach (var progression in manager.BattleFrontProgressions)
+            {
+                progression.DestroVP = 0;
+                progression.OrderVP = 0;
+                progression.LastOpenedZone = 0;
+                progression.LastOwningRealm = progression.DefaultRealmLock;
+            }
+
+            var defaultBattleFront = manager.GetActiveBattleFrontFromProgression();
+            if (defaultBattleFront != null)
+                defaultBattleFront.LastOpenedZone = 1;
+        }
+
 
         [STAThread]
         static void Main(string[] args)
@@ -149,6 +173,13 @@ namespace WorldServer
             WorldMgr.UpperTierCampaignManager = new UpperTierCampaignManager(RVRProgressionService._RVRProgressions.Where(x => x.Tier == 4).ToList(), WorldMgr._Regions);
             Log.Info("Battlefront Manager", "Creating Lower Tier Campaign Manager", ConsoleColor.Cyan);
             WorldMgr.LowerTierCampaignManager = new LowerTierCampaignManager(RVRProgressionService._RVRProgressions.Where(x => x.Tier == 1).ToList(), WorldMgr._Regions);
+
+            if (Config.ResetBattlefrontsOnStartup)
+            {
+                Log.Info("Battlefront Manager", "ResetBattlefrontsOnStartup enabled - resetting battlefront progression", ConsoleColor.Cyan);
+                ResetBattlefrontProgressionsOnStartup();
+            }
+
             Log.Info("Battlefront Manager", "Getting Progression based upon rvr_progression.LastOpenedZone", ConsoleColor.Cyan);
             WorldMgr.UpperTierCampaignManager.GetActiveBattleFrontFromProgression();
             WorldMgr.LowerTierCampaignManager.GetActiveBattleFrontFromProgression();
@@ -157,8 +188,8 @@ namespace WorldServer
             WorldMgr.AttachCampaignsToRegions();
 
             Log.Info("Battlefront Manager", "Locking Battlefronts", ConsoleColor.Cyan);
-            WorldMgr.UpperTierCampaignManager.LockBattleFrontsAllRegions(4);
-            WorldMgr.LowerTierCampaignManager.LockBattleFrontsAllRegions(1);
+            WorldMgr.UpperTierCampaignManager.LockBattleFrontsAllRegions(4, Config.ResetBattlefrontsOnStartup);
+            WorldMgr.LowerTierCampaignManager.LockBattleFrontsAllRegions(1, Config.ResetBattlefrontsOnStartup);
 
             Log.Info("Battlefront Manager", "Opening Active battlefronts", ConsoleColor.Cyan);
             WorldMgr.UpperTierCampaignManager.OpenActiveBattlefront();

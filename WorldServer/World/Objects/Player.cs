@@ -4688,8 +4688,11 @@ namespace WorldServer.World.Objects
 
         #region Action Points
 
+        private const ushort ACTION_POINT_REGEN_HOLD = 2000;
+
         private int _actionPointTimer;
         private long _lastAPCheck = TCPManager.GetTimeStampMS();
+        private long _nextActionPointRegen;
 
         private ushort _actionPoints;
 
@@ -4722,6 +4725,15 @@ namespace WorldServer.World.Objects
 
         /// <summary><para>Adds the amount specified to the player's action points.</para>
         /// <para>Returns the change in action points.</para></summary>
+        private void HoldActionPointRegen()
+        {
+            _actionPointTimer = 0;
+
+            long nextRegen = TCPManager.GetTimeStampMS() + ACTION_POINT_REGEN_HOLD;
+            if (nextRegen > _nextActionPointRegen)
+                _nextActionPointRegen = nextRegen;
+        }
+
         public override int ModifyActionPoints(int amount)
         {
             int deltaAP;
@@ -4745,6 +4757,9 @@ namespace WorldServer.World.Objects
 
             ActionPoints = (ushort)(_actionPoints + deltaAP);
 
+            if (deltaAP < 0)
+                HoldActionPointRegen();
+
             return deltaAP;
         }
 
@@ -4756,6 +4771,7 @@ namespace WorldServer.World.Objects
                 return false;
 
             ActionPoints -= amount;
+            HoldActionPointRegen();
 
             return true;
         }
@@ -4776,6 +4792,12 @@ namespace WorldServer.World.Objects
 
         public void UpdateActionPoints(long tick)
         {
+            if (tick < _nextActionPointRegen)
+            {
+                _lastAPCheck = tick;
+                return;
+            }
+
             if (!AbtInterface.IsCasting() && !AbtInterface.IsOnGlobalCooldown())
             {
                 _actionPointTimer += (ushort)((tick - _lastAPCheck) * StsInterface.GetStatPercentageModifier(Stats.ActionPointRegen));

@@ -462,6 +462,10 @@ namespace WorldServer.World.Abilities
             if (constInfo.MinimumRank > _unitOwner.AdjustedLevel || constInfo.MinimumRenown > _unitOwner.RenownRank)
                 return false;
 
+            // Renown mastery tactics are rank-granted and do not require a tree slot unlock.
+            if (Array.IndexOf(RenownMasteryTactics, tacticEntry) >= 0)
+                return _abilitySet.Contains(tacticEntry);
+
             if (constInfo.MasteryTree == 0)
                 return true;
 
@@ -473,7 +477,8 @@ namespace WorldServer.World.Abilities
                     return _activeSkillsInTree[destTree, i] == 1;
             }
 
-            return false;
+            // Some renown-granted tactics can carry a mastery-tree marker but are not mastery-tree unlocks.
+            return _abilitySet.Contains(tacticEntry);
         }
 
         #endregion Validation
@@ -874,6 +879,7 @@ namespace WorldServer.World.Abilities
 
         private const byte MAX_TREE_COUNT = 3;
         private const byte MAX_TREE_ABILITIES = 7;
+        private const byte MAX_TREE_POINTS = 15;
 
         public bool MasteryChanged { get; set; }
         private readonly AbilityInfo[,] _masteryAbilities = new AbilityInfo[MAX_TREE_COUNT, MAX_TREE_ABILITIES];
@@ -882,6 +888,42 @@ namespace WorldServer.World.Abilities
         private readonly byte[,] _activeSkillsInTree = new byte[MAX_TREE_COUNT, MAX_TREE_ABILITIES];
 
         private byte[] _bonusMasteryPoints = { 0, 0, 0 };
+
+        private int GetInvestedTreePoints(int treeIndex)
+        {
+            int invested = _pointsInTree[treeIndex] - _bonusMasteryPoints[treeIndex];
+            return invested < 0 ? 0 : invested;
+        }
+
+        private int GetSavedInvestedTreePoints(int treeIndex)
+        {
+            if (_playerOwner?._Value?.MasterySkills == null)
+                return 0;
+
+            string[] saved = _playerOwner._Value.MasterySkills.Split(';');
+            if (saved.Length <= treeIndex)
+                return 0;
+
+            if (!int.TryParse(saved[treeIndex], out int parsed))
+                return 0;
+
+            if (parsed < 0)
+                return 0;
+
+            return Math.Min(MAX_TREE_POINTS, parsed);
+        }
+
+        private int GetEffectiveInvestedTreePoints(int treeIndex)
+        {
+            // Use whichever is higher so UI lockout holds both before and after local confirm/save.
+            return Math.Max(GetInvestedTreePoints(treeIndex), GetSavedInvestedTreePoints(treeIndex));
+        }
+
+        private byte GetDisplayTreePoints(int treeIndex)
+        {
+            // Tree UI should reflect invested points so bonus mastery doesn't block the final spend.
+            return (byte)Math.Min(MAX_TREE_POINTS, GetEffectiveInvestedTreePoints(treeIndex));
+        }
 
         // RB   4/9/2016    Need a way for ItemsInterface to update these values on demand
         /// <summary>
@@ -974,9 +1016,9 @@ namespace WorldServer.World.Abilities
             string[] temp = _playerOwner._Value.MasterySkills.Split(';');
 
             // RB   4/9/2016    Apply free mastery points from gear.
-            _pointsInTree[0] = (byte)(Convert.ToByte(temp[0]) + _bonusMasteryPoints[0]);
-            _pointsInTree[1] = (byte)(Convert.ToByte(temp[1]) + _bonusMasteryPoints[1]);
-            _pointsInTree[2] = (byte)(Convert.ToByte(temp[2]) + _bonusMasteryPoints[2]);
+            _pointsInTree[0] = (byte)(Math.Min(MAX_TREE_POINTS, Convert.ToByte(temp[0])) + _bonusMasteryPoints[0]);
+            _pointsInTree[1] = (byte)(Math.Min(MAX_TREE_POINTS, Convert.ToByte(temp[1])) + _bonusMasteryPoints[1]);
+            _pointsInTree[2] = (byte)(Math.Min(MAX_TREE_POINTS, Convert.ToByte(temp[2])) + _bonusMasteryPoints[2]);
 
             for (byte i = 0; i < 3; i++)
             {
@@ -993,10 +1035,8 @@ namespace WorldServer.World.Abilities
             // RB   5/23/2016   Do not save bonus mastery points
             for (byte i = 0; i < MAX_TREE_COUNT; i++)
             {
-                if ((_pointsInTree[i] - _bonusMasteryPoints[i]) < 0)
-                    masString += "0;";
-                else
-                    masString += (_pointsInTree[i] - _bonusMasteryPoints[i]) + ";";
+                int investedPoints = Math.Min(MAX_TREE_POINTS, GetInvestedTreePoints(i));
+                masString += investedPoints + ";";
             }
 
             for (byte i = 0; i < MAX_TREE_COUNT; ++i)
@@ -1080,11 +1120,7 @@ namespace WorldServer.World.Abilities
                 Out.WriteByte((byte)(i + 1));
                 Out.Fill(0, 4);
 
-                // RB   4/9/2016    If for whatever reason bonus mastery points push the tree above 15, cap them.
-                if (_pointsInTree[i] > 15)
-                    _pointsInTree[i] = 15;
-
-                Out.WriteByte(_pointsInTree[i]);
+                Out.WriteByte(GetDisplayTreePoints(i));
 
                 Out.WriteByte(2);
                 Out.Fill(0, 14);
@@ -1182,7 +1218,7 @@ namespace WorldServer.World.Abilities
                 Out.WriteByte((byte)pointsAvailable);
                 Out.Fill(0, 2);
                 Out.WriteByte((byte)(i + 1));
-                Out.WriteByte(_pointsInTree[i]);
+                Out.WriteByte(GetDisplayTreePoints(i));
                 Out.Fill(0, 3);
                 Out.WriteUInt32((uint)(pointsSpent * 2000));
                 Out.WriteUInt32(0);
@@ -1200,7 +1236,7 @@ namespace WorldServer.World.Abilities
             for (byte i = 0; i < MAX_TREE_COUNT; ++i)
             {
                 // Don't count bonus points as points spent.
-                points += _pointsInTree[i] - _bonusMasteryPoints[i];
+                points += Math.Min(MAX_TREE_POINTS, GetInvestedTreePoints(i));
 
                 for (byte j = 0; j < MAX_TREE_ABILITIES; j++)
                     points += _activeSkillsInTree[i, j];
@@ -1283,7 +1319,11 @@ namespace WorldServer.World.Abilities
             if (tree <= 3)
             {
                 if (!abInterface.AddPointToTree(tree))
+                {
+                    abInterface.ReloadMastery();
+                    abInterface.SendMasteryPointsUpdate();
                     return;
+                }
             }
             else if (tree <= 24)
             {
@@ -1308,12 +1348,17 @@ namespace WorldServer.World.Abilities
 
         public bool AddPointToTree(byte tree)
         {
-            if (_pointsInTree[tree - 1] >= 15)
+            int treeIndex = tree - 1;
+            if (treeIndex < 0 || treeIndex >= MAX_TREE_COUNT)
+                return false;
+
+            if (GetEffectiveInvestedTreePoints(treeIndex) >= MAX_TREE_POINTS)
             {
                 _playerOwner.SendClientMessage("You attempted to put more than 15 points into a mastery tree.");
                 return false;
             }
-            _pointsInTree[tree - 1]++;
+
+            _pointsInTree[treeIndex]++;
             return true;
         }
 

@@ -49,6 +49,10 @@ namespace WorldServer.Configs
 
         // Networking
         public int PacketCollateLength = 0;
+        public bool UseMythicActionCoverageTables = false;
+        public bool UseMythicAbilityGraphTables = false;
+        public bool MythicAbilityGraphOverrideExistingCommands = false;
+        public bool ResetBattlefrontsOnStartup = true;
 
 
         // RVR Configuration

@@ -1,0 +1,11 @@
+Pet Command Id,Pet Command,Icon Num
+0,none,0
+1,stay,33
+2,follow,30
+3,passive,31
+4,defensive,29
+5,aggressive,28
+6,attack,54
+7,release,0
+8,ability,0
+9,ability state,0

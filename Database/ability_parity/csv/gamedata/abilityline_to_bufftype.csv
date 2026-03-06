@@ -1,0 +1,9 @@
+Line Id,Type name,Client-side enumeration value,Buff Frame Red,Buff Frame Green,Buff Frame Blue
+1001,Hex,1,184,0,9
+1002,Curse,2,130,0,197
+1003,Cripple,3,0,167,12
+1004,Ail,4,104,186,255
+1005,Bolster,5,104,186,255
+1006,Augment,6,104,186,255
+1007,Bless,7,255,220,80
+1008,Enchant,8,104,186,255
