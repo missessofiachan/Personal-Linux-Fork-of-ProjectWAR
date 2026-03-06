@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Common;
 using FrameWork;
 using WorldServer.NetWork;
@@ -115,14 +115,53 @@ namespace WorldServer.World.Interfaces
                 tacList.Add(_myPlayer._Value.Tactic3);
             if (_myPlayer._Value.Tactic4 != 0 && !tacList.Contains(_myPlayer._Value.Tactic4))
                 tacList.Add(_myPlayer._Value.Tactic4);
+            if (_myPlayer._Value.Tactic5 != 0 && !tacList.Contains(_myPlayer._Value.Tactic5))
+                tacList.Add(_myPlayer._Value.Tactic5);
+            if (_myPlayer._Value.Tactic6 != 0 && !tacList.Contains(_myPlayer._Value.Tactic6))
+                tacList.Add(_myPlayer._Value.Tactic6);
+            if (_myPlayer._Value.Tactic7 != 0 && !tacList.Contains(_myPlayer._Value.Tactic7))
+                tacList.Add(_myPlayer._Value.Tactic7);
+            if (_myPlayer._Value.Tactic8 != 0 && !tacList.Contains(_myPlayer._Value.Tactic8))
+                tacList.Add(_myPlayer._Value.Tactic8);
 
             int maxAllowedTactics = GetMaxAllowedTactics();
+            int maxRenown = 2;
+            int maxTome = 1;
 
-            while (tacList.Count > maxAllowedTactics)
+            int careerCount = 0;
+            int renownCount = 0;
+            int tomeCount = 0;
+
+            List<ushort> validTactics = new List<ushort>();
+            foreach (ushort tactic in tacList)
             {
-                tacList.RemoveAt(tacList.Count - 1);
-                sendTacticUpdate = true;
+                if (tactic == 0 || validTactics.Contains(tactic)) continue;
+
+                if (AbilityMgr.RenownTacticEntries.Contains(tactic))
+                {
+                    if (renownCount < maxRenown)
+                    {
+                        validTactics.Add(tactic);
+                        renownCount++;
+                    }
+                    else sendTacticUpdate = true;
+                }
+                else
+                {
+                    if (careerCount < maxAllowedTactics)
+                    {
+                        validTactics.Add(tactic);
+                        careerCount++;
+                    }
+                    else if (tomeCount < maxTome)
+                    {
+                        validTactics.Add(tactic);
+                        tomeCount++;
+                    }
+                    else sendTacticUpdate = true;
+                }
             }
+            tacList = validTactics;
 
             foreach (NewBuff buff in _activeBuffs)
             {
@@ -218,7 +257,7 @@ namespace WorldServer.World.Interfaces
             }
 
             // Update the saved list for the server
-            for (int i = 0; i < 4; ++i)
+            for (int i = 0; i < 8; ++i)
                 _myPlayer._Value.SetTactic((byte)(i + 1), i < _activeTactics.Count ? _activeTactics[i] : (ushort)0);
 
             if (sendTacticUpdate)
@@ -237,18 +276,47 @@ namespace WorldServer.World.Interfaces
 
             List<NewBuff> removeList = new List<NewBuff>();
 
-            _myPlayer._Value.SetTactic(1, 0);
-            _myPlayer._Value.SetTactic(2, 0);
-            _myPlayer._Value.SetTactic(3, 0);
-            _myPlayer._Value.SetTactic(4, 0);
+            for (byte i = 1; i <= 8; i++)
+                _myPlayer._Value.SetTactic(i, 0);
 
             int maxAllowedTactics = GetMaxAllowedTactics();
+            int maxRenown = 2;
+            int maxTome = 1;
 
-            while (tacList.Count > maxAllowedTactics)
+            int careerCount = 0;
+            int renownCount = 0;
+            int tomeCount = 0;
+
+            List<ushort> validTactics = new List<ushort>();
+            foreach (ushort tactic in tacList)
             {
-                tacList.RemoveAt(tacList.Count - 1);
-                sendTacticUpdate = true;
+                if (tactic == 0 || validTactics.Contains(tactic)) continue;
+
+                if (AbilityMgr.RenownTacticEntries.Contains(tactic))
+                {
+                    if (renownCount < maxRenown)
+                    {
+                        validTactics.Add(tactic);
+                        renownCount++;
+                    }
+                    else sendTacticUpdate = true;
+                }
+                else
+                {
+                    if (careerCount < maxAllowedTactics)
+                    {
+                        validTactics.Add(tactic);
+                        careerCount++;
+                    }
+                    else if (tomeCount < maxTome)
+                    {
+                        validTactics.Add(tactic);
+                        tomeCount++;
+                    }
+                    else sendTacticUpdate = true;
+                }
             }
+            tacList = validTactics;
 
             foreach (var buff in _activeBuffs)
             {
@@ -352,7 +420,7 @@ namespace WorldServer.World.Interfaces
 
 
             // Update the saved list for the server
-            for (int i = 0; i < 4; ++i)
+            for (int i = 0; i < 8; ++i)
                 _myPlayer._Value.SetTactic((byte)(i + 1), i < _activeTactics.Count ? _activeTactics[i] : (ushort)0);
 
             if (sendTacticUpdate)
@@ -814,3 +882,7 @@ namespace WorldServer.World.Interfaces
         }
     }
 }
+
+
+
+

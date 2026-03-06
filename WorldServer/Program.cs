@@ -129,19 +129,9 @@ namespace WorldServer
                 Log.Error("Directory Check", "Zones directory does not exist");
                 ConsoleMgr.WaitAndExit(2000);
             }
-            if (!Directory.Exists("Scripts"))
-            {
-                Log.Error("Directory Check", "Scripts directory does not exist");
-                ConsoleMgr.WaitAndExit(2000);
-            }
             if (!Directory.Exists("World"))
             {
                 Log.Error("Directory Check", "World directory does not exist");
-                ConsoleMgr.WaitAndExit(2000);
-            }
-            if (!Directory.Exists("Abilities"))
-            {
-                Log.Error("Directory Check", "Abilities directory does not exist");
                 ConsoleMgr.WaitAndExit(2000);
             }
 

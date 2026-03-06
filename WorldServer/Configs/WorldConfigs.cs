@@ -25,7 +25,7 @@ namespace WorldServer.Configs
         public int RenownRate = 1;
         public int InfluenceRate = 1;
         public int RankCap = 40;
-        public int RenownCap = 40;
+        public int RenownCap = 100;
 
         // Crossrealming
         public bool ChatBetweenRealms = true;
@@ -34,11 +34,11 @@ namespace WorldServer.Configs
         // Area / NPC
         public bool CleanSpawns = true;
         public bool DiscoverAll = false;
-        public bool OpenRvR = true;
+        public bool OpenRvR = false;
 
         // Loading
         public bool PreloadAllCharacters = true;
-        public string Motd = "Welcome to WAR: Apocalypse, Max Level 32, Max RR 32.";
+        public string Motd = "Welcome to WAR";
         public string RegionOcclusionFolder = "los/";
         public string ZoneFolder = "zones/";
 
@@ -49,8 +49,8 @@ namespace WorldServer.Configs
 
         // Networking
         public int PacketCollateLength = 0;
-        public bool UseMythicActionCoverageTables = false;
-        public bool UseMythicAbilityGraphTables = false;
+        public bool UseMythicActionCoverageTables = true;
+        public bool UseMythicAbilityGraphTables = true;
         public bool MythicAbilityGraphOverrideExistingCommands = false;
         public bool ResetBattlefrontsOnStartup = true;
 

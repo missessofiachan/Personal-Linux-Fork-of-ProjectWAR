@@ -237,7 +237,7 @@ namespace WorldServer.World.Battlefronts.Keeps
             }
             else
             {
-                _logger.Error($"Could not find Guild Claim Objective for {Info.Name}");
+                _logger.Debug($"Could not find Guild Claim Objective for {Info.Name}");
             }
 
             PlayerSpawnLocation = BattleFrontService._PlayerKeepSpawnPoints.SingleOrDefault(x => x.Key == Info.KeepId);

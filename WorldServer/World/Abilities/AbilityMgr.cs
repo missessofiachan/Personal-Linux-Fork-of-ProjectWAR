@@ -48,14 +48,26 @@ namespace WorldServer.World.Abilities
         private static readonly Dictionary<ushort, ushort> MythicCsvAbilityEffects = new Dictionary<ushort, ushort>();
         private static readonly Dictionary<ushort, ushort[]> MythicCsvEffectLinks = new Dictionary<ushort, ushort[]>();
 
-        private const ushort RenownEmpoweredMasteryEntry = 27870;
-        private const ushort RenownEternalMasteryEntry = 27871;
-        private const ushort RenownInfiniteMasteryEntry = 27872;
-        private const ushort RenownAugmentVigorEntry = 27873;
+        internal const ushort RenownEmpoweredMasteryEntry = 27870;
+        internal const ushort RenownEternalMasteryEntry = 27871;
+        internal const ushort RenownInfiniteMasteryEntry = 27872;
+        internal const ushort RenownAugmentVigorEntry = 27873;
         private const ushort RenownSilentBonusRankOneEntry = 22275;
         private const ushort RenownSilentBonusRankTwoEntry = 27875;
         private const ushort RenownSilentActionPointBonus = 50;
         private const ushort ImDaBiggestBuffEntry = 734;
+
+        /// <summary>
+        /// The 4 slottable renown tactics (3 granted at RR90, 1 at RR100).
+        /// Used by TacticsInterface to classify tactic slots correctly.
+        /// </summary>
+        public static readonly HashSet<ushort> RenownTacticEntries = new HashSet<ushort>
+        {
+            RenownEmpoweredMasteryEntry,
+            RenownEternalMasteryEntry,
+            RenownInfiniteMasteryEntry,
+            RenownAugmentVigorEntry
+        };
 
         public static void ReloadAbilities()
         {
@@ -420,7 +432,7 @@ namespace WorldServer.World.Abilities
                             if (desiredCommand != null)
                                 desiredCommand.DamageInfo = abDmgHeal;
                             else
-                                Log.Error("AbilityMgr",
+                                Log.Debug("AbilityMgr",
                                     "Failed Load: " + abDmgHeal.Entry + " " + abDmgHeal.ParentCommandID + " " + abDmgHeal.ParentCommandSequence);
 
                             if (!damageTypeDictionary.ContainsKey(abDmgHeal.Entry))
@@ -830,7 +842,7 @@ namespace WorldServer.World.Abilities
                 }
                 else
                 {
-                    Log.Error("Entry: " + cAb.ProtoEntry, cAb.AbilityId + " ~ Failed loading");
+                    Log.Debug("Entry: " + cAb.ProtoEntry, cAb.AbilityId + " ~ Failed loading (ability not found in AbilityInfo)");
                 }
             }
 

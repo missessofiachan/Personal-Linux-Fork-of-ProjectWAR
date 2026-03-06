@@ -402,7 +402,7 @@
     <Compile Include="Managers\CommandMgr.cs" />
     <Compile Include="Managers\Commands\BaseCommands.cs" />
     <Compile Include="Managers\LootsMgr.cs" />
-    <Compile Include="Managers\ScriptsManager.cs" />
+
     <Compile Include="NetWork\Handler\AuctionHandlers.cs" />
     <Compile Include="NetWork\Handler\AuthentificationHandlers.cs" />
     <Compile Include="NetWork\Handler\CharacterHandlers.cs" />
@@ -775,7 +775,7 @@
     <Compile Include="World\Scripting\GameObject\MailBoxScript.cs" />
     <Compile Include="World\Scripting\GeneralScriptAttributes.cs" />
     <Compile Include="World\Scripting\Items\PotionScript.cs" />
-    <Compile Include="World\Scripting\PacketSenderScript.cs" />
+    <Compile Include="World\Scripting\CareerPackages.cs" />
     <Compile Include="World\WorldSettings\WorldSettingsMgr.cs" />
   </ItemGroup>
   <ItemGroup>

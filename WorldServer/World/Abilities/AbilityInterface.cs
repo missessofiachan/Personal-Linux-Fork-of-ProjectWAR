@@ -1,4 +1,4 @@
-﻿//#define ABILITY_DEVELOPMENT
+//#define ABILITY_DEVELOPMENT
 
 using FrameWork;
 using GameData;
@@ -1131,7 +1131,7 @@ namespace WorldServer.World.Abilities
                 Out.WriteByte((byte)(0x0D + i));
                 Out.WriteByte(6);
                 Out.Fill(0, 5);
-                Out.WriteByte(i == 2 ? (byte)0xFC : (byte)0x0F);
+                Out.WriteByte((byte)0x0F);
                 Out.Fill(0, 5);
                 _playerOwner.SendPacket(Out);
             }
@@ -1214,7 +1214,7 @@ namespace WorldServer.World.Abilities
                 Out.WriteByte(7);
                 Out.WriteByte(1);
                 Out.WriteByte(1);
-                Out.WriteByte(1);
+                Out.WriteByte((byte)pointsSpent);
                 Out.WriteByte((byte)pointsAvailable);
                 Out.Fill(0, 2);
                 Out.WriteByte((byte)(i + 1));

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using SystemData;
 using Common;
 using FrameWork;
@@ -24,9 +25,15 @@ namespace WorldServer.World.Interfaces
         private readonly List<ushort> _activeIds = new List<ushort>();
 
         private readonly List<ushort> _activeAbilities = new List<ushort>();
+        private readonly List<ushort> _tacticBuffIds = new List<ushort>();
         private readonly List<Tuple<string, byte, int>> _savedCommandInfo = new List<Tuple<string, byte, int>>(); 
 
         private Player _player;
+
+        public bool HasRenownAbility(ushort spellId)
+        {
+            return _passiveIds.Contains(spellId) || _activeIds.Contains(spellId) || _activeAbilities.Contains(spellId) || _tacticBuffIds.Contains(spellId);
+        }
 
         public RenownInterface()
         {
@@ -157,8 +164,14 @@ namespace WorldServer.World.Interfaces
                 case "AddBuff":
                     BuffInfo buffInfo = AbilityMgr.GetBuffInfo((ushort) value);
                     if (buffInfo == null)
-                        _player.SendClientMessage("The requested ability is not implemented.");
-                    else _player.BuffInterface.QueueBuff(new BuffQueueInfo(_player, _player.EffectiveLevel, buffInfo));
+                    {
+                        _player.SendClientMessage("The requested renown buff is not implemented (id: " + value + ").");
+                    }
+                    else
+                    {
+                        _tacticBuffIds.Add((ushort)value);
+                        _player.BuffInterface.QueueBuff(new BuffQueueInfo(_player, _player.EffectiveLevel, buffInfo));
+                    }
                     break;
             }
         }
@@ -185,6 +198,7 @@ namespace WorldServer.World.Interfaces
                     _player.AbtInterface.RemoveGrantedAbility((ushort)cmdInfo.Item3);
                     break;
                 case "AddBuff":
+                    _tacticBuffIds.Remove((ushort)cmdInfo.Item3);
                     _player.BuffInterface.RemoveBuffByEntry((ushort)cmdInfo.Item3);
                     break;
                 default:
@@ -196,16 +210,19 @@ namespace WorldServer.World.Interfaces
 
         private void Clear()
         {
-            // Remove actives from skillbar
-            PacketOut Out = new PacketOut((byte)Opcodes.F_CHARACTER_INFO, 32);
+            if (_activeAbilities.Count > 0)
+            {
+                // Remove actives from skillbar
+                PacketOut Out = new PacketOut((byte)Opcodes.F_CHARACTER_INFO, 32);
 
-            Out.WriteByte(0x0B); 
-            Out.WriteByte((byte)_activeAbilities.Count);
+                Out.WriteByte(0x0B); 
+                Out.WriteByte((byte)_activeAbilities.Count);
 
-            foreach (ushort abilityID in _activeAbilities)
-                Out.WriteUInt16(abilityID);
+                foreach (ushort abilityID in _activeAbilities.ToList())
+                    Out.WriteUInt16(abilityID);
 
-            _player.SendPacket(Out);
+                _player.SendPacket(Out);
+            }
 
             ReverseAllCommands();
             _activeAbilities.Clear();
@@ -256,6 +273,7 @@ namespace WorldServer.World.Interfaces
             _passiveIds.Clear();
             _activeIds.Clear();
             _activeAbilities.Clear();
+            _tacticBuffIds.Clear();
             _savedCommandInfo.Clear();
         }
 
@@ -318,7 +336,22 @@ namespace WorldServer.World.Interfaces
 
             //(byte)(Trained[(tree - 9), Skillpos - 1] > 0 ? 1 : 0)
 
-            Save();
+            // Monotonic state generation: DO NOT call the global Save() method here 
+            // because it triggers race conditions with multiple threaded purchases.
+            // Instead, we build the sorted explicit string locally and assign it directly.
+            string renownString = "";
+            for (int i = 0; i < 7; i++)
+            {
+                for (int y = 0; y < 20; y++)
+                {
+                    if (_trained[i][y] > 0)
+                        renownString += "" + i + ":" + y + ";";
+                }
+            }
+            
+            _player._Value.RenownSkills = renownString;
+            _player._Value.Dirty = true;
+            CharMgr.Database.SaveObject(_player._Value);
 
             List<ushort> lastActives = new List<ushort>(_activeAbilities);
 
@@ -384,6 +417,8 @@ namespace WorldServer.World.Interfaces
 
             CharMgr.Database.SaveObject(_player._Value);
 
+            SendRenownAbilityInfo();
+
             PacketOut Out = new PacketOut((byte)Opcodes.F_CAREER_PACKAGE_UPDATE, 20);
             Out.WriteByte(9);
             Out.WriteByte(1);
@@ -395,8 +430,6 @@ namespace WorldServer.World.Interfaces
             Out.WriteUInt32(0);
 
             _player.SendPacket(Out);
-
-            SendRenownAbilityInfo();
         }
 
         public void SendRenownAbilityInfo()

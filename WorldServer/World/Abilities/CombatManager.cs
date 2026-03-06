@@ -1288,8 +1288,7 @@ namespace WorldServer.World.Abilities
                 }
 
                 // Optional debug scaling for targeted players.
-                if (target is Player plr && Math.Abs(plr.DebugDamageScaler - 1f) > 0.001f)
-                    damageInfo.Damage *= plr.DebugDamageScaler;
+
 
 
                 if (damageInfo.StatUsed > 0)

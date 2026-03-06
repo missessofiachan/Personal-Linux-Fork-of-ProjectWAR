@@ -25,6 +25,6 @@
     <Error>true</Error>
     <Debug>true</Debug>
     <Tcp>true</Tcp>
-    <Dump>false</Dump>
+    <Dump>true</Dump>
   </LogLevel>
 </AccountConfigs>

@@ -175,7 +175,7 @@ namespace WorldServer.NetWork.Handler
             }
             if (Jump.Type >= 4 && Jump.Type <= 6)
             {
-                if(!WorldMgr.InstanceMgr.ZoneIn(cclient.Plr,Jump.Type,Jump));
+                if (!WorldMgr.InstanceMgr.ZoneIn(cclient.Plr, Jump.Type, Jump))
                     SendJumpFailed(cclient.Plr);
                 return;
             }

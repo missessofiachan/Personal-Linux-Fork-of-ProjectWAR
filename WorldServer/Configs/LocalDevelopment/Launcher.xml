@@ -21,6 +21,6 @@
   </LogLevel>
   <PatcherFilesPath>PatcherFilesDirectory</PatcherFilesPath>
   <TempFilesPath>TempFilesDirectory</TempFilesPath>
-  <ServerState>CLOSED</ServerState>
-  <PatchNotes>Welcome to WAR: Apocalypse</PatchNotes>
+  <ServerState>OPEN</ServerState>
+  <PatchNotes>Welcome to WAR</PatchNotes>
 </LauncherConfig>

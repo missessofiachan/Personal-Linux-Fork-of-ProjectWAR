@@ -11,9 +11,9 @@
     <Successs>true</Successs>
     <Notice>true</Notice>
     <Error>true</Error>
-    <Debug>false</Debug>
-    <Tcp>false</Tcp>
-    <Dump>false</Dump>
+    <Debug>true</Debug>
+    <Tcp>true</Tcp>
+    <Dump>true</Dump>
   </LogLevel>
   <CharacterDatabase>
     <Server>127.0.0.1</Server>
@@ -58,7 +58,7 @@
   <DiscoverAll>false</DiscoverAll>
   <OpenRvR>true</OpenRvR>
   <PreloadAllCharacters>true</PreloadAllCharacters>
-  <Motd>Welcome WAR: Apocalypse</Motd>
+  <Motd>Welcome WAR</Motd>
   <RegionOcclusionFolder>los/</RegionOcclusionFolder>
   <ZoneFolder>zones/</ZoneFolder>
   <EnableAPI>true</EnableAPI>

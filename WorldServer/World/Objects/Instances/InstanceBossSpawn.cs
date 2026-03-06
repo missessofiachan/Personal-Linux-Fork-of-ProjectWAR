@@ -173,15 +173,20 @@ namespace WorldServer.World.Objects.Instances
                 }
             }
 
-            EvtInterface.AddEvent(ApplyDelayedLockout, 40000, 1);
+            EvtInterface.AddEvent(ApplyDelayedLockout, 5000, 1);
         }
 
         private void ApplyDelayedLockout()
         {
-            foreach (var player in Player._Players.Where(x=>x.InstanceID == InstanceID.ToString()))
+            if (Instance == null)
+                return;
+
+            string instanceKey = Instance.ZoneID + ":" + Instance.ID;
+
+            foreach (var player in Player._Players.Where(x => x.InstanceID == instanceKey).ToList())
             {
                 Instance.ApplyLockout(new List<Player> { player });
-                player.SendClientMessage($"LOCKOUT applied..");
+                player.SendClientMessage("You have been given an instance lockout timer.");
             }
         }
 

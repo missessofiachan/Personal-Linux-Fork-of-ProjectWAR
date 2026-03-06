@@ -46,7 +46,7 @@ namespace WorldServer.World.Battlefronts.Keeps
                     if (proto == null)
                     {
                         if ((realm == Realms.REALMS_REALM_ORDER ? Info.OrderId : Info.DestroId) != 0)
-                            Log.Notice("KeepNPC", "No FlagGuard Proto (" + (realm == Realms.REALMS_REALM_ORDER ? Info.OrderId : Info.DestroId) + ") for keep id " + Info.KeepId);
+                            Log.Debug("KeepNPC", "No FlagGuard Proto (" + (realm == Realms.REALMS_REALM_ORDER ? Info.OrderId : Info.DestroId) + ") for keep id " + Info.KeepId);
                         return;
                     }
                     _logger.Trace($"Spawning Guard {proto.Name} ({proto.Entry})");

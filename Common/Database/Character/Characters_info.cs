@@ -296,6 +296,18 @@ namespace Common
         [DataElement]
         public ushort Tactic4 { get; set; }
 
+        [DataElement]
+        public ushort Tactic5 { get; set; }
+
+        [DataElement]
+        public ushort Tactic6 { get; set; }
+
+        [DataElement]
+        public ushort Tactic7 { get; set; }
+
+        [DataElement]
+        public ushort Tactic8 { get; set; }
+
         public List<ushort> GetTactics()
         {
             List<ushort> tacList = new List<ushort> { Tactic1 };
@@ -306,6 +318,14 @@ namespace Common
                 tacList.Add(Tactic3);
             if (Tactic4 != 0)
                 tacList.Add(Tactic4);
+            if (Tactic5 != 0)
+                tacList.Add(Tactic5);
+            if (Tactic6 != 0)
+                tacList.Add(Tactic6);
+            if (Tactic7 != 0)
+                tacList.Add(Tactic7);
+            if (Tactic8 != 0)
+                tacList.Add(Tactic8);
 
             return tacList;
         }
@@ -331,6 +351,26 @@ namespace Common
 
                 case 4:
                     Tactic4 = value;
+                    Dirty = true;
+                    break;
+
+                case 5:
+                    Tactic5 = value;
+                    Dirty = true;
+                    break;
+
+                case 6:
+                    Tactic6 = value;
+                    Dirty = true;
+                    break;
+
+                case 7:
+                    Tactic7 = value;
+                    Dirty = true;
+                    break;
+
+                case 8:
+                    Tactic8 = value;
                     Dirty = true;
                     break;
             }

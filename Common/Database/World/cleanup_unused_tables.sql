@@ -1,0 +1,9 @@
+DROP TABLE IF EXISTS `ability`;
+DROP TABLE IF EXISTS `abilitybin`;
+DROP TABLE IF EXISTS `abilitycomponentbin`;
+DROP TABLE IF EXISTS `abilitycomponentxcomponent`;
+DROP TABLE IF EXISTS `abilityexpression`;
+DROP TABLE IF EXISTS `abilityrequirmentbin`;
+DROP TABLE IF EXISTS `abilityupgradebin`;
+DROP TABLE IF EXISTS `abilityupgradeentry`;
+DROP TABLE IF EXISTS `itemability`;

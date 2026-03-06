@@ -760,8 +760,8 @@ namespace WorldServer.World.Objects
                 StsInterface.SendRenownStats();
                 SendRealmBonus();
                 SendInited();
-                TacInterface.HandleTactics(_Value.GetTactics());
-                TacInterface.SendTactics();
+                // Moved to end of StartInit
+
 
                 /*SendUpdatehv();// tempary fix for hunters vale pq*/
 
@@ -773,7 +773,29 @@ namespace WorldServer.World.Objects
                 if (GldInterface.IsInGuild())
                     GldInterface.Guild.SendGuildInfo(this);
 
-                WorldMgr.GeneralScripts.OnWorldPlayerEvent("SEND_PACKAGES", this, null);
+                if (WorldServer.World.Scripting.CareerPackages.Packets.TryGetValue(Info.Career, out var packages))
+                {
+                    foreach (var package in packages)
+                    {
+                        PacketOut Out = new PacketOut(package.Opcode);
+                        Out.Write(package.Data, 3, package.Data.Length - 3);
+                        SendPacket(Out);
+                    }
+                }
+
+                if (Info.FirstConnect && GmLevel == 1)
+                {
+                    Info.FirstConnect = false;
+                    if (!IsBanned)
+                    {
+                        if (WorldServer.World.Scripting.CareerPackages.Intros.TryGetValue(Info.Career, out var intro))
+                        {
+                            PacketOut Out = new PacketOut(intro.Opcode);
+                            Out.Write(intro.Data, 3, intro.Data.Length - 3);
+                            SendPacket(Out);
+                        }
+                    }
+                }
 
                 // Zaru: here it is always: initialized = false
                 //if (!_initialized)
@@ -829,6 +851,8 @@ namespace WorldServer.World.Objects
                 AbtInterface.SendAbilityLevels();
                 AbtInterface.ReloadMastery();
                 AbtInterface.SendMasteryPointsUpdate();
+                TacInterface.HandleTactics(_Value.GetTactics());
+                TacInterface.SendTactics();
 
                 SendClientData();
 
@@ -1302,16 +1326,11 @@ namespace WorldServer.World.Objects
 
         private long _lastExileWarned;
 
-#if !DEBUG
         private int _throttleCount;
         private long _lastMessageTime;
-#endif
 
         public bool ShouldThrottle()
         {
-#if DEBUG
-            return false;
-#else
             if (IsBanned)
             {
                 if (_lastExileWarned + 30 < TCPManager.GetTimeStamp())
@@ -1363,7 +1382,6 @@ namespace WorldServer.World.Objects
             }
 
             return false;
-#endif
         }
 
         public bool BlocksChatFrom(Player sender)
@@ -3750,10 +3768,7 @@ namespace WorldServer.World.Objects
         /// <remarks>The scaler is hidden to player, lower than 1 if debuffed (intended feature)</remarks>
         public volatile float WarcampFarmScaler = 1f;
 
-        /// <summary>
-        /// Configurable scalar for debugging or special-case damage tuning.
-        /// </summary>
-        public volatile float DebugDamageScaler = 1f;
+
 
         /// <summary>
         /// Provides an opportunity for this unit to modify incoming ability damage from enemies.
@@ -4633,20 +4648,20 @@ namespace WorldServer.World.Objects
 
         public byte GetCareerTacticSlots()
         {
-            var slots = Level > 10 ? Level / 10 : 0;
-            if (slots > 4)
-                slots = 4;
+            var slots = Level / 10;
+            if (slots < 1) slots = 1;
+            if (slots > 4) slots = 4;
             return (byte)slots;
         }
 
         public byte GetRenownTacticSlots()
         {
-            return Level >= 40 ? (byte)2 : (byte)0;
+            return 2;
         }
 
         public byte GetTomeTacticSlots()
         {
-            return Level >= 40 ? (byte)1 : (byte)0;
+            return 1;
         }
 
         public int GetMaxTacticSlots()

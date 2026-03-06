@@ -28,6 +28,7 @@ namespace WorldServer.Services.World
 
             return _RegionCells[RegionId][X, Y];
         }
+
         public static CellSpawns[,] GetCells(ushort RegionId)
         {
             if (!_RegionCells.ContainsKey(RegionId))
@@ -44,7 +45,7 @@ namespace WorldServer.Services.World
             if (Program.Config.CleanSpawns)
                 RemoveDoubleSpawns();
         }
-        
+
         public static void LoadRegionSpawns()
         {
             long InvalidSpawns = 0;
@@ -60,7 +61,7 @@ namespace WorldServer.Services.World
                     Spawn.Proto = CreatureService.GetCreatureProto(Spawn.Entry);
                     if (Spawn.Proto == null)
                     {
-                        Log.Notice("LoadRegionSpawns", "Invalid Creature Proto (" + Spawn.Entry + "), spawn Guid(" + Spawn.Guid + ")");
+                        Log.Debug("LoadRegionSpawns", "Invalid Creature Proto (" + Spawn.Entry + "), spawn Guid(" + Spawn.Guid + ")");
                         ++InvalidSpawns;
                         continue;
                     }
@@ -72,7 +73,7 @@ namespace WorldServer.Services.World
                         Y = (ushort)(Spawn.WorldY >> 12);
 
                         GetRegionCell(Info.Region, X, Y).AddSpawn(Spawn);
-                        
+
                         if (!RegionCount.ContainsKey(Info.Name))
                             RegionCount.Add(Info.Name, 0);
 
@@ -80,10 +81,9 @@ namespace WorldServer.Services.World
                     }
                     else
                     {
-                        Log.Notice("LoadRegionSpawns", "ZoneId (" + Spawn.ZoneId + ") invalid, Spawn Guid(" + Spawn.Guid + ")");
+                        Log.Debug("LoadRegionSpawns", "ZoneId (" + Spawn.ZoneId + ") invalid, Spawn Guid(" + Spawn.Guid + ")");
                         ++InvalidSpawns;
                     }
-                    
                 }
             }
 
@@ -99,7 +99,7 @@ namespace WorldServer.Services.World
 
                     if (Spawn.Proto == null)
                     {
-                        Log.Notice("LoadRegionSpawns", "Invalid GameObject Proto (" + Spawn.Entry + "), spawn Guid(" + Spawn.Guid + ")");
+                        Log.Debug("LoadRegionSpawns", "Invalid GameObject Proto (" + Spawn.Entry + "), spawn Guid(" + Spawn.Guid + ")");
                         ++InvalidSpawns;
                         continue;
                     }
@@ -119,14 +119,14 @@ namespace WorldServer.Services.World
                     }
                     else
                     {
-                        Log.Notice("LoadRegionSpawns", "ZoneId (" + Spawn.ZoneId + ") invalid, Spawn Guid(" + Spawn.Guid + ")");
+                        Log.Debug("LoadRegionSpawns", "ZoneId (" + Spawn.ZoneId + ") invalid, Spawn Guid(" + Spawn.Guid + ")");
                         ++InvalidSpawns;
                     }
                 }
             }
 
             if (InvalidSpawns > 0)
-                Log.Notice("LoadRegionSpawns", "[" + InvalidSpawns + "] Invalid Spawns");
+                Log.Debug("LoadRegionSpawns", "[" + InvalidSpawns + "] Invalid Spawns");
 
             foreach (KeyValuePair<string, int> Counts in RegionCount)
                 Log.Debug("Region", "[" + Counts.Key + "] : " + Counts.Value);
@@ -202,7 +202,6 @@ namespace WorldServer.Services.World
                 Log.Info("Spawns", "DELETE FROM creature_spawns WHERE Guid in " + L + ";");
                 Database.ExecuteNonQuery("DELETE FROM creature_spawns WHERE Guid in " + L + ";");
             }
-
 
             for (i = 0; i < 255; ++i)
             {

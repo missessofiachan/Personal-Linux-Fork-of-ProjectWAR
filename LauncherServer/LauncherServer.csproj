@@ -138,11 +138,14 @@
   <ItemGroup>
     <Content Include="launcher.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="mythloginserviceconfig.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">
-    <MakeDir Directories="$(TargetDir)PatcherFilesDirectory\data.myp" />
-    <Copy SourceFiles="..\Scripts\LocalDevelopment\mythloginserviceconfig.xml" DestinationFolder="$(TargetDir)PatcherFilesDirectory\data.myp" />
     <MakeDir Directories="$(TargetDir)Configs" />
-    <Copy SourceFiles="..\Scripts\LocalDevelopment\mythloginserviceconfig.xml" DestinationFolder="$(TargetDir)Configs" />
+    <Copy SourceFiles="mythloginserviceconfig.xml" DestinationFolder="$(TargetDir)Configs" />
   </Target>
 </Project>

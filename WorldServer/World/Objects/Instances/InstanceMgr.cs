@@ -47,7 +47,7 @@ namespace WorldServer.World.Objects.Instances
             {
                 foreach (KeyValuePair<ushort, Instance> ii in _instances)
                 {
-                    if (ii.Value.ZoneID == zoneID)
+                    if (ii.Value.Info.Entry == II.Entry)
                     {
                         // solo
                         if (player.PriorityGroup == null)
