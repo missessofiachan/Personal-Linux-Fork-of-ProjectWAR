@@ -9,10 +9,10 @@ namespace WorldServer.World.Objects.Instances
         uint bossId;
         Instance Instance;
         
-        public InstanceSpawn(Creature_spawn spawn, uint bossId,Instance instance):base(spawn)
+        public InstanceSpawn(Creature_spawn spawn, uint spawnGroupId, uint bossId, Instance instance) : base(spawn)
         {
-            instanceGroupSpawnId = instanceGroupSpawnId;
-            bossId = bossId;
+            instanceGroupSpawnId = spawnGroupId;
+            this.bossId = bossId;
             Instance = instance;
             EvtInterface.AddEventNotify(EventName.OnEnterCombat, OnEnterCombat);
             EvtInterface.AddEventNotify(EventName.OnLeaveCombat, OnLeaveCombat);
@@ -45,9 +45,16 @@ namespace WorldServer.World.Objects.Instances
             
         }
 
+        protected override void SetDeath(Unit killer)
+        {
+            base.SetDeath(killer);
+
+            Instance?.OnInstanceMobDeath(this);
+        }
+
         public InstanceSpawn RezInstanceSpawn()
         {
-            InstanceSpawn newCreature = new InstanceSpawn(Spawn, bossId, Instance);
+            InstanceSpawn newCreature = new InstanceSpawn(Spawn, instanceGroupSpawnId, bossId, Instance);
             Region.AddObject(newCreature, Spawn.ZoneId);
             Destroy();
             return newCreature;

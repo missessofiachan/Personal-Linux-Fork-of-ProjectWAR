@@ -7114,19 +7114,19 @@ namespace WorldServer.World.Objects
 
         public bool HasLockout(ushort zoneId, uint bossId)
         {
-            string lockout = _Value.GetLockout(zoneId);
-            if (lockout == null)
+            if (bossId == 0)
                 return false;
 
-            if (lockout.Contains(bossId.ToString()))
-                return true;
+            string lockout = _Value.GetLockout(zoneId);
+            if (string.IsNullOrWhiteSpace(lockout))
+                return false;
 
-            //var split = lockout.Split(':');
-            //for (int i = 2; i < split.Length; i++)
-            //{
-            //	if (uint.Parse(split[i]).Equals(BossId))
-            //		return true;
-            //}
+            string[] split = lockout.Split(':');
+            for (int i = 2; i < split.Length; i++)
+            {
+                if (uint.TryParse(split[i], out uint parsedBossId) && parsedBossId == bossId)
+                    return true;
+            }
 
             return false;
         }

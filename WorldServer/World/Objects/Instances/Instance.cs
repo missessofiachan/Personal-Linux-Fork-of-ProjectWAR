@@ -279,33 +279,43 @@ namespace WorldServer.World.Objects.Instances
 
 		public void ApplyLockout(List<Player> subGroup)
 		{
+            if (CurrentBossId == 0 || subGroup == null || subGroup.Count == 0)
+                return;
+
+            int nextResetTimestamp = GetNextServerMidnightTimestamp();
+            string nextLockoutId = "~" + ZoneID + ":" + nextResetTimestamp;
+            HashSet<uint> bossesKilled = ParseBossList(Lockout?.Bosseskilled);
+            bossesKilled.Add(CurrentBossId);
+            string mergedBossesKilled = string.Join(":", bossesKilled.OrderBy(x => x));
+
             if (Lockout == null) // instance hasn't got any lockouts
 			{
 				Lockout = new Instance_Lockouts
 				{
-					InstanceID = "~" + ZoneID + ":" + (TCPManager.GetTimeStamp() + Info.LockoutTimer * 60),
-					Bosseskilled = CurrentBossId.ToString()
+					InstanceID = nextLockoutId,
+					Bosseskilled = mergedBossesKilled
 				};
-				InstanceService._InstanceLockouts.Add(Lockout.InstanceID, Lockout);
+				InstanceService._InstanceLockouts[Lockout.InstanceID] = Lockout;
 				Lockout.Dirty = true;
 				WorldMgr.Database.AddObject(Lockout);
-                InstanceService.SaveLockoutInstanceID(ZoneID + ":" + ID, Lockout);
 			}
 			else // instance has got already lockouts
 			{
-                List<string> bossList = Lockout.Bosseskilled.Split(':').Distinct().ToList();
-                if (!bossList.Contains(CurrentBossId.ToString()))
-                    bossList.Add(CurrentBossId.ToString());
-                Lockout.Bosseskilled = string.Empty;
-                foreach (string boss in bossList)
-                    Lockout.Bosseskilled += ":" + boss;
-                if (Lockout.Bosseskilled.StartsWith(":"))
-                    Lockout.Bosseskilled = Lockout.Bosseskilled.Substring(1);
+                string oldLockoutId = Lockout.InstanceID;
+                Lockout.InstanceID = nextLockoutId;
+                Lockout.Bosseskilled = mergedBossesKilled;
+
+                if (!string.IsNullOrEmpty(oldLockoutId) && oldLockoutId != Lockout.InstanceID)
+                    InstanceService._InstanceLockouts.Remove(oldLockoutId);
+
+                InstanceService._InstanceLockouts[Lockout.InstanceID] = Lockout;
                 Lockout.Dirty = true;
 				WorldMgr.Database.SaveObject(Lockout);
 			}
 
-			foreach (Player pl in subGroup)
+            InstanceService.SaveLockoutInstanceID(ZoneID + ":" + ID, Lockout);
+
+			foreach (Player pl in subGroup.Where(x => x != null))
 			{
 				pl._Value.AddLockout(Lockout);
 				pl.SendLockouts();
@@ -314,14 +324,8 @@ namespace WorldServer.World.Objects.Instances
 		
 		private void LoadBossSpawns()
         {
-            List<uint> deadbossIds = new List<uint>();
+            HashSet<uint> deadbossIds = ParseDeadBossIds();
             List<uint> spawnedBossIds = new List<uint>();
-
-            if (Lockout != null)
-				for (int i = 0; i < Lockout.Bosseskilled.Split(':').Count();i++)
-				{
-					deadbossIds.Add(uint.Parse(Lockout.Bosseskilled.Split(':')[i]));
-				}
 			
             InstanceService._InstanceBossSpawns.TryGetValue(Info.Entry, out List<Instance_Boss_Spawn> Obj);
 			
@@ -627,6 +631,8 @@ namespace WorldServer.World.Objects.Instances
                     if (IS == null)
                         return;
 
+                    IS.InstanceGroupSpawnId = obj.SpawnGroupID;
+
                     if (obj.SpawnGroupID > 0)
                     {
                         _BossSpawns.TryGetValue(obj.SpawnGroupID, out List<InstanceBossSpawn> spawns);
@@ -646,12 +652,7 @@ namespace WorldServer.World.Objects.Instances
         {
             InstanceService._InstanceSpawns.TryGetValue(ZoneID, out List<Instance_Spawn> Obj);
 
-            List<uint> deadbossIds = new List<uint>();
-            if (Lockout != null)
-                for (int i = 0; i < Lockout.Bosseskilled.Split(';').Count(); i++)
-                {
-                    deadbossIds.Add(uint.Parse(Lockout.Bosseskilled.Split(';')[i].Split(':')[1]));
-                }
+            HashSet<uint> deadbossIds = ParseDeadBossIds();
 
             if (Obj == null)
                 return;
@@ -681,7 +682,7 @@ namespace WorldServer.World.Objects.Instances
                     spawn.ZoneId = obj.ZoneID;
                     spawn.Enabled = 1;
 					
-                    InstanceSpawn IS = new InstanceSpawn(spawn, obj.ConnectedbossId,this);
+                    InstanceSpawn IS = new InstanceSpawn(spawn, obj.SpawnGroupID, obj.ConnectedbossId, this);
 
                     if (obj.SpawnGroupID > 0)
                     {
@@ -792,10 +793,73 @@ namespace WorldServer.World.Objects.Instances
 
         }
 
+        public void OnInstanceMobDeath(Unit deadUnit)
+        {
+            if (ZoneID == 196)
+                OpenBilerotMucusDoors();
+        }
+
+        private void OpenBilerotMucusDoors()
+        {
+            foreach (GameObject door in Region.GetObjects<GameObject>().Where(x => x != null && x.Entry == 100546 && x.ZoneId == ZoneID))
+            {
+                if (door.Spawn?.DoorId > 0 && door.VfxState == 0)
+                    door.OpenDoor(false);
+            }
+        }
+
+        private int GetNextServerMidnightTimestamp()
+        {
+            var nowUtc = System.DateTime.UtcNow;
+            var serverNow = System.TimeZoneInfo.ConvertTimeFromUtc(nowUtc, System.TimeZoneInfo.Local);
+            var nextServerMidnight = serverNow.Date.AddDays(1);
+            var nextUtc = System.TimeZoneInfo.ConvertTimeToUtc(nextServerMidnight, System.TimeZoneInfo.Local);
+
+            return (int)(nextUtc - new System.DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc)).TotalSeconds;
+        }
+
+        private HashSet<uint> ParseDeadBossIds()
+        {
+            return ParseBossList(Lockout?.Bosseskilled);
+        }
+
+        private HashSet<uint> ParseBossList(string bossesKilled)
+        {
+            HashSet<uint> bossIds = new HashSet<uint>();
+
+            if (string.IsNullOrWhiteSpace(bossesKilled))
+                return bossIds;
+
+            if (bossesKilled.Contains(";"))
+            {
+                foreach (string segment in bossesKilled.Split(';'))
+                {
+                    if (string.IsNullOrWhiteSpace(segment))
+                        continue;
+
+                    string[] split = segment.Split(':');
+                    string token = split.Length > 1 ? split[split.Length - 1] : split[0];
+
+                    if (uint.TryParse(token, out uint bossId) && bossId > 0)
+                        bossIds.Add(bossId);
+                }
+            }
+            else
+            {
+                foreach (string token in bossesKilled.Split(':'))
+                {
+                    if (uint.TryParse(token, out uint bossId) && bossId > 0)
+                        bossIds.Add(bossId);
+                }
+            }
+
+            return bossIds;
+        }
+
 		public void RemoveInstanceObjectOnBossDeath(uint bossId)
 		{
-			var list = _Objects.Where(x => (x as InstanceObject).Info.EncounterID == bossId).ToList();
-			if (list != null && list.Count > 0)
+			var list = _Objects.OfType<InstanceObject>().Where(x => x.Info.EncounterID == bossId).ToList();
+			if (list.Count > 0)
 			{
 				list.ForEach(x => x.RemoveFromWorld());
 			}

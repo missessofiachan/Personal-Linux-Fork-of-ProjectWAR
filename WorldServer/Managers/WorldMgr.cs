@@ -1441,6 +1441,19 @@ namespace WorldServer.Managers
 
         public static void AttachCampaignsToRegions()
         {
+            // Ensure all campaign-relevant regions exist before attaching campaigns.
+            // Regions 1,3,8 (T1) and 2,4,11 (T4) are not preloaded at startup, so
+            // ResolveActiveRegion() would otherwise lazy-load them after attachment
+            // runs, leaving them without a campaign and triggering a warn+reattach
+            // on every boot.
+            ushort[] campaignRegionIds = { 1, 3, 8, 2, 4, 11 };
+            foreach (var id in campaignRegionIds)
+            {
+                if (id < Constants.RegionName.Length)
+                    GetRegion(id, true, Constants.RegionName[id]);
+                else
+                    GetRegion(id, true);
+            }
 
             foreach (var regionMgr in _Regions)
             {

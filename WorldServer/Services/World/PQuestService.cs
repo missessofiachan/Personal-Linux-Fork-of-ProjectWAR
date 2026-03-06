@@ -136,8 +136,6 @@ namespace WorldServer.Services.World
             Log.Debug("WorldMgr", "PQLoot ...");
             _PQLoot = Database.SelectAllObjects<PQuest_Loot>() as List<PQuest_Loot>;
             Log.Success("PQLoot", "Loaded " + _PQLoot.Count + " Items");
-
-            LoadPQ_Loot_Crafting();
         }
 
         public static List<PQuest_Loot_Crafting> _PQLoot_Crafting;
@@ -147,8 +145,8 @@ namespace WorldServer.Services.World
         {
             Log.Debug("WorldMgr", "PQLootCrafting ...");
             _PQLoot_Crafting = Database.SelectAllObjects<PQuest_Loot_Crafting>() as List<PQuest_Loot_Crafting>;
-            if (_PQLoot != null)
-                Log.Success("PQLootCrafting", "Loaded " + _PQLoot.Count + " Items");
+            if (_PQLoot_Crafting != null)
+                Log.Success("PQLootCrafting", "Loaded " + _PQLoot_Crafting.Count + " Items");
         }
     }
 }

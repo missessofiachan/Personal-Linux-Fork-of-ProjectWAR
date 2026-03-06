@@ -24,6 +24,7 @@ namespace WorldServer.World.Objects.Instances
         public static readonly Logger _logger = LogManager.GetCurrentClassLogger();
         public List<Creature> AddList = new List<Creature>();
         public int PlayerDeathsCount { get; set; } = 0;
+        private HashSet<uint> _eligibleLooterCharacterIds = new HashSet<uint>();
 
         public InstanceBossSpawn(Creature_spawn spawn, uint bossId, ushort instanceId, Instance instance) : base(spawn)
         {
@@ -154,10 +155,14 @@ namespace WorldServer.World.Objects.Instances
 
             if (Instance != null)
             {
+                string instanceKey = Instance.ZoneID + ":" + Instance.ID;
+                _eligibleLooterCharacterIds = new HashSet<uint>(Player._Players.Where(x => x.InstanceID == instanceKey).Select(x => x.CharacterId));
+
                 Instance.OnBossDeath(InstanceGroupSpawnId, this);
 
                 // remove barriages from this instance
                 Instance.RemoveInstanceObjectOnBossDeath(BossId);
+                Instance.OnInstanceMobDeath(this);
             }
 
             // handle torch of lileath on horgulul death
@@ -200,7 +205,7 @@ namespace WorldServer.World.Objects.Instances
                 {
                     foreach (Player member in player.PriorityGroup.Members)
                     {
-                        if (!member.HasLockout((ushort)ZoneId, BossId))
+                        if (!HasBlockingLockout(member))
                             subGroup.Add(member);
                     }
                     // used to only have items of careers in group in the lootcontainer
@@ -215,7 +220,7 @@ namespace WorldServer.World.Objects.Instances
                         player.Zone.Info != null &&
                         (player.Zone.Info.Type == 4 || player.Zone.Info.Type == 5 || player.Zone.Info.Type == 6))
                     {
-                        if (!player.HasLockout((ushort)ZoneId, BossId))
+                        if (!HasBlockingLockout(player))
                         {
                             lootContainer.SendInteract(player, menu);
                             
@@ -232,9 +237,24 @@ namespace WorldServer.World.Objects.Instances
             }
         }
 
+        private bool HasBlockingLockout(Player player)
+        {
+            if (player == null)
+                return true;
+
+            if (_eligibleLooterCharacterIds.Count > 0 && !_eligibleLooterCharacterIds.Contains(player.CharacterId))
+                return true;
+
+            if (!player.HasLockout((ushort)ZoneId, BossId))
+                return false;
+
+            return !_eligibleLooterCharacterIds.Contains(player.CharacterId);
+        }
+
         public InstanceBossSpawn RezInstanceSpawn()
         {
             InstanceBossSpawn newCreature = new InstanceBossSpawn(Spawn, BossId, InstanceID,Instance);
+            newCreature.InstanceGroupSpawnId = InstanceGroupSpawnId;
             Region.AddObject(newCreature, Spawn.ZoneId);
             Destroy();
             return newCreature;

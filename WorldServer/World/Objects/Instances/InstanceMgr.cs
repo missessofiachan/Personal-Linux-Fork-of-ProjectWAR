@@ -256,12 +256,25 @@ namespace WorldServer.World.Objects.Instances
 
         public void ApplyLockout(string instanceId, List<Player> players)
         {
-            if (_instances == null && string.IsNullOrEmpty(instanceId))
+            if (_instances == null || string.IsNullOrEmpty(instanceId) || players == null || players.Count == 0)
                 return;
             try
             {
-                _instances.TryGetValue(ushort.Parse(instanceId.Split(':')[1]), out Instance inst);
-                inst?.ApplyLockout(players.Where(x => !x.HasLockout(ushort.Parse(instanceId.Split(':')[1]), inst.CurrentBossId)).ToList());
+                string[] split = instanceId.Split(':');
+                if (split.Length < 2)
+                    return;
+
+                if (!ushort.TryParse(split[0], out ushort zoneId))
+                    return;
+
+                if (!ushort.TryParse(split[1], out ushort localInstanceId))
+                    return;
+
+                _instances.TryGetValue(localInstanceId, out Instance inst);
+                if (inst == null || inst.CurrentBossId == 0)
+                    return;
+
+                inst.ApplyLockout(players.Where(x => x != null && !x.HasLockout(zoneId, inst.CurrentBossId)).ToList());
             }
             catch (Exception e)
             {
@@ -271,13 +284,23 @@ namespace WorldServer.World.Objects.Instances
 
         public bool HasLockoutFromCurrentBoss(Player plr)
         {
-            if (_instances == null && (plr == null || string.IsNullOrEmpty(plr.InstanceID)))
+            if (_instances == null || plr == null || string.IsNullOrEmpty(plr.InstanceID))
                 return false;
 
             try
             {
-                _instances.TryGetValue(ushort.Parse(plr.InstanceID.Split(':')[1]), out Instance inst);
-                return plr.HasLockout(plr.Zone.ZoneId, inst.CurrentBossId);
+                string[] split = plr.InstanceID.Split(':');
+                if (split.Length < 2)
+                    return false;
+
+                if (!ushort.TryParse(split[1], out ushort localInstanceId))
+                    return false;
+
+                _instances.TryGetValue(localInstanceId, out Instance inst);
+                if (inst == null || inst.CurrentBossId == 0)
+                    return false;
+
+                return plr.HasLockout(inst.ZoneID, inst.CurrentBossId);
             }
             catch (Exception e)
             {

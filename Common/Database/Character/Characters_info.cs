@@ -520,48 +520,72 @@ namespace Common
 
         public void AddLockout(Instance_Lockouts Lockout)
         {
-            // ~zoneID:timestamp:bossId:...~zoneID:timestamp:bossId:...~zoneID:timestamp:bossId:...
-            string newLockout = string.Empty;
+            if (Lockout == null || string.IsNullOrWhiteSpace(Lockout.InstanceID))
+                return;
 
-            if (string.IsNullOrEmpty(_lockouts))
-            {
-                newLockout = Lockout.InstanceID + ":" + Lockout.Bosseskilled;
+            string lockoutId = Lockout.InstanceID.TrimStart('~');
+            string[] lockoutParts = lockoutId.Split(':');
+            if (lockoutParts.Length < 2)
+                return;
 
-                if (!newLockout.StartsWith("~"))
-                    newLockout += "~";
-            }
-            else
+            if (!ushort.TryParse(lockoutParts[0], out ushort incomingZoneId))
+                return;
+
+            if (!int.TryParse(lockoutParts[1], out int incomingTimestamp))
+                return;
+
+            HashSet<uint> incomingBossIds = new HashSet<uint>();
+            if (!string.IsNullOrWhiteSpace(Lockout.Bosseskilled))
             {
-                for (int i = 0; i < _lockouts.Split('~').Length; i++)
+                foreach (string token in Lockout.Bosseskilled.Split(':'))
                 {
-                    string currLockout = _lockouts.Split('~')[i];
-                    // check zone id
-                    if (currLockout.Split(':')[0] == Lockout.InstanceID.Replace("~", "").Split(':')[0])
-                    {
-                        // zoneID equal - lockout already existing
-                        if (!newLockout.StartsWith("~"))
-                            newLockout += "~"; // ~
-                        newLockout += currLockout.Split(':')[0] + ":" + currLockout.Split(':')[1]; // ~260:12345, keep old timestamp
-                        List<string> bossIdList = new List<string>();
-                        for (int j = 2; j < currLockout.Split(':').Length; j++)
-                            bossIdList.Add(currLockout.Split(':')[j]);
-                        for (int j = 0; j < Lockout.Bosseskilled.Split(':').Length; j++)
-                            bossIdList.Add(Lockout.Bosseskilled.Split(':')[j]);
-                        bossIdList = bossIdList.Distinct().ToList(); // remove multiple bosses
-                        bossIdList.Sort();
-                        foreach (string bossId in bossIdList)
-                            newLockout += ":" + bossId; // build string with bosses: ~260:12345:330:331:.....
-                    }
-                    else
-                    {
-                        if (!currLockout.StartsWith("~") && !newLockout.EndsWith("~"))
-                            currLockout = "~" + currLockout;
-                        newLockout += currLockout;
-                    }
+                    if (uint.TryParse(token, out uint bossId) && bossId > 0)
+                        incomingBossIds.Add(bossId);
                 }
             }
 
-            Lockouts = newLockout;
+            List<string> mergedLockouts = new List<string>();
+            bool mergedIncomingZone = false;
+            int mergedZoneTimestamp = incomingTimestamp;
+            HashSet<uint> mergedZoneBossIds = new HashSet<uint>(incomingBossIds);
+
+            foreach (string raw in (_lockouts ?? string.Empty).Split('~'))
+            {
+                if (string.IsNullOrWhiteSpace(raw))
+                    continue;
+
+                string normalized = raw.StartsWith("~") ? raw : "~" + raw;
+                string[] currentParts = normalized.TrimStart('~').Split(':');
+                if (currentParts.Length < 2 || !ushort.TryParse(currentParts[0], out ushort currentZoneId))
+                {
+                    mergedLockouts.Add(normalized);
+                    continue;
+                }
+
+                if (currentZoneId != incomingZoneId)
+                {
+                    mergedLockouts.Add(normalized);
+                    continue;
+                }
+
+                mergedIncomingZone = true;
+
+                int currentTimestamp = 0;
+                int.TryParse(currentParts[1], out currentTimestamp);
+                mergedZoneTimestamp = Math.Max(currentTimestamp, mergedZoneTimestamp);
+                for (int i = 2; i < currentParts.Length; i++)
+                {
+                    if (uint.TryParse(currentParts[i], out uint bossId) && bossId > 0)
+                        mergedZoneBossIds.Add(bossId);
+                }
+            }
+
+            string incomingZoneEntry = "~" + incomingZoneId + ":" + (mergedIncomingZone ? mergedZoneTimestamp : incomingTimestamp);
+            if (mergedZoneBossIds.Count > 0)
+                incomingZoneEntry += ":" + string.Join(":", mergedZoneBossIds.OrderBy(x => x));
+            mergedLockouts.Add(incomingZoneEntry);
+
+            Lockouts = string.Join(string.Empty, mergedLockouts);
             Dirty = true;
         }
     }

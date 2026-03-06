@@ -9,6 +9,7 @@
     <Copy SourceFiles="@(FilesToCopy)"
           DestinationFolder="$(OutDir)libs"
           SkipUnchangedFiles="true"
-          Condition="'@(FilesToCopy)' != ''" />
+          Condition="'@(FilesToCopy)' != ''"
+          ContinueOnError="WarnAndContinue" />
   </Target>
 </Project>
