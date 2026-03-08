@@ -8,7 +8,10 @@
 *.sln.docstates
 *.VC.opendb
 *.VC.VC.opendb
+.vs/
 *.vs
+.claude/
+git_recent.txt
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/

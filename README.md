@@ -145,7 +145,7 @@ For contributors and AI agents, please refer to the following architectural and 
 
 - **[1.4.8 Restoration Plan](1_4_8_RESTORATION_PLAN.md)**: Details the project's core mission and data restoration workflow.
 - **[Systemic Divergences](SYSTEMIC_DIVERGENCES.md)**: Maps differences between Retail and Emulator logic.
-- **[AI Documentation](AI_Documentation/AI_README.md)**: Central repository for AI rules, instructions, and change logs.
+- **[AI Agent Rules](AGENTS.md)**: Single source of truth for repository-specific AI instructions.
 
 ## Development Resources
 
