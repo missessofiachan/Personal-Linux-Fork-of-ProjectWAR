@@ -217,6 +217,12 @@ WarPatcher/Release
 .vs/WarEmulator/v15/sqlite3/storage.ide-wal
 /Common/Common.csproj.bak
 
+# ClientDataMatrix local outputs
+.dotnet_home/
+clientdatamatrix.err.txt
+clientdatamatrix.out.txt
+tmp-data-matrix*/
+
 # Zone data - too large for GitHub, distributed via release assets
 deps/zones/
 

@@ -41,6 +41,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerLauncher", "ServerLau
 		{D5C98F3A-D5D2-4AED-A5A7-06D2DE095095} = {D5C98F3A-D5D2-4AED-A5A7-06D2DE095095}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientDataMatrix", "ClientDataMatrix\ClientDataMatrix.csproj", "{9D78DA89-5E7A-4D62-9A03-45D8567F5192}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8BC085CD-429B-41D1-BB47-9621FD32EC23} = {8BC085CD-429B-41D1-BB47-9621FD32EC23}
+		{D5C98F3A-D5D2-4AED-A5A7-06D2DE095095} = {D5C98F3A-D5D2-4AED-A5A7-06D2DE095095}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -79,6 +85,10 @@ Global
 		{391C546A-4DFB-4A9D-A3DF-419128D308A2}.Debug|x64.Build.0 = Debug|x64
 		{391C546A-4DFB-4A9D-A3DF-419128D308A2}.Release|x64.ActiveCfg = Release|x64
 		{391C546A-4DFB-4A9D-A3DF-419128D308A2}.Release|x64.Build.0 = Release|x64
+		{9D78DA89-5E7A-4D62-9A03-45D8567F5192}.Debug|x64.ActiveCfg = Debug|x64
+		{9D78DA89-5E7A-4D62-9A03-45D8567F5192}.Debug|x64.Build.0 = Debug|x64
+		{9D78DA89-5E7A-4D62-9A03-45D8567F5192}.Release|x64.ActiveCfg = Release|x64
+		{9D78DA89-5E7A-4D62-9A03-45D8567F5192}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

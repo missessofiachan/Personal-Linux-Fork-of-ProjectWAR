@@ -1,0 +1,4 @@
+# DomainKey	Meaning	Confidence	SourceLabel	SourcePath	SourceLocation	Notes
+# This file is intentionally empty by default.
+# Add last-resort schema hints here only when extracted-client evidence is absent.
+# Any row sourced from WAR-RE-Toolkit SQL/decompile/packet material should use Confidence=Londo.
