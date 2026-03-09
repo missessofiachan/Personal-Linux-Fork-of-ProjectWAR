@@ -136,6 +136,14 @@ namespace ClientDataMatrix.Services
             if (TryResolveOperationSpecificStructuralSemantic(componentRow.Operation, fieldKey, rawValue, out structuralSemantic))
                 return structuralSemantic;
 
+            ComponentFieldSemantic genericFlagsSemantic;
+            if (TryResolveGenericFlagsRawSemantic(componentRow.Operation, fieldKey, rawValue, out genericFlagsSemantic))
+                return genericFlagsSemantic;
+
+            ComponentFieldSemantic namedControlSemantic;
+            if (TryResolveNamedControlFieldSemantic(componentRow.Operation, fieldKey, rawValue, out namedControlSemantic))
+                return namedControlSemantic;
+
             List<ComponentTokenEvidence> sharedFieldEvidence;
             if (IsSharedFieldFallbackAllowed(fieldKey)
                 && _evidenceByFieldKey.TryGetValue(fieldKey, out sharedFieldEvidence)
@@ -970,6 +978,102 @@ namespace ClientDataMatrix.Services
                 && int.TryParse(fieldKey.Substring(dotIndex + 4), NumberStyles.Integer, CultureInfo.InvariantCulture, out valueIndex);
         }
 
+        private static bool TryDescribeDamageExtDataField(int valueIndex, out string semanticSummary, out string roleNotes)
+        {
+            semanticSummary = null;
+            roleNotes = null;
+
+            switch (valueIndex)
+            {
+                case 1:
+                    semanticSummary = "DAMAGE ext-data branch selector for the slot-local damage payload.";
+                    roleNotes = "This low-cardinality field splits the dominant DAMAGE payload branches and tracks closely with the neighboring Val2, Val3, and Val7 fields.";
+                    return true;
+                case 2:
+                    semanticSummary = "DAMAGE ext-data payload-A field for the slot-local damage payload.";
+                    roleNotes = "This field mixes compact selector-like values with scalar-looking payloads, so it needs to be read together with the neighboring Val1, Val3, and Val7 fields.";
+                    return true;
+                case 3:
+                    semanticSummary = "DAMAGE ext-data profile selector for the slot-local damage payload.";
+                    roleNotes = "This compact enum-like field behaves like the main profile selector inside the recurring DAMAGE ext-data block.";
+                    return true;
+                case 4:
+                    semanticSummary = "DAMAGE ext-data family marker for the slot-local damage payload.";
+                    roleNotes = "This field behaves like a layout-family tag rather than a free scalar and overwhelmingly stays in the 8-family with a small 9-variant minority.";
+                    return true;
+                case 5:
+                    semanticSummary = "DAMAGE ext-data auxiliary selector for minority slot-local damage branches.";
+                    roleNotes = "This low-cardinality field only appears in minority DAMAGE ext-data branches and behaves more like an auxiliary selector or modifier than a wide scalar.";
+                    return true;
+                case 6:
+                    semanticSummary = "DAMAGE ext-data reference/link field for the slot-local damage payload.";
+                    roleNotes = "This field behaves like a branch-local reference slot: some DAMAGE branches carry exact RequirementId matches here, while other branches carry identifier-like values instead of scalar payloads.";
+                    return true;
+                case 7:
+                    semanticSummary = "DAMAGE ext-data payload-B field for the slot-local damage payload.";
+                    roleNotes = "This field behaves like the second profile-specific payload slot and carries the widest scalar-looking values in the recurring DAMAGE ext-data block.";
+                    return true;
+                case 8:
+                    semanticSummary = "DAMAGE ext-data sparse tail payload field for minority slot-local damage branches.";
+                    roleNotes = "This field only appears in minority DAMAGE ext-data branches after the main Val7 payload and behaves like an auxiliary tail parameter.";
+                    return true;
+                case 9:
+                    semanticSummary = "DAMAGE ext-data slot-presence marker for minority slot-local damage branches.";
+                    roleNotes = "This field is almost always fixed at 1 when present, so it behaves like a branch marker or enabled-flag rather than a free scalar.";
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private static bool TryDescribeBonusTypeAdjustExtDataField(int valueIndex, out string semanticSummary, out string roleNotes)
+        {
+            semanticSummary = null;
+            roleNotes = null;
+
+            switch (valueIndex)
+            {
+                case 1:
+                    semanticSummary = "BONUS_TYPE_ADJUST ext-data branch selector for the slot-local bonus payload.";
+                    roleNotes = "This low-cardinality field splits the dominant BONUS_TYPE_ADJUST payload branches and tracks closely with the neighboring Val2, Val3, and Val7 fields.";
+                    return true;
+                case 2:
+                    semanticSummary = "BONUS_TYPE_ADJUST ext-data payload-A field for the slot-local bonus payload.";
+                    roleNotes = "This field mixes compact selector-like values with scalar-looking payloads, so it needs to be read together with the neighboring Val1, Val3, and Val7 fields.";
+                    return true;
+                case 3:
+                    semanticSummary = "BONUS_TYPE_ADJUST ext-data profile selector for the slot-local bonus payload.";
+                    roleNotes = "This compact enum-like field behaves like the main profile selector inside the recurring BONUS_TYPE_ADJUST ext-data block.";
+                    return true;
+                case 4:
+                    semanticSummary = "BONUS_TYPE_ADJUST ext-data family marker for the slot-local bonus payload.";
+                    roleNotes = "This field behaves like a layout-family tag rather than a free scalar and overwhelmingly stays in the 8-family with a small 9-variant minority.";
+                    return true;
+                case 5:
+                    semanticSummary = "BONUS_TYPE_ADJUST ext-data auxiliary selector for minority slot-local bonus branches.";
+                    roleNotes = "This low-cardinality field only appears in minority BONUS_TYPE_ADJUST ext-data branches and behaves more like an auxiliary selector or modifier than a wide scalar.";
+                    return true;
+                case 6:
+                    semanticSummary = "BONUS_TYPE_ADJUST ext-data reference/link field for the slot-local bonus payload.";
+                    roleNotes = "This field behaves like a branch-local reference slot: some BONUS_TYPE_ADJUST branches carry exact RequirementId matches here, while other branches carry identifier-like values instead of scalar payloads.";
+                    return true;
+                case 7:
+                    semanticSummary = "BONUS_TYPE_ADJUST ext-data payload-B field for the slot-local bonus payload.";
+                    roleNotes = "This field behaves like the second profile-specific payload slot and carries the widest scalar-looking values in the recurring BONUS_TYPE_ADJUST ext-data block.";
+                    return true;
+                case 8:
+                    semanticSummary = "BONUS_TYPE_ADJUST ext-data sparse tail payload field for minority slot-local bonus branches.";
+                    roleNotes = "This field only appears in minority BONUS_TYPE_ADJUST ext-data branches after the main Val7 payload and behaves like an auxiliary tail parameter.";
+                    return true;
+                case 9:
+                    semanticSummary = "BONUS_TYPE_ADJUST ext-data slot-presence marker for minority slot-local bonus branches.";
+                    roleNotes = "This field is almost always fixed at 1 when present, so it behaves like a branch marker or enabled-flag rather than a free scalar.";
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         private static bool TryDescribeApplyAbilityExtDataField(int valueIndex, out string semanticSummary, out string roleNotes)
         {
             semanticSummary = null;
@@ -993,9 +1097,25 @@ namespace ClientDataMatrix.Services
                     semanticSummary = "APPLY_ABILITY ext-data family marker for the slot-local embedded payload.";
                     roleNotes = "This field behaves like a payload-layout tag rather than a free scalar; extracted rows overwhelmingly use one dominant value with a small minority variant.";
                     return true;
+                case 5:
+                    semanticSummary = "APPLY_ABILITY ext-data auxiliary selector for minority slot-local payload branches.";
+                    roleNotes = "This low-cardinality field only appears in minority APPLY_ABILITY ext-data branches and behaves more like an auxiliary selector or modifier than a wide scalar.";
+                    return true;
+                case 6:
+                    semanticSummary = "APPLY_ABILITY ext-data reference/link field for the slot-local embedded payload.";
+                    roleNotes = "This field behaves like a branch-local reference slot: some neighboring APPLY_ABILITY branches carry exact RequirementId matches here, while other branches carry large identifier-like values instead of scalar payloads.";
+                    return true;
                 case 7:
                     semanticSummary = "APPLY_ABILITY ext-data payload-B field for the slot-local embedded payload.";
                     roleNotes = "This field behaves like the second profile-specific payload slot and varies far more widely than the small selector fields around it.";
+                    return true;
+                case 8:
+                    semanticSummary = "APPLY_ABILITY ext-data sparse tail payload field for minority slot-local payload branches.";
+                    roleNotes = "This field only appears in minority APPLY_ABILITY ext-data branches after the main Val7 payload and behaves like an auxiliary tail parameter.";
+                    return true;
+                case 9:
+                    semanticSummary = "APPLY_ABILITY ext-data slot-presence marker for minority slot-local payload branches.";
+                    roleNotes = "This field is almost always fixed at 1 when present, so it behaves like a branch marker or enabled-flag rather than a free scalar.";
                     return true;
                 default:
                     return false;
@@ -1025,13 +1145,210 @@ namespace ClientDataMatrix.Services
                     semanticSummary = "CC ext-data family marker for the slot-local control payload.";
                     roleNotes = "This field is almost fixed at 8 with a minority 9 variant, so it behaves like a layout-family tag rather than a free scalar.";
                     return true;
+                case 5:
+                    semanticSummary = "CC ext-data auxiliary selector for minority slot-local control branches.";
+                    roleNotes = "This low-cardinality field only appears in minority CC ext-data branches and behaves more like an auxiliary selector or modifier than a wide scalar.";
+                    return true;
+                case 6:
+                    semanticSummary = "CC ext-data reference/link field for the slot-local control payload.";
+                    roleNotes = "This field behaves like a branch-local reference slot: some nearby CC branches carry exact RequirementId matches here, while other branches carry identifier-like values instead of scalar payloads.";
+                    return true;
                 case 7:
                     semanticSummary = "CC ext-data payload-B field for the slot-local control payload.";
                     roleNotes = "This field behaves like the second profile-specific payload slot and carries the widest scalar-looking values in the recurring CC ext-data block.";
                     return true;
+                case 8:
+                    semanticSummary = "CC ext-data sparse tail payload field for minority slot-local control branches.";
+                    roleNotes = "This field only appears in minority CC ext-data branches after the main Val7 payload and behaves like an auxiliary tail parameter.";
+                    return true;
+                case 9:
+                    semanticSummary = "CC ext-data slot-presence marker for minority slot-local control branches.";
+                    roleNotes = "This field is almost always fixed at 1 when present, so it behaves like a branch marker or enabled-flag rather than a free scalar.";
+                    return true;
                 default:
                     return false;
             }
+        }
+
+        private static bool TryDescribeKnockbackExtDataField(int valueIndex, out string semanticSummary, out string roleNotes)
+        {
+            semanticSummary = null;
+            roleNotes = null;
+
+            switch (valueIndex)
+            {
+                case 1:
+                    semanticSummary = "KNOCKBACK ext-data branch selector for the slot-local displacement payload.";
+                    roleNotes = "This low-cardinality field splits the dominant KNOCKBACK payload branches and tracks closely with the neighboring Val2, Val3, and Val7 fields.";
+                    return true;
+                case 2:
+                    semanticSummary = "KNOCKBACK ext-data payload-A field for the slot-local displacement payload.";
+                    roleNotes = "This field mixes compact selector-like values with scalar-looking payloads, so it needs to be read together with the neighboring Val1, Val3, and Val7 fields.";
+                    return true;
+                case 3:
+                    semanticSummary = "KNOCKBACK ext-data profile selector for the slot-local displacement payload.";
+                    roleNotes = "This compact enum-like field behaves like the main profile selector inside the recurring KNOCKBACK ext-data block.";
+                    return true;
+                case 4:
+                    semanticSummary = "KNOCKBACK ext-data family marker for the slot-local displacement payload.";
+                    roleNotes = "This field behaves like a layout-family tag rather than a free scalar and overwhelmingly stays in the 8-family with small minority variants.";
+                    return true;
+                case 5:
+                    semanticSummary = "KNOCKBACK ext-data auxiliary selector for minority slot-local displacement branches.";
+                    roleNotes = "This low-cardinality field only appears in minority KNOCKBACK ext-data branches and behaves more like an auxiliary selector or modifier than a wide scalar.";
+                    return true;
+                case 6:
+                    semanticSummary = "KNOCKBACK ext-data reference/link field for the slot-local displacement payload.";
+                    roleNotes = "This field behaves like a branch-local reference slot: some KNOCKBACK branches carry exact RequirementId matches here, while other branches carry identifier-like values instead of scalar payloads.";
+                    return true;
+                case 7:
+                    semanticSummary = "KNOCKBACK ext-data payload-B field for the slot-local displacement payload.";
+                    roleNotes = "This field behaves like the second profile-specific payload slot and carries the widest scalar-looking values in the recurring KNOCKBACK ext-data block.";
+                    return true;
+                case 8:
+                    semanticSummary = "KNOCKBACK ext-data sparse tail payload field for minority slot-local displacement branches.";
+                    roleNotes = "This field only appears in minority KNOCKBACK ext-data branches after the main Val7 payload and behaves like an auxiliary tail parameter.";
+                    return true;
+                case 9:
+                    semanticSummary = "KNOCKBACK ext-data slot-presence marker for minority slot-local displacement branches.";
+                    roleNotes = "This field is almost always fixed at 1 when present, so it behaves like a branch marker or enabled-flag rather than a free scalar.";
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private static bool TryDescribeImmunityExtDataField(int valueIndex, out string semanticSummary, out string roleNotes)
+        {
+            semanticSummary = null;
+            roleNotes = null;
+
+            switch (valueIndex)
+            {
+                case 1:
+                    semanticSummary = "IMMUNITY ext-data branch selector for the slot-local immunity payload.";
+                    roleNotes = "This low-cardinality field splits the dominant IMMUNITY payload branches and tracks closely with the neighboring Val2, Val3, and Val7 fields.";
+                    return true;
+                case 2:
+                    semanticSummary = "IMMUNITY ext-data payload-A field for the slot-local immunity payload.";
+                    roleNotes = "This field mixes compact selector-like values with scalar-looking payloads, so it needs to be read together with the neighboring Val1, Val3, and Val7 fields.";
+                    return true;
+                case 3:
+                    semanticSummary = "IMMUNITY ext-data profile selector for the slot-local immunity payload.";
+                    roleNotes = "This compact enum-like field behaves like the main profile selector inside the recurring IMMUNITY ext-data block.";
+                    return true;
+                case 4:
+                    semanticSummary = "IMMUNITY ext-data family marker for the slot-local immunity payload.";
+                    roleNotes = "This field behaves like a layout-family tag rather than a free scalar and stays almost entirely in the 8-family with a minority 9-variant.";
+                    return true;
+                case 5:
+                    semanticSummary = "IMMUNITY ext-data auxiliary selector for minority slot-local immunity branches.";
+                    roleNotes = "This low-cardinality field only appears in minority IMMUNITY ext-data branches and behaves more like an auxiliary selector or modifier than a wide scalar.";
+                    return true;
+                case 6:
+                    semanticSummary = "IMMUNITY ext-data reference/link field for the slot-local immunity payload.";
+                    roleNotes = "This field behaves like a branch-local reference slot: some IMMUNITY branches carry exact RequirementId matches here, while other branches carry identifier-like values instead of scalar payloads.";
+                    return true;
+                case 7:
+                    semanticSummary = "IMMUNITY ext-data payload-B field for the slot-local immunity payload.";
+                    roleNotes = "This field behaves like the second profile-specific payload slot and varies more widely than the small selector fields around it.";
+                    return true;
+                case 8:
+                    semanticSummary = "IMMUNITY ext-data sparse tail payload field for minority slot-local immunity branches.";
+                    roleNotes = "This field only appears in minority IMMUNITY ext-data branches after the main Val7 payload and behaves like an auxiliary tail parameter.";
+                    return true;
+                case 9:
+                    semanticSummary = "IMMUNITY ext-data slot-presence marker for minority slot-local immunity branches.";
+                    roleNotes = "This field is almost always fixed at 1 when present, so it behaves like a branch marker or enabled-flag rather than a free scalar.";
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private static bool TryDescribeKnockbackValueField(string fieldKey, out string semanticSummary, out string roleNotes)
+        {
+            semanticSummary = null;
+            roleNotes = null;
+
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                semanticSummary = "KNOCKBACK primary displacement magnitude for the component payload.";
+                roleNotes = "This large-magnitude field is populated on nearly every KNOCKBACK row, including pure shove rows like Rune of Sundering and airborne launch rows like Gore, Khaine's Wrath, Exoneration, and Unleash the Winds, so it behaves like the base displacement strength rather than a branch selector.";
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                semanticSummary = "KNOCKBACK secondary launch or lift control for the component payload.";
+                roleNotes = "This field is zero on flatter shove rows such as Rune of Sundering, but commonly lands in the 300-950 band on airborne launch rows and staged launch families such as Azyr's Beckoning, so it behaves like a secondary launch-vector or lift parameter rather than a branch selector.";
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+            {
+                semanticSummary = "KNOCKBACK tertiary trajectory-bias control for the component payload.";
+                roleNotes = "This field stays at 0 on simpler shove rows such as Rune of Sundering and Flames Of Fate, appears as small positive values on compact knockback test rows such as Knockback and Raid Boss Test Ability 1, and flips negative on mount-launch rows such as Mount - Arabian Disc - Midnight and Aphotic, so it behaves like a secondary trajectory-axis or bias control rather than another primary magnitude.";
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value[3]", StringComparison.OrdinalIgnoreCase))
+            {
+                semanticSummary = "KNOCKBACK displacement profile selector for the component payload.";
+                roleNotes = "This low-cardinality field clusters with distinct motion families: 0 on simpler shove rows, 2 on the dominant player-launch family, and 3 or higher on minority scripted variants, so it behaves like a motion-profile selector rather than a scalar magnitude.";
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryDescribeNamedControlField(string fieldKey, out string semanticSummary, out string roleNotes)
+        {
+            semanticSummary = null;
+            roleNotes = null;
+
+            if (string.Equals(fieldKey, "ActivationDelay", StringComparison.OrdinalIgnoreCase))
+            {
+                semanticSummary = "Delay before the component payload activates after its trigger fires.";
+                roleNotes = "The client-side field name and the observed round-number values indicate a timing control field rather than an enum or identifier.";
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "ConeAngle", StringComparison.OrdinalIgnoreCase))
+            {
+                semanticSummary = "Directional cone arc width used by the component payload.";
+                roleNotes = "The client-side field name and the observed values align with common arc widths such as 45, 90, 120, 135, 180, and 360.";
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "FlightSpeed", StringComparison.OrdinalIgnoreCase))
+            {
+                semanticSummary = "Projectile or travel-speed control for the component payload.";
+                roleNotes = "The client-side field name and the observed values behave like speed magnitudes rather than compact selector enums.";
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "MaxTargets", StringComparison.OrdinalIgnoreCase))
+            {
+                semanticSummary = "Maximum target-count cap for the component payload.";
+                roleNotes = "The client-side field name and the observed small integer values indicate a hard cap on how many targets the component may affect.";
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryDescribeGenericFlagsRawField(string fieldKey, out string semanticSummary, out string roleNotes)
+        {
+            semanticSummary = null;
+            roleNotes = null;
+
+            if (!string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            semanticSummary = "Packed raw flag bitfield for the component payload.";
+            roleNotes = "The client field name is explicit, but the exact meaning of each bit is still operation-specific and unresolved. Value-note bit positions are zero-based.";
+            return true;
         }
 
         private static string BuildDominantRawValueSummary(IEnumerable<FieldObservation> observations, int limit)
@@ -1046,6 +1363,68 @@ namespace ClientDataMatrix.Services
                 .ThenBy(group => group.Key, StringComparer.OrdinalIgnoreCase)
                 .Take(limit)
                 .Select(group => group.Key + " x" + group.Count().ToString(CultureInfo.InvariantCulture)));
+        }
+
+        private static bool TryBuildDamageStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 1 || observations == null || observations.Count == 0)
+                return false;
+
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
+                return false;
+
+            string semanticSummary;
+            string roleNotes;
+            if (!TryDescribeDamageExtDataField(valueIndex, out semanticSummary, out roleNotes))
+                return false;
+
+            string dominantValues = BuildDominantRawValueSummary(observations, 6);
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = semanticSummary,
+                Confidence = SemanticConfidence.Structural,
+                Notes = "This is a structural inference from recurring DAMAGE ext-data layouts in extracted client BIN rows for ExtData slot "
+                    + slotIndex.ToString(CultureInfo.InvariantCulture)
+                    + ". "
+                    + roleNotes
+                    + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : " Dominant raw values: " + dominantValues + ".")
+                    + " Exact per-value retail semantics are still unresolved; use the value-profile evidence to inspect raw-value clusters."
+            };
+            return true;
+        }
+
+        private static bool TryBuildBonusTypeAdjustStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 22 || observations == null || observations.Count == 0)
+                return false;
+
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
+                return false;
+
+            string semanticSummary;
+            string roleNotes;
+            if (!TryDescribeBonusTypeAdjustExtDataField(valueIndex, out semanticSummary, out roleNotes))
+                return false;
+
+            string dominantValues = BuildDominantRawValueSummary(observations, 6);
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = semanticSummary,
+                Confidence = SemanticConfidence.Structural,
+                Notes = "This is a structural inference from recurring BONUS_TYPE_ADJUST ext-data layouts in extracted client BIN rows for ExtData slot "
+                    + slotIndex.ToString(CultureInfo.InvariantCulture)
+                    + ". "
+                    + roleNotes
+                    + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : " Dominant raw values: " + dominantValues + ".")
+                    + " Exact per-value retail semantics are still unresolved; use the value-profile evidence to inspect raw-value clusters."
+            };
+            return true;
         }
 
         private static bool TryBuildApplyAbilityStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
@@ -1075,6 +1454,54 @@ namespace ClientDataMatrix.Services
                     + roleNotes
                     + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : " Dominant raw values: " + dominantValues + ".")
                     + " Exact per-value retail semantics are still unresolved; use the value-profile evidence to inspect raw-value clusters."
+            };
+            return true;
+        }
+
+        private static bool TryBuildNamedControlFieldInference(string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (observations == null || observations.Count == 0)
+                return false;
+
+            string semanticSummary;
+            string roleNotes;
+            if (!TryDescribeNamedControlField(fieldKey, out semanticSummary, out roleNotes))
+                return false;
+
+            string dominantValues = BuildDominantRawValueSummary(observations, 6);
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = semanticSummary,
+                Confidence = SemanticConfidence.Inferred,
+                Notes = "This inferred meaning comes from the descriptive client field name and the observed value shapes in extracted client BIN rows. "
+                    + roleNotes
+                    + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : " Dominant raw values: " + dominantValues + ".")
+                    + " Exact display formatting is not directly token-confirmed yet."
+            };
+            return true;
+        }
+
+        private static bool TryBuildGenericFlagsRawInference(string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (observations == null || observations.Count == 0)
+                return false;
+
+            string semanticSummary;
+            string roleNotes;
+            if (!TryDescribeGenericFlagsRawField(fieldKey, out semanticSummary, out roleNotes))
+                return false;
+
+            string dominantValues = BuildDominantRawValueSummary(observations, 6);
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = semanticSummary,
+                Confidence = SemanticConfidence.Structural,
+                Notes = "This structural inference comes from the explicit client field name and the recurring raw bit-pattern values in extracted client BIN rows. "
+                    + roleNotes
+                    + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : " Dominant raw values: " + dominantValues + ".")
+                    + " Exact per-bit retail semantics are still unresolved; use the value-profile evidence to inspect recurring flag combinations."
             };
             return true;
         }
@@ -1138,6 +1565,192 @@ namespace ClientDataMatrix.Services
             return true;
         }
 
+        private static bool TryBuildKnockbackStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 24 || observations == null || observations.Count == 0)
+                return false;
+
+            string semanticSummary;
+            string roleNotes;
+            string dominantValues = BuildDominantRawValueSummary(observations, 6);
+            if (TryDescribeKnockbackValueField(fieldKey, out semanticSummary, out roleNotes))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = semanticSummary,
+                    Confidence = SemanticConfidence.Structural,
+                    Notes = "This is a structural inference from recurring KNOCKBACK value patterns in extracted client BIN rows. "
+                        + roleNotes
+                        + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : " Dominant raw values: " + dominantValues + ".")
+                        + " Exact retail presentation is still unresolved; use the value-profile evidence to inspect raw-value clusters."
+                };
+                return true;
+            }
+
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
+                return false;
+
+            if (!TryDescribeKnockbackExtDataField(valueIndex, out semanticSummary, out roleNotes))
+                return false;
+
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = semanticSummary,
+                Confidence = SemanticConfidence.Structural,
+                Notes = "This is a structural inference from recurring KNOCKBACK ext-data layouts in extracted client BIN rows for ExtData slot "
+                    + slotIndex.ToString(CultureInfo.InvariantCulture)
+                    + ". "
+                    + roleNotes
+                    + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : " Dominant raw values: " + dominantValues + ".")
+                    + " Exact per-value retail semantics are still unresolved; use the value-profile evidence to inspect raw-value clusters."
+            };
+            return true;
+        }
+
+        private static bool TryBuildImmunityStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 38 || observations == null || observations.Count == 0)
+                return false;
+
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
+                return false;
+
+            string semanticSummary;
+            string roleNotes;
+            if (!TryDescribeImmunityExtDataField(valueIndex, out semanticSummary, out roleNotes))
+                return false;
+
+            string dominantValues = BuildDominantRawValueSummary(observations, 6);
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = semanticSummary,
+                Confidence = SemanticConfidence.Structural,
+                Notes = "This is a structural inference from recurring IMMUNITY ext-data layouts in extracted client BIN rows for ExtData slot "
+                    + slotIndex.ToString(CultureInfo.InvariantCulture)
+                    + ". "
+                    + roleNotes
+                    + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : " Dominant raw values: " + dominantValues + ".")
+                    + " Exact per-value retail semantics are still unresolved; use the value-profile evidence to inspect raw-value clusters."
+            };
+            return true;
+        }
+
+        private static string BuildDamageStructuralValueNote(int valueIndex, string rawValue)
+        {
+            if (string.IsNullOrWhiteSpace(rawValue))
+                return string.Empty;
+
+            switch (valueIndex)
+            {
+                case 1:
+                    if (string.Equals(rawValue, "2", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant DAMAGE Val1 branch marker in the recurring ext-data layout.";
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This is the secondary DAMAGE Val1 branch marker in the recurring ext-data layout.";
+                    break;
+                case 4:
+                    if (string.Equals(rawValue, "8", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant DAMAGE family marker across the recurring ext-data layout.";
+                    if (string.Equals(rawValue, "9", StringComparison.OrdinalIgnoreCase))
+                        return "This is a minority DAMAGE family-marker variant.";
+                    break;
+                case 5:
+                    if (string.Equals(rawValue, "3", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant DAMAGE Val5 auxiliary-selector branch in the minority tail layout.";
+                    break;
+                case 6:
+                    long damageLinkValue;
+                    if (long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out damageLinkValue))
+                    {
+                        if (damageLinkValue >= 1000)
+                            return "This large DAMAGE Val6 value behaves like an identifier-style link target rather than a scalar payload.";
+                        if (damageLinkValue > 0)
+                            return "This DAMAGE Val6 value behaves like a compact branch-local link marker rather than a free scalar.";
+                    }
+                    break;
+                case 7:
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant compact DAMAGE Val7 branch in the recurring ext-data layout.";
+
+                    long damagePayloadValue;
+                    if (long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out damagePayloadValue)
+                        && damagePayloadValue >= 100)
+                        return "This is a scalar-looking DAMAGE Val7 branch variant compared with the dominant compact 1-branch.";
+                    break;
+                case 8:
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant sparse DAMAGE Val8 tail branch.";
+                    break;
+                case 9:
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This fixed 1-value behaves like a slot-presence marker rather than a scalar payload.";
+                    break;
+            }
+
+            return string.Empty;
+        }
+
+        private static string BuildBonusTypeAdjustStructuralValueNote(int valueIndex, string rawValue)
+        {
+            if (string.IsNullOrWhiteSpace(rawValue))
+                return string.Empty;
+
+            switch (valueIndex)
+            {
+                case 1:
+                    if (string.Equals(rawValue, "2", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant BONUS_TYPE_ADJUST Val1 branch marker in the recurring ext-data layout.";
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This is the secondary BONUS_TYPE_ADJUST Val1 branch marker in the recurring ext-data layout.";
+                    break;
+                case 4:
+                    if (string.Equals(rawValue, "8", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant BONUS_TYPE_ADJUST family marker across the recurring ext-data layout.";
+                    if (string.Equals(rawValue, "9", StringComparison.OrdinalIgnoreCase))
+                        return "This is a minority BONUS_TYPE_ADJUST family-marker variant.";
+                    break;
+                case 5:
+                    if (string.Equals(rawValue, "3", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant BONUS_TYPE_ADJUST Val5 auxiliary-selector branch in the minority tail layout.";
+                    break;
+                case 6:
+                    long bonusLinkValue;
+                    if (long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out bonusLinkValue))
+                    {
+                        if (bonusLinkValue >= 1000)
+                            return "This large BONUS_TYPE_ADJUST Val6 value behaves like an identifier-style link target rather than a scalar payload.";
+                        if (bonusLinkValue > 0)
+                            return "This BONUS_TYPE_ADJUST Val6 value behaves like a compact branch-local link marker rather than a free scalar.";
+                    }
+                    break;
+                case 7:
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant compact BONUS_TYPE_ADJUST Val7 branch in the recurring ext-data layout.";
+
+                    long bonusPayloadValue;
+                    if (long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out bonusPayloadValue)
+                        && bonusPayloadValue >= 100)
+                        return "This is a scalar-looking BONUS_TYPE_ADJUST Val7 branch variant compared with the dominant compact 1-branch.";
+                    break;
+                case 8:
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant sparse BONUS_TYPE_ADJUST Val8 tail branch.";
+                    break;
+                case 9:
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This fixed 1-value behaves like a slot-presence marker rather than a scalar payload.";
+                    break;
+            }
+
+            return string.Empty;
+        }
+
         private static string BuildApplyAbilityStructuralValueNote(int valueIndex, string rawValue)
         {
             if (string.IsNullOrWhiteSpace(rawValue))
@@ -1167,6 +1780,27 @@ namespace ClientDataMatrix.Services
                     if (string.Equals(rawValue, "9", StringComparison.OrdinalIgnoreCase))
                         return "This is a minority variant of the dominant 8-family marker.";
                     break;
+                case 5:
+                    if (string.Equals(rawValue, "3", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant APPLY_ABILITY Val5 auxiliary-selector branch in the minority tail layout.";
+                    if (string.Equals(rawValue, "5", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(rawValue, "8", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(rawValue, "9", StringComparison.OrdinalIgnoreCase))
+                        return "This is a minority APPLY_ABILITY Val5 auxiliary-selector variant.";
+                    break;
+                case 6:
+                    if (string.Equals(rawValue, "100", StringComparison.OrdinalIgnoreCase))
+                        return "This compact APPLY_ABILITY Val6 link marker is common in the secondary Val1=1, Val2=9, Val3=4 branch.";
+
+                    long applyAbilityLinkValue;
+                    if (long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out applyAbilityLinkValue))
+                    {
+                        if (applyAbilityLinkValue >= 1000)
+                            return "This large APPLY_ABILITY Val6 value behaves like an identifier-style link target rather than a scalar payload.";
+                        if (applyAbilityLinkValue > 0)
+                            return "This APPLY_ABILITY Val6 value behaves like a compact branch-local link marker rather than a free scalar.";
+                    }
+                    break;
                 case 7:
                     if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
                         return "This is the dominant Val7 payload branch and is strongly paired with Val1=2, Val2=2, Val3=1, and Val4=8.";
@@ -1175,9 +1809,249 @@ namespace ClientDataMatrix.Services
                     if (string.Equals(rawValue, "250", StringComparison.OrdinalIgnoreCase))
                         return "This branch is strongly paired with Val2=3, Val3=4, and Val4=8.";
                     break;
+                case 8:
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant sparse APPLY_ABILITY Val8 tail branch.";
+                    if (string.Equals(rawValue, "2", StringComparison.OrdinalIgnoreCase) || string.Equals(rawValue, "3", StringComparison.OrdinalIgnoreCase))
+                        return "This is a minority sparse APPLY_ABILITY Val8 tail variant.";
+                    break;
+                case 9:
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This fixed 1-value behaves like a slot-presence marker rather than a scalar payload.";
+                    break;
             }
 
             return string.Empty;
+        }
+
+        private static string BuildKnockbackStructuralValueNote(int valueIndex, string rawValue)
+        {
+            if (string.IsNullOrWhiteSpace(rawValue))
+                return string.Empty;
+
+            switch (valueIndex)
+            {
+                case 1:
+                    if (string.Equals(rawValue, "2", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant KNOCKBACK Val1 branch marker in the recurring ext-data layout.";
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This is the secondary KNOCKBACK Val1 branch marker in the recurring ext-data layout.";
+                    break;
+                case 4:
+                    if (string.Equals(rawValue, "8", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant KNOCKBACK family marker across the recurring ext-data layout.";
+                    if (string.Equals(rawValue, "9", StringComparison.OrdinalIgnoreCase))
+                        return "This is a minority KNOCKBACK family-marker variant.";
+                    break;
+                case 5:
+                    if (string.Equals(rawValue, "3", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant KNOCKBACK Val5 auxiliary-selector branch in the minority tail layout.";
+                    break;
+                case 6:
+                    long knockbackLinkValue;
+                    if (long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out knockbackLinkValue))
+                    {
+                        if (knockbackLinkValue >= 1000)
+                            return "This large KNOCKBACK Val6 value behaves like an identifier-style link target rather than a scalar payload.";
+                        if (knockbackLinkValue > 0)
+                            return "This KNOCKBACK Val6 value behaves like a compact branch-local link marker rather than a free scalar.";
+                    }
+                    break;
+                case 7:
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant compact KNOCKBACK Val7 branch in the recurring ext-data layout.";
+
+                    long knockbackPayloadValue;
+                    if (long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out knockbackPayloadValue)
+                        && knockbackPayloadValue >= 100)
+                        return "This is a scalar-looking KNOCKBACK Val7 branch variant compared with the dominant compact 1-branch.";
+                    break;
+                case 8:
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant sparse KNOCKBACK Val8 tail branch.";
+                    break;
+                case 9:
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This fixed 1-value behaves like a slot-presence marker rather than a scalar payload.";
+                    break;
+            }
+
+            return string.Empty;
+        }
+
+        private static string BuildImmunityStructuralValueNote(int valueIndex, string rawValue)
+        {
+            if (string.IsNullOrWhiteSpace(rawValue))
+                return string.Empty;
+
+            switch (valueIndex)
+            {
+                case 4:
+                    if (string.Equals(rawValue, "8", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant IMMUNITY family marker across the recurring ext-data layout.";
+                    if (string.Equals(rawValue, "9", StringComparison.OrdinalIgnoreCase))
+                        return "This is a minority IMMUNITY family-marker variant.";
+                    break;
+                case 5:
+                    if (string.Equals(rawValue, "3", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant IMMUNITY Val5 auxiliary-selector branch in the minority tail layout.";
+                    break;
+                case 6:
+                    long immunityLinkValue;
+                    if (long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out immunityLinkValue))
+                    {
+                        if (immunityLinkValue >= 1000)
+                            return "This large IMMUNITY Val6 value behaves like an identifier-style link target rather than a scalar payload.";
+                        if (immunityLinkValue > 0)
+                            return "This IMMUNITY Val6 value behaves like a compact branch-local link marker rather than a free scalar.";
+                    }
+                    break;
+                case 7:
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant compact IMMUNITY Val7 branch in the recurring ext-data layout.";
+
+                    long immunityPayloadValue;
+                    if (long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out immunityPayloadValue)
+                        && immunityPayloadValue >= 1000)
+                        return "This is an identifier-like IMMUNITY Val7 branch variant compared with the dominant compact 1-branch.";
+                    break;
+                case 8:
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant sparse IMMUNITY Val8 tail branch.";
+                    break;
+                case 9:
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This fixed 1-value behaves like a slot-presence marker rather than a scalar payload.";
+                    break;
+            }
+
+            return string.Empty;
+        }
+
+        private static string BuildKnockbackValueFieldNote(string fieldKey, string rawValue)
+        {
+            long numericValue;
+            if (string.IsNullOrWhiteSpace(rawValue)
+                || !long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out numericValue))
+                return string.Empty;
+
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                if (numericValue <= 25000)
+                    return "This is a short-range KNOCKBACK displacement branch compared with the common 40000-65000 launch band.";
+                if (numericValue >= 80000)
+                    return "This is a high-magnitude KNOCKBACK displacement branch compared with the common 40000-65000 launch band.";
+                return "This is a midrange KNOCKBACK displacement value in the common player-launch band.";
+            }
+
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                if (numericValue == 0)
+                    return "This zero value matches flatter shove rows that do not use a secondary lift control.";
+                if (numericValue <= 450)
+                    return "This is a shallow secondary launch-control value in the lower observed lift band.";
+                if (numericValue >= 800)
+                    return "This is a steep secondary launch-control value in the upper observed lift band.";
+                return "This is a midrange secondary launch-control value in the common KNOCKBACK lift band.";
+            }
+
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+            {
+                if (numericValue < 0)
+                    return "This negative trajectory-bias branch appears on mount-style launch rows rather than the common shove layout.";
+                if (numericValue == 0)
+                    return "This zero trajectory-bias branch aligns with the simpler shove layout.";
+                if (numericValue <= 100)
+                    return "This small positive trajectory-bias branch appears on compact knockback test and short-range shove variants.";
+                return "This large positive trajectory-bias branch appears on minority scripted launch variants rather than the common shove layout.";
+            }
+
+            if (string.Equals(fieldKey, "Value[3]", StringComparison.OrdinalIgnoreCase))
+            {
+                if (numericValue == 0)
+                    return "This value matches the simplest shove profile with no extra motion-profile selector.";
+                if (numericValue == 2)
+                    return "This is the dominant KNOCKBACK motion-profile selector in the player-launch family.";
+                if (numericValue == 3)
+                    return "This is a secondary KNOCKBACK motion-profile selector seen in mixed or hidden side-effect rows.";
+                return "This is a minority KNOCKBACK motion-profile selector variant.";
+            }
+
+            return string.Empty;
+        }
+
+        private static string BuildNamedControlFieldValueNote(string fieldKey, string rawValue)
+        {
+            long numericValue;
+            if (string.IsNullOrWhiteSpace(rawValue)
+                || !long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out numericValue))
+                return string.Empty;
+
+            if (string.Equals(fieldKey, "ActivationDelay", StringComparison.OrdinalIgnoreCase))
+            {
+                if (numericValue <= 100)
+                    return "This is a short activation-delay branch compared with the common 250-1500 range.";
+                if (numericValue >= 10000)
+                    return "This is an unusually long activation-delay branch compared with the common sub-2-second timings.";
+                return "This is a midrange activation-delay value in the common extracted-client timing band.";
+            }
+
+            if (string.Equals(fieldKey, "ConeAngle", StringComparison.OrdinalIgnoreCase))
+            {
+                if (numericValue >= 360)
+                    return "This value behaves like a full-circle or effectively omni-directional arc.";
+                if (numericValue >= 180)
+                    return "This value behaves like a very wide directional arc.";
+                return "This value behaves like a standard forward cone width.";
+            }
+
+            if (string.Equals(fieldKey, "FlightSpeed", StringComparison.OrdinalIgnoreCase))
+            {
+                if (numericValue <= 500)
+                    return "This is on the slow end of the observed projectile-speed range.";
+                if (numericValue >= 1500)
+                    return "This is on the fast end of the observed projectile-speed range.";
+                return "This is a midrange projectile-speed value in the observed set.";
+            }
+
+            if (string.Equals(fieldKey, "MaxTargets", StringComparison.OrdinalIgnoreCase))
+            {
+                if (numericValue <= 1)
+                    return "This branch is capped to a single target.";
+                if (numericValue >= 9)
+                    return "This branch allows a broad multi-target cap compared with the common small counts.";
+                return "This branch allows a small multi-target cap.";
+            }
+
+            return string.Empty;
+        }
+
+        private static string BuildGenericFlagsRawValueNote(string rawValue)
+        {
+            if (string.IsNullOrWhiteSpace(rawValue))
+                return string.Empty;
+
+            long numericValue;
+            if (!long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out numericValue))
+                return "This raw value still behaves like an opaque packed flag field rather than a free scalar.";
+
+            if (numericValue < 0)
+                return "This negative raw value is unusual for a flags field and should be treated as a signed packed mask.";
+
+            if (numericValue == 0)
+                return "This zero raw value indicates that no flag bits are set.";
+
+            ulong unsignedValue = (ulong)numericValue;
+            int bitCount = CountSetBits(unsignedValue);
+            string bitSummary = BuildSetBitSummary(unsignedValue, 6);
+
+            if (bitCount <= 1)
+                return "This raw value sets bit " + bitSummary + " only, so it behaves like an isolated flag branch.";
+
+            if (bitCount <= 3)
+                return "This raw value combines " + bitCount.ToString(CultureInfo.InvariantCulture) + " flag bits (" + bitSummary + "), so it behaves like a compact mode mask.";
+
+            return "This raw value combines " + bitCount.ToString(CultureInfo.InvariantCulture) + " flag bits (" + bitSummary + "), so it behaves like a packed mode mask rather than a scalar.";
         }
 
         private static string BuildCcStructuralValueNote(string fieldKey, int? valueIndex, string rawValue)
@@ -1240,6 +2114,24 @@ namespace ClientDataMatrix.Services
                     if (string.Equals(rawValue, "9", StringComparison.OrdinalIgnoreCase))
                         return "This is a minority CC family-marker variant.";
                     break;
+                case 5:
+                    if (string.Equals(rawValue, "3", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant CC Val5 auxiliary-selector branch in the minority tail layout.";
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(rawValue, "5", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(rawValue, "8", StringComparison.OrdinalIgnoreCase))
+                        return "This is a minority CC Val5 auxiliary-selector variant.";
+                    break;
+                case 6:
+                    long ccLinkValue;
+                    if (long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out ccLinkValue))
+                    {
+                        if (ccLinkValue >= 1000)
+                            return "This large CC Val6 value behaves like an identifier-style link target rather than a scalar payload.";
+                        if (ccLinkValue > 0)
+                            return "This CC Val6 value behaves like a compact branch-local link marker rather than a free scalar.";
+                    }
+                    break;
                 case 7:
                     if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
                         return "This is the dominant compact CC Val7 branch in the recurring ext-data layout.";
@@ -1249,6 +2141,19 @@ namespace ClientDataMatrix.Services
                         || string.Equals(rawValue, "200", StringComparison.OrdinalIgnoreCase))
                         return "This is a scalar-looking CC Val7 branch variant compared with the dominant compact 1-branch.";
                     break;
+                case 8:
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant sparse CC Val8 tail branch.";
+                    if (string.Equals(rawValue, "16", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(rawValue, "25", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(rawValue, "34", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(rawValue, "150", StringComparison.OrdinalIgnoreCase))
+                        return "This is a minority scalar-looking CC Val8 tail variant.";
+                    break;
+                case 9:
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This fixed 1-value behaves like a slot-presence marker rather than a scalar payload.";
+                    break;
             }
 
             return string.Empty;
@@ -1257,6 +2162,68 @@ namespace ClientDataMatrix.Services
         private static bool TryResolveOperationSpecificStructuralSemantic(uint operationId, string fieldKey, string rawValue, out ComponentFieldSemantic semantic)
         {
             semantic = null;
+
+            if (operationId == 1)
+            {
+                int slotIndex;
+                int valueIndex;
+                if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
+                    return false;
+
+                string semanticSummary;
+                string roleNotes;
+                if (!TryDescribeDamageExtDataField(valueIndex, out semanticSummary, out roleNotes))
+                    return false;
+
+                string valueNote = BuildDamageStructuralValueNote(valueIndex, rawValue);
+                semantic = new ComponentFieldSemantic
+                {
+                    DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                    Meaning = semanticSummary,
+                    Confidence = SemanticConfidence.Structural,
+                    Source = "DAMAGE structural inference",
+                    SourcePath = string.Empty,
+                    SourceLocation = string.Empty,
+                    Notes = "This extracted-client-only inference comes from recurring DAMAGE ext-data layouts in slot "
+                        + slotIndex.ToString(CultureInfo.InvariantCulture)
+                        + ". "
+                        + roleNotes
+                        + (string.IsNullOrWhiteSpace(rawValue) ? string.Empty : " Current raw value: " + rawValue + ".")
+                        + (string.IsNullOrWhiteSpace(valueNote) ? string.Empty : " " + valueNote)
+                };
+                return true;
+            }
+
+            if (operationId == 22)
+            {
+                int slotIndex;
+                int valueIndex;
+                if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
+                    return false;
+
+                string semanticSummary;
+                string roleNotes;
+                if (!TryDescribeBonusTypeAdjustExtDataField(valueIndex, out semanticSummary, out roleNotes))
+                    return false;
+
+                string valueNote = BuildBonusTypeAdjustStructuralValueNote(valueIndex, rawValue);
+                semantic = new ComponentFieldSemantic
+                {
+                    DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                    Meaning = semanticSummary,
+                    Confidence = SemanticConfidence.Structural,
+                    Source = "BONUS_TYPE_ADJUST structural inference",
+                    SourcePath = string.Empty,
+                    SourceLocation = string.Empty,
+                    Notes = "This extracted-client-only inference comes from recurring BONUS_TYPE_ADJUST ext-data layouts in slot "
+                        + slotIndex.ToString(CultureInfo.InvariantCulture)
+                        + ". "
+                        + roleNotes
+                        + (string.IsNullOrWhiteSpace(rawValue) ? string.Empty : " Current raw value: " + rawValue + ".")
+                        + (string.IsNullOrWhiteSpace(valueNote) ? string.Empty : " " + valueNote)
+                };
+                return true;
+            }
 
             if (operationId == 23)
             {
@@ -1280,6 +2247,87 @@ namespace ClientDataMatrix.Services
                     SourcePath = string.Empty,
                     SourceLocation = string.Empty,
                     Notes = "This extracted-client-only inference comes from recurring APPLY_ABILITY ext-data layouts in slot "
+                        + slotIndex.ToString(CultureInfo.InvariantCulture)
+                        + ". "
+                        + roleNotes
+                        + (string.IsNullOrWhiteSpace(rawValue) ? string.Empty : " Current raw value: " + rawValue + ".")
+                        + (string.IsNullOrWhiteSpace(valueNote) ? string.Empty : " " + valueNote)
+                };
+                return true;
+            }
+
+            if (operationId == 24)
+            {
+                string semanticSummary;
+                string roleNotes;
+                if (TryDescribeKnockbackValueField(fieldKey, out semanticSummary, out roleNotes))
+                {
+                    string knockbackValueNote = BuildKnockbackValueFieldNote(fieldKey, rawValue);
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = semanticSummary,
+                        Confidence = SemanticConfidence.Structural,
+                        Source = "KNOCKBACK structural inference",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = "This extracted-client-only inference comes from recurring KNOCKBACK value patterns in the component rows. "
+                            + roleNotes
+                            + (string.IsNullOrWhiteSpace(rawValue) ? string.Empty : " Current raw value: " + rawValue + ".")
+                            + (string.IsNullOrWhiteSpace(knockbackValueNote) ? string.Empty : " " + knockbackValueNote)
+                    };
+                    return true;
+                }
+
+                int slotIndex;
+                int valueIndex;
+                if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
+                    return false;
+
+                if (!TryDescribeKnockbackExtDataField(valueIndex, out semanticSummary, out roleNotes))
+                    return false;
+
+                string valueNote = BuildKnockbackStructuralValueNote(valueIndex, rawValue);
+                semantic = new ComponentFieldSemantic
+                {
+                    DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                    Meaning = semanticSummary,
+                    Confidence = SemanticConfidence.Structural,
+                    Source = "KNOCKBACK structural inference",
+                    SourcePath = string.Empty,
+                    SourceLocation = string.Empty,
+                    Notes = "This extracted-client-only inference comes from recurring KNOCKBACK ext-data layouts in slot "
+                        + slotIndex.ToString(CultureInfo.InvariantCulture)
+                        + ". "
+                        + roleNotes
+                        + (string.IsNullOrWhiteSpace(rawValue) ? string.Empty : " Current raw value: " + rawValue + ".")
+                        + (string.IsNullOrWhiteSpace(valueNote) ? string.Empty : " " + valueNote)
+                };
+                return true;
+            }
+
+            if (operationId == 38)
+            {
+                int slotIndex;
+                int valueIndex;
+                if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
+                    return false;
+
+                string semanticSummary;
+                string roleNotes;
+                if (!TryDescribeImmunityExtDataField(valueIndex, out semanticSummary, out roleNotes))
+                    return false;
+
+                string valueNote = BuildImmunityStructuralValueNote(valueIndex, rawValue);
+                semantic = new ComponentFieldSemantic
+                {
+                    DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                    Meaning = semanticSummary,
+                    Confidence = SemanticConfidence.Structural,
+                    Source = "IMMUNITY structural inference",
+                    SourcePath = string.Empty,
+                    SourceLocation = string.Empty,
+                    Notes = "This extracted-client-only inference comes from recurring IMMUNITY ext-data layouts in slot "
                         + slotIndex.ToString(CultureInfo.InvariantCulture)
                         + ". "
                         + roleNotes
@@ -1355,6 +2403,106 @@ namespace ClientDataMatrix.Services
                     + (string.IsNullOrWhiteSpace(fieldValueNote) ? string.Empty : " " + fieldValueNote)
             };
             return true;
+        }
+
+        private static bool TryResolveNamedControlFieldSemantic(uint operationId, string fieldKey, string rawValue, out ComponentFieldSemantic semantic)
+        {
+            semantic = null;
+
+            string semanticSummary;
+            string roleNotes;
+            if (!TryDescribeNamedControlField(fieldKey, out semanticSummary, out roleNotes))
+                return false;
+
+            string valueNote = BuildNamedControlFieldValueNote(fieldKey, rawValue);
+            semantic = new ComponentFieldSemantic
+            {
+                DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                Meaning = semanticSummary,
+                Confidence = SemanticConfidence.Inferred,
+                Source = "Named control field inference",
+                SourcePath = string.Empty,
+                SourceLocation = string.Empty,
+                Notes = "This inferred meaning comes from the descriptive client field name and the observed value shapes in extracted client BIN rows. "
+                    + roleNotes
+                    + (string.IsNullOrWhiteSpace(rawValue) ? string.Empty : " Current raw value: " + rawValue + ".")
+                    + (string.IsNullOrWhiteSpace(valueNote) ? string.Empty : " " + valueNote)
+                    + " Exact display formatting is not directly token-confirmed yet."
+            };
+            return true;
+        }
+
+        private static bool TryResolveGenericFlagsRawSemantic(uint operationId, string fieldKey, string rawValue, out ComponentFieldSemantic semantic)
+        {
+            semantic = null;
+
+            string semanticSummary;
+            string roleNotes;
+            if (!TryDescribeGenericFlagsRawField(fieldKey, out semanticSummary, out roleNotes))
+                return false;
+
+            string valueNote = BuildGenericFlagsRawValueNote(rawValue);
+            semantic = new ComponentFieldSemantic
+            {
+                DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                Meaning = semanticSummary,
+                Confidence = SemanticConfidence.Structural,
+                Source = "FlagsRaw structural inference",
+                SourcePath = string.Empty,
+                SourceLocation = string.Empty,
+                Notes = "This extracted-client-only inference comes from the explicit client field name and the recurring raw bit-pattern values in the component rows. "
+                    + roleNotes
+                    + (string.IsNullOrWhiteSpace(rawValue) ? string.Empty : " Current raw value: " + rawValue + ".")
+                    + (string.IsNullOrWhiteSpace(valueNote) ? string.Empty : " " + valueNote)
+            };
+            return true;
+        }
+
+        private static int CountSetBits(ulong value)
+        {
+            int bitCount = 0;
+            while (value != 0)
+            {
+                if ((value & 1UL) != 0)
+                    bitCount++;
+
+                value >>= 1;
+            }
+
+            return bitCount;
+        }
+
+        private static string BuildSetBitSummary(ulong value, int limit)
+        {
+            if (value == 0)
+                return "0";
+
+            List<string> bits = new List<string>();
+            int bitIndex = 0;
+            int totalCount = 0;
+            ulong remaining = value;
+
+            while (remaining != 0)
+            {
+                if ((remaining & 1UL) != 0)
+                {
+                    totalCount++;
+                    if (bits.Count < limit)
+                        bits.Add(bitIndex.ToString(CultureInfo.InvariantCulture));
+                }
+
+                remaining >>= 1;
+                bitIndex++;
+            }
+
+            if (bits.Count == 0)
+                return string.Empty;
+
+            string summary = string.Join(", ", bits);
+            if (totalCount > bits.Count)
+                summary += ", ...";
+
+            return summary;
         }
 
         private static bool TryFormatFieldValue(long rawValue, out string valueText)
@@ -1671,7 +2819,25 @@ namespace ClientDataMatrix.Services
             }
 
             FieldObservationInference structuralInference;
+            if (TryBuildNamedControlFieldInference(fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildDamageStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildBonusTypeAdjustStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
             if (TryBuildCcStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildKnockbackStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildImmunityStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildGenericFlagsRawInference(fieldKey, observations, out structuralInference))
                 return structuralInference;
 
             return TryBuildApplyAbilityStructuralInference(operationId, fieldKey, observations, out structuralInference)

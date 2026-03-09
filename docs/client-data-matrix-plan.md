@@ -338,7 +338,7 @@ The GUI provides:
 9. a `Source Status` tab for file load outcomes
 10. a `Log` tab for timestamped session actions
 11. an `Operation Schemas` tab for browsing component operations, recurring non-zero fields, semantic hints, and sample abilities
-12. an `Unknown Triage` tab that ranks remaining unknown and `Structural` component fields by triage score, priority, and frequency, hides multiplier noise by default, shows raw-value evidence plus a value-profile/correlated-field view for the selected hotspot, surfaces partial structural roles for recurring `APPLY_ABILITY` / `CC` layouts, and lets the GUI jump directly into the sample ability
+12. an `Unknown Triage` tab that ranks remaining unknown and `Structural` component fields by triage score, priority, and frequency, hides multiplier noise by default, shows raw-value evidence plus a value-profile/correlated-field view for the selected hotspot, surfaces partial structural roles for recurring `DAMAGE` / `BONUS_TYPE_ADJUST` / `APPLY_ABILITY` / `CC` / `KNOCKBACK` / `IMMUNITY` layouts including `Val6` link slots and the tail `Val5` / `Val8` / `Val9` slots, surfaces partial structural roles for `KNOCKBACK` `Value[0]` / `Value[1]` / `Value[2]` / `Value[3]`, treats descriptive control fields like `ActivationDelay` / `ConeAngle` / `FlightSpeed` / `MaxTargets` as inferred semantics instead of blank unknowns, treats generic `FlagsRaw` fields as explicit packed masks instead of leaving them fully opaque, and lets the GUI jump directly into the sample ability
 
 ### Confirmed Direction Change
 
@@ -375,6 +375,22 @@ The next major gaps are no longer file ingestion gaps. They are relationship and
 10. The token dictionary now includes ability names, source-text excerpts, and extracted-text context tags such as `Knockback`, `Knockdown`, `Immunity`, and `CrowdControl`.
 11. A new operation-schema report now groups `abilitycomponentexport.bin` rows by operation, records recurring non-zero fields, carries semantic summaries from extracted client evidence, and exposes sample abilities in both the GUI and generated docs.
 12. Requirement rows are no longer only raw blobs: the new ledger shows which abilities, components, and parent requirement rows reference each row, which child requirements it points at, and which ext-data fields are active, but most individual requirement-field meanings are still unresolved.
+
+### Current Triage Snapshot
+
+The latest extracted-client-only operation pass reduced the remaining queue to `1578` unknown rows, `321` structural rows, and `22` high-signal unknown rows in `Unknown Triage`.
+
+This pass moved three more families into GUI-visible partial decodes:
+
+1. `DAMAGE` recurring `ExtData[*].Val1/2/3/4/5/6/7/8/9`
+2. `BONUS_TYPE_ADJUST` recurring `ExtData[*].Val1/2/3/4/5/6/7/8/9`
+3. `KNOCKBACK` `Value[2]` as a bounded trajectory-bias control beside the already-decoded `Value[0]` / `Value[1]` / `Value[3]`
+
+The next bounded semantic targets are now:
+
+1. `IMMUNITY` `Value[0]` and `Value[2]`
+2. `APPLY_ABILITY` `Value[3]`, `Value[7]`, `Value15`, and `Value08`
+3. `CC` `Value[1]`, `Value[3]`, `Value[5]`, and `Value[6]`
 
 ### Next Recovery Step
 

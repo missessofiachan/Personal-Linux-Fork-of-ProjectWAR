@@ -81,7 +81,8 @@ Default roots:
 11. Use `Unknown Triage` to:
    - rank remaining `Unknown` and `Structural` component fields by triage score, priority, and observation count
    - treat `Structural` confidence as a partial decode: the field role is inferred from extracted BIN clustering, but exact per-value semantics still need manual work
-   - use those partial decodes to separate recurring layout roles such as `APPLY_ABILITY` / `CC` `ExtData[*].Val1/2/3/4/7` blocks and `CC` `FlagsRaw` / `Value15` from truly opaque fields
+   - use those partial decodes to separate recurring layout roles such as `DAMAGE` / `BONUS_TYPE_ADJUST` / `APPLY_ABILITY` / `CC` / `KNOCKBACK` / `IMMUNITY` `ExtData[*].Val1/2/3/4/5/6/7/8/9` blocks, generic `FlagsRaw` masks, `CC` `Value15`, and `KNOCKBACK` `Value[0]` / `Value[1]` / `Value[2]` / `Value[3]` from truly opaque fields
+   - treat `Inferred` named control fields such as `ActivationDelay`, `ConeAngle`, `FlightSpeed`, and `MaxTargets` as mostly solved: the field name and value shape are strong enough to use in the GUI even when no direct token row exists
    - leave `Hide Multiplier Noise` enabled when you want the list to stay focused on ext-data, flags, delays, target limits, and other higher-signal unknowns
    - focus on the highest-impact unresolved fields before lower-value tail work
    - inspect the `Value Evidence` grid for the selected hotspot to see which raw values dominate that field
