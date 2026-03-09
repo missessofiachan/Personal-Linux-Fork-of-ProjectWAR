@@ -12,6 +12,7 @@ namespace ClientDataMatrix.Services
     {
         public const string Confirmed = "Confirmed";
         public const string Inferred = "Inferred";
+        public const string Structural = "Structural";
         public const string Unknown = "Unknown";
         public const string Londo = "Londo";
     }
@@ -130,6 +131,10 @@ namespace ClientDataMatrix.Services
             ComponentFieldSemantic requirementSemantic;
             if (TryResolveRequirementFieldSemantic(fieldKey, rawValue, out requirementSemantic))
                 return requirementSemantic;
+
+            ComponentFieldSemantic structuralSemantic;
+            if (TryResolveOperationSpecificStructuralSemantic(componentRow.Operation, fieldKey, rawValue, out structuralSemantic))
+                return structuralSemantic;
 
             List<ComponentTokenEvidence> sharedFieldEvidence;
             if (IsSharedFieldFallbackAllowed(fieldKey)
@@ -377,6 +382,159 @@ namespace ClientDataMatrix.Services
             };
         }
 
+        public List<ComponentOperationFieldValueRecord> BuildOperationFieldValueEvidence(uint operationId, string fieldKey)
+        {
+            if (_dataset == null || string.IsNullOrWhiteSpace(fieldKey))
+                return new List<ComponentOperationFieldValueRecord>();
+
+            Dictionary<ushort, List<AbilityComponentReference>> referencesByComponentId = BuildAbilityReferencesByComponentId();
+            List<FieldValueObservation> observations = new List<FieldValueObservation>();
+
+            foreach (BinaryComponentRecord component in _dataset.BinaryComponents.Where(row => row.Operation == operationId))
+            {
+                string rawValue;
+                if (!TryReadFieldRawValue(component, fieldKey, out rawValue))
+                    continue;
+
+                List<AbilityComponentReference> references;
+                if (!referencesByComponentId.TryGetValue(component.ComponentId, out references))
+                    references = new List<AbilityComponentReference>();
+
+                observations.Add(new FieldValueObservation
+                {
+                    RawValue = rawValue,
+                    ComponentId = component.ComponentId,
+                    AbilityReferences = references
+                });
+            }
+
+            return observations
+                .GroupBy(row => row.RawValue, StringComparer.OrdinalIgnoreCase)
+                .Select(group =>
+                {
+                    List<AbilityComponentReference> sampleAbilities = group
+                        .SelectMany(row => row.AbilityReferences ?? new List<AbilityComponentReference>())
+                        .GroupBy(row => row.AbilityId.ToString(CultureInfo.InvariantCulture)
+                            + "|"
+                            + row.ComponentId.ToString(CultureInfo.InvariantCulture)
+                            + "|"
+                            + row.ComponentSlotIndex.ToString(CultureInfo.InvariantCulture), StringComparer.OrdinalIgnoreCase)
+                        .Select(match => match.First())
+                        .OrderBy(row => row.AbilityId)
+                        .ThenBy(row => row.ComponentSlotIndex)
+                        .ThenBy(row => row.ComponentId)
+                        .Take(24)
+                        .ToList();
+
+                    return new ComponentOperationFieldValueRecord
+                    {
+                        RawValue = group.Key,
+                        ObservationCount = group.Count(),
+                        DistinctComponentCount = group.Select(row => row.ComponentId).Distinct().Count(),
+                        DistinctAbilityCount = sampleAbilities.Select(row => row.AbilityId).Distinct().Count(),
+                        SampleComponentIdsText = JoinValues(group.Select(row => row.ComponentId.ToString(CultureInfo.InvariantCulture)).Distinct().OrderBy(value => value).Take(12)),
+                        SampleAbilityIdsText = JoinValues(sampleAbilities.Select(row => row.AbilityId.ToString(CultureInfo.InvariantCulture)).Distinct().OrderBy(value => value).Take(12)),
+                        SampleAbilities = sampleAbilities.Select(row => new ComponentOperationAbilityRecord
+                        {
+                            AbilityId = row.AbilityId,
+                            AbilityName = row.AbilityName,
+                            ComponentId = row.ComponentId,
+                            ComponentSlotIndex = row.ComponentSlotIndex,
+                            TriggerText = row.TriggerText,
+                            ContextTagsText = JoinValues(row.ContextTags ?? new List<string>()),
+                            TextExcerpt = row.TextExcerpt,
+                            SourcePath = row.SourcePath,
+                            SourceLocation = row.SourceLocation
+                        }).ToList()
+                    };
+                })
+                .OrderByDescending(row => row.ObservationCount)
+                .ThenByDescending(row => row.DistinctAbilityCount)
+                .ThenBy(row => row.RawValue, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        public ComponentOperationFieldValueInsightRecord BuildOperationFieldValueInsight(uint operationId, string fieldKey, string rawValue)
+        {
+            ComponentOperationFieldValueInsightRecord empty = new ComponentOperationFieldValueInsightRecord
+            {
+                OperationId = operationId,
+                FieldKey = fieldKey,
+                RawValue = rawValue,
+                TriggerSummaryText = "No sampled trigger evidence is available for this value yet.",
+                ContextTagSummaryText = "No sampled context tags are available for this value yet.",
+                CompanionSummaryText = "No strong non-zero companion fields were isolated for this value yet.",
+                CompanionFields = new List<ComponentOperationFieldCorrelationRecord>()
+            };
+
+            if (_dataset == null || string.IsNullOrWhiteSpace(fieldKey) || string.IsNullOrWhiteSpace(rawValue))
+                return empty;
+
+            List<BinaryComponentRecord> matchingComponents = _dataset.BinaryComponents
+                .Where(row => row.Operation == operationId)
+                .Where(row =>
+                {
+                    string candidateValue;
+                    return TryReadFieldRawValue(row, fieldKey, out candidateValue)
+                        && string.Equals(candidateValue, rawValue, StringComparison.OrdinalIgnoreCase);
+                })
+                .ToList();
+            if (matchingComponents.Count == 0)
+                return empty;
+
+            Dictionary<ushort, List<AbilityComponentReference>> referencesByComponentId = BuildAbilityReferencesByComponentId();
+            List<AbilityComponentReference> abilityReferences = DistinctAbilityReferences(matchingComponents, referencesByComponentId);
+            Dictionary<string, List<FieldObservation>> observationsByField = BuildFieldObservationsByField(matchingComponents);
+
+            List<ComponentOperationFieldCorrelationRecord> allCompanionFields = observationsByField
+                .Where(pair => !string.Equals(pair.Key, fieldKey, StringComparison.OrdinalIgnoreCase))
+                .Select(pair => BuildCompanionFieldCorrelation(pair.Key, pair.Value, matchingComponents.Count))
+                .Where(row => row != null)
+                .OrderByDescending(row => row.CoveragePercent)
+                .ThenByDescending(row => row.MatchCount)
+                .ThenByDescending(row => row.ObservationCount)
+                .ThenBy(row => GetFieldSortKey(row.FieldKey), StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            List<ComponentOperationFieldCorrelationRecord> nonMultiplierCompanions = allCompanionFields
+                .Where(row => !row.FieldKey.StartsWith("Multiplier[", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            List<ComponentOperationFieldCorrelationRecord> companionFields = (nonMultiplierCompanions.Count == 0 ? allCompanionFields : nonMultiplierCompanions)
+                .Take(12)
+                .ToList();
+
+            List<string> highSignalCompanions = companionFields
+                .Where(row => row.CoveragePercent >= 75)
+                .Take(5)
+                .Select(row => row.FieldKey
+                    + "="
+                    + row.DominantValue
+                    + " ("
+                    + row.MatchCount.ToString(CultureInfo.InvariantCulture)
+                    + "/"
+                    + matchingComponents.Count.ToString(CultureInfo.InvariantCulture)
+                    + ", "
+                    + row.CoveragePercent.ToString(CultureInfo.InvariantCulture)
+                    + "%)")
+                .ToList();
+
+            empty.ObservationCount = matchingComponents.Count;
+            empty.DistinctComponentCount = matchingComponents.Select(row => row.ComponentId).Distinct().Count();
+            empty.DistinctAbilityCount = abilityReferences.Select(row => row.AbilityId).Distinct().Count();
+            empty.TriggerSummaryText = BuildValueCountSummary(
+                abilityReferences.Select(row => row.TriggerText),
+                6,
+                "No sampled trigger evidence is available for this value yet.");
+            empty.ContextTagSummaryText = BuildValueCountSummary(
+                abilityReferences.SelectMany(row => row.ContextTags ?? new List<string>()),
+                8,
+                "No sampled context tags are available for this value yet.");
+            empty.CompanionSummaryText = highSignalCompanions.Count == 0
+                ? "No strong non-zero companion fields were isolated for this value yet."
+                : string.Join("; ", highSignalCompanions);
+            empty.CompanionFields = companionFields;
+            return empty;
+        }
+
         private void BuildClientTokenEvidence(AbilityDataset dataset)
         {
             Dictionary<ushort, List<IndexedStringRecord>> descriptionsById = dataset.AbilityDescriptions
@@ -570,8 +728,62 @@ namespace ClientDataMatrix.Services
 
         private List<ComponentOperationFieldRecord> BuildOperationFieldRecords(uint operationId, List<BinaryComponentRecord> components, List<AbilityComponentReference> abilityReferences)
         {
+            Dictionary<string, List<FieldObservation>> observationsByField = BuildFieldObservationsByField(components);
+
+            List<string> operationContextTags = abilityReferences
+                .SelectMany(row => row.ContextTags ?? new List<string>())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            int operationAbilityCount = abilityReferences
+                .Select(row => row.AbilityId)
+                .Distinct()
+                .Count();
+            List<ComponentOperationFieldRecord> rows = new List<ComponentOperationFieldRecord>();
+            foreach (KeyValuePair<string, List<FieldObservation>> pair in observationsByField.OrderBy(entry => GetFieldSortKey(entry.Key), StringComparer.OrdinalIgnoreCase))
+            {
+                string domainKey = BuildOperationFieldDomainKey(operationId, pair.Key);
+                DefinitionDomain domain = BuildDomain(domainKey);
+                FieldObservationInference inference = BuildFieldObservationInference(operationId, pair.Key, pair.Value);
+                List<string> tokenRenderings = domain == null
+                    ? new List<string>()
+                    : domain.Options.Where(option => !string.Equals(option.RawValue, "override", StringComparison.OrdinalIgnoreCase)).Select(option => option.RawValue).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(value => value, StringComparer.OrdinalIgnoreCase).ToList();
+                List<string> semanticMeanings = domain == null
+                    ? new List<string>()
+                    : domain.Options.Select(option => option.Meaning).Where(value => !string.IsNullOrWhiteSpace(value)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(value => value, StringComparer.OrdinalIgnoreCase).ToList();
+                List<string> domainContextTags = GetDomainContextTags(domainKey);
+                string notes = BuildOperationFieldNotes(pair.Key, pair.Value, domain, components.Count);
+                if (inference != null && !string.IsNullOrWhiteSpace(inference.Notes))
+                    notes += " " + inference.Notes;
+                string confidence = semanticMeanings.Count == 0 && inference != null ? inference.Confidence : DetermineDomainConfidence(domain);
+                FieldTriage triage = BuildFieldTriage(operationId, pair.Key, pair.Value, confidence, operationAbilityCount);
+
+                rows.Add(new ComponentOperationFieldRecord
+                {
+                    FieldKey = pair.Key,
+                    NonZeroCount = pair.Value.Count,
+                    DistinctValueCount = pair.Value.Select(row => row.RawValue).Distinct(StringComparer.OrdinalIgnoreCase).Count(),
+                    SampleValuesText = JoinValues(pair.Value.Select(row => row.RawValue).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(value => value, StringComparer.OrdinalIgnoreCase).Take(12)),
+                    TokenRenderingsText = tokenRenderings.Count == 0 ? "(none)" : JoinValues(tokenRenderings),
+                    SemanticSummary = semanticMeanings.Count == 0
+                        ? inference == null ? "No extracted-client semantic mapping is known yet for this field." : inference.SemanticSummary
+                        : string.Join(" ", semanticMeanings),
+                    Confidence = confidence,
+                    ContextTagsText = JoinValues(domainContextTags.Count == 0 ? operationContextTags : domainContextTags),
+                    Notes = notes,
+                    TriageScore = triage.Score,
+                    TriageBucket = triage.Bucket,
+                    TriageNotes = triage.Notes
+                });
+            }
+
+            return rows;
+        }
+
+        private static Dictionary<string, List<FieldObservation>> BuildFieldObservationsByField(IEnumerable<BinaryComponentRecord> components)
+        {
             Dictionary<string, List<FieldObservation>> observationsByField = new Dictionary<string, List<FieldObservation>>(StringComparer.OrdinalIgnoreCase);
-            foreach (BinaryComponentRecord component in components)
+            foreach (BinaryComponentRecord component in components ?? Enumerable.Empty<BinaryComponentRecord>())
             {
                 AddFieldObservation(observationsByField, "ActivationDelay", component.ComponentId, component.LayoutVariant, component.ActivationDelay);
                 AddFieldObservation(observationsByField, "Duration", component.ComponentId, component.LayoutVariant, component.Duration);
@@ -604,45 +816,7 @@ namespace ClientDataMatrix.Services
                 }
             }
 
-            List<string> operationContextTags = abilityReferences
-                .SelectMany(row => row.ContextTags ?? new List<string>())
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
-                .ToList();
-            List<ComponentOperationFieldRecord> rows = new List<ComponentOperationFieldRecord>();
-            foreach (KeyValuePair<string, List<FieldObservation>> pair in observationsByField.OrderBy(entry => GetFieldSortKey(entry.Key), StringComparer.OrdinalIgnoreCase))
-            {
-                string domainKey = BuildOperationFieldDomainKey(operationId, pair.Key);
-                DefinitionDomain domain = BuildDomain(domainKey);
-                FieldObservationInference inference = BuildFieldObservationInference(pair.Key, pair.Value);
-                List<string> tokenRenderings = domain == null
-                    ? new List<string>()
-                    : domain.Options.Where(option => !string.Equals(option.RawValue, "override", StringComparison.OrdinalIgnoreCase)).Select(option => option.RawValue).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(value => value, StringComparer.OrdinalIgnoreCase).ToList();
-                List<string> semanticMeanings = domain == null
-                    ? new List<string>()
-                    : domain.Options.Select(option => option.Meaning).Where(value => !string.IsNullOrWhiteSpace(value)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(value => value, StringComparer.OrdinalIgnoreCase).ToList();
-                List<string> domainContextTags = GetDomainContextTags(domainKey);
-                string notes = BuildOperationFieldNotes(pair.Key, pair.Value, domain, components.Count);
-                if (inference != null && !string.IsNullOrWhiteSpace(inference.Notes))
-                    notes += " " + inference.Notes;
-
-                rows.Add(new ComponentOperationFieldRecord
-                {
-                    FieldKey = pair.Key,
-                    NonZeroCount = pair.Value.Count,
-                    DistinctValueCount = pair.Value.Select(row => row.RawValue).Distinct(StringComparer.OrdinalIgnoreCase).Count(),
-                    SampleValuesText = JoinValues(pair.Value.Select(row => row.RawValue).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(value => value, StringComparer.OrdinalIgnoreCase).Take(12)),
-                    TokenRenderingsText = tokenRenderings.Count == 0 ? "(none)" : JoinValues(tokenRenderings),
-                    SemanticSummary = semanticMeanings.Count == 0
-                        ? inference == null ? "No extracted-client semantic mapping is known yet for this field." : inference.SemanticSummary
-                        : string.Join(" ", semanticMeanings),
-                    Confidence = semanticMeanings.Count == 0 && inference != null ? inference.Confidence : DetermineDomainConfidence(domain),
-                    ContextTagsText = JoinValues(domainContextTags.Count == 0 ? operationContextTags : domainContextTags),
-                    Notes = notes
-                });
-            }
-
-            return rows;
+            return observationsByField;
         }
 
         private static void AddFieldObservation(Dictionary<string, List<FieldObservation>> observationsByField, string fieldKey, ushort componentId, string layoutVariant, uint rawValue)
@@ -695,6 +869,568 @@ namespace ClientDataMatrix.Services
             return "ExtData[" + slotIndex.ToString(CultureInfo.InvariantCulture) + "].Val" + valueIndex.ToString(CultureInfo.InvariantCulture);
         }
 
+        private static bool TryReadFieldRawValue(BinaryComponentRecord component, string fieldKey, out string rawValue)
+        {
+            rawValue = null;
+            if (component == null || string.IsNullOrWhiteSpace(fieldKey))
+                return false;
+
+            if (string.Equals(fieldKey, "ActivationDelay", StringComparison.OrdinalIgnoreCase))
+                return TryFormatFieldValue(component.ActivationDelay, out rawValue);
+            if (string.Equals(fieldKey, "Duration", StringComparison.OrdinalIgnoreCase))
+                return TryFormatFieldValue(component.Duration, out rawValue);
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+                return TryFormatFieldValue(component.FlagsRaw, out rawValue);
+            if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+                return TryFormatFieldValue(component.Value08, out rawValue);
+            if (string.Equals(fieldKey, "Radius", StringComparison.OrdinalIgnoreCase))
+                return TryFormatFieldValue(component.Radius, out rawValue);
+            if (string.Equals(fieldKey, "ConeAngle", StringComparison.OrdinalIgnoreCase))
+                return TryFormatFieldValue(component.ConeAngle, out rawValue);
+            if (string.Equals(fieldKey, "FlightSpeed", StringComparison.OrdinalIgnoreCase))
+                return TryFormatFieldValue(component.FlightSpeed, out rawValue);
+            if (string.Equals(fieldKey, "Value15", StringComparison.OrdinalIgnoreCase))
+                return TryFormatFieldValue(component.Value15, out rawValue);
+            if (string.Equals(fieldKey, "MaxTargets", StringComparison.OrdinalIgnoreCase))
+                return TryFormatFieldValue(component.MaxTargets, out rawValue);
+            if (string.Equals(fieldKey, "Value00", StringComparison.OrdinalIgnoreCase))
+                return TryFormatFieldValue(component.Value00, out rawValue);
+            if (string.Equals(fieldKey, "Interval", StringComparison.OrdinalIgnoreCase))
+                return TryFormatFieldValue(component.Interval, out rawValue);
+
+            int index;
+            if (TryParseIndexedField(fieldKey, "Value[", out index))
+            {
+                if (index >= 0 && index < component.Values.Count)
+                    return TryFormatFieldValue(component.Values[index], out rawValue);
+                return false;
+            }
+
+            if (TryParseIndexedField(fieldKey, "Multiplier[", out index))
+            {
+                if (index >= 0 && index < component.Multipliers.Count)
+                    return TryFormatFieldValue(component.Multipliers[index], out rawValue);
+                return false;
+            }
+
+            int slotIndex;
+            int valueIndex;
+            if (TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
+            {
+                BinaryExtDataRecord extRecord = component.ExtData.FirstOrDefault(row => row.SlotIndex == slotIndex);
+                if (extRecord == null)
+                    return false;
+
+                switch (valueIndex)
+                {
+                    case 1: return TryFormatFieldValue(extRecord.Val1, out rawValue);
+                    case 2: return TryFormatFieldValue(extRecord.Val2, out rawValue);
+                    case 3: return TryFormatFieldValue(extRecord.Val3, out rawValue);
+                    case 4: return TryFormatFieldValue(extRecord.Val4, out rawValue);
+                    case 5: return TryFormatFieldValue(extRecord.Val5, out rawValue);
+                    case 6: return TryFormatFieldValue(extRecord.Val6, out rawValue);
+                    case 7: return TryFormatFieldValue(extRecord.Val7, out rawValue);
+                    case 8: return TryFormatFieldValue(extRecord.Val8, out rawValue);
+                    case 9: return TryFormatFieldValue(extRecord.Val9, out rawValue);
+                }
+            }
+
+            return false;
+        }
+
+        private static bool TryParseIndexedField(string fieldKey, string prefix, out int index)
+        {
+            index = -1;
+            if (string.IsNullOrWhiteSpace(fieldKey)
+                || string.IsNullOrWhiteSpace(prefix)
+                || !fieldKey.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+                || !fieldKey.EndsWith("]", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            return int.TryParse(fieldKey.Substring(prefix.Length, fieldKey.Length - prefix.Length - 1), NumberStyles.Integer, CultureInfo.InvariantCulture, out index);
+        }
+
+        private static bool TryParseExtDataField(string fieldKey, out int slotIndex, out int valueIndex)
+        {
+            slotIndex = -1;
+            valueIndex = -1;
+            if (string.IsNullOrWhiteSpace(fieldKey)
+                || !fieldKey.StartsWith("ExtData[", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            int closeBracket = fieldKey.IndexOf(']');
+            if (closeBracket <= "ExtData[".Length)
+                return false;
+
+            int dotIndex = fieldKey.IndexOf(".Val", StringComparison.OrdinalIgnoreCase);
+            if (dotIndex <= closeBracket)
+                return false;
+
+            return int.TryParse(fieldKey.Substring("ExtData[".Length, closeBracket - "ExtData[".Length), NumberStyles.Integer, CultureInfo.InvariantCulture, out slotIndex)
+                && int.TryParse(fieldKey.Substring(dotIndex + 4), NumberStyles.Integer, CultureInfo.InvariantCulture, out valueIndex);
+        }
+
+        private static bool TryDescribeApplyAbilityExtDataField(int valueIndex, out string semanticSummary, out string roleNotes)
+        {
+            semanticSummary = null;
+            roleNotes = null;
+
+            switch (valueIndex)
+            {
+                case 1:
+                    semanticSummary = "APPLY_ABILITY ext-data branch selector for the slot-local embedded payload.";
+                    roleNotes = "This low-cardinality field splits the dominant APPLY_ABILITY payload branches, but the exact retail meaning of each raw value is still unresolved.";
+                    return true;
+                case 2:
+                    semanticSummary = "APPLY_ABILITY ext-data payload-A field for the slot-local embedded payload.";
+                    roleNotes = "This field mixes compact selector-like values with scalar-looking payloads, so it needs to be read together with the neighboring Val1, Val3, and Val7 fields.";
+                    return true;
+                case 3:
+                    semanticSummary = "APPLY_ABILITY ext-data profile selector for the slot-local embedded payload.";
+                    roleNotes = "This compact enum-like field is the clearest profile or behavior selector inside the APPLY_ABILITY ext-data block.";
+                    return true;
+                case 4:
+                    semanticSummary = "APPLY_ABILITY ext-data family marker for the slot-local embedded payload.";
+                    roleNotes = "This field behaves like a payload-layout tag rather than a free scalar; extracted rows overwhelmingly use one dominant value with a small minority variant.";
+                    return true;
+                case 7:
+                    semanticSummary = "APPLY_ABILITY ext-data payload-B field for the slot-local embedded payload.";
+                    roleNotes = "This field behaves like the second profile-specific payload slot and varies far more widely than the small selector fields around it.";
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private static bool TryDescribeCcExtDataField(int valueIndex, out string semanticSummary, out string roleNotes)
+        {
+            semanticSummary = null;
+            roleNotes = null;
+
+            switch (valueIndex)
+            {
+                case 1:
+                    semanticSummary = "CC ext-data branch selector for the slot-local control payload.";
+                    roleNotes = "This low-cardinality field splits the dominant CC payload branches and tracks closely with the neighboring Val2, Val3, and Val7 fields.";
+                    return true;
+                case 2:
+                    semanticSummary = "CC ext-data payload-A field for the slot-local control payload.";
+                    roleNotes = "This field mixes compact selector-like values with scalar-looking payloads, so it needs to be read together with the neighboring Val1, Val3, and Val7 fields.";
+                    return true;
+                case 3:
+                    semanticSummary = "CC ext-data profile selector for the slot-local control payload.";
+                    roleNotes = "This compact enum-like field behaves like the main profile selector inside the recurring CC ext-data block.";
+                    return true;
+                case 4:
+                    semanticSummary = "CC ext-data family marker for the slot-local control payload.";
+                    roleNotes = "This field is almost fixed at 8 with a minority 9 variant, so it behaves like a layout-family tag rather than a free scalar.";
+                    return true;
+                case 7:
+                    semanticSummary = "CC ext-data payload-B field for the slot-local control payload.";
+                    roleNotes = "This field behaves like the second profile-specific payload slot and carries the widest scalar-looking values in the recurring CC ext-data block.";
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private static string BuildDominantRawValueSummary(IEnumerable<FieldObservation> observations, int limit)
+        {
+            List<FieldObservation> items = observations == null ? new List<FieldObservation>() : observations.ToList();
+            if (items.Count == 0)
+                return string.Empty;
+
+            return string.Join(", ", items
+                .GroupBy(row => row.RawValue, StringComparer.OrdinalIgnoreCase)
+                .OrderByDescending(group => group.Count())
+                .ThenBy(group => group.Key, StringComparer.OrdinalIgnoreCase)
+                .Take(limit)
+                .Select(group => group.Key + " x" + group.Count().ToString(CultureInfo.InvariantCulture)));
+        }
+
+        private static bool TryBuildApplyAbilityStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 23 || observations == null || observations.Count == 0)
+                return false;
+
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
+                return false;
+
+            string semanticSummary;
+            string roleNotes;
+            if (!TryDescribeApplyAbilityExtDataField(valueIndex, out semanticSummary, out roleNotes))
+                return false;
+
+            string dominantValues = BuildDominantRawValueSummary(observations, 6);
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = semanticSummary,
+                Confidence = SemanticConfidence.Structural,
+                Notes = "This is a structural inference from recurring APPLY_ABILITY ext-data layouts in extracted client BIN rows for ExtData slot "
+                    + slotIndex.ToString(CultureInfo.InvariantCulture)
+                    + ". "
+                    + roleNotes
+                    + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : " Dominant raw values: " + dominantValues + ".")
+                    + " Exact per-value retail semantics are still unresolved; use the value-profile evidence to inspect raw-value clusters."
+            };
+            return true;
+        }
+
+        private static bool TryBuildCcStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 12 || observations == null || observations.Count == 0)
+                return false;
+
+            string dominantValues = BuildDominantRawValueSummary(observations, 6);
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "CC packed control bitfield for branch and behavior selection.",
+                    Confidence = SemanticConfidence.Structural,
+                    Notes = "This is a structural inference from recurring CC layouts in extracted client BIN rows. "
+                        + "The field behaves like a packed bitfield or mode mask and should be read together with Value15 and the leading ExtData selector fields."
+                        + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : " Dominant raw values: " + dominantValues + ".")
+                        + " Exact per-bit retail semantics are still unresolved; use the value-profile evidence to inspect branch clusters."
+                };
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value15", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "CC auxiliary profile marker paired with FlagsRaw.",
+                    Confidence = SemanticConfidence.Structural,
+                    Notes = "This is a structural inference from recurring CC layouts in extracted client BIN rows. "
+                        + "The field is almost always a small fixed marker and behaves like a companion selector or layout tag rather than a free scalar."
+                        + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : " Dominant raw values: " + dominantValues + ".")
+                        + " Exact per-value retail semantics are still unresolved; use the value-profile evidence to inspect the paired FlagsRaw branches."
+                };
+                return true;
+            }
+
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
+                return false;
+
+            string semanticSummary;
+            string roleNotes;
+            if (!TryDescribeCcExtDataField(valueIndex, out semanticSummary, out roleNotes))
+                return false;
+
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = semanticSummary,
+                Confidence = SemanticConfidence.Structural,
+                Notes = "This is a structural inference from recurring CC ext-data layouts in extracted client BIN rows for ExtData slot "
+                    + slotIndex.ToString(CultureInfo.InvariantCulture)
+                    + ". "
+                    + roleNotes
+                    + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : " Dominant raw values: " + dominantValues + ".")
+                    + " Exact per-value retail semantics are still unresolved; use the value-profile evidence to inspect raw-value clusters."
+            };
+            return true;
+        }
+
+        private static string BuildApplyAbilityStructuralValueNote(int valueIndex, string rawValue)
+        {
+            if (string.IsNullOrWhiteSpace(rawValue))
+                return string.Empty;
+
+            switch (valueIndex)
+            {
+                case 1:
+                    if (string.Equals(rawValue, "2", StringComparison.OrdinalIgnoreCase))
+                        return "This raw value is the dominant branch marker and frequently appears with Val2=2, Val3=1, and Val7=1.";
+                    break;
+                case 2:
+                    if (string.Equals(rawValue, "2", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant Val2 branch and is strongly paired with Val1=2, Val3=1, Val4=8, and Val7=1.";
+                    if (string.Equals(rawValue, "9", StringComparison.OrdinalIgnoreCase))
+                        return "This common secondary branch is strongly paired with Val1=1, Val3=4, Val4=8, and often Val6=100.";
+                    break;
+                case 3:
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant Val3 profile and is strongly paired with Val1=2, Val2=2, Val4=8, and Val7=1.";
+                    if (string.Equals(rawValue, "4", StringComparison.OrdinalIgnoreCase))
+                        return "This secondary Val3 profile is strongly paired with Val1=1, Val2=9, Val4=8, and often Val6=100.";
+                    break;
+                case 4:
+                    if (string.Equals(rawValue, "8", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant APPLY_ABILITY family marker across the extracted rows.";
+                    if (string.Equals(rawValue, "9", StringComparison.OrdinalIgnoreCase))
+                        return "This is a minority variant of the dominant 8-family marker.";
+                    break;
+                case 7:
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant Val7 payload branch and is strongly paired with Val1=2, Val2=2, Val3=1, and Val4=8.";
+                    if (string.Equals(rawValue, "5", StringComparison.OrdinalIgnoreCase))
+                        return "This common secondary Val7 branch is strongly paired with Val1=1, Val2=9, Val3=4, Val4=8, and Val6=100.";
+                    if (string.Equals(rawValue, "250", StringComparison.OrdinalIgnoreCase))
+                        return "This branch is strongly paired with Val2=3, Val3=4, and Val4=8.";
+                    break;
+            }
+
+            return string.Empty;
+        }
+
+        private static string BuildCcStructuralValueNote(string fieldKey, int? valueIndex, string rawValue)
+        {
+            if (string.IsNullOrWhiteSpace(rawValue))
+                return string.Empty;
+
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.Equals(rawValue, "2175", StringComparison.OrdinalIgnoreCase))
+                    return "This dominant packed branch commonly appears with Value15=4 and the leading ExtData profile Val1=2, Val3=1, Val4=8, and Val7=1.";
+                if (string.Equals(rawValue, "2303", StringComparison.OrdinalIgnoreCase))
+                    return "This common packed branch stays in the same dominant CC layout family and still pairs with the usual Value15=4 marker.";
+                if (string.Equals(rawValue, "8", StringComparison.OrdinalIgnoreCase))
+                    return "This compact low-bit branch appears in shorter CC layouts that still reuse the same ext-data selector pattern.";
+                if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                    return "This minimal branch behaves like a single-flag variant inside the broader CC bitfield family.";
+                return string.Empty;
+            }
+
+            if (string.Equals(fieldKey, "Value15", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.Equals(rawValue, "4", StringComparison.OrdinalIgnoreCase))
+                    return "This is the dominant CC Value15 marker and appears across almost every major FlagsRaw branch.";
+                if (string.Equals(rawValue, "5", StringComparison.OrdinalIgnoreCase))
+                    return "This is a rare Value15 variant inside the dominant CC layout family.";
+                return string.Empty;
+            }
+
+            if (!valueIndex.HasValue)
+                return string.Empty;
+
+            switch (valueIndex.Value)
+            {
+                case 1:
+                    if (string.Equals(rawValue, "2", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant CC Val1 branch marker and most often pairs with Val3=1 and Val4=8.";
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This is the secondary CC Val1 branch marker and commonly appears with the non-dominant Val3 profiles.";
+                    break;
+                case 2:
+                    if (string.Equals(rawValue, "2", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant compact CC Val2 branch inside the recurring ext-data layout.";
+                    if (string.Equals(rawValue, "15", StringComparison.OrdinalIgnoreCase))
+                        return "This is a common secondary compact CC Val2 branch inside the recurring ext-data layout.";
+                    if (string.Equals(rawValue, "88", StringComparison.OrdinalIgnoreCase))
+                        return "This is a high scalar-looking Val2 variant compared with the compact selector-like CC branches.";
+                    break;
+                case 3:
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant CC Val3 profile in the recurring ext-data layout.";
+                    if (string.Equals(rawValue, "4", StringComparison.OrdinalIgnoreCase))
+                        return "This is the main secondary CC Val3 profile in the recurring ext-data layout.";
+                    if (string.Equals(rawValue, "5", StringComparison.OrdinalIgnoreCase) || string.Equals(rawValue, "6", StringComparison.OrdinalIgnoreCase))
+                        return "This is a minority CC Val3 profile variant in the recurring ext-data layout.";
+                    break;
+                case 4:
+                    if (string.Equals(rawValue, "8", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant CC family marker across the recurring ext-data layout.";
+                    if (string.Equals(rawValue, "9", StringComparison.OrdinalIgnoreCase))
+                        return "This is a minority CC family-marker variant.";
+                    break;
+                case 7:
+                    if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
+                        return "This is the dominant compact CC Val7 branch in the recurring ext-data layout.";
+                    if (string.Equals(rawValue, "20", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(rawValue, "50", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(rawValue, "100", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(rawValue, "200", StringComparison.OrdinalIgnoreCase))
+                        return "This is a scalar-looking CC Val7 branch variant compared with the dominant compact 1-branch.";
+                    break;
+            }
+
+            return string.Empty;
+        }
+
+        private static bool TryResolveOperationSpecificStructuralSemantic(uint operationId, string fieldKey, string rawValue, out ComponentFieldSemantic semantic)
+        {
+            semantic = null;
+
+            if (operationId == 23)
+            {
+                int slotIndex;
+                int valueIndex;
+                if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
+                    return false;
+
+                string semanticSummary;
+                string roleNotes;
+                if (!TryDescribeApplyAbilityExtDataField(valueIndex, out semanticSummary, out roleNotes))
+                    return false;
+
+                string valueNote = BuildApplyAbilityStructuralValueNote(valueIndex, rawValue);
+                semantic = new ComponentFieldSemantic
+                {
+                    DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                    Meaning = semanticSummary,
+                    Confidence = SemanticConfidence.Structural,
+                    Source = "APPLY_ABILITY structural inference",
+                    SourcePath = string.Empty,
+                    SourceLocation = string.Empty,
+                    Notes = "This extracted-client-only inference comes from recurring APPLY_ABILITY ext-data layouts in slot "
+                        + slotIndex.ToString(CultureInfo.InvariantCulture)
+                        + ". "
+                        + roleNotes
+                        + (string.IsNullOrWhiteSpace(rawValue) ? string.Empty : " Current raw value: " + rawValue + ".")
+                        + (string.IsNullOrWhiteSpace(valueNote) ? string.Empty : " " + valueNote)
+                };
+                return true;
+            }
+
+            if (operationId != 12)
+                return false;
+
+            string fieldSemanticSummary;
+            string fieldRoleNotes;
+            string fieldValueNote;
+            string sourceLabel;
+
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                fieldSemanticSummary = "CC packed control bitfield for branch and behavior selection.";
+                fieldRoleNotes = "This field behaves like a packed bitfield or mode mask and should be read together with Value15 and the leading ExtData selector fields.";
+                fieldValueNote = BuildCcStructuralValueNote(fieldKey, null, rawValue);
+                sourceLabel = "CC structural inference";
+            }
+            else if (string.Equals(fieldKey, "Value15", StringComparison.OrdinalIgnoreCase))
+            {
+                fieldSemanticSummary = "CC auxiliary profile marker paired with FlagsRaw.";
+                fieldRoleNotes = "This field behaves like a small companion selector or layout tag rather than a free scalar.";
+                fieldValueNote = BuildCcStructuralValueNote(fieldKey, null, rawValue);
+                sourceLabel = "CC structural inference";
+            }
+            else
+            {
+                int slotIndex;
+                int valueIndex;
+                if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
+                    return false;
+
+                if (!TryDescribeCcExtDataField(valueIndex, out fieldSemanticSummary, out fieldRoleNotes))
+                    return false;
+
+                fieldValueNote = BuildCcStructuralValueNote(fieldKey, valueIndex, rawValue);
+                sourceLabel = "CC structural inference";
+                semantic = new ComponentFieldSemantic
+                {
+                    DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                    Meaning = fieldSemanticSummary,
+                    Confidence = SemanticConfidence.Structural,
+                    Source = sourceLabel,
+                    SourcePath = string.Empty,
+                    SourceLocation = string.Empty,
+                    Notes = "This extracted-client-only inference comes from recurring CC ext-data layouts in slot "
+                        + slotIndex.ToString(CultureInfo.InvariantCulture)
+                        + ". "
+                        + fieldRoleNotes
+                        + (string.IsNullOrWhiteSpace(rawValue) ? string.Empty : " Current raw value: " + rawValue + ".")
+                        + (string.IsNullOrWhiteSpace(fieldValueNote) ? string.Empty : " " + fieldValueNote)
+                };
+                return true;
+            }
+
+            semantic = new ComponentFieldSemantic
+            {
+                DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                Meaning = fieldSemanticSummary,
+                Confidence = SemanticConfidence.Structural,
+                Source = sourceLabel,
+                SourcePath = string.Empty,
+                SourceLocation = string.Empty,
+                Notes = "This extracted-client-only inference comes from recurring CC component layouts. "
+                    + fieldRoleNotes
+                    + (string.IsNullOrWhiteSpace(rawValue) ? string.Empty : " Current raw value: " + rawValue + ".")
+                    + (string.IsNullOrWhiteSpace(fieldValueNote) ? string.Empty : " " + fieldValueNote)
+            };
+            return true;
+        }
+
+        private static bool TryFormatFieldValue(long rawValue, out string valueText)
+        {
+            valueText = null;
+            if (rawValue == 0)
+                return false;
+
+            valueText = rawValue.ToString(CultureInfo.InvariantCulture);
+            return true;
+        }
+
+        private static ComponentOperationFieldCorrelationRecord BuildCompanionFieldCorrelation(string fieldKey, List<FieldObservation> observations, int selectedComponentCount)
+        {
+            if (string.IsNullOrWhiteSpace(fieldKey)
+                || observations == null
+                || observations.Count == 0
+                || selectedComponentCount <= 0)
+                return null;
+
+            List<FieldValueCount> values = observations
+                .GroupBy(row => row.RawValue, StringComparer.OrdinalIgnoreCase)
+                .Select(group => new FieldValueCount
+                {
+                    RawValue = group.Key,
+                    Count = group.Select(row => row.ComponentId).Distinct().Count()
+                })
+                .OrderByDescending(row => row.Count)
+                .ThenBy(row => row.RawValue, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            if (values.Count == 0)
+                return null;
+
+            FieldValueCount dominant = values[0];
+            int observationCount = observations.Select(row => row.ComponentId).Distinct().Count();
+            int coveragePercent = dominant.Count * 100 / selectedComponentCount;
+            int minimumObservations = Math.Max(3, selectedComponentCount / 5);
+            if (coveragePercent < 50 && observationCount < minimumObservations)
+                return null;
+
+            return new ComponentOperationFieldCorrelationRecord
+            {
+                FieldKey = fieldKey,
+                DominantValue = dominant.RawValue,
+                MatchCount = dominant.Count,
+                ObservationCount = observationCount,
+                CoveragePercent = coveragePercent,
+                DistinctValueCount = values.Count,
+                SampleValuesText = JoinValues(values.Select(row => row.RawValue).Take(6))
+            };
+        }
+
+        private static string BuildValueCountSummary(IEnumerable<string> values, int maxItems, string emptyText)
+        {
+            List<string> items = values == null
+                ? new List<string>()
+                : values
+                    .Where(value => !string.IsNullOrWhiteSpace(value))
+                    .GroupBy(value => value, StringComparer.OrdinalIgnoreCase)
+                    .Select(group => new FieldValueCount
+                    {
+                        RawValue = group.Key,
+                        Count = group.Count()
+                    })
+                    .OrderByDescending(row => row.Count)
+                    .ThenBy(row => row.RawValue, StringComparer.OrdinalIgnoreCase)
+                    .Select(row => row.RawValue + " x" + row.Count.ToString(CultureInfo.InvariantCulture))
+                    .Take(maxItems)
+                    .ToList();
+
+            if (items.Count == 0)
+                return emptyText;
+
+            return string.Join(", ", items);
+        }
+
         private List<string> GetDomainContextTags(string domainKey)
         {
             List<ComponentTokenEvidence> evidenceRows;
@@ -716,6 +1452,8 @@ namespace ClientDataMatrix.Services
                 return SemanticConfidence.Confirmed;
             if (domain.Options.Any(option => string.Equals(option.Confidence, SemanticConfidence.Inferred, StringComparison.OrdinalIgnoreCase)))
                 return SemanticConfidence.Inferred;
+            if (domain.Options.Any(option => string.Equals(option.Confidence, SemanticConfidence.Structural, StringComparison.OrdinalIgnoreCase)))
+                return SemanticConfidence.Structural;
             if (domain.Options.Any(option => string.Equals(option.Confidence, SemanticConfidence.Londo, StringComparison.OrdinalIgnoreCase)))
                 return SemanticConfidence.Londo;
             return SemanticConfidence.Unknown;
@@ -738,6 +1476,114 @@ namespace ClientDataMatrix.Services
                 summary += " " + domain.Notes;
 
             return summary.Trim();
+        }
+
+        private static FieldTriage BuildFieldTriage(uint operationId, string fieldKey, List<FieldObservation> observations, string confidence, int operationAbilityCount)
+        {
+            bool isStructural = string.Equals(confidence, SemanticConfidence.Structural, StringComparison.OrdinalIgnoreCase);
+            if (!string.Equals(confidence, SemanticConfidence.Unknown, StringComparison.OrdinalIgnoreCase) && !isStructural)
+            {
+                return new FieldTriage
+                {
+                    Score = 0,
+                    Bucket = "Resolved",
+                    Notes = "This field already has extracted-client semantic coverage and does not need unknown-first triage."
+                };
+            }
+
+            int nonZeroCount = observations == null ? 0 : observations.Count;
+            int distinctValueCount = observations == null ? 0 : observations.Select(row => row.RawValue).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+            int score = 0;
+            List<string> reasons = new List<string>();
+
+            if (PriorityOperations.Contains(operationId))
+            {
+                score += 100;
+                reasons.Add("priority operation");
+            }
+
+            if (operationAbilityCount > 0)
+            {
+                score += Math.Min(30, operationAbilityCount / 40);
+                if (operationAbilityCount >= 200)
+                    reasons.Add(operationAbilityCount.ToString(CultureInfo.InvariantCulture) + " referencing abilities");
+            }
+
+            if (nonZeroCount > 0)
+            {
+                score += Math.Min(60, nonZeroCount / 20);
+                if (nonZeroCount >= 100)
+                    reasons.Add(nonZeroCount.ToString(CultureInfo.InvariantCulture) + " non-zero rows");
+            }
+
+            if (distinctValueCount > 0)
+            {
+                score += Math.Min(40, distinctValueCount * 2);
+                if (distinctValueCount >= 10)
+                    reasons.Add(distinctValueCount.ToString(CultureInfo.InvariantCulture) + " distinct values");
+            }
+
+            if (fieldKey.StartsWith("ExtData[", StringComparison.OrdinalIgnoreCase))
+            {
+                score += 35;
+                reasons.Add("ext-data slot");
+            }
+            else if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                score += 30;
+                reasons.Add("flag bitfield candidate");
+            }
+            else if (string.Equals(fieldKey, "ActivationDelay", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(fieldKey, "Interval", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(fieldKey, "MaxTargets", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(fieldKey, "ConeAngle", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(fieldKey, "FlightSpeed", StringComparison.OrdinalIgnoreCase))
+            {
+                score += 20;
+                reasons.Add("gameplay control field");
+            }
+            else if (fieldKey.StartsWith("Value[", StringComparison.OrdinalIgnoreCase))
+            {
+                score += 10;
+                reasons.Add("generic value slot");
+            }
+
+            if (fieldKey.StartsWith("Multiplier[", StringComparison.OrdinalIgnoreCase))
+            {
+                score -= 80;
+                reasons.Add("multiplier-array noise");
+            }
+
+            if (isStructural)
+            {
+                score = Math.Max(0, score - 20);
+                reasons.Add("structural role inferred");
+            }
+
+            if (score < 0)
+                score = 0;
+
+            return new FieldTriage
+            {
+                Score = score,
+                Bucket = DetermineFieldTriageBucket(score),
+                Notes = reasons.Count == 0
+                    ? "Low-signal unknown field."
+                    : string.Join("; ", reasons.Distinct(StringComparer.OrdinalIgnoreCase)) + "."
+            };
+        }
+
+        private static string DetermineFieldTriageBucket(int score)
+        {
+            if (score >= 170)
+                return "Critical";
+            if (score >= 120)
+                return "High";
+            if (score >= 70)
+                return "Medium";
+            if (score > 0)
+                return "Low";
+            return "Noise";
         }
 
         private static string JoinValues(IEnumerable<string> values)
@@ -793,33 +1639,44 @@ namespace ClientDataMatrix.Services
             items.Add(evidence);
         }
 
-        private FieldObservationInference BuildFieldObservationInference(string fieldKey, List<FieldObservation> observations)
+        private FieldObservationInference BuildFieldObservationInference(uint operationId, string fieldKey, List<FieldObservation> observations)
         {
-            if (!IsRequirementLinkField(fieldKey) || observations == null || observations.Count == 0 || _knownRequirementIds.Count == 0)
+            if (observations == null || observations.Count == 0)
                 return null;
 
-            List<ushort> matchedRequirementIds = observations
-                .Select(row => ParseRequirementId(row.RawValue))
-                .Where(value => value.HasValue)
-                .Select(value => value.Value)
-                .Distinct()
-                .OrderBy(value => value)
-                .ToList();
-            if (matchedRequirementIds.Count == 0)
-                return null;
-
-            int distinctValueCount = observations.Select(row => row.RawValue).Distinct(StringComparer.OrdinalIgnoreCase).Count();
-            string exampleIds = string.Join(", ", matchedRequirementIds.Take(12).Select(value => value.ToString(CultureInfo.InvariantCulture)));
-            return new FieldObservationInference
+            if (IsRequirementLinkField(fieldKey) && _knownRequirementIds.Count > 0)
             {
-                SemanticSummary = matchedRequirementIds.Count == distinctValueCount
-                    ? "Exact raw values in this field match known RequirementId rows in abilityrequirementexport.bin."
-                    : "This field includes raw values that match known RequirementId rows in abilityrequirementexport.bin.",
-                Confidence = SemanticConfidence.Inferred,
-                Notes = matchedRequirementIds.Count == distinctValueCount
-                    ? "Every distinct observed value in this field matches a known RequirementId; example requirement ids: " + exampleIds + "."
-                    : matchedRequirementIds.Count.ToString(CultureInfo.InvariantCulture) + " distinct value(s) in this field match known RequirementId rows; example requirement ids: " + exampleIds + "."
-            };
+                List<ushort> matchedRequirementIds = observations
+                    .Select(row => ParseRequirementId(row.RawValue))
+                    .Where(value => value.HasValue)
+                    .Select(value => value.Value)
+                    .Distinct()
+                    .OrderBy(value => value)
+                    .ToList();
+                if (matchedRequirementIds.Count > 0)
+                {
+                    int distinctValueCount = observations.Select(row => row.RawValue).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+                    string exampleIds = string.Join(", ", matchedRequirementIds.Take(12).Select(value => value.ToString(CultureInfo.InvariantCulture)));
+                    return new FieldObservationInference
+                    {
+                        SemanticSummary = matchedRequirementIds.Count == distinctValueCount
+                            ? "Exact raw values in this field match known RequirementId rows in abilityrequirementexport.bin."
+                            : "This field includes raw values that match known RequirementId rows in abilityrequirementexport.bin.",
+                        Confidence = SemanticConfidence.Inferred,
+                        Notes = matchedRequirementIds.Count == distinctValueCount
+                            ? "Every distinct observed value in this field matches a known RequirementId; example requirement ids: " + exampleIds + "."
+                            : matchedRequirementIds.Count.ToString(CultureInfo.InvariantCulture) + " distinct value(s) in this field match known RequirementId rows; example requirement ids: " + exampleIds + "."
+                    };
+                }
+            }
+
+            FieldObservationInference structuralInference;
+            if (TryBuildCcStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            return TryBuildApplyAbilityStructuralInference(operationId, fieldKey, observations, out structuralInference)
+                ? structuralInference
+                : null;
         }
 
         private static string BuildAbilityComponentFieldKey(ushort abilityId, ushort componentId, string fieldKey)
@@ -1405,6 +2262,26 @@ namespace ClientDataMatrix.Services
         {
             public string SemanticSummary { get; set; }
             public string Confidence { get; set; }
+            public string Notes { get; set; }
+        }
+
+        private sealed class FieldValueObservation
+        {
+            public string RawValue { get; set; }
+            public ushort ComponentId { get; set; }
+            public List<AbilityComponentReference> AbilityReferences { get; set; }
+        }
+
+        private sealed class FieldValueCount
+        {
+            public string RawValue { get; set; }
+            public int Count { get; set; }
+        }
+
+        private sealed class FieldTriage
+        {
+            public int Score { get; set; }
+            public string Bucket { get; set; }
             public string Notes { get; set; }
         }
 

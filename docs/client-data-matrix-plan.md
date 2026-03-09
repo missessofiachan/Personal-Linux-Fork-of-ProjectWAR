@@ -334,10 +334,11 @@ The GUI provides:
 5. a `Domains` tab with explicit extracted-client identifier-domain ledgers
 6. a `Requirements` tab with requirement-row summaries, raw ext-data rows, field activity, and inbound/outbound link browsing
 7. a `Coverage` tab with whole-dataset ability readiness browsing
-8. a `Conflict Ledger` tab with per-domain conflict summaries and filtered conflict detail browsing
+8. a `Conflict Ledger` tab with per-domain conflict summaries, visible high-signal counts, triage scores/categories, a blank-string-noise filter, an `AbilityId`-mirror `EffectId` filter for the routine `abilities.csv` placeholder pattern, a `High-Signal Only` filter, explicit `MountOverlayEffectId` / `ZeroVsEffectIdGap` categories for the remaining effect-link mismatches, explicit `PlaceholderStringMismatch` / `InternalAbilityNameMismatch` / `InternalOnlyAbilityNameMismatch` categories for the bounded string-cleanup pass, rule-backed canonical `Resolve To` recommendations, a decoded conflict-profile/value-meaning view, claim-level evidence browsing, and direct ability navigation for ability-backed conflicts
 9. a `Source Status` tab for file load outcomes
 10. a `Log` tab for timestamped session actions
 11. an `Operation Schemas` tab for browsing component operations, recurring non-zero fields, semantic hints, and sample abilities
+12. an `Unknown Triage` tab that ranks remaining unknown and `Structural` component fields by triage score, priority, and frequency, hides multiplier noise by default, shows raw-value evidence plus a value-profile/correlated-field view for the selected hotspot, surfaces partial structural roles for recurring `APPLY_ABILITY` / `CC` layouts, and lets the GUI jump directly into the sample ability
 
 ### Confirmed Direction Change
 
@@ -362,12 +363,12 @@ Confirmed follow-up files not yet parsed:
 
 The next major gaps are no longer file ingestion gaps. They are relationship and documentation depth gaps:
 
-1. The conflict report is broad, but it is not yet grouped into dedicated per-domain output files.
-2. The GUI now decodes the primary ability enum fields, but many raw ext-data values and some unknown bytes still need named semantics.
+1. The conflict report is broad, and although the GUI now has a noise filter and claim drilldown, it is not yet grouped into dedicated per-domain output files.
+2. The GUI now decodes the primary ability enum fields and can cluster unknown raw values by trigger/context/companion-field patterns, but many ext-data values and some unknown bytes still need named semantics.
 3. The current slice is ability-centric; race/career identity collision reports still need their own dedicated pass.
 4. The current GUI explains likely ability flow from effect links, timings, components, and inferred requirement rows, but it does not yet visualize the node/edge graph directly.
 5. The field-domain explorer now shows known raw-value options with provenance, but many scalar fields still need deeper semantic decoding before they can become strong emulator-side enums.
-6. A first-pass component schema engine now uses extracted client text tokens like `COM_0_DURA_SECONDS` and `COM_0_VAL0_DAMAGE` to classify component fields by operation, but ext-data still has large `Unknown` coverage.
+6. A first-pass component schema engine now uses extracted client text tokens like `COM_0_DURA_SECONDS` and `COM_0_VAL0_DAMAGE` to classify component fields by operation, and the GUI now ranks those remaining unknowns directly, but ext-data still has large `Unknown` coverage.
 7. The token dictionary now writes plain-English glossary pages, but complex nested tokens like `VAL0_COM_0_VAL0_DAMAGE` still need hand-reviewed decomposition to read naturally.
 8. Requirement linkage now exists, but it is intentionally narrow and currently limited to the inferred `ExtData[*].Val6 -> RequirementId` rule.
 9. Coverage reporting now exists, but the current status buckets are still coarse and should eventually become domain-specific.

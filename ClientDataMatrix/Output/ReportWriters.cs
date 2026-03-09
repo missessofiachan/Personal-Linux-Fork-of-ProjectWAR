@@ -595,7 +595,7 @@ namespace ClientDataMatrix.Output
                 builder.AppendLine();
 
                 AppendTable(builder, "Field Schema", operation.Fields ?? new List<ComponentOperationFieldRecord>(),
-                    new[] { "FieldKey", "NonZero", "DistinctValues", "SampleValues", "TokenRenderings", "SemanticSummary", "Confidence", "ContextTags", "Notes" },
+                    new[] { "FieldKey", "NonZero", "DistinctValues", "SampleValues", "TokenRenderings", "SemanticSummary", "Confidence", "Triage", "Score", "ContextTags", "Notes" },
                     row => new[]
                     {
                         row.FieldKey,
@@ -605,8 +605,10 @@ namespace ClientDataMatrix.Output
                         row.TokenRenderingsText,
                         row.SemanticSummary,
                         row.Confidence,
+                        row.TriageBucket,
+                        row.TriageScore.ToString(CultureInfo.InvariantCulture),
                         row.ContextTagsText,
-                        row.Notes
+                        string.IsNullOrWhiteSpace(row.TriageNotes) ? row.Notes : row.Notes + " " + row.TriageNotes
                     });
 
                 AppendTable(builder, "Sample Abilities", operation.SampleAbilities ?? new List<ComponentOperationAbilityRecord>(),
@@ -678,7 +680,21 @@ namespace ClientDataMatrix.Output
                 builder.AppendLine("### " + conflict.SubjectKey + " :: " + conflict.FactName);
                 builder.AppendLine();
                 builder.AppendLine("- Domain: `" + conflict.Domain + "`");
+                builder.AppendLine("- Triage: `" + conflict.TriageBucket + "` | score `" + conflict.TriageScore.ToString(CultureInfo.InvariantCulture) + "` | category `" + conflict.TriageCategory + "`");
                 builder.AppendLine("- Distinct values: `" + string.Join("`, `", conflict.DistinctValues.Select(NullToEmpty)) + "`");
+                if (!string.IsNullOrWhiteSpace(conflict.ResolutionRule) || !string.IsNullOrWhiteSpace(conflict.CanonicalValue))
+                {
+                    string resolution = string.Join(" -> ", new[]
+                    {
+                        conflict.RecommendedSourceFamily,
+                        conflict.CanonicalValue,
+                        conflict.CanonicalMeaning
+                    }.Where(value => !string.IsNullOrWhiteSpace(value)));
+                    builder.AppendLine("- Resolution: `" + NullToEmpty(conflict.ResolutionRule) + "`" + (string.IsNullOrWhiteSpace(resolution) ? string.Empty : " | `" + EscapeMarkdownCell(resolution) + "`"));
+                }
+                if (!string.IsNullOrWhiteSpace(conflict.ResolutionNotes))
+                    builder.AppendLine("- Resolution notes: " + EscapeMarkdownCell(conflict.ResolutionNotes));
+                builder.AppendLine("- Notes: " + EscapeMarkdownCell(NullToEmpty(conflict.TriageNotes)));
                 builder.AppendLine();
                 AppendTable(builder, "Evidence", conflict.Claims,
                     new[] { "Value", "Source", "File", "Path", "Line", "ByteOffset", "Field", "Confidence" },
@@ -980,7 +996,7 @@ namespace ClientDataMatrix.Output
         private static void WriteOperationFieldsCsv(string path, IList<ComponentOperationSchemaRecord> operations)
         {
             StringBuilder builder = new StringBuilder();
-            builder.AppendLine("OperationId,OperationName,FieldKey,NonZeroCount,DistinctValueCount,SampleValues,TokenRenderings,SemanticSummary,Confidence,ContextTags,Notes");
+            builder.AppendLine("OperationId,OperationName,FieldKey,NonZeroCount,DistinctValueCount,SampleValues,TokenRenderings,SemanticSummary,Confidence,TriageBucket,TriageScore,TriageNotes,ContextTags,Notes");
             foreach (ComponentOperationSchemaRecord operation in operations)
             {
                 foreach (ComponentOperationFieldRecord field in operation.Fields ?? new List<ComponentOperationFieldRecord>())
@@ -996,6 +1012,9 @@ namespace ClientDataMatrix.Output
                         EscapeCsv(field.TokenRenderingsText),
                         EscapeCsv(field.SemanticSummary),
                         EscapeCsv(field.Confidence),
+                        EscapeCsv(field.TriageBucket),
+                        EscapeCsv(field.TriageScore.ToString(CultureInfo.InvariantCulture)),
+                        EscapeCsv(field.TriageNotes),
                         EscapeCsv(field.ContextTagsText),
                         EscapeCsv(field.Notes)
                     }));

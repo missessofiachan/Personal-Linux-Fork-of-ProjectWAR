@@ -40,7 +40,17 @@ Default roots:
 6. Use `Conflict Ledger` to:
    - generate the full conflict ledger
    - browse conflict counts grouped by domain
-   - inspect the first 500 conflicts for the selected domain
+   - use the `High` column in the domain grid to see which domains still contain real critical/high work after filters are applied
+   - inspect the first 500 conflicts for the selected domain, ordered by triage score instead of raw subject order
+   - toggle `Hide Blank String Noise` to suppress the high-volume blank-vs-localized text mismatches while triaging stronger conflicts like `EffectId`
+   - leave `Hide AbilityId-Mirror EffectId Pattern` enabled when you want to suppress the routine `abilities.csv EffectId == AbilityId` cases and focus on the narrower `EffectId` disagreements that do not follow that mirror pattern
+   - toggle `High-Signal Only` when you want the tab to collapse to just `Critical` and `High` conflicts after the other filters have been applied
+   - use the summary panel and category column to separate the remaining `EffectId` work into `AbilityIdMirrorEffectId`, `MountOverlayEffectId`, and `ZeroVsEffectIdGap`, and to split string mismatches into `PlaceholderStringMismatch`, `InternalAbilityNameMismatch`, and `InternalOnlyAbilityNameMismatch` instead of treating every text disagreement as the same problem
+   - use the `Resolve To` column when you want the tab to show the current canonical recommendation directly in the grid, including the preferred source family, raw value, and decoded effect name when available
+   - inspect the `Conflict Profile` panel for the selected row to see the decoded subject, triage category, and source pattern without manually reading every claim first
+   - inspect the `Value Meanings` grid to compare raw conflict values against decoded effect names or unit renderings before dropping to claim-level evidence
+   - inspect the claim-evidence grid for the selected conflict so you can see the exact values, source file, field name, and confidence without leaving the GUI
+   - double-click an ability-backed conflict row to jump straight into `Ability Doctor` and generate that ability report
    - open the full markdown ledger on disk
 7. Use `Token Dictionary` to:
    - generate the COM token glossary from extracted client strings
@@ -68,8 +78,19 @@ Default roots:
    - spot inline requirement-reference hints when `ExtData[*].Val6` values exactly match known `abilityrequirementexport.bin` rows
    - browse sample abilities that use the selected operation, including trigger text and client-text excerpts
    - focus first on priority operations such as `CC`, `APPLY_ABILITY`, `KNOCKBACK`, and `IMMUNITY`
-11. Use `Source Status` to review file load success, row counts, and parse failures.
-12. Use `Log` to keep a timestamped execution trail for the current session.
+11. Use `Unknown Triage` to:
+   - rank remaining `Unknown` and `Structural` component fields by triage score, priority, and observation count
+   - treat `Structural` confidence as a partial decode: the field role is inferred from extracted BIN clustering, but exact per-value semantics still need manual work
+   - use those partial decodes to separate recurring layout roles such as `APPLY_ABILITY` / `CC` `ExtData[*].Val1/2/3/4/7` blocks and `CC` `FlagsRaw` / `Value15` from truly opaque fields
+   - leave `Hide Multiplier Noise` enabled when you want the list to stay focused on ext-data, flags, delays, target limits, and other higher-signal unknowns
+   - focus on the highest-impact unresolved fields before lower-value tail work
+   - inspect the `Value Evidence` grid for the selected hotspot to see which raw values dominate that field
+   - inspect the `Value Profile` panel for the selected raw value to see its trigger mix, context tags, and strongest non-multiplier companion fields
+   - inspect the `Correlated Fields` grid to find recurring `Val1`/`Val3`/`Val4`/`Val7` style clusters around a selected raw value without leaving the GUI
+   - inspect sample abilities for the selected raw value so each unknown stays grounded in client text and trigger context
+   - double-click a sample ability to jump straight into `Ability Doctor` for that row
+12. Use `Source Status` to review file load success, row counts, and parse failures.
+13. Use `Log` to keep a timestamped execution trail for the current session.
 
 ## Definition Explorer
 
@@ -149,7 +170,6 @@ The CLI commands still work, although this is now a Windows GUI executable and c
 .\bin\Debug\ClientDataMatrix.exe report coverage
 ```
 
-```powershell
 .\bin\Debug\ClientDataMatrix.exe report requirements
 ```
 

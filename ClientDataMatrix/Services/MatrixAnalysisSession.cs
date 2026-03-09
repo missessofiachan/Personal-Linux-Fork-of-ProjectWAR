@@ -71,6 +71,16 @@ namespace ClientDataMatrix.Services
             return _componentSchemas.BuildOperationSchemas(ExtractedRootPath);
         }
 
+        public List<ComponentOperationFieldValueRecord> BuildOperationFieldValueEvidence(uint operationId, string fieldKey)
+        {
+            return _componentSchemas.BuildOperationFieldValueEvidence(operationId, fieldKey);
+        }
+
+        public ComponentOperationFieldValueInsightRecord BuildOperationFieldValueInsight(uint operationId, string fieldKey, string rawValue)
+        {
+            return _componentSchemas.BuildOperationFieldValueInsight(operationId, fieldKey, rawValue);
+        }
+
         public string WriteAbilityReport(string outputRoot, AbilityAnalysisResult report)
         {
             string resolvedOutputRoot = ResolveOutputRoot(outputRoot);

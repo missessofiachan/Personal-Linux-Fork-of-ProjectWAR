@@ -62,15 +62,32 @@ namespace ClientDataMatrix.UI
         private DataGridView _operationGrid;
         private DataGridView _operationFieldGrid;
         private DataGridView _operationAbilityGrid;
+        private Button _generateUnknownsButton;
+        private Button _openUnknownMarkdownButton;
+        private Button _openUnknownFolderButton;
+        private CheckBox _hideMultiplierUnknownsCheckBox;
+        private TextBox _unknownSummaryTextBox;
+        private DataGridView _unknownFieldGrid;
+        private DataGridView _unknownValueGrid;
+        private TextBox _unknownInsightTextBox;
+        private DataGridView _unknownCompanionGrid;
+        private DataGridView _unknownAbilityGrid;
         private Button _generateConflictsButton;
         private Button _openConflictMarkdownButton;
         private Button _openConflictFolderButton;
+        private CheckBox _hideBlankStringConflictCheckBox;
+        private CheckBox _hideMirrorEffectIdConflictCheckBox;
+        private CheckBox _highSignalConflictsOnlyCheckBox;
         private TextBox _conflictSummaryTextBox;
         private DataGridView _conflictDomainGrid;
         private DataGridView _conflictGrid;
+        private TextBox _conflictInsightTextBox;
+        private DataGridView _conflictValueGrid;
+        private DataGridView _conflictClaimGrid;
         private DataGridView _statusGrid;
         private TextBox _logTextBox;
         private ToolStripStatusLabel _statusLabel;
+        private TabControl _mainTabs;
 
         private MatrixAnalysisSession _session;
         private DefinitionCatalog _definitions;
@@ -91,6 +108,8 @@ namespace ClientDataMatrix.UI
         private string _lastOperationSchemaMarkdownPath;
         private string _lastConflictMarkdownPath;
         private bool _isBusy;
+        private readonly Dictionary<string, List<ComponentOperationFieldValueRecord>> _unknownValueCache = new Dictionary<string, List<ComponentOperationFieldValueRecord>>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, ComponentOperationFieldValueInsightRecord> _unknownInsightCache = new Dictionary<string, ComponentOperationFieldValueInsightRecord>(StringComparer.OrdinalIgnoreCase);
 
         public MainForm(string extractedRootPath, string outputRoot)
         {
@@ -144,7 +163,7 @@ namespace ClientDataMatrix.UI
             Button browseOutput = new Button { Text = "Browse...", AutoSize = true, Margin = new Padding(0, 3, 8, 3) };
             browseOutput.Click += (sender, args) => ChooseFolder(_outputPathTextBox, "Select the report output folder.");
             panel.Controls.Add(browseOutput, 2, 1);
-            Label hint = new Label { Text = "Double-click the exe to launch this GUI. Analysis remains read-only against extracted files.", AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(0, 8, 0, 0) };
+            Label hint = new Label { Text = "GUI analysis stays read-only against extracted client files.", AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(0, 8, 0, 0) };
             panel.Controls.Add(hint, 3, 1);
             panel.SetColumnSpan(hint, 2);
 
@@ -153,17 +172,18 @@ namespace ClientDataMatrix.UI
 
         private Control CreateMainTabs()
         {
-            TabControl tabs = new TabControl { Dock = DockStyle.Fill };
-            tabs.TabPages.Add(CreateAbilityTab());
-            tabs.TabPages.Add(CreateTokenTab());
-            tabs.TabPages.Add(CreateDomainTab());
-            tabs.TabPages.Add(CreateRequirementTab());
-            tabs.TabPages.Add(CreateCoverageTab());
-            tabs.TabPages.Add(CreateOperationTab());
-            tabs.TabPages.Add(CreateConflictTab());
-            tabs.TabPages.Add(CreateStatusTab());
-            tabs.TabPages.Add(CreateLogTab());
-            return tabs;
+            _mainTabs = new TabControl { Dock = DockStyle.Fill };
+            _mainTabs.TabPages.Add(CreateAbilityTab());
+            _mainTabs.TabPages.Add(CreateTokenTab());
+            _mainTabs.TabPages.Add(CreateDomainTab());
+            _mainTabs.TabPages.Add(CreateRequirementTab());
+            _mainTabs.TabPages.Add(CreateCoverageTab());
+            _mainTabs.TabPages.Add(CreateOperationTab());
+            _mainTabs.TabPages.Add(CreateUnknownTab());
+            _mainTabs.TabPages.Add(CreateConflictTab());
+            _mainTabs.TabPages.Add(CreateStatusTab());
+            _mainTabs.TabPages.Add(CreateLogTab());
+            return _mainTabs;
         }
 
         private TabPage CreateAbilityTab()
@@ -273,14 +293,25 @@ namespace ClientDataMatrix.UI
             _openConflictFolderButton = new Button { Text = "Open Output Folder", AutoSize = true, Enabled = false };
             _openConflictFolderButton.Click += (sender, args) => OpenPath(string.IsNullOrWhiteSpace(_lastConflictMarkdownPath) ? null : Path.GetDirectoryName(_lastConflictMarkdownPath));
             actions.Controls.Add(_openConflictFolderButton);
+            _hideBlankStringConflictCheckBox = new CheckBox { Text = "Hide Blank String Noise", AutoSize = true };
+            _hideBlankStringConflictCheckBox.CheckedChanged += (sender, args) => RefreshConflictView();
+            actions.Controls.Add(_hideBlankStringConflictCheckBox);
+            _hideMirrorEffectIdConflictCheckBox = new CheckBox { Text = "Hide AbilityId-Mirror EffectId Pattern", AutoSize = true, Checked = true };
+            _hideMirrorEffectIdConflictCheckBox.CheckedChanged += (sender, args) => RefreshConflictView();
+            actions.Controls.Add(_hideMirrorEffectIdConflictCheckBox);
+            _highSignalConflictsOnlyCheckBox = new CheckBox { Text = "High-Signal Only", AutoSize = true };
+            _highSignalConflictsOnlyCheckBox.CheckedChanged += (sender, args) => RefreshConflictView();
+            actions.Controls.Add(_highSignalConflictsOnlyCheckBox);
 
             _conflictSummaryTextBox = CreateReadOnlyTextBox();
             _conflictSummaryTextBox.Text = "Generate the conflict ledger to browse contradiction domains.";
 
-            SplitContainer split = new SplitContainer { Dock = DockStyle.Fill, Orientation = Orientation.Horizontal, SplitterDistance = 240 };
+            SplitContainer split = new SplitContainer { Dock = DockStyle.Fill, Orientation = Orientation.Vertical, SplitterDistance = 330 };
             _conflictDomainGrid = CreateReadOnlyGrid();
             _conflictDomainGrid.AutoGenerateColumns = false;
             _conflictDomainGrid.Columns.Add(CreateTextColumn("Domain", "Domain", 180));
+            _conflictDomainGrid.Columns.Add(CreateTextColumn("Peak", "PeakTriageScore", 70));
+            _conflictDomainGrid.Columns.Add(CreateTextColumn("High", "HighSignalCount", 70));
             _conflictDomainGrid.Columns.Add(CreateTextColumn("Conflicts", "ConflictCount", 90));
             _conflictDomainGrid.Columns.Add(CreateTextColumn("Subjects", "SubjectCount", 90));
             _conflictDomainGrid.Columns.Add(CreateTextColumn("Facts", "FactCount", 90));
@@ -288,17 +319,157 @@ namespace ClientDataMatrix.UI
 
             _conflictGrid = CreateReadOnlyGrid();
             _conflictGrid.AutoGenerateColumns = false;
+            _conflictGrid.Columns.Add(CreateTextColumn("Triage", "TriageBucket", 80));
+            _conflictGrid.Columns.Add(CreateTextColumn("Score", "TriageScore", 65));
+            _conflictGrid.Columns.Add(CreateTextColumn("Category", "TriageCategory", 130));
+            _conflictGrid.Columns.Add(CreateTextColumn("Resolve To", "ResolutionHint", 180));
+            _conflictGrid.Columns.Add(CreateTextColumn("Kind", "SubjectKind", 95));
             _conflictGrid.Columns.Add(CreateTextColumn("Subject", "SubjectKey", 190));
             _conflictGrid.Columns.Add(CreateTextColumn("Fact", "FactName", 140));
             _conflictGrid.Columns.Add(CreateTextColumn("Domain", "Domain", 110));
             _conflictGrid.Columns.Add(CreateTextColumn("Distinct Values", "DistinctValues", 420));
             _conflictGrid.Columns.Add(CreateTextColumn("Evidence", "ClaimCount", 80));
+            _conflictGrid.SelectionChanged += (sender, args) => RefreshConflictClaims();
+            _conflictGrid.CellDoubleClick += async (sender, args) => { if (args.RowIndex >= 0) await NavigateSelectedConflictAbilityAsync(); };
+
+            _conflictInsightTextBox = CreateReadOnlyTextBox();
+            _conflictInsightTextBox.Text = "Select a conflict to inspect its subject, decoded values, and source pattern.";
+
+            _conflictValueGrid = CreateReadOnlyGrid();
+            _conflictValueGrid.AutoGenerateColumns = false;
+            _conflictValueGrid.Columns.Add(CreateTextColumn("Value", "ValueText", 150));
+            _conflictValueGrid.Columns.Add(CreateTextColumn("Meaning", "Meaning", 220));
+            _conflictValueGrid.Columns.Add(CreateTextColumn("Sources", "SourcesText", 120));
+            _conflictValueGrid.Columns.Add(CreateTextColumn("Claims", "ClaimCount", 70));
+            _conflictValueGrid.Columns.Add(CreateTextColumn("Notes", "Notes", 260));
+
+            _conflictClaimGrid = CreateReadOnlyGrid();
+            _conflictClaimGrid.AutoGenerateColumns = false;
+            _conflictClaimGrid.Columns.Add(CreateTextColumn("Value", "NormalizedValue", 220));
+            _conflictClaimGrid.Columns.Add(CreateTextColumn("Raw", "RawValue", 160));
+            _conflictClaimGrid.Columns.Add(CreateTextColumn("Source", "SourceFamily", 110));
+            _conflictClaimGrid.Columns.Add(CreateTextColumn("File", "TableName", 160));
+            _conflictClaimGrid.Columns.Add(CreateTextColumn("Field", "FieldName", 130));
+            _conflictClaimGrid.Columns.Add(CreateTextColumn("Confidence", "Confidence", 120));
+            _conflictClaimGrid.Columns.Add(CreateTextColumn("Path", "SourcePath", 300));
+            _conflictClaimGrid.Columns.Add(CreateTextColumn("Location", "SourceLocation", 100));
+            _conflictClaimGrid.Columns.Add(CreateTextColumn("Notes", "Notes", 220));
+
+            SplitContainer detailSplit = new SplitContainer { Dock = DockStyle.Fill, Orientation = Orientation.Horizontal, SplitterDistance = 290 };
+            detailSplit.Panel1.Controls.Add(WrapInGroup("Conflict Details", _conflictGrid));
+
+            SplitContainer evidenceSplit = new SplitContainer { Dock = DockStyle.Fill, Orientation = Orientation.Vertical, SplitterDistance = 480 };
+            TableLayoutPanel profileLayout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2 };
+            profileLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 120F));
+            profileLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            profileLayout.Controls.Add(WrapInGroup("Conflict Profile", _conflictInsightTextBox), 0, 0);
+            profileLayout.Controls.Add(WrapInGroup("Value Meanings", _conflictValueGrid), 0, 1);
+            evidenceSplit.Panel1.Controls.Add(profileLayout);
+            evidenceSplit.Panel2.Controls.Add(WrapInGroup("Claim Evidence", _conflictClaimGrid));
+            detailSplit.Panel2.Controls.Add(evidenceSplit);
 
             split.Panel1.Controls.Add(WrapInGroup("Conflict Domains", _conflictDomainGrid));
-            split.Panel2.Controls.Add(WrapInGroup("Conflict Details", _conflictGrid));
+            split.Panel2.Controls.Add(detailSplit);
 
             layout.Controls.Add(actions, 0, 0);
             layout.Controls.Add(_conflictSummaryTextBox, 0, 1);
+            layout.Controls.Add(split, 0, 2);
+            tab.Controls.Add(layout);
+            return tab;
+        }
+
+        private TabPage CreateUnknownTab()
+        {
+            TabPage tab = new TabPage("Unknown Triage");
+            TableLayoutPanel layout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3 };
+            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 145F));
+            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+            FlowLayoutPanel actions = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true };
+            _generateUnknownsButton = new Button { Text = "Generate Operation Schemas", AutoSize = true, Enabled = false };
+            _generateUnknownsButton.Click += async (sender, args) => await GenerateOperationSchemaReportAsync();
+            actions.Controls.Add(_generateUnknownsButton);
+            _openUnknownMarkdownButton = new Button { Text = "Open Markdown", AutoSize = true, Enabled = false };
+            _openUnknownMarkdownButton.Click += (sender, args) => OpenPath(_lastOperationSchemaMarkdownPath);
+            actions.Controls.Add(_openUnknownMarkdownButton);
+            _openUnknownFolderButton = new Button { Text = "Open Output Folder", AutoSize = true, Enabled = false };
+            _openUnknownFolderButton.Click += (sender, args) => OpenPath(string.IsNullOrWhiteSpace(_lastOperationSchemaMarkdownPath) ? null : Path.GetDirectoryName(_lastOperationSchemaMarkdownPath));
+            actions.Controls.Add(_openUnknownFolderButton);
+            _hideMultiplierUnknownsCheckBox = new CheckBox { Text = "Hide Multiplier Noise", AutoSize = true, Checked = true };
+            _hideMultiplierUnknownsCheckBox.CheckedChanged += (sender, args) => RefreshUnknownView();
+            actions.Controls.Add(_hideMultiplierUnknownsCheckBox);
+
+            _unknownSummaryTextBox = CreateReadOnlyTextBox();
+            _unknownSummaryTextBox.Text = "Generate operation schemas to rank the remaining unknown or structural component fields by impact and priority.";
+
+            SplitContainer split = new SplitContainer { Dock = DockStyle.Fill, Orientation = Orientation.Horizontal, SplitterDistance = 360 };
+            _unknownFieldGrid = CreateReadOnlyGrid();
+            _unknownFieldGrid.AutoGenerateColumns = false;
+            _unknownFieldGrid.Columns.Add(CreateTextColumn("Triage", "TriageBucket", 80));
+            _unknownFieldGrid.Columns.Add(CreateTextColumn("Score", "TriageScore", 65));
+            _unknownFieldGrid.Columns.Add(CreateTextColumn("Confidence", "Confidence", 85));
+            _unknownFieldGrid.Columns.Add(CreateTextColumn("Priority", "PriorityText", 70));
+            _unknownFieldGrid.Columns.Add(CreateTextColumn("OperationId", "OperationId", 90));
+            _unknownFieldGrid.Columns.Add(CreateTextColumn("OperationName", "OperationName", 180));
+            _unknownFieldGrid.Columns.Add(CreateTextColumn("Field", "FieldKey", 180));
+            _unknownFieldGrid.Columns.Add(CreateTextColumn("NonZero", "NonZeroCount", 75));
+            _unknownFieldGrid.Columns.Add(CreateTextColumn("Distinct", "DistinctValueCount", 75));
+            _unknownFieldGrid.Columns.Add(CreateTextColumn("Tags", "ContextTagsText", 190));
+            _unknownFieldGrid.Columns.Add(CreateTextColumn("Sample Values", "SampleValuesText", 220));
+            _unknownFieldGrid.Columns.Add(CreateTextColumn("Notes", "Notes", 320));
+            _unknownFieldGrid.SelectionChanged += (sender, args) => RefreshUnknownDetails();
+            split.Panel1.Controls.Add(WrapInGroup("Unknown Field Hotspots", _unknownFieldGrid));
+
+            SplitContainer detailSplit = new SplitContainer { Dock = DockStyle.Fill, Orientation = Orientation.Vertical, SplitterDistance = 430 };
+            _unknownValueGrid = CreateReadOnlyGrid();
+            _unknownValueGrid.AutoGenerateColumns = false;
+            _unknownValueGrid.Columns.Add(CreateTextColumn("Raw Value", "RawValue", 90));
+            _unknownValueGrid.Columns.Add(CreateTextColumn("Observations", "ObservationCount", 90));
+            _unknownValueGrid.Columns.Add(CreateTextColumn("Components", "DistinctComponentCount", 85));
+            _unknownValueGrid.Columns.Add(CreateTextColumn("Abilities", "DistinctAbilityCount", 75));
+            _unknownValueGrid.Columns.Add(CreateTextColumn("Sample ComponentIds", "SampleComponentIdsText", 160));
+            _unknownValueGrid.Columns.Add(CreateTextColumn("Sample AbilityIds", "SampleAbilityIdsText", 160));
+            _unknownValueGrid.SelectionChanged += (sender, args) => RefreshUnknownValueAbilities();
+            detailSplit.Panel1.Controls.Add(WrapInGroup("Value Evidence", _unknownValueGrid));
+
+            TableLayoutPanel insightLayout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3 };
+            insightLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 120F));
+            insightLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 190F));
+            insightLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+            _unknownInsightTextBox = CreateReadOnlyTextBox();
+            _unknownInsightTextBox.Text = "Select an unknown or structural field and raw value to inspect its trigger mix, context tags, and dominant companion fields.";
+            insightLayout.Controls.Add(WrapInGroup("Value Profile", _unknownInsightTextBox), 0, 0);
+
+            _unknownCompanionGrid = CreateReadOnlyGrid();
+            _unknownCompanionGrid.AutoGenerateColumns = false;
+            _unknownCompanionGrid.Columns.Add(CreateTextColumn("Field", "FieldKey", 170));
+            _unknownCompanionGrid.Columns.Add(CreateTextColumn("Dominant Value", "DominantValue", 110));
+            _unknownCompanionGrid.Columns.Add(CreateTextColumn("Coverage %", "CoveragePercent", 80));
+            _unknownCompanionGrid.Columns.Add(CreateTextColumn("Matches", "MatchCount", 80));
+            _unknownCompanionGrid.Columns.Add(CreateTextColumn("Observed", "ObservationCount", 80));
+            _unknownCompanionGrid.Columns.Add(CreateTextColumn("Distinct", "DistinctValueCount", 75));
+            _unknownCompanionGrid.Columns.Add(CreateTextColumn("Sample Values", "SampleValuesText", 220));
+            insightLayout.Controls.Add(WrapInGroup("Correlated Fields", _unknownCompanionGrid), 0, 1);
+
+            _unknownAbilityGrid = CreateReadOnlyGrid();
+            _unknownAbilityGrid.AutoGenerateColumns = false;
+            _unknownAbilityGrid.Columns.Add(CreateTextColumn("AbilityId", "AbilityId", 90));
+            _unknownAbilityGrid.Columns.Add(CreateTextColumn("AbilityName", "AbilityName", 170));
+            _unknownAbilityGrid.Columns.Add(CreateTextColumn("ComponentId", "ComponentId", 95));
+            _unknownAbilityGrid.Columns.Add(CreateTextColumn("Slot", "ComponentSlotIndex", 60));
+            _unknownAbilityGrid.Columns.Add(CreateTextColumn("Trigger", "TriggerText", 170));
+            _unknownAbilityGrid.Columns.Add(CreateTextColumn("Tags", "ContextTagsText", 150));
+            _unknownAbilityGrid.Columns.Add(CreateTextColumn("TextExcerpt", "TextExcerpt", 420));
+            _unknownAbilityGrid.Columns.Add(CreateTextColumn("Source", "SourceLocation", 90));
+            _unknownAbilityGrid.CellDoubleClick += async (sender, args) => { if (args.RowIndex >= 0) await NavigateSelectedUnknownAbilityAsync(); };
+            insightLayout.Controls.Add(WrapInGroup("Sample Abilities", _unknownAbilityGrid), 0, 2);
+            detailSplit.Panel2.Controls.Add(insightLayout);
+            split.Panel2.Controls.Add(detailSplit);
+
+            layout.Controls.Add(actions, 0, 0);
+            layout.Controls.Add(_unknownSummaryTextBox, 0, 1);
             layout.Controls.Add(split, 0, 2);
             tab.Controls.Add(layout);
             return tab;
@@ -523,6 +694,8 @@ namespace ClientDataMatrix.UI
             _operationFieldGrid = CreateReadOnlyGrid();
             _operationFieldGrid.AutoGenerateColumns = false;
             _operationFieldGrid.Columns.Add(CreateTextColumn("Field", "FieldKey", 170));
+            _operationFieldGrid.Columns.Add(CreateTextColumn("Triage", "TriageBucket", 80));
+            _operationFieldGrid.Columns.Add(CreateTextColumn("Score", "TriageScore", 65));
             _operationFieldGrid.Columns.Add(CreateTextColumn("NonZero", "NonZeroCount", 70));
             _operationFieldGrid.Columns.Add(CreateTextColumn("Distinct", "DistinctValueCount", 70));
             _operationFieldGrid.Columns.Add(CreateTextColumn("Sample Values", "SampleValuesText", 220));
@@ -652,6 +825,8 @@ namespace ClientDataMatrix.UI
                 _lastRequirementMarkdownPath = null;
                 _lastOperationSchemaMarkdownPath = null;
                 _lastConflictMarkdownPath = null;
+                _unknownValueCache.Clear();
+                _unknownInsightCache.Clear();
                 _openAbilityMarkdownButton.Enabled = false;
                 _openAbilityFolderButton.Enabled = false;
                 _openTokenDictionaryMarkdownButton.Enabled = false;
@@ -664,8 +839,14 @@ namespace ClientDataMatrix.UI
                 _openRequirementsFolderButton.Enabled = false;
                 _openOperationSchemasMarkdownButton.Enabled = false;
                 _openOperationSchemasFolderButton.Enabled = false;
+                _openUnknownMarkdownButton.Enabled = false;
+                _openUnknownFolderButton.Enabled = false;
+                _hideMultiplierUnknownsCheckBox.Checked = true;
                 _openConflictMarkdownButton.Enabled = false;
                 _openConflictFolderButton.Enabled = false;
+                _hideBlankStringConflictCheckBox.Checked = false;
+                _hideMirrorEffectIdConflictCheckBox.Checked = true;
+                _highSignalConflictsOnlyCheckBox.Checked = false;
 
                 _statusGrid.DataSource = _session.Dataset.TableStatuses.OrderBy(x => x.SourceFamily).ThenBy(x => x.TableName).ToList();
                 ApplyAbilityFilter();
@@ -686,9 +867,18 @@ namespace ClientDataMatrix.UI
                 _operationGrid.DataSource = null;
                 _operationFieldGrid.DataSource = null;
                 _operationAbilityGrid.DataSource = null;
+                _unknownSummaryTextBox.Text = "Generate operation schemas to rank the remaining unknown component fields by impact and priority.";
+                _unknownFieldGrid.DataSource = null;
+                _unknownValueGrid.DataSource = null;
+                _unknownCompanionGrid.DataSource = null;
+                _unknownAbilityGrid.DataSource = null;
+                _unknownInsightTextBox.Text = "Select an unknown field and raw value to inspect its trigger mix, context tags, and dominant companion fields.";
                 _conflictSummaryTextBox.Text = "Generate the conflict ledger to browse contradiction domains.";
                 _conflictDomainGrid.DataSource = null;
                 _conflictGrid.DataSource = null;
+                _conflictValueGrid.DataSource = null;
+                _conflictClaimGrid.DataSource = null;
+                _conflictInsightTextBox.Text = "Select a conflict to inspect its subject, decoded values, and source pattern.";
 
                 AppendLog("Loaded dataset from " + _session.ExtractedRootPath + ".");
                 AppendLog("Catalog contains " + _abilityCatalog.Count.ToString(CultureInfo.InvariantCulture) + " unique ability ids.");
@@ -709,6 +899,8 @@ namespace ClientDataMatrix.UI
                 _abilityCatalogStatusLabel.Text = "Dataset load failed.";
                 ClearAbilityPresentation(ex.ToString());
                 _tokenGrid.DataSource = null;
+                _openTokenDictionaryMarkdownButton.Enabled = false;
+                _openTokenDictionaryFolderButton.Enabled = false;
                 _domainsGrid.DataSource = null;
                 _domainValuesGrid.DataSource = null;
                 _domainsSummaryTextBox.Text = "Dataset load failed. Fix the extracted root path and reload.";
@@ -722,10 +914,37 @@ namespace ClientDataMatrix.UI
                 _openRequirementsMarkdownButton.Enabled = false;
                 _openRequirementsFolderButton.Enabled = false;
                 _coverageGrid.DataSource = null;
+                _coverageSummaryTextBox.Text = "Dataset load failed. Fix the extracted root path and reload.";
+                _openCoverageMarkdownButton.Enabled = false;
+                _openCoverageFolderButton.Enabled = false;
                 _operationGrid.DataSource = null;
                 _operationFieldGrid.DataSource = null;
                 _operationAbilityGrid.DataSource = null;
+                _operationSummaryTextBox.Text = "Dataset load failed. Fix the extracted root path and reload.";
+                _openOperationSchemasMarkdownButton.Enabled = false;
+                _openOperationSchemasFolderButton.Enabled = false;
+                _unknownValueCache.Clear();
+                _unknownInsightCache.Clear();
+                _unknownFieldGrid.DataSource = null;
+                _unknownValueGrid.DataSource = null;
+                _unknownCompanionGrid.DataSource = null;
+                _unknownAbilityGrid.DataSource = null;
+                _unknownSummaryTextBox.Text = "Dataset load failed. Fix the extracted root path and reload.";
+                _unknownInsightTextBox.Text = "Dataset load failed. Fix the extracted root path and reload.";
+                _openUnknownMarkdownButton.Enabled = false;
+                _openUnknownFolderButton.Enabled = false;
+                _hideMultiplierUnknownsCheckBox.Checked = true;
                 _conflictSummaryTextBox.Text = "Dataset load failed. Fix the extracted root path and reload.";
+                _conflictDomainGrid.DataSource = null;
+                _conflictGrid.DataSource = null;
+                _conflictValueGrid.DataSource = null;
+                _conflictClaimGrid.DataSource = null;
+                _conflictInsightTextBox.Text = "Dataset load failed. Fix the extracted root path and reload.";
+                _openConflictMarkdownButton.Enabled = false;
+                _openConflictFolderButton.Enabled = false;
+                _hideBlankStringConflictCheckBox.Checked = false;
+                _hideMirrorEffectIdConflictCheckBox.Checked = true;
+                _highSignalConflictsOnlyCheckBox.Checked = false;
                 AppendLog("Dataset load failed: " + ex.Message);
                 SetBusy(false, "Dataset load failed.");
                 MessageBox.Show(this, ex.ToString(), "ClientDataMatrix Load Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -781,10 +1000,7 @@ namespace ClientDataMatrix.UI
                 _lastConflictReport = report;
                 _openConflictMarkdownButton.Enabled = File.Exists(_lastConflictMarkdownPath);
                 _openConflictFolderButton.Enabled = Directory.Exists(Path.GetDirectoryName(_lastConflictMarkdownPath));
-                _conflictSummaryTextBox.Text = BuildConflictSummary(report, _lastConflictMarkdownPath);
-                _conflictDomainGrid.DataSource = BuildDomainRows(report);
-                SelectFirstRow(_conflictDomainGrid);
-                RefreshConflictRows();
+                RefreshConflictView();
                 AppendLog("Conflict report written to " + _lastConflictMarkdownPath + ".");
                 SetBusy(false, "Conflict report generated.");
                 return true;
@@ -850,8 +1066,12 @@ namespace ClientDataMatrix.UI
                 OperationSchemaDocument report = await Task.Run(() => _session.BuildOperationSchemas());
                 _lastOperationSchemaMarkdownPath = await Task.Run(() => _session.WriteOperationSchemaReport(outputRoot, report));
                 _lastOperationSchema = report;
+                _unknownValueCache.Clear();
+                _unknownInsightCache.Clear();
                 _openOperationSchemasMarkdownButton.Enabled = File.Exists(_lastOperationSchemaMarkdownPath);
                 _openOperationSchemasFolderButton.Enabled = Directory.Exists(Path.GetDirectoryName(_lastOperationSchemaMarkdownPath));
+                _openUnknownMarkdownButton.Enabled = _openOperationSchemasMarkdownButton.Enabled;
+                _openUnknownFolderButton.Enabled = _openOperationSchemasFolderButton.Enabled;
                 _operationSummaryTextBox.Text = BuildOperationSummary(report, _lastOperationSchemaMarkdownPath);
                 _operationGrid.DataSource = report.Operations == null
                     ? new List<OperationSchemaListRow>()
@@ -867,6 +1087,7 @@ namespace ClientDataMatrix.UI
                     }).ToList();
                 SelectFirstRow(_operationGrid);
                 RefreshOperationDetails();
+                RefreshUnknownView();
                 AppendLog("Operation schema report written to " + _lastOperationSchemaMarkdownPath + ".");
                 SetBusy(false, "Operation schemas generated.");
                 return true;
@@ -1057,6 +1278,60 @@ namespace ClientDataMatrix.UI
             return ushort.TryParse(_abilityIdTextBox.Text.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out abilityId);
         }
 
+        private async Task NavigateSelectedUnknownAbilityAsync()
+        {
+            OperationAbilityListRow selected = _unknownAbilityGrid.CurrentRow == null ? null : _unknownAbilityGrid.CurrentRow.DataBoundItem as OperationAbilityListRow;
+            if (selected == null)
+                return;
+
+            await NavigateToAbilityAsync(selected.AbilityId, true);
+        }
+
+        private async Task NavigateSelectedConflictAbilityAsync()
+        {
+            ConflictListRow selected = _conflictGrid.CurrentRow == null ? null : _conflictGrid.CurrentRow.DataBoundItem as ConflictListRow;
+            ushort abilityId;
+            if (selected == null || !TryParseAbilityIdFromSubjectKey(selected.SubjectKey, out abilityId))
+                return;
+
+            await NavigateToAbilityAsync(abilityId, true);
+        }
+
+        private async Task NavigateToAbilityAsync(ushort abilityId, bool generateReport)
+        {
+            if (_mainTabs != null && _mainTabs.TabPages.Count > 0)
+                _mainTabs.SelectedIndex = 0;
+
+            _abilityIdTextBox.Text = abilityId.ToString(CultureInfo.InvariantCulture);
+            SelectAbilityInCatalog(abilityId);
+            AppendLog("Focused ability " + abilityId.ToString(CultureInfo.InvariantCulture) + " from triage view.");
+
+            if (generateReport)
+                await GenerateAbilityReportAsync();
+        }
+
+        private void SelectAbilityInCatalog(ushort abilityId)
+        {
+            if (_abilitySearchTextBox != null && !string.IsNullOrWhiteSpace(_abilitySearchTextBox.Text))
+                _abilitySearchTextBox.Text = string.Empty;
+            else
+                ApplyAbilityFilter();
+
+            if (_abilityGrid == null || _abilityGrid.Rows.Count == 0)
+                return;
+
+            foreach (DataGridViewRow row in _abilityGrid.Rows)
+            {
+                AbilityCatalogEntry entry = row.DataBoundItem as AbilityCatalogEntry;
+                if (entry == null || entry.AbilityId != abilityId)
+                    continue;
+
+                if (row.Cells.Count > 0)
+                    _abilityGrid.CurrentCell = row.Cells[0];
+                return;
+            }
+        }
+
         private void PopulateAbilityPresentation(AbilityAnalysisResult report, string markdownPath)
         {
             _abilitySummaryTextBox.Text = BuildAbilitySummary(report, markdownPath);
@@ -1227,22 +1502,101 @@ namespace ClientDataMatrix.UI
             if (_lastConflictReport == null)
             {
                 _conflictGrid.DataSource = null;
+                _conflictValueGrid.DataSource = null;
+                _conflictClaimGrid.DataSource = null;
+                _conflictInsightTextBox.Text = "Select a conflict to inspect its subject, decoded values, and source pattern.";
                 return;
             }
 
             ConflictDomainRow selected = _conflictDomainGrid.CurrentRow == null ? null : _conflictDomainGrid.CurrentRow.DataBoundItem as ConflictDomainRow;
-            IEnumerable<ConflictRecord> conflicts = _lastConflictReport.Conflicts;
+            IEnumerable<ConflictRecord> conflicts = GetVisibleConflicts();
             if (selected != null && !string.IsNullOrWhiteSpace(selected.Domain))
                 conflicts = conflicts.Where(x => string.Equals(x.Domain, selected.Domain, StringComparison.OrdinalIgnoreCase));
 
-            _conflictGrid.DataSource = conflicts.OrderBy(x => x.SubjectKey).ThenBy(x => x.FactName).Take(500).Select(x => new ConflictListRow
+            _conflictGrid.DataSource = conflicts.OrderByDescending(x => x.TriageScore).ThenBy(x => x.SubjectKey).ThenBy(x => x.FactName).Take(500).Select(x => new ConflictListRow
             {
+                TriageBucket = x.TriageBucket,
+                TriageScore = x.TriageScore,
+                TriageCategory = x.TriageCategory,
+                ResolutionHint = BuildConflictResolutionHint(x),
+                SubjectKind = ResolveSubjectKind(x.SubjectKey),
                 SubjectKey = x.SubjectKey,
                 FactName = x.FactName,
                 Domain = x.Domain,
                 DistinctValues = string.Join(" | ", x.DistinctValues ?? new List<string>()),
-                ClaimCount = x.Claims == null ? 0 : x.Claims.Count
+                ClaimCount = x.Claims == null ? 0 : x.Claims.Count,
+                Conflict = x
             }).ToList();
+            SelectFirstRow(_conflictGrid);
+            RefreshConflictClaims();
+        }
+
+        private void RefreshConflictClaims()
+        {
+            if (_lastConflictReport == null)
+            {
+                _conflictValueGrid.DataSource = null;
+                _conflictClaimGrid.DataSource = null;
+                _conflictInsightTextBox.Text = "Select a conflict to inspect its subject, decoded values, and source pattern.";
+                return;
+            }
+
+            ConflictListRow selected = _conflictGrid.CurrentRow == null ? null : _conflictGrid.CurrentRow.DataBoundItem as ConflictListRow;
+            if (selected == null || selected.Conflict == null)
+            {
+                _conflictValueGrid.DataSource = null;
+                _conflictClaimGrid.DataSource = null;
+                _conflictInsightTextBox.Text = "Select a conflict to inspect its subject, decoded values, and source pattern.";
+                return;
+            }
+
+            _conflictInsightTextBox.Text = BuildConflictInsightSummary(selected.Conflict);
+            _conflictValueGrid.DataSource = BuildConflictValueRows(selected.Conflict);
+            _conflictClaimGrid.DataSource = (selected.Conflict.Claims ?? new List<ClaimRecord>()).Select(claim => new ConflictClaimListRow
+            {
+                NormalizedValue = NullToPlaceholder(claim.NormalizedValue),
+                RawValue = NullToPlaceholder(claim.RawValue),
+                SourceFamily = claim.SourceFamily,
+                TableName = claim.TableName,
+                FieldName = claim.FieldName,
+                Confidence = claim.Confidence,
+                SourcePath = claim.SourcePath,
+                SourceLocation = claim.LineNumber > 0
+                    ? "line " + claim.LineNumber.ToString(CultureInfo.InvariantCulture)
+                    : (claim.ByteOffset > 0 ? "byte " + claim.ByteOffset.ToString(CultureInfo.InvariantCulture) : string.Empty),
+                Notes = claim.Notes
+            }).ToList();
+        }
+
+        private void RefreshConflictView()
+        {
+            if (_lastConflictReport == null)
+            {
+                _conflictSummaryTextBox.Text = "Generate the conflict ledger to browse contradiction domains.";
+                _conflictDomainGrid.DataSource = null;
+                _conflictGrid.DataSource = null;
+                _conflictClaimGrid.DataSource = null;
+                return;
+            }
+
+            _conflictSummaryTextBox.Text = BuildConflictSummary(_lastConflictReport, _lastConflictMarkdownPath);
+            _conflictDomainGrid.DataSource = BuildDomainRows(_lastConflictReport);
+            SelectFirstRow(_conflictDomainGrid);
+            RefreshConflictRows();
+        }
+
+        private List<ConflictRecord> GetVisibleConflicts()
+        {
+            IEnumerable<ConflictRecord> conflicts = _lastConflictReport == null || _lastConflictReport.Conflicts == null
+                ? Enumerable.Empty<ConflictRecord>()
+                : _lastConflictReport.Conflicts;
+            if (_hideBlankStringConflictCheckBox != null && _hideBlankStringConflictCheckBox.Checked)
+                conflicts = conflicts.Where(conflict => !conflict.IsNoise);
+            if (_hideMirrorEffectIdConflictCheckBox != null && _hideMirrorEffectIdConflictCheckBox.Checked)
+                conflicts = conflicts.Where(conflict => !string.Equals(conflict.TriageCategory, "AbilityIdMirrorEffectId", StringComparison.OrdinalIgnoreCase));
+            if (_highSignalConflictsOnlyCheckBox != null && _highSignalConflictsOnlyCheckBox.Checked)
+                conflicts = conflicts.Where(conflict => string.Equals(conflict.TriageBucket, "Critical", StringComparison.OrdinalIgnoreCase) || string.Equals(conflict.TriageBucket, "High", StringComparison.OrdinalIgnoreCase));
+            return conflicts.ToList();
         }
 
         private void RefreshDomainValues()
@@ -1383,6 +1737,8 @@ namespace ClientDataMatrix.UI
             _operationFieldGrid.DataSource = (operation.Fields ?? new List<ComponentOperationFieldRecord>()).Select(row => new OperationFieldListRow
             {
                 FieldKey = row.FieldKey,
+                TriageBucket = row.TriageBucket,
+                TriageScore = row.TriageScore,
                 NonZeroCount = row.NonZeroCount,
                 DistinctValueCount = row.DistinctValueCount,
                 SampleValuesText = row.SampleValuesText,
@@ -1390,7 +1746,7 @@ namespace ClientDataMatrix.UI
                 SemanticSummary = row.SemanticSummary,
                 Confidence = row.Confidence,
                 ContextTagsText = row.ContextTagsText,
-                Notes = row.Notes
+                Notes = string.IsNullOrWhiteSpace(row.TriageNotes) ? row.Notes : row.TriageNotes + " " + row.Notes
             }).ToList();
             _operationAbilityGrid.DataSource = (operation.SampleAbilities ?? new List<ComponentOperationAbilityRecord>()).Select(row => new OperationAbilityListRow
             {
@@ -1404,6 +1760,172 @@ namespace ClientDataMatrix.UI
                 SourcePath = row.SourcePath,
                 SourceLocation = row.SourceLocation
             }).ToList();
+        }
+
+        private void RefreshUnknownView()
+        {
+            if (_lastOperationSchema == null)
+            {
+                _unknownSummaryTextBox.Text = "Generate operation schemas to rank the remaining unknown or structural component fields by impact and priority.";
+                _unknownFieldGrid.DataSource = null;
+                _unknownValueGrid.DataSource = null;
+                _unknownCompanionGrid.DataSource = null;
+                _unknownAbilityGrid.DataSource = null;
+                _unknownInsightTextBox.Text = "Select an unknown or structural field and raw value to inspect its trigger mix, context tags, and dominant companion fields.";
+                return;
+            }
+
+            List<UnknownFieldListRow> allRows = (_lastOperationSchema.Operations ?? new List<ComponentOperationSchemaRecord>())
+                .SelectMany(operation => (operation.Fields ?? new List<ComponentOperationFieldRecord>())
+                    .Where(field => string.Equals(field.Confidence, SemanticConfidence.Unknown, StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(field.Confidence, SemanticConfidence.Structural, StringComparison.OrdinalIgnoreCase))
+                    .Select(field => new UnknownFieldListRow
+                    {
+                        TriageBucket = field.TriageBucket,
+                        TriageScore = field.TriageScore,
+                        TriageNotes = field.TriageNotes,
+                        Confidence = field.Confidence,
+                        PriorityText = operation.IsPriority ? "Yes" : "No",
+                        OperationId = operation.OperationId,
+                        OperationName = operation.OperationName,
+                        FieldKey = field.FieldKey,
+                        NonZeroCount = field.NonZeroCount,
+                        DistinctValueCount = field.DistinctValueCount,
+                        ContextTagsText = field.ContextTagsText,
+                        SampleValuesText = field.SampleValuesText,
+                        Notes = string.IsNullOrWhiteSpace(field.TriageNotes) ? field.Notes : field.TriageNotes + " " + field.Notes,
+                        Operation = operation
+                    }))
+                .ToList();
+
+            List<UnknownFieldListRow> rows = allRows;
+            if (_hideMultiplierUnknownsCheckBox != null && _hideMultiplierUnknownsCheckBox.Checked)
+                rows = rows.Where(row => !row.FieldKey.StartsWith("Multiplier[", StringComparison.OrdinalIgnoreCase)).ToList();
+
+            rows = rows
+                .OrderByDescending(row => row.TriageScore)
+                .ThenByDescending(row => string.Equals(row.PriorityText, "Yes", StringComparison.OrdinalIgnoreCase))
+                .ThenByDescending(row => row.NonZeroCount)
+                .ThenByDescending(row => row.DistinctValueCount)
+                .ThenBy(row => row.OperationId)
+                .ThenBy(row => row.FieldKey)
+                .ToList();
+
+            _unknownSummaryTextBox.Text = BuildUnknownSummary(_lastOperationSchema, rows, allRows.Count - rows.Count);
+            _unknownFieldGrid.DataSource = rows;
+            SelectFirstRow(_unknownFieldGrid);
+            RefreshUnknownDetails();
+        }
+
+        private void RefreshUnknownDetails()
+        {
+            if (_lastOperationSchema == null)
+            {
+                _unknownValueGrid.DataSource = null;
+                _unknownCompanionGrid.DataSource = null;
+                _unknownAbilityGrid.DataSource = null;
+                _unknownInsightTextBox.Text = "Select an unknown or structural field and raw value to inspect its trigger mix, context tags, and dominant companion fields.";
+                return;
+            }
+
+            UnknownFieldListRow selected = _unknownFieldGrid.CurrentRow == null ? null : _unknownFieldGrid.CurrentRow.DataBoundItem as UnknownFieldListRow;
+            if (selected == null || selected.Operation == null)
+            {
+                _unknownValueGrid.DataSource = null;
+                _unknownCompanionGrid.DataSource = null;
+                _unknownAbilityGrid.DataSource = null;
+                _unknownInsightTextBox.Text = "Select an unknown or structural field and raw value to inspect its trigger mix, context tags, and dominant companion fields.";
+                return;
+            }
+
+            List<ComponentOperationFieldValueRecord> values = GetUnknownFieldValues(selected.OperationId, selected.FieldKey);
+            _unknownValueGrid.DataSource = values.Select(row => new UnknownValueListRow
+            {
+                RawValue = row.RawValue,
+                ObservationCount = row.ObservationCount,
+                DistinctComponentCount = row.DistinctComponentCount,
+                DistinctAbilityCount = row.DistinctAbilityCount,
+                SampleComponentIdsText = row.SampleComponentIdsText,
+                SampleAbilityIdsText = row.SampleAbilityIdsText,
+                Value = row
+            }).ToList();
+            SelectFirstRow(_unknownValueGrid);
+            RefreshUnknownValueAbilities();
+        }
+
+        private void RefreshUnknownValueAbilities()
+        {
+            UnknownValueListRow selected = _unknownValueGrid.CurrentRow == null ? null : _unknownValueGrid.CurrentRow.DataBoundItem as UnknownValueListRow;
+            List<ComponentOperationAbilityRecord> abilities = selected == null || selected.Value == null
+                ? new List<ComponentOperationAbilityRecord>()
+                : selected.Value.SampleAbilities ?? new List<ComponentOperationAbilityRecord>();
+            ComponentOperationFieldValueInsightRecord insight = selected == null || selected.Value == null
+                ? null
+                : GetUnknownValueInsight(selected.Value.RawValue);
+
+            _unknownAbilityGrid.DataSource = abilities.Select(row => new OperationAbilityListRow
+            {
+                AbilityId = row.AbilityId,
+                AbilityName = row.AbilityName,
+                ComponentId = row.ComponentId,
+                ComponentSlotIndex = row.ComponentSlotIndex,
+                TriggerText = row.TriggerText,
+                ContextTagsText = row.ContextTagsText,
+                TextExcerpt = row.TextExcerpt,
+                SourcePath = row.SourcePath,
+                SourceLocation = row.SourceLocation
+            }).ToList();
+            _unknownCompanionGrid.DataSource = insight == null || insight.CompanionFields == null
+                ? new List<UnknownCompanionListRow>()
+                : insight.CompanionFields.Select(row => new UnknownCompanionListRow
+                {
+                    FieldKey = row.FieldKey,
+                    DominantValue = row.DominantValue,
+                    CoveragePercent = row.CoveragePercent,
+                    MatchCount = row.MatchCount,
+                    ObservationCount = row.ObservationCount,
+                    DistinctValueCount = row.DistinctValueCount,
+                    SampleValuesText = row.SampleValuesText
+                }).ToList();
+            _unknownInsightTextBox.Text = BuildUnknownValueInsightSummary(insight);
+        }
+
+        private List<ComponentOperationFieldValueRecord> GetUnknownFieldValues(uint operationId, string fieldKey)
+        {
+            if (_session == null || string.IsNullOrWhiteSpace(fieldKey))
+                return new List<ComponentOperationFieldValueRecord>();
+
+            string cacheKey = operationId.ToString(CultureInfo.InvariantCulture) + "|" + fieldKey;
+            List<ComponentOperationFieldValueRecord> cached;
+            if (_unknownValueCache.TryGetValue(cacheKey, out cached))
+                return cached;
+
+            List<ComponentOperationFieldValueRecord> rows = _session.BuildOperationFieldValueEvidence(operationId, fieldKey);
+            _unknownValueCache[cacheKey] = rows;
+            return rows;
+        }
+
+        private ComponentOperationFieldValueInsightRecord GetUnknownValueInsight(string rawValue)
+        {
+            if (_session == null || string.IsNullOrWhiteSpace(rawValue))
+                return null;
+
+            UnknownFieldListRow field = _unknownFieldGrid.CurrentRow == null ? null : _unknownFieldGrid.CurrentRow.DataBoundItem as UnknownFieldListRow;
+            if (field == null)
+                return null;
+
+            string cacheKey = field.OperationId.ToString(CultureInfo.InvariantCulture)
+                + "|"
+                + field.FieldKey
+                + "|"
+                + rawValue;
+            ComponentOperationFieldValueInsightRecord cached;
+            if (_unknownInsightCache.TryGetValue(cacheKey, out cached))
+                return cached;
+
+            ComponentOperationFieldValueInsightRecord insight = _session.BuildOperationFieldValueInsight(field.OperationId, field.FieldKey, rawValue);
+            _unknownInsightCache[cacheKey] = insight;
+            return insight;
         }
 
         private string BuildDatasetSummary()
@@ -1448,12 +1970,35 @@ namespace ClientDataMatrix.UI
 
         private string BuildConflictSummary(ConflictReportDocument report, string markdownPath)
         {
-            int domainCount = report.Conflicts.Select(x => x.Domain ?? string.Empty).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+            List<ConflictRecord> visibleConflicts = GetVisibleConflicts();
+            int domainCount = visibleConflicts.Select(x => x.Domain ?? string.Empty).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+            int blankNoiseCount = report.Conflicts.Count(x => x.IsNoise);
+            int placeholderStringCount = report.Conflicts.Count(x => string.Equals(x.TriageCategory, "PlaceholderStringMismatch", StringComparison.OrdinalIgnoreCase));
+            int internalAbilityNameCount = report.Conflicts.Count(x => string.Equals(x.TriageCategory, "InternalAbilityNameMismatch", StringComparison.OrdinalIgnoreCase));
+            int internalOnlyAbilityNameCount = report.Conflicts.Count(x => string.Equals(x.TriageCategory, "InternalOnlyAbilityNameMismatch", StringComparison.OrdinalIgnoreCase));
+            int mirrorEffectIdCount = report.Conflicts.Count(x => string.Equals(x.TriageCategory, "AbilityIdMirrorEffectId", StringComparison.OrdinalIgnoreCase));
+            int mountOverlayCount = report.Conflicts.Count(x => string.Equals(x.TriageCategory, "MountOverlayEffectId", StringComparison.OrdinalIgnoreCase));
+            int zeroVsEffectCount = report.Conflicts.Count(x => string.Equals(x.TriageCategory, "ZeroVsEffectIdGap", StringComparison.OrdinalIgnoreCase));
+            int resolvedEffectSuggestions = report.Conflicts.Count(x => string.Equals(x.Domain, "EffectId", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(x.CanonicalValue));
+            int resolvedAbilityNameSuggestions = report.Conflicts.Count(x => string.Equals(x.Domain, "AbilityName", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(x.CanonicalValue));
+            int suppressed = report.Conflicts.Count - visibleConflicts.Count;
+            int highSignal = visibleConflicts.Count(x => string.Equals(x.TriageBucket, "Critical", StringComparison.OrdinalIgnoreCase) || string.Equals(x.TriageBucket, "High", StringComparison.OrdinalIgnoreCase));
             return "Markdown: " + markdownPath + Environment.NewLine
                 + "Claims: " + report.Claims.Count.ToString(CultureInfo.InvariantCulture) + Environment.NewLine
-                + "Conflicts: " + report.Conflicts.Count.ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "Visible Conflicts: " + visibleConflicts.Count.ToString(CultureInfo.InvariantCulture) + " / " + report.Conflicts.Count.ToString(CultureInfo.InvariantCulture) + Environment.NewLine
                 + "Domains: " + domainCount.ToString(CultureInfo.InvariantCulture) + Environment.NewLine
-                + "The detail grid is filtered by the selected domain and capped at 500 rows.";
+                + "High-Signal Conflicts: " + highSignal.ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "Blank/String Noise Cases: " + blankNoiseCount.ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "Placeholder/Test String Cases: " + placeholderStringCount.ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "Internal-vs-Player Ability Name Cases: " + internalAbilityNameCount.ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "Internal-Only Ability Name Cases: " + internalOnlyAbilityNameCount.ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "AbilityId-Mirror EffectId Cases: " + mirrorEffectIdCount.ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "Mount Overlay EffectId Cases: " + mountOverlayCount.ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "Zero-vs-EffectId Gaps: " + zeroVsEffectCount.ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "EffectId Rows With Canonical Suggestion: " + resolvedEffectSuggestions.ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "AbilityName Rows With Canonical Suggestion: " + resolvedAbilityNameSuggestions.ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "Currently Hidden By Filters: " + suppressed.ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "The detail grid is filtered by the selected domain, capped at 500 rows, and now shows claim-level evidence for the selected conflict.";
         }
 
         private string BuildTokenDictionarySummary(TokenDictionaryDocument report, string markdownPath)
@@ -1511,15 +2056,101 @@ namespace ClientDataMatrix.UI
                 + "This ledger groups component rows by operation, shows recurring non-zero fields, and explains them from extracted client evidence before any Londo override.";
         }
 
+        private string BuildUnknownSummary(OperationSchemaDocument report, List<UnknownFieldListRow> rows, int suppressedCount)
+        {
+            int priorityRows = rows.Count(row => string.Equals(row.PriorityText, "Yes", StringComparison.OrdinalIgnoreCase));
+            int priorityOperations = rows.Where(row => string.Equals(row.PriorityText, "Yes", StringComparison.OrdinalIgnoreCase)).Select(row => row.OperationId).Distinct().Count();
+            int structuralRows = rows.Count(row => string.Equals(row.Confidence, SemanticConfidence.Structural, StringComparison.OrdinalIgnoreCase));
+            UnknownFieldListRow top = rows.FirstOrDefault();
+            return "Markdown: " + _lastOperationSchemaMarkdownPath + Environment.NewLine
+                + "Unknown/Structural fields: " + rows.Count.ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "Structural role hints: " + structuralRows.ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "Priority hotspots: " + priorityRows.ToString(CultureInfo.InvariantCulture) + " fields across " + priorityOperations.ToString(CultureInfo.InvariantCulture) + " priority operations" + Environment.NewLine
+                + "Suppressed multiplier noise: " + suppressedCount.ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "Operations with unknowns: " + (report == null || report.Operations == null ? 0 : report.Operations.Count(operation => (operation.Fields ?? new List<ComponentOperationFieldRecord>()).Any(field => string.Equals(field.Confidence, SemanticConfidence.Unknown, StringComparison.OrdinalIgnoreCase) || string.Equals(field.Confidence, SemanticConfidence.Structural, StringComparison.OrdinalIgnoreCase)))).ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + (top == null
+                    ? "Generate operation schemas to begin triage."
+                    : "Top hotspot: " + top.OperationName + " :: " + top.FieldKey + " [" + top.Confidence + " | " + top.TriageBucket + " " + top.TriageScore.ToString(CultureInfo.InvariantCulture) + "] (" + top.NonZeroCount.ToString(CultureInfo.InvariantCulture) + " non-zero rows).");
+        }
+
+        private static string BuildUnknownValueInsightSummary(ComponentOperationFieldValueInsightRecord insight)
+        {
+            if (insight == null)
+                return "Select an unknown field and raw value to inspect its trigger mix, context tags, and dominant companion fields.";
+
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine("Selected value: " + NullToPlaceholder(insight.RawValue));
+            builder.AppendLine("Components: " + insight.DistinctComponentCount.ToString(CultureInfo.InvariantCulture)
+                + " | Abilities: " + insight.DistinctAbilityCount.ToString(CultureInfo.InvariantCulture)
+                + " | Observations: " + insight.ObservationCount.ToString(CultureInfo.InvariantCulture));
+            builder.AppendLine("Triggers: " + NullToPlaceholder(insight.TriggerSummaryText));
+            builder.AppendLine("Context tags: " + NullToPlaceholder(insight.ContextTagSummaryText));
+            builder.Append("Strong companions: " + NullToPlaceholder(insight.CompanionSummaryText));
+            return builder.ToString();
+        }
+
+        private string BuildConflictInsightSummary(ConflictRecord conflict)
+        {
+            if (conflict == null)
+                return "Select a conflict to inspect its subject, decoded values, and source pattern.";
+
+            List<string> sources = (conflict.Claims ?? new List<ClaimRecord>())
+                .Select(claim => claim.SourceFamily)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine("Subject: " + DescribeConflictSubject(conflict.SubjectKey));
+            builder.AppendLine("Fact: " + NullToPlaceholder(conflict.FactName) + " | Domain: " + NullToPlaceholder(conflict.Domain));
+            builder.AppendLine("Triage: " + NullToPlaceholder(conflict.TriageBucket) + " " + conflict.TriageScore.ToString(CultureInfo.InvariantCulture) + " | " + NullToPlaceholder(conflict.TriageCategory));
+            builder.AppendLine("Sources: " + (sources.Count == 0 ? "(none)" : string.Join(", ", sources)));
+            builder.AppendLine("Distinct values: " + (conflict.DistinctValues == null ? 0 : conflict.DistinctValues.Count).ToString(CultureInfo.InvariantCulture));
+            builder.AppendLine("Resolution: " + BuildConflictResolutionHint(conflict));
+            if (!string.IsNullOrWhiteSpace(conflict.ResolutionNotes))
+                builder.AppendLine("Resolution notes: " + conflict.ResolutionNotes);
+            builder.Append("Notes: " + NullToPlaceholder(conflict.TriageNotes));
+            return builder.ToString();
+        }
+
+        private List<ConflictValueListRow> BuildConflictValueRows(ConflictRecord conflict)
+        {
+            if (conflict == null || conflict.Claims == null)
+                return new List<ConflictValueListRow>();
+
+            return conflict.Claims
+                .GroupBy(claim => (claim.NormalizedValue ?? string.Empty) + "|" + (claim.RawValue ?? string.Empty), StringComparer.OrdinalIgnoreCase)
+                .Select(group =>
+                {
+                    List<ClaimRecord> claims = group.ToList();
+                    ClaimRecord representative = claims[0];
+                    string valueText = string.IsNullOrWhiteSpace(representative.RawValue) ? representative.NormalizedValue : representative.RawValue;
+                    return new ConflictValueListRow
+                    {
+                        ValueText = NullToPlaceholder(valueText),
+                        Meaning = DescribeConflictValue(conflict, representative),
+                        SourcesText = string.Join(", ", claims.Select(claim => claim.SourceFamily).Where(value => !string.IsNullOrWhiteSpace(value)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(value => value, StringComparer.OrdinalIgnoreCase)),
+                        ClaimCount = claims.Count,
+                        Notes = BuildConflictValueNotes(conflict, representative, claims)
+                    };
+                })
+                .OrderByDescending(row => row.ClaimCount)
+                .ThenBy(row => row.ValueText)
+                .ToList();
+        }
+
         private List<ConflictDomainRow> BuildDomainRows(ConflictReportDocument report)
         {
-            return report.Conflicts.GroupBy(x => x.Domain ?? string.Empty, StringComparer.OrdinalIgnoreCase).Select(group => new ConflictDomainRow
+            return GetVisibleConflicts().GroupBy(x => x.Domain ?? string.Empty, StringComparer.OrdinalIgnoreCase).Select(group => new ConflictDomainRow
             {
                 Domain = group.Key,
+                PeakTriageScore = group.Max(x => x.TriageScore),
+                HighSignalCount = group.Count(x => string.Equals(x.TriageBucket, "Critical", StringComparison.OrdinalIgnoreCase) || string.Equals(x.TriageBucket, "High", StringComparison.OrdinalIgnoreCase)),
                 ConflictCount = group.Count(),
                 SubjectCount = group.Select(x => x.SubjectKey).Distinct(StringComparer.OrdinalIgnoreCase).Count(),
                 FactCount = group.Select(x => x.FactName).Distinct(StringComparer.OrdinalIgnoreCase).Count()
-            }).OrderByDescending(x => x.ConflictCount).ThenBy(x => x.Domain).ToList();
+            }).OrderByDescending(x => x.HighSignalCount).ThenByDescending(x => x.PeakTriageScore).ThenByDescending(x => x.ConflictCount).ThenBy(x => x.Domain).ToList();
         }
 
         private string ResolveOutputRoot()
@@ -1540,6 +2171,7 @@ namespace ClientDataMatrix.UI
             _generateRequirementsButton.Enabled = !isBusy && _session != null;
             _generateCoverageButton.Enabled = !isBusy && _session != null;
             _generateOperationSchemasButton.Enabled = !isBusy && _session != null;
+            _generateUnknownsButton.Enabled = !isBusy && _session != null;
             _generateConflictsButton.Enabled = !isBusy && _session != null;
             _statusLabel.Text = statusText;
         }
@@ -1634,6 +2266,119 @@ namespace ClientDataMatrix.UI
                     : count.ToString(CultureInfo.InvariantCulture) + " decoded rows loaded. Double-click a row to open its full client-domain ledger.";
         }
 
+        private string DescribeConflictSubject(string subjectKey)
+        {
+            ushort abilityId;
+            if (TryParseAbilityIdFromSubjectKey(subjectKey, out abilityId))
+            {
+                AbilityCatalogEntry match = _abilityCatalog.FirstOrDefault(row => row.AbilityId == abilityId);
+                return match == null ? subjectKey : "Ability " + abilityId.ToString(CultureInfo.InvariantCulture) + " - " + NullToPlaceholder(match.Name);
+            }
+
+            int effectId;
+            if (TryParseEffectIdFromSubjectKey(subjectKey, out effectId))
+                return "Effect " + effectId.ToString(CultureInfo.InvariantCulture) + " - " + LookupEffectMeaning(effectId);
+
+            return NullToPlaceholder(subjectKey);
+        }
+
+        private string DescribeConflictValue(ConflictRecord conflict, ClaimRecord claim)
+        {
+            if (conflict == null || claim == null)
+                return string.Empty;
+
+            string rawValue = string.IsNullOrWhiteSpace(claim.RawValue) ? claim.NormalizedValue : claim.RawValue;
+            if (string.IsNullOrWhiteSpace(rawValue))
+                return "(blank)";
+
+            if (string.Equals(conflict.Domain, "EffectId", StringComparison.OrdinalIgnoreCase))
+            {
+                int effectId;
+                if (int.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out effectId))
+                {
+                    List<string> parts = new List<string> { LookupEffectMeaning(effectId) };
+                    int subjectAbilityId;
+                    if (TryParseAbilityId(conflict.SubjectKey, out subjectAbilityId) && effectId == subjectAbilityId)
+                        parts.Add("matches AbilityId");
+                    return string.Join(" | ", parts.Where(value => !string.IsNullOrWhiteSpace(value)));
+                }
+            }
+
+            long numericValue;
+            if (long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out numericValue))
+            {
+                if (string.Equals(conflict.Domain, "Milliseconds", StringComparison.OrdinalIgnoreCase))
+                    return numericValue.ToString(CultureInfo.InvariantCulture) + " ms";
+                if (string.Equals(conflict.Domain, "Feet", StringComparison.OrdinalIgnoreCase))
+                    return numericValue.ToString(CultureInfo.InvariantCulture) + " feet";
+                if (string.Equals(conflict.Domain, "ActionPoints", StringComparison.OrdinalIgnoreCase))
+                    return numericValue.ToString(CultureInfo.InvariantCulture) + " action points";
+            }
+
+            return NullToPlaceholder(claim.NormalizedValue);
+        }
+
+        private string BuildConflictValueNotes(ConflictRecord conflict, ClaimRecord representative, List<ClaimRecord> claims)
+        {
+            List<string> notes = new List<string>();
+            if (representative != null && !string.IsNullOrWhiteSpace(representative.FieldName))
+                notes.Add("field " + representative.FieldName);
+
+            if (string.Equals(conflict == null ? string.Empty : conflict.TriageCategory, "AbilityIdMirrorEffectId", StringComparison.OrdinalIgnoreCase))
+            {
+                int subjectAbilityId;
+                int value;
+                string rawValue = representative == null || string.IsNullOrWhiteSpace(representative.RawValue) ? string.Empty : representative.RawValue;
+                if (TryParseAbilityId(conflict == null ? null : conflict.SubjectKey, out subjectAbilityId)
+                    && int.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out value)
+                    && value == subjectAbilityId)
+                    notes.Add("mirrors subject AbilityId");
+                else
+                    notes.Add("non-mirror target value");
+            }
+
+            string sourceFiles = string.Join(", ", claims.Select(claim => claim.TableName).Where(value => !string.IsNullOrWhiteSpace(value)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(value => value, StringComparer.OrdinalIgnoreCase));
+            if (!string.IsNullOrWhiteSpace(sourceFiles))
+                notes.Add(sourceFiles);
+
+            return string.Join("; ", notes);
+        }
+
+        private static string BuildConflictResolutionHint(ConflictRecord conflict)
+        {
+            if (conflict == null)
+                return "(none)";
+
+            List<string> parts = new List<string>();
+            if (!string.IsNullOrWhiteSpace(conflict.RecommendedSourceFamily))
+                parts.Add(conflict.RecommendedSourceFamily);
+            if (!string.IsNullOrWhiteSpace(conflict.CanonicalValue))
+                parts.Add(conflict.CanonicalValue);
+            if (!string.IsNullOrWhiteSpace(conflict.CanonicalMeaning)
+                && !string.Equals(conflict.CanonicalMeaning, conflict.CanonicalValue, StringComparison.OrdinalIgnoreCase))
+                parts.Add(conflict.CanonicalMeaning);
+            if (parts.Count > 0)
+                return string.Join(" -> ", parts);
+            if (!string.IsNullOrWhiteSpace(conflict.ResolutionRule))
+                return conflict.ResolutionRule;
+            return "(none)";
+        }
+
+        private string LookupEffectMeaning(int effectId)
+        {
+            if (_definitions != null)
+                return _definitions.DescribeEffectId(effectId);
+
+            if (_session != null)
+            {
+                ClientEffectRecord row = _session.Dataset.ClientEffects.FirstOrDefault(effect => effect.EffectId == (uint)effectId && !string.IsNullOrWhiteSpace(effect.Name));
+                if (row != null)
+                    return row.Name;
+            }
+
+            return "Unknown effect " + effectId.ToString(CultureInfo.InvariantCulture);
+        }
+
         private static TextBox CreateReadOnlyTextBox() { return new TextBox { Dock = DockStyle.Fill, Multiline = true, ScrollBars = ScrollBars.Both, ReadOnly = true, WordWrap = true }; }
         private static DataGridView CreateReadOnlyGrid() { return new DataGridView { Dock = DockStyle.Fill, AllowUserToAddRows = false, AllowUserToDeleteRows = false, AllowUserToResizeRows = false, ReadOnly = true, AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.DisplayedCells, ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText, RowHeadersVisible = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, MultiSelect = false }; }
         private static DataGridViewTextBoxColumn CreateTextColumn(string headerText, string propertyName, int width) { return new DataGridViewTextBoxColumn { HeaderText = headerText, DataPropertyName = propertyName, Width = width, MinimumWidth = Math.Min(width, 60), SortMode = DataGridViewColumnSortMode.Automatic }; }
@@ -1641,11 +2386,38 @@ namespace ClientDataMatrix.UI
         private static void SelectFirstRow(DataGridView grid) { if (grid != null && grid.Rows.Count > 0 && grid.CurrentCell == null) grid.CurrentCell = grid.Rows[0].Cells[0]; }
         private static string GetAbilityName(AbilityAnalysisResult report) { ClientAbilityRecord client = report.ClientAbilityRows.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.Name)); if (client != null) return client.Name; IndexedStringRecord name = report.AbilityNameRows.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.NormalizedValue)); return name == null ? "Ability" : name.NormalizedValue; }
         private static string EffectName(AbilityAnalysisResult report, int effectId) { ClientEffectRecord row = report.ClientEffectRows.FirstOrDefault(x => x.EffectId == effectId); return row == null ? "Unknown effect" : NullToPlaceholder(row.Name); }
+        private static string ResolveSubjectKind(string subjectKey) { if (string.IsNullOrWhiteSpace(subjectKey)) return string.Empty; int separator = subjectKey.IndexOf(':'); return separator <= 0 ? subjectKey : subjectKey.Substring(0, separator); }
+        private static bool TryParseAbilityId(string subjectKey, out int abilityId)
+        {
+            abilityId = 0;
+            if (string.IsNullOrWhiteSpace(subjectKey) || !subjectKey.StartsWith("Ability:", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            return int.TryParse(subjectKey.Substring("Ability:".Length), NumberStyles.Integer, CultureInfo.InvariantCulture, out abilityId);
+        }
+        private static bool TryParseAbilityIdFromSubjectKey(string subjectKey, out ushort abilityId)
+        {
+            abilityId = 0;
+            if (string.IsNullOrWhiteSpace(subjectKey) || !subjectKey.StartsWith("Ability:", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            return ushort.TryParse(subjectKey.Substring("Ability:".Length), NumberStyles.Integer, CultureInfo.InvariantCulture, out abilityId);
+        }
+        private static bool TryParseEffectIdFromSubjectKey(string subjectKey, out int effectId)
+        {
+            effectId = 0;
+            if (string.IsNullOrWhiteSpace(subjectKey) || !subjectKey.StartsWith("Effect:", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            return int.TryParse(subjectKey.Substring("Effect:".Length), NumberStyles.Integer, CultureInfo.InvariantCulture, out effectId);
+        }
         private static string NullToPlaceholder(string value) { return string.IsNullOrWhiteSpace(value) ? "(none)" : value; }
         private static string TextOrNone(int value) { return value > 0 ? value.ToString(CultureInfo.InvariantCulture) : "(none)"; }
 
-        private sealed class ConflictDomainRow { public string Domain { get; set; } public int ConflictCount { get; set; } public int SubjectCount { get; set; } public int FactCount { get; set; } }
-        private sealed class ConflictListRow { public string SubjectKey { get; set; } public string FactName { get; set; } public string Domain { get; set; } public string DistinctValues { get; set; } public int ClaimCount { get; set; } }
+        private sealed class ConflictDomainRow { public string Domain { get; set; } public int PeakTriageScore { get; set; } public int HighSignalCount { get; set; } public int ConflictCount { get; set; } public int SubjectCount { get; set; } public int FactCount { get; set; } }
+        private sealed class ConflictListRow { public string TriageBucket { get; set; } public int TriageScore { get; set; } public string TriageCategory { get; set; } public string ResolutionHint { get; set; } public string SubjectKind { get; set; } public string SubjectKey { get; set; } public string FactName { get; set; } public string Domain { get; set; } public string DistinctValues { get; set; } public int ClaimCount { get; set; } public ConflictRecord Conflict { get; set; } }
+        private sealed class ConflictValueListRow { public string ValueText { get; set; } public string Meaning { get; set; } public string SourcesText { get; set; } public int ClaimCount { get; set; } public string Notes { get; set; } }
+        private sealed class ConflictClaimListRow { public string NormalizedValue { get; set; } public string RawValue { get; set; } public string SourceFamily { get; set; } public string TableName { get; set; } public string FieldName { get; set; } public string Confidence { get; set; } public string SourcePath { get; set; } public string SourceLocation { get; set; } public string Notes { get; set; } }
         private sealed class TokenDefinitionListRow { public string ExampleToken { get; set; } public string FieldKey { get; set; } public string PlainEnglishMeaning { get; set; } public string Confidence { get; set; } public string ContextTagsText { get; set; } public string ExampleAbilityIdsText { get; set; } public string Notes { get; set; } }
         private sealed class DomainListRow { public string DomainKey { get; set; } public string DisplayName { get; set; } public string Confidence { get; set; } public string Canonicality { get; set; } public int ValueCount { get; set; } public int DistinctMeaningCount { get; set; } public int DuplicateMeaningCount { get; set; } public string SourceFilesText { get; set; } public string RecommendedUsage { get; set; } public string Notes { get; set; } }
         private sealed class DomainValueListRow { public string RawValue { get; set; } public string Meaning { get; set; } public string Confidence { get; set; } public string Source { get; set; } public string SourcePath { get; set; } public string SourceLocation { get; set; } public string Notes { get; set; } }
@@ -1655,7 +2427,10 @@ namespace ClientDataMatrix.UI
         private sealed class RequirementReferenceListRow { public string Direction { get; set; } public string SourceKind { get; set; } public ushort SourceId { get; set; } public string SourceLabel { get; set; } public string SourceField { get; set; } public ushort LinkedRequirementId { get; set; } public string RelatedAbilitiesText { get; set; } public string ContextTagsText { get; set; } public string SourcePath { get; set; } public string SourceLocation { get; set; } public string Notes { get; set; } }
         private sealed class CoverageListRow { public ushort AbilityId { get; set; } public string Name { get; set; } public string CoverageStatus { get; set; } public string EffectIdText { get; set; } public string HasClientCsvText { get; set; } public string HasClientBinText { get; set; } public string HasLocalizedNameText { get; set; } public string HasDescriptionTextText { get; set; } public string HasEffectTextText { get; set; } public string HasRootEffectRowText { get; set; } public int ComponentCount { get; set; } public int RequirementLinkCount { get; set; } public int RequirementRowCount { get; set; } public string SourcesText { get; set; } public string MissingText { get; set; } }
         private sealed class OperationSchemaListRow { public uint OperationId { get; set; } public string OperationName { get; set; } public string PriorityText { get; set; } public int ComponentCount { get; set; } public int AbilityCount { get; set; } public string ContextTagsText { get; set; } public string LayoutVariantsText { get; set; } }
-        private sealed class OperationFieldListRow { public string FieldKey { get; set; } public int NonZeroCount { get; set; } public int DistinctValueCount { get; set; } public string SampleValuesText { get; set; } public string TokenRenderingsText { get; set; } public string SemanticSummary { get; set; } public string Confidence { get; set; } public string ContextTagsText { get; set; } public string Notes { get; set; } }
+        private sealed class OperationFieldListRow { public string FieldKey { get; set; } public string TriageBucket { get; set; } public int TriageScore { get; set; } public int NonZeroCount { get; set; } public int DistinctValueCount { get; set; } public string SampleValuesText { get; set; } public string TokenRenderingsText { get; set; } public string SemanticSummary { get; set; } public string Confidence { get; set; } public string ContextTagsText { get; set; } public string Notes { get; set; } }
         private sealed class OperationAbilityListRow { public ushort AbilityId { get; set; } public string AbilityName { get; set; } public ushort ComponentId { get; set; } public int ComponentSlotIndex { get; set; } public string TriggerText { get; set; } public string ContextTagsText { get; set; } public string TextExcerpt { get; set; } public string SourcePath { get; set; } public string SourceLocation { get; set; } }
+        private sealed class UnknownFieldListRow { public string TriageBucket { get; set; } public int TriageScore { get; set; } public string TriageNotes { get; set; } public string Confidence { get; set; } public string PriorityText { get; set; } public uint OperationId { get; set; } public string OperationName { get; set; } public string FieldKey { get; set; } public int NonZeroCount { get; set; } public int DistinctValueCount { get; set; } public string ContextTagsText { get; set; } public string SampleValuesText { get; set; } public string Notes { get; set; } public ComponentOperationSchemaRecord Operation { get; set; } }
+        private sealed class UnknownValueListRow { public string RawValue { get; set; } public int ObservationCount { get; set; } public int DistinctComponentCount { get; set; } public int DistinctAbilityCount { get; set; } public string SampleComponentIdsText { get; set; } public string SampleAbilityIdsText { get; set; } public ComponentOperationFieldValueRecord Value { get; set; } }
+        private sealed class UnknownCompanionListRow { public string FieldKey { get; set; } public string DominantValue { get; set; } public int CoveragePercent { get; set; } public int MatchCount { get; set; } public int ObservationCount { get; set; } public int DistinctValueCount { get; set; } public string SampleValuesText { get; set; } }
     }
 }

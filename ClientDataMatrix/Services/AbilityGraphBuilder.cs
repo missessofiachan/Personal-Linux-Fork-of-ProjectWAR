@@ -8,7 +8,45 @@ namespace ClientDataMatrix.Services
 {
     public sealed class AbilityGraphBuilder
     {
+        private static readonly string[] PrototypeStringMarkers =
+        {
+            "can delete",
+            "debug",
+            "dummy",
+            "placeholder",
+            "todo",
+            "wip"
+        };
+
+        private static readonly string[] InternalAbilityNameMarkers =
+        {
+            " counter x",
+            " dispel tracker ",
+            " owner ",
+            " permission tracker ",
+            " main hand weap ",
+            " off hand weap ",
+            " both hand weap ",
+            " autoattack ",
+            " vfx ",
+            " dummy ",
+            " console test ",
+            " sub ability ",
+            " gating ability ",
+            " invisible counter ",
+            " invisible counters ",
+            " spec tactics ",
+            " spec morale ",
+            " spec abilities ",
+            " tags on main ",
+            " tags on off ",
+            " duration pulsing aoe - vfx ",
+            " duration st - vfx ",
+            " encounters "
+        };
+
         private readonly AbilityDataset _dataset;
+        private readonly Dictionary<uint, ClientAbilityRecord> _clientAbilitiesById;
         private readonly Dictionary<uint, List<ClientEffectRecord>> _effectsById;
         private readonly Dictionary<ushort, List<BinaryRequirementRecord>> _requirementsById;
         private readonly HashSet<ushort> _knownRequirementIds;
@@ -16,6 +54,9 @@ namespace ClientDataMatrix.Services
         public AbilityGraphBuilder(AbilityDataset dataset)
         {
             _dataset = dataset;
+            _clientAbilitiesById = dataset.ClientAbilities
+                .GroupBy(x => x.AbilityId)
+                .ToDictionary(x => x.Key, x => x.OrderBy(y => y.LineNumber).First());
             _effectsById = dataset.ClientEffects.GroupBy(x => x.EffectId).ToDictionary(x => x.Key, x => x.OrderBy(y => y.LineNumber).ToList());
             _requirementsById = dataset.BinaryRequirements.GroupBy(x => x.RequirementId).ToDictionary(x => x.Key, x => x.OrderBy(y => y.RecordIndex).ToList());
             _knownRequirementIds = new HashSet<ushort>(_requirementsById.Keys);
@@ -184,7 +225,656 @@ namespace ClientDataMatrix.Services
                 AddClaim(graph, "PregameChar:" + row.Sequence, "RaceName", "RaceName", row.RaceName, row.RaceName, row, "race", "client_xml", "pregame_chars.xml");
                 AddClaim(graph, "PregameChar:" + row.Sequence, "CareerName", "CareerName", row.CareerName, row.CareerName, row, "career", "client_xml", "pregame_chars.xml");
             }
-            return new ConflictReportDocument { GeneratedAtUtc = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture), ExtractedRootPath = extractedRootPath, TableStatuses = _dataset.TableStatuses.OrderBy(x => x.SourceFamily).ThenBy(x => x.TableName).ToList(), Claims = graph.Claims, Conflicts = graph.GetConflicts() };
+            List<ConflictRecord> conflicts = graph.GetConflicts();
+            AnnotateConflictTriage(conflicts);
+            return new ConflictReportDocument { GeneratedAtUtc = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture), ExtractedRootPath = extractedRootPath, TableStatuses = _dataset.TableStatuses.OrderBy(x => x.SourceFamily).ThenBy(x => x.TableName).ToList(), Claims = graph.Claims, Conflicts = conflicts };
+        }
+
+        private void AnnotateConflictTriage(IList<ConflictRecord> conflicts)
+        {
+            if (conflicts == null)
+                return;
+
+            foreach (ConflictRecord conflict in conflicts)
+            {
+                ConflictTriage triage = BuildConflictTriage(conflict);
+                conflict.TriageScore = triage.Score;
+                conflict.TriageBucket = triage.Bucket;
+                conflict.TriageCategory = triage.Category;
+                conflict.TriageNotes = triage.Notes;
+                conflict.IsNoise = triage.IsNoise;
+                ConflictResolution resolution = BuildConflictResolution(conflict);
+                conflict.ResolutionRule = resolution.Rule;
+                conflict.RecommendedSourceFamily = resolution.RecommendedSourceFamily;
+                conflict.CanonicalValue = resolution.CanonicalValue;
+                conflict.CanonicalMeaning = resolution.CanonicalMeaning;
+                conflict.ResolutionNotes = resolution.Notes;
+            }
+        }
+
+        private ConflictTriage BuildConflictTriage(ConflictRecord conflict)
+        {
+            if (conflict == null)
+            {
+                return new ConflictTriage
+                {
+                    Score = 0,
+                    Bucket = "Noise",
+                    Category = "Unknown",
+                    Notes = "No conflict data is available.",
+                    IsNoise = true
+                };
+            }
+
+            string domain = conflict.Domain ?? string.Empty;
+            string subjectKey = conflict.SubjectKey ?? string.Empty;
+            bool hasBlank = (conflict.DistinctValues ?? new List<string>()).Any(value => string.IsNullOrWhiteSpace(value));
+            bool numericOnly = (conflict.DistinctValues ?? new List<string>()).Count > 0
+                && (conflict.DistinctValues ?? new List<string>()).All(value =>
+                {
+                    long ignored;
+                    return long.TryParse(value ?? string.Empty, NumberStyles.Integer, CultureInfo.InvariantCulture, out ignored);
+                });
+            bool stringDomain = IsStringConflictDomain(domain);
+            int score = 0;
+            string category = "General";
+            List<string> reasons = new List<string>();
+            bool isNoise = false;
+
+            if (IsBlankStringNoiseDomain(domain) && hasBlank)
+            {
+                score = 5;
+                category = "BlankStringNoise";
+                isNoise = true;
+                reasons.Add("blank client text collides with localized string content");
+            }
+            else if (stringDomain && IsPlaceholderStringConflict(conflict))
+            {
+                score = 30;
+                category = "PlaceholderStringMismatch";
+                reasons.Add("one side uses provisional or test text");
+            }
+            else if (IsInternalAbilityNameConflict(conflict))
+            {
+                score = 35;
+                category = "InternalAbilityNameMismatch";
+                reasons.Add("one side uses an internal helper label instead of a player-facing ability title");
+            }
+            else if (IsInternalOnlyAbilityNameConflict(conflict))
+            {
+                score = 12;
+                category = "InternalOnlyAbilityNameMismatch";
+                reasons.Add("all variants look like internal helper or prototype ability labels");
+            }
+            else if (IsAbilityIdMirrorEffectConflict(conflict))
+            {
+                score = 125;
+                category = "AbilityIdMirrorEffectId";
+                reasons.Add("abilities.csv EffectId mirrors AbilityId while BIN points elsewhere");
+            }
+            else if (IsMountOverlayEffectConflict(conflict))
+            {
+                score = 110;
+                category = "MountOverlayEffectId";
+                reasons.Add("abilities.csv points at a generic Mount Effects contract row while BIN uses a mounted ability effect");
+            }
+            else if (IsZeroVsEffectConflict(conflict))
+            {
+                score = 100;
+                category = "ZeroVsEffectIdGap";
+                reasons.Add("one source reports EffectId 0 while another provides a concrete effect id");
+            }
+            else if (string.Equals(domain, "EffectId", StringComparison.OrdinalIgnoreCase))
+            {
+                score = 180;
+                category = "IdentifierMismatch";
+                reasons.Add("effect linkage disagrees across client sources");
+            }
+            else if (string.Equals(domain, "Milliseconds", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(domain, "Feet", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(domain, "ActionPoints", StringComparison.OrdinalIgnoreCase))
+            {
+                score = 135;
+                category = "NumericContractMismatch";
+                reasons.Add("core numeric contract differs across sources");
+            }
+            else if (numericOnly)
+            {
+                score = 110;
+                category = "NumericMismatch";
+                reasons.Add("all conflicting values are numeric");
+            }
+            else if (stringDomain)
+            {
+                score = hasBlank ? 20 : 65;
+                category = hasBlank ? "PartialStringGap" : "StringMismatch";
+                reasons.Add(hasBlank ? "one side is blank while another provides text" : "multiple non-blank text variants disagree");
+            }
+            else
+            {
+                score = 60;
+                category = "MixedMismatch";
+                reasons.Add("conflict spans different extracted sources");
+            }
+
+            if (subjectKey.StartsWith("Ability:", StringComparison.OrdinalIgnoreCase))
+            {
+                score += 20;
+                reasons.Add("ability-facing conflict");
+            }
+            else if (subjectKey.StartsWith("Effect:", StringComparison.OrdinalIgnoreCase))
+            {
+                score += 10;
+                reasons.Add("effect-facing conflict");
+            }
+
+            if ((conflict.DistinctValues ?? new List<string>()).Count > 2)
+            {
+                score += 10;
+                reasons.Add((conflict.DistinctValues ?? new List<string>()).Count.ToString(CultureInfo.InvariantCulture) + " distinct values");
+            }
+
+            if ((conflict.Claims ?? new List<ClaimRecord>()).Select(claim => claim.SourceFamily).Distinct(StringComparer.OrdinalIgnoreCase).Count() > 1)
+                reasons.Add("cross-source disagreement");
+
+            return new ConflictTriage
+            {
+                Score = score,
+                Bucket = DetermineConflictBucket(score, isNoise),
+                Category = category,
+                Notes = string.Join("; ", reasons.Distinct(StringComparer.OrdinalIgnoreCase)) + ".",
+                IsNoise = isNoise
+            };
+        }
+
+        private ConflictResolution BuildConflictResolution(ConflictRecord conflict)
+        {
+            if (conflict == null)
+                return new ConflictResolution();
+
+            if (string.Equals(conflict.TriageCategory, "AbilityIdMirrorEffectId", StringComparison.OrdinalIgnoreCase))
+            {
+                ClaimRecord canonical = SelectPreferredNonMirrorEffectClaim(conflict);
+                return BuildEffectResolution(canonical, "PreferNonMirrorEffectId", "Prefer the non-mirror effect id over the CSV ability-id echo.");
+            }
+
+            if (string.Equals(conflict.TriageCategory, "MountOverlayEffectId", StringComparison.OrdinalIgnoreCase))
+            {
+                ClaimRecord canonical = SelectPreferredPositiveNonCsvEffectClaim(conflict);
+                return BuildEffectResolution(canonical, "PreferMountedAbilityEffectId", "Prefer the specific mounted ability effect over the generic Mount Effects contract row.");
+            }
+
+            if (string.Equals(conflict.TriageCategory, "ZeroVsEffectIdGap", StringComparison.OrdinalIgnoreCase))
+            {
+                ClaimRecord canonical = SelectPreferredPositiveEffectClaim(conflict);
+                return BuildEffectResolution(canonical, "PreferNonZeroEffectId", "Prefer the non-zero effect id over the missing-effect placeholder.");
+            }
+
+            if (string.Equals(conflict.TriageCategory, "PlaceholderStringMismatch", StringComparison.OrdinalIgnoreCase))
+            {
+                ClaimRecord canonical = SelectPreferredNonPlaceholderStringClaim(conflict);
+                return BuildStringResolution(canonical, "PreferNonPlaceholderString", "Prefer the non-placeholder extracted-client string over provisional or test text.");
+            }
+
+            if (string.Equals(conflict.TriageCategory, "InternalAbilityNameMismatch", StringComparison.OrdinalIgnoreCase))
+            {
+                ClaimRecord canonical = SelectPreferredNonInternalAbilityNameClaim(conflict);
+                return BuildStringResolution(canonical, "PreferPlayerFacingAbilityName", "Prefer the player-facing ability title over internal helper labels such as counters, trackers, VFX stubs, or hand-weapon placeholders.");
+            }
+
+            if (string.Equals(conflict.TriageCategory, "InternalOnlyAbilityNameMismatch", StringComparison.OrdinalIgnoreCase))
+            {
+                return new ConflictResolution
+                {
+                    Rule = "KeepInternalNameForManualReview",
+                    Notes = "All observed ability-name variants look internal; keep the row visible for manual review instead of promoting a canonical title."
+                };
+            }
+
+            if (conflict.IsNoise)
+            {
+                return new ConflictResolution
+                {
+                    Rule = "IgnoreNoise",
+                    Notes = "This conflict is classified as low-value text noise and does not need a canonical value."
+                };
+            }
+
+            return new ConflictResolution();
+        }
+
+        private static ConflictResolution BuildStringResolution(ClaimRecord canonicalClaim, string rule, string notes)
+        {
+            if (canonicalClaim == null)
+            {
+                return new ConflictResolution
+                {
+                    Rule = rule,
+                    Notes = notes
+                };
+            }
+
+            string canonicalValue = GetClaimDisplayValue(canonicalClaim);
+            string canonicalMeaning = string.Equals(canonicalValue, canonicalClaim.NormalizedValue, StringComparison.OrdinalIgnoreCase)
+                ? string.Empty
+                : canonicalClaim.NormalizedValue;
+
+            return new ConflictResolution
+            {
+                Rule = rule,
+                RecommendedSourceFamily = canonicalClaim.SourceFamily,
+                CanonicalValue = canonicalValue,
+                CanonicalMeaning = canonicalMeaning,
+                Notes = notes
+            };
+        }
+
+        private ConflictResolution BuildEffectResolution(ClaimRecord canonicalClaim, string rule, string notes)
+        {
+            if (canonicalClaim == null)
+            {
+                return new ConflictResolution
+                {
+                    Rule = rule,
+                    Notes = notes
+                };
+            }
+
+            int effectId;
+            string meaning = TryParseClaimInt(canonicalClaim, out effectId)
+                ? DescribeEffectId(effectId)
+                : canonicalClaim.NormalizedValue ?? string.Empty;
+            return new ConflictResolution
+            {
+                Rule = rule,
+                RecommendedSourceFamily = canonicalClaim.SourceFamily,
+                CanonicalValue = canonicalClaim.RawValue,
+                CanonicalMeaning = meaning,
+                Notes = notes
+            };
+        }
+
+        private ClaimRecord SelectPreferredPositiveEffectClaim(ConflictRecord conflict)
+        {
+            return (conflict.Claims ?? new List<ClaimRecord>())
+                .Where(claim =>
+                {
+                    int value;
+                    return TryParseClaimInt(claim, out value) && value > 0;
+                })
+                .OrderBy(claim => string.Equals(claim.SourceFamily, "client_csv", StringComparison.OrdinalIgnoreCase) ? 1 : 0)
+                .ThenBy(claim => claim.SourceFamily, StringComparer.OrdinalIgnoreCase)
+                .FirstOrDefault();
+        }
+
+        private static ClaimRecord SelectPreferredNonPlaceholderStringClaim(ConflictRecord conflict)
+        {
+            return (conflict.Claims ?? new List<ClaimRecord>())
+                .Where(claim => !LooksLikePlaceholderString(GetClaimStringDomain(conflict, claim), GetClaimDisplayValue(claim)))
+                .OrderBy(claim => GetPreferredStringSourceRank(GetClaimStringDomain(conflict, claim), claim.SourceFamily))
+                .ThenByDescending(claim => GetClaimDisplayValue(claim).Length)
+                .FirstOrDefault();
+        }
+
+        private static ClaimRecord SelectPreferredNonInternalAbilityNameClaim(ConflictRecord conflict)
+        {
+            return (conflict.Claims ?? new List<ClaimRecord>())
+                .Where(claim => !LooksLikeInternalAbilityName(GetClaimDisplayValue(claim)))
+                .OrderBy(claim => GetPreferredStringSourceRank(GetClaimStringDomain(conflict, claim), claim.SourceFamily))
+                .ThenByDescending(claim => GetClaimDisplayValue(claim).Length)
+                .FirstOrDefault();
+        }
+
+        private ClaimRecord SelectPreferredPositiveNonCsvEffectClaim(ConflictRecord conflict)
+        {
+            return (conflict.Claims ?? new List<ClaimRecord>())
+                .Where(claim => !string.Equals(claim.SourceFamily, "client_csv", StringComparison.OrdinalIgnoreCase))
+                .Where(claim =>
+                {
+                    int value;
+                    return TryParseClaimInt(claim, out value) && value > 0;
+                })
+                .OrderBy(claim => claim.SourceFamily, StringComparer.OrdinalIgnoreCase)
+                .FirstOrDefault();
+        }
+
+        private ClaimRecord SelectPreferredNonMirrorEffectClaim(ConflictRecord conflict)
+        {
+            int abilityId;
+            if (!TryParseAbilityId(conflict == null ? null : conflict.SubjectKey, out abilityId))
+                return null;
+
+            return (conflict.Claims ?? new List<ClaimRecord>())
+                .Where(claim =>
+                {
+                    int value;
+                    return TryParseClaimInt(claim, out value) && value > 0 && value != abilityId;
+                })
+                .OrderBy(claim => string.Equals(claim.SourceFamily, "client_csv", StringComparison.OrdinalIgnoreCase) ? 1 : 0)
+                .ThenBy(claim => claim.SourceFamily, StringComparer.OrdinalIgnoreCase)
+                .FirstOrDefault();
+        }
+
+        private string DescribeEffectId(int effectId)
+        {
+            if (effectId <= 0)
+                return string.Empty;
+
+            List<ClientEffectRecord> rows;
+            if (!_effectsById.TryGetValue((uint)effectId, out rows))
+                return "Unknown effect " + effectId.ToString(CultureInfo.InvariantCulture);
+
+            ClientEffectRecord row = rows.FirstOrDefault(entry => !string.IsNullOrWhiteSpace(entry.Name)) ?? rows.FirstOrDefault();
+            return row == null || string.IsNullOrWhiteSpace(row.Name)
+                ? "Unknown effect " + effectId.ToString(CultureInfo.InvariantCulture)
+                : row.Name;
+        }
+
+        private bool IsMountOverlayEffectConflict(ConflictRecord conflict)
+        {
+            if (conflict == null
+                || !string.Equals(conflict.Domain, "EffectId", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            int abilityId;
+            if (!TryParseAbilityId(conflict.SubjectKey, out abilityId))
+                return false;
+
+            ClientAbilityRecord abilityRow;
+            if (!_clientAbilitiesById.TryGetValue((uint)abilityId, out abilityRow)
+                || string.IsNullOrWhiteSpace(abilityRow.Name)
+                || !abilityRow.Name.StartsWith("Mount -", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            ClaimRecord csvClaim = conflict.Claims == null
+                ? null
+                : conflict.Claims.FirstOrDefault(claim => string.Equals(claim.SourceFamily, "client_csv", StringComparison.OrdinalIgnoreCase));
+            int csvEffectId;
+            if (!TryParseClaimInt(csvClaim, out csvEffectId))
+                return false;
+
+            List<ClientEffectRecord> effectRows;
+            if (!_effectsById.TryGetValue((uint)csvEffectId, out effectRows))
+                return false;
+
+            ClientEffectRecord effectRow = effectRows.FirstOrDefault();
+            return effectRow != null
+                && !string.IsNullOrWhiteSpace(effectRow.Name)
+                && effectRow.Name.StartsWith("Mount Effects", StringComparison.OrdinalIgnoreCase)
+                && SelectPreferredPositiveNonCsvEffectClaim(conflict) != null;
+        }
+
+        private static bool IsAbilityIdMirrorEffectConflict(ConflictRecord conflict)
+        {
+            if (conflict == null
+                || !string.Equals(conflict.Domain, "EffectId", StringComparison.OrdinalIgnoreCase)
+                || conflict.Claims == null
+                || conflict.Claims.Count < 2)
+                return false;
+
+            int abilityId;
+            if (!TryParseAbilityId(conflict.SubjectKey, out abilityId))
+                return false;
+
+            ClaimRecord csvClaim = conflict.Claims.FirstOrDefault(claim => string.Equals(claim.SourceFamily, "client_csv", StringComparison.OrdinalIgnoreCase));
+            if (csvClaim == null)
+                return false;
+
+            int csvEffectId;
+            if (!int.TryParse(csvClaim.RawValue ?? string.Empty, NumberStyles.Integer, CultureInfo.InvariantCulture, out csvEffectId))
+                return false;
+            if (csvEffectId != abilityId)
+                return false;
+
+            return conflict.Claims
+                .Where(claim => !string.Equals(claim.SourceFamily, "client_csv", StringComparison.OrdinalIgnoreCase))
+                .Select(claim =>
+                {
+                    int value;
+                    return int.TryParse(claim.RawValue ?? string.Empty, NumberStyles.Integer, CultureInfo.InvariantCulture, out value)
+                        ? (int?)value
+                        : null;
+                })
+                .Any(value => value.HasValue && value.Value > 0 && value.Value != abilityId);
+        }
+
+        private static bool IsZeroVsEffectConflict(ConflictRecord conflict)
+        {
+            if (conflict == null
+                || !string.Equals(conflict.Domain, "EffectId", StringComparison.OrdinalIgnoreCase)
+                || conflict.Claims == null
+                || conflict.Claims.Count < 2)
+                return false;
+
+            List<int> values = conflict.Claims
+                .Select(claim =>
+                {
+                    int value;
+                    return int.TryParse(claim.RawValue ?? string.Empty, NumberStyles.Integer, CultureInfo.InvariantCulture, out value)
+                        ? (int?)value
+                        : null;
+                })
+                .Where(value => value.HasValue)
+                .Select(value => value.Value)
+                .Distinct()
+                .ToList();
+            return values.Contains(0) && values.Any(value => value > 0);
+        }
+
+        private static bool IsPlaceholderStringConflict(ConflictRecord conflict)
+        {
+            if (conflict == null || !IsStringConflictDomain(conflict.Domain) || conflict.Claims == null || conflict.Claims.Count < 2)
+                return false;
+
+            bool hasPlaceholder = false;
+            bool hasNonPlaceholder = false;
+            foreach (ClaimRecord claim in conflict.Claims)
+            {
+                string value = GetClaimDisplayValue(claim);
+                if (string.IsNullOrWhiteSpace(value))
+                    continue;
+
+                if (LooksLikePlaceholderString(GetClaimStringDomain(conflict, claim), value))
+                    hasPlaceholder = true;
+                else
+                    hasNonPlaceholder = true;
+            }
+
+            return hasPlaceholder && hasNonPlaceholder;
+        }
+
+        private static bool IsInternalAbilityNameConflict(ConflictRecord conflict)
+        {
+            if (conflict == null
+                || !string.Equals(conflict.Domain, "AbilityName", StringComparison.OrdinalIgnoreCase)
+                || conflict.Claims == null
+                || conflict.Claims.Count < 2)
+                return false;
+
+            bool hasInternal = false;
+            bool hasNonInternal = false;
+            foreach (ClaimRecord claim in conflict.Claims)
+            {
+                string value = GetClaimDisplayValue(claim);
+                if (string.IsNullOrWhiteSpace(value))
+                    continue;
+
+                if (LooksLikeInternalAbilityName(value))
+                    hasInternal = true;
+                else
+                    hasNonInternal = true;
+            }
+
+            return hasInternal && hasNonInternal;
+        }
+
+        private static bool IsInternalOnlyAbilityNameConflict(ConflictRecord conflict)
+        {
+            if (conflict == null
+                || !string.Equals(conflict.Domain, "AbilityName", StringComparison.OrdinalIgnoreCase)
+                || conflict.Claims == null
+                || conflict.Claims.Count < 2)
+                return false;
+
+            List<string> values = conflict.Claims
+                .Select(GetClaimDisplayValue)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .ToList();
+            return values.Count > 0 && values.All(LooksLikeInternalAbilityName);
+        }
+
+        private static bool TryParseClaimInt(ClaimRecord claim, out int value)
+        {
+            value = 0;
+            return claim != null
+                && int.TryParse(claim.RawValue ?? string.Empty, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+        }
+
+        private static bool TryParseAbilityId(string subjectKey, out int abilityId)
+        {
+            abilityId = 0;
+            if (string.IsNullOrWhiteSpace(subjectKey) || !subjectKey.StartsWith("Ability:", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            return int.TryParse(subjectKey.Substring("Ability:".Length), NumberStyles.Integer, CultureInfo.InvariantCulture, out abilityId);
+        }
+
+        private static string DetermineConflictBucket(int score, bool isNoise)
+        {
+            if (isNoise)
+                return "Noise";
+            if (score >= 170)
+                return "Critical";
+            if (score >= 120)
+                return "High";
+            if (score >= 70)
+                return "Medium";
+            if (score > 0)
+                return "Low";
+            return "Noise";
+        }
+
+        private static bool IsBlankStringNoiseDomain(string domain)
+        {
+            return string.Equals(domain, "AbilityName", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(domain, "AbilityDescription", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(domain, "AbilityEffectText", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(domain, "ComponentDescription", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(domain, "EffectName", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(domain, "RaceName", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(domain, "CareerName", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(domain, "CareerLineName", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsStringConflictDomain(string domain)
+        {
+            return IsBlankStringNoiseDomain(domain);
+        }
+
+        private static string GetClaimStringDomain(ConflictRecord conflict, ClaimRecord claim)
+        {
+            return string.IsNullOrWhiteSpace(conflict == null ? null : conflict.Domain)
+                ? (claim == null ? string.Empty : claim.Domain ?? string.Empty)
+                : conflict.Domain;
+        }
+
+        private static string GetClaimDisplayValue(ClaimRecord claim)
+        {
+            if (claim == null)
+                return string.Empty;
+
+            return string.IsNullOrWhiteSpace(claim.NormalizedValue)
+                ? claim.RawValue ?? string.Empty
+                : claim.NormalizedValue;
+        }
+
+        private static bool LooksLikePlaceholderString(string domain, string value)
+        {
+            string trimmed = (value ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(trimmed))
+                return false;
+
+            string lower = trimmed.ToLowerInvariant();
+            if (ContainsPrototypeMarker(lower))
+                return true;
+
+            if (!IsDescriptionLikeDomain(domain))
+                return false;
+
+            if (ContainsTokenMacro(trimmed))
+                return false;
+
+            int wordCount = CountWords(trimmed);
+            if (trimmed.Length <= 16 && wordCount <= 3)
+                return true;
+
+            if (trimmed.Length <= 40 && wordCount <= 6 && !EndsWithSentencePunctuation(trimmed))
+                return true;
+
+            return trimmed.Length <= 40 && (trimmed.Contains("?") || trimmed.Contains("+") || trimmed.Contains("=") || trimmed.Contains("/"));
+        }
+
+        private static bool LooksLikeInternalAbilityName(string value)
+        {
+            string trimmed = (value ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(trimmed))
+                return false;
+
+            if (trimmed.StartsWith(";", StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            string paddedLower = " " + trimmed.ToLowerInvariant() + " ";
+            return InternalAbilityNameMarkers.Any(marker => paddedLower.Contains(marker));
+        }
+
+        private static bool IsDescriptionLikeDomain(string domain)
+        {
+            return string.Equals(domain, "AbilityDescription", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(domain, "AbilityEffectText", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(domain, "ComponentDescription", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static int GetPreferredStringSourceRank(string domain, string sourceFamily)
+        {
+            if (IsDescriptionLikeDomain(domain))
+                return string.Equals(sourceFamily, "client_strings", StringComparison.OrdinalIgnoreCase) ? 0 : 1;
+
+            return string.Equals(sourceFamily, "client_csv", StringComparison.OrdinalIgnoreCase) ? 0 : 1;
+        }
+
+        private static bool ContainsPrototypeMarker(string lowerValue)
+        {
+            if (string.IsNullOrWhiteSpace(lowerValue))
+                return false;
+
+            if (lowerValue.StartsWith("test ", StringComparison.OrdinalIgnoreCase)
+                || lowerValue.EndsWith(" test", StringComparison.OrdinalIgnoreCase)
+                || lowerValue.IndexOf(" test ", StringComparison.OrdinalIgnoreCase) >= 0)
+                return true;
+
+            return PrototypeStringMarkers.Any(marker => lowerValue.Contains(marker));
+        }
+
+        private static bool ContainsTokenMacro(string value)
+        {
+            return value.IndexOf("{COM_", StringComparison.OrdinalIgnoreCase) >= 0
+                || value.IndexOf("{ABIL_", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static int CountWords(string value)
+        {
+            return (value ?? string.Empty)
+                .Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                .Length;
+        }
+
+        private static bool EndsWithSentencePunctuation(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return false;
+
+            char last = value[value.Length - 1];
+            return last == '.' || last == '!' || last == ':';
         }
 
         public CoverageReportDocument BuildCoverageReport(string extractedRootPath)
@@ -594,6 +1284,24 @@ namespace ClientDataMatrix.Services
         private static bool Match(int? candidateAbilityId, ushort abilityId)
         {
             return candidateAbilityId.HasValue && candidateAbilityId.Value == abilityId;
+        }
+
+        private sealed class ConflictTriage
+        {
+            public int Score { get; set; }
+            public string Bucket { get; set; }
+            public string Category { get; set; }
+            public string Notes { get; set; }
+            public bool IsNoise { get; set; }
+        }
+
+        private sealed class ConflictResolution
+        {
+            public string Rule { get; set; }
+            public string RecommendedSourceFamily { get; set; }
+            public string CanonicalValue { get; set; }
+            public string CanonicalMeaning { get; set; }
+            public string Notes { get; set; }
         }
     }
 }

@@ -231,6 +231,16 @@ namespace ClientDataMatrix.Model
         public string Domain { get; set; }
         public List<string> DistinctValues { get; set; }
         public List<ClaimRecord> Claims { get; set; }
+        public int TriageScore { get; set; }
+        public string TriageBucket { get; set; }
+        public string TriageCategory { get; set; }
+        public string TriageNotes { get; set; }
+        public bool IsNoise { get; set; }
+        public string ResolutionRule { get; set; }
+        public string RecommendedSourceFamily { get; set; }
+        public string CanonicalValue { get; set; }
+        public string CanonicalMeaning { get; set; }
+        public string ResolutionNotes { get; set; }
     }
 
     public sealed class AnalysisGraph
@@ -594,6 +604,9 @@ namespace ClientDataMatrix.Model
         public string Confidence { get; set; }
         public string ContextTagsText { get; set; }
         public string Notes { get; set; }
+        public int TriageScore { get; set; }
+        public string TriageBucket { get; set; }
+        public string TriageNotes { get; set; }
     }
 
     public sealed class ComponentOperationAbilityRecord
@@ -607,5 +620,41 @@ namespace ClientDataMatrix.Model
         public string TextExcerpt { get; set; }
         public string SourcePath { get; set; }
         public string SourceLocation { get; set; }
+    }
+
+    public sealed class ComponentOperationFieldValueRecord
+    {
+        public string RawValue { get; set; }
+        public int ObservationCount { get; set; }
+        public int DistinctComponentCount { get; set; }
+        public int DistinctAbilityCount { get; set; }
+        public string SampleComponentIdsText { get; set; }
+        public string SampleAbilityIdsText { get; set; }
+        public List<ComponentOperationAbilityRecord> SampleAbilities { get; set; }
+    }
+
+    public sealed class ComponentOperationFieldValueInsightRecord
+    {
+        public uint OperationId { get; set; }
+        public string FieldKey { get; set; }
+        public string RawValue { get; set; }
+        public int ObservationCount { get; set; }
+        public int DistinctComponentCount { get; set; }
+        public int DistinctAbilityCount { get; set; }
+        public string TriggerSummaryText { get; set; }
+        public string ContextTagSummaryText { get; set; }
+        public string CompanionSummaryText { get; set; }
+        public List<ComponentOperationFieldCorrelationRecord> CompanionFields { get; set; }
+    }
+
+    public sealed class ComponentOperationFieldCorrelationRecord
+    {
+        public string FieldKey { get; set; }
+        public string DominantValue { get; set; }
+        public int MatchCount { get; set; }
+        public int ObservationCount { get; set; }
+        public int CoveragePercent { get; set; }
+        public int DistinctValueCount { get; set; }
+        public string SampleValuesText { get; set; }
     }
 }
