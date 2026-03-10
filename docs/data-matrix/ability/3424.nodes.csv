@@ -1,0 +1,56 @@
+﻿Id,Kind,Key,Label,Properties
+ability:3424,ability,3424,Ability 3424,
+component:12515,component,12515,Component 12515,
+component:142,component,142,Component 142,
+component:343,component,343,Component 343,
+effect:12,effect,12,Effect 12,
+effect:1321,effect,1321,Effect 1321,
+effect:1329,effect,1329,Effect 1329,
+effect:1330,effect,1330,Effect 1330,
+effect:1411,effect,1411,Effect 1411,
+effect:1810,effect,1810,Effect 1810,
+effect:1855,effect,1855,Effect 1855,
+effect:2031,effect,2031,Effect 2031,
+effect:2086,effect,2086,Effect 2086,
+effect:2110,effect,2110,Effect 2110,
+effect:2253,effect,2253,Effect 2253,
+effect:2459,effect,2459,Effect 2459,
+effect:2643,effect,2643,Effect 2643,
+effect:2918,effect,2918,Effect 2918,
+effect:3424,effect,3424,Effect 3424,
+effect:406,effect,406,Effect 406,
+effect:441,effect,441,Effect 441,
+effect:540,effect,540,Effect 540,
+effect:57,effect,57,Effect 57,
+effect:630,effect,630,Effect 630,
+effect:92,effect,92,Effect 92,
+row:abilities.csv|line=3560;AbilityId=3424,row,abilities.csv|line=3560;AbilityId=3424,abilities.csv line=3560;AbilityId=3424,line_number=3560 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\abilities.csv
+row:abilitycomponentexport.bin|record=6027;ComponentId=12515;offset=1054741,row,abilitycomponentexport.bin|record=6027;ComponentId=12515;offset=1054741,abilitycomponentexport.bin record=6027;ComponentId=12515;offset=1054741,byte_offset=1054741 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilitycomponentexport.bin
+row:abilitycomponentexport.bin|record=6615;ComponentId=142;offset=1156903,row,abilitycomponentexport.bin|record=6615;ComponentId=142;offset=1156903,abilitycomponentexport.bin record=6615;ComponentId=142;offset=1156903,byte_offset=1156903 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilitycomponentexport.bin
+row:abilitycomponentexport.bin|record=6792;ComponentId=343;offset=1187902,row,abilitycomponentexport.bin|record=6792;ComponentId=343;offset=1187902,abilitycomponentexport.bin record=6792;ComponentId=343;offset=1187902,byte_offset=1187902 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilitycomponentexport.bin
+row:abilitydesc.txt|line=3425;EntryId=3424,row,abilitydesc.txt|line=3425;EntryId=3424,abilitydesc.txt line=3425;EntryId=3424,line_number=3425 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\abilitydesc.txt
+row:abilityexport.bin|record=363;AbilityId=3424;offset=70302,row,abilityexport.bin|record=363;AbilityId=3424;offset=70302,abilityexport.bin record=363;AbilityId=3424;offset=70302,byte_offset=70302 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityexport.bin
+row:abilitynames.txt|line=3425;EntryId=3424,row,abilitynames.txt|line=3425;EntryId=3424,abilitynames.txt line=3425;EntryId=3424,line_number=3425 | normalized_value=Triumphant Blasting | raw_value=Triumphant Blasting^n | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\abilitynames.txt
+row:componenteffects.txt|line=12516;EntryId=12515,row,componenteffects.txt|line=12516;EntryId=12515,componenteffects.txt line=12516;EntryId=12515,line_number=12516 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\componenteffects.txt
+row:componenteffects.txt|line=143;EntryId=142,row,componenteffects.txt|line=143;EntryId=142,componenteffects.txt line=143;EntryId=142,line_number=143 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\componenteffects.txt
+row:componenteffects.txt|line=344;EntryId=343,row,componenteffects.txt|line=344;EntryId=343,componenteffects.txt line=344;EntryId=343,line_number=344 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\componenteffects.txt
+row:effects.csv|line=107;EffectId=92,row,effects.csv|line=107;EffectId=92,effects.csv line=107;EffectId=92,line_number=107 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=1389;EffectId=1321,row,effects.csv|line=1389;EffectId=1321,effects.csv line=1389;EffectId=1321,line_number=1389 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=1398;EffectId=1329,row,effects.csv|line=1398;EffectId=1329,effects.csv line=1398;EffectId=1329,line_number=1398 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=1399;EffectId=1330,row,effects.csv|line=1399;EffectId=1330,effects.csv line=1399;EffectId=1330,line_number=1399 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=1484;EffectId=1411,row,effects.csv|line=1484;EffectId=1411,effects.csv line=1484;EffectId=1411,line_number=1484 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=17;EffectId=12,row,effects.csv|line=17;EffectId=12,effects.csv line=17;EffectId=12,line_number=17 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=1900;EffectId=1810,row,effects.csv|line=1900;EffectId=1810,effects.csv line=1900;EffectId=1810,line_number=1900 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=2098;EffectId=2031,row,effects.csv|line=2098;EffectId=2031,effects.csv line=2098;EffectId=2031,line_number=2098 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=2156;EffectId=2086,row,effects.csv|line=2156;EffectId=2086,effects.csv line=2156;EffectId=2086,line_number=2156 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=2181;EffectId=2110,row,effects.csv|line=2181;EffectId=2110,effects.csv line=2181;EffectId=2110,line_number=2181 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=2330;EffectId=2253,row,effects.csv|line=2330;EffectId=2253,effects.csv line=2330;EffectId=2253,line_number=2330 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=2546;EffectId=2459,row,effects.csv|line=2546;EffectId=2459,effects.csv line=2546;EffectId=2459,line_number=2546 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=2737;EffectId=2643,row,effects.csv|line=2737;EffectId=2643,effects.csv line=2737;EffectId=2643,line_number=2737 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=3019;EffectId=2918,row,effects.csv|line=3019;EffectId=2918,effects.csv line=3019;EffectId=2918,line_number=3019 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=3532;EffectId=3424,row,effects.csv|line=3532;EffectId=3424,effects.csv line=3532;EffectId=3424,line_number=3532 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=451;EffectId=406,row,effects.csv|line=451;EffectId=406,effects.csv line=451;EffectId=406,line_number=451 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=492;EffectId=441,row,effects.csv|line=492;EffectId=441,effects.csv line=492;EffectId=441,line_number=492 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=598;EffectId=540,row,effects.csv|line=598;EffectId=540,effects.csv line=598;EffectId=540,line_number=598 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=691;EffectId=630,row,effects.csv|line=691;EffectId=630,effects.csv line=691;EffectId=630,line_number=691 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=70;EffectId=57,row,effects.csv|line=70;EffectId=57,effects.csv line=70;EffectId=57,line_number=70 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv

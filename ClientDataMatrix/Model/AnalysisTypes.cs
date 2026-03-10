@@ -644,6 +644,50 @@ namespace ClientDataMatrix.Model
         public List<OperationFieldWorkPacketRecord> Packets { get; set; }
     }
 
+    public sealed class ControlLiteralCrosswalkDocument
+    {
+        public string GeneratedAtUtc { get; set; }
+        public string ExtractedRootPath { get; set; }
+        public string FilterDescription { get; set; }
+        public List<ControlLiteralRecord> Literals { get; set; }
+    }
+
+    public sealed class ControlLiteralRecord
+    {
+        public int GlobalRank { get; set; }
+        public int PriorityScore { get; set; }
+        public string RawValue { get; set; }
+        public int ObservationCount { get; set; }
+        public int DistinctSourceCount { get; set; }
+        public int DistinctComponentCount { get; set; }
+        public int DistinctAbilityCount { get; set; }
+        public int DistinctRequirementCount { get; set; }
+        public string SourceKeysText { get; set; }
+        public string ContextTagsText { get; set; }
+        public string SampleAbilityIdsText { get; set; }
+        public string SampleRequirementIdsText { get; set; }
+        public string Interpretation { get; set; }
+        public string Notes { get; set; }
+        public string Summary { get; set; }
+        public List<ControlLiteralSourceRecord> Sources { get; set; }
+    }
+
+    public sealed class ControlLiteralSourceRecord
+    {
+        public string SourceKey { get; set; }
+        public string SourceLabel { get; set; }
+        public int ObservationCount { get; set; }
+        public int DistinctComponentCount { get; set; }
+        public int DistinctAbilityCount { get; set; }
+        public int DistinctRequirementCount { get; set; }
+        public string SampleComponentIdsText { get; set; }
+        public string SampleAbilityIdsText { get; set; }
+        public string SampleRequirementIdsText { get; set; }
+        public string TriggerSummaryText { get; set; }
+        public string ContextTagSummaryText { get; set; }
+        public string CompanionSummaryText { get; set; }
+    }
+
     public sealed class OperationFieldWorkPacketRecord
     {
         public int GlobalRank { get; set; }

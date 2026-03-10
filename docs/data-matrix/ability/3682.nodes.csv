@@ -1,0 +1,14 @@
+﻿Id,Kind,Key,Label,Properties
+ability:3682,ability,3682,Ability 3682,
+component:329,component,329,Component 329,
+component:674,component,674,Component 674,
+effect:89,effect,89,Effect 89,
+row:abilities.csv|line=3821;AbilityId=3682,row,abilities.csv|line=3821;AbilityId=3682,abilities.csv line=3821;AbilityId=3682,line_number=3821 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\abilities.csv
+row:abilitycomponentexport.bin|record=174;ComponentId=674;offset=29716,row,abilitycomponentexport.bin|record=174;ComponentId=674;offset=29716,abilitycomponentexport.bin record=174;ComponentId=674;offset=29716,byte_offset=29716 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilitycomponentexport.bin
+row:abilitycomponentexport.bin|record=6778;ComponentId=329;offset=1185083,row,abilitycomponentexport.bin|record=6778;ComponentId=329;offset=1185083,abilitycomponentexport.bin record=6778;ComponentId=329;offset=1185083,byte_offset=1185083 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilitycomponentexport.bin
+row:abilitydesc.txt|line=3683;EntryId=3682,row,abilitydesc.txt|line=3683;EntryId=3682,abilitydesc.txt line=3683;EntryId=3682,line_number=3683 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\abilitydesc.txt
+row:abilityexport.bin|record=620;AbilityId=3682;offset=120193,row,abilityexport.bin|record=620;AbilityId=3682;offset=120193,abilityexport.bin record=620;AbilityId=3682;offset=120193,byte_offset=120193 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityexport.bin
+row:abilitynames.txt|line=3683;EntryId=3682,row,abilitynames.txt|line=3683;EntryId=3682,abilitynames.txt line=3683;EntryId=3682,line_number=3683 | normalized_value=Knocked Down | raw_value=Knocked Down^n | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\abilitynames.txt
+row:componenteffects.txt|line=330;EntryId=329,row,componenteffects.txt|line=330;EntryId=329,componenteffects.txt line=330;EntryId=329,line_number=330 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\componenteffects.txt
+row:componenteffects.txt|line=675;EntryId=674,row,componenteffects.txt|line=675;EntryId=674,componenteffects.txt line=675;EntryId=674,line_number=675 | normalized_value=Knocked down! | raw_value=Knocked down! | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\componenteffects.txt
+row:effects.csv|line=103;EffectId=89,row,effects.csv|line=103;EffectId=89,effects.csv line=103;EffectId=89,line_number=103 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv

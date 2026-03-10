@@ -29,6 +29,8 @@ namespace WorldServer.World.Abilities
 
         public static bool PreventCasting;
         private static readonly ushort[] RenownMasteryTactics = { 27870, 27871, 27872, 27873 };
+        private const byte RenownMasteryTacticThreshold = 90;
+        private const byte RenownAugmentVigorThreshold = 100;
         private const byte RenownSilentBonusRankOne = 70;
         private const byte RenownSilentBonusRankTwo = 80;
         private const ushort RenownSilentBonusRankOneEntry = 22275;
@@ -115,12 +117,28 @@ namespace WorldServer.World.Abilities
 
         }
 
-        private bool MeetsRenownMasteryRequirements(AbilityConstants constants)
+        private static byte GetRequiredRenownForTactic(ushort tacticEntry, byte minimumRenown)
+        {
+            switch (tacticEntry)
+            {
+                case 27870:
+                case 27871:
+                case 27872:
+                    return (byte)Math.Max(minimumRenown, RenownMasteryTacticThreshold);
+                case 27873:
+                    return (byte)Math.Max(minimumRenown, RenownAugmentVigorThreshold);
+                default:
+                    return minimumRenown;
+            }
+        }
+
+        private bool MeetsRenownMasteryRequirements(ushort tacticEntry, AbilityConstants constants)
         {
             if (_playerOwner == null || constants == null)
                 return false;
 
-            return _playerOwner.Level >= constants.MinimumRank && _playerOwner.RenownRank >= constants.MinimumRenown;
+            byte requiredRenown = GetRequiredRenownForTactic(tacticEntry, constants.MinimumRenown);
+            return _playerOwner.Level >= constants.MinimumRank && _playerOwner.RenownRank >= requiredRenown;
         }
 
         private bool SyncRenownMasteryTactics()
@@ -137,7 +155,7 @@ namespace WorldServer.World.Abilities
                 if (constants == null)
                     continue;
 
-                bool shouldHave = MeetsRenownMasteryRequirements(constants);
+                bool shouldHave = MeetsRenownMasteryRequirements(tacticEntry, constants);
                 bool hasInSet = _abilitySet.Contains(tacticEntry);
                 bool hasInList = _abilities.Exists(ab => ab.Entry == tacticEntry);
 
@@ -187,7 +205,7 @@ namespace WorldServer.World.Abilities
 
         private bool HasRenownSilentBuff(ushort buffEntry)
         {
-            return _playerOwner?.BuffInterface?.GetBuff(buffEntry, _playerOwner) != null;
+            return _playerOwner?.BuffInterface?.HasBuffInAnyState(buffEntry, _playerOwner) == true;
         }
 
         private bool QueueRenownSilentBuff(ushort buffEntry)
@@ -205,10 +223,21 @@ namespace WorldServer.World.Abilities
 
         private bool EnsureRenownSilentBuff(ushort buffEntry, bool shouldHave)
         {
-            bool hasBuff = HasRenownSilentBuff(buffEntry);
+            if (_playerOwner?.BuffInterface == null)
+                return false;
+
+            BuffInterface buffInterface = _playerOwner.BuffInterface;
+            int appliedCopies = buffInterface.CountAppliedOrQueuedBuffs(buffEntry, _playerOwner);
+            bool hasBuff = buffInterface.HasBuffInAnyState(buffEntry, _playerOwner);
 
             if (shouldHave)
             {
+                if (appliedCopies > 1)
+                {
+                    buffInterface.RemoveBuffFromAnyState(buffEntry, _playerOwner);
+                    return QueueRenownSilentBuff(buffEntry);
+                }
+
                 if (hasBuff)
                     return false;
 
@@ -218,8 +247,7 @@ namespace WorldServer.World.Abilities
             if (!hasBuff)
                 return false;
 
-            _playerOwner.BuffInterface.RemoveBuffByEntry(buffEntry);
-            return true;
+            return buffInterface.RemoveBuffFromAnyState(buffEntry, _playerOwner);
         }
 
         private byte GetRenownSilentMasteryBonus()
@@ -459,7 +487,8 @@ namespace WorldServer.World.Abilities
             if (constInfo == null)
                 return false;
 
-            if (constInfo.MinimumRank > _unitOwner.AdjustedLevel || constInfo.MinimumRenown > _unitOwner.RenownRank)
+            byte requiredRenown = GetRequiredRenownForTactic(tacticEntry, constInfo.MinimumRenown);
+            if (constInfo.MinimumRank > _unitOwner.AdjustedLevel || requiredRenown > _unitOwner.RenownRank)
                 return false;
 
             // Renown mastery tactics are rank-granted and do not require a tree slot unlock.

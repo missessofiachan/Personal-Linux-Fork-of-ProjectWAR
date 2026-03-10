@@ -46,6 +46,7 @@ namespace ClientDataMatrix.UI
         private Button _openRemainingWorkMarkdownButton;
         private Button _openRemainingWorkNextMarkdownButton;
         private Button _openRemainingWorkOperationFieldsMarkdownButton;
+        private Button _openRemainingWorkLiteralCrosswalkMarkdownButton;
         private Button _openRemainingWorkFolderButton;
         private CheckBox _remainingWorkAllAreasCheckBox;
         private ComboBox _remainingWorkPriorityFilterComboBox;
@@ -121,6 +122,7 @@ namespace ClientDataMatrix.UI
         private string _lastRemainingWorkMarkdownPath;
         private string _lastRemainingWorkNextMarkdownPath;
         private string _lastRemainingWorkOperationFieldsMarkdownPath;
+        private string _lastRemainingWorkLiteralCrosswalkMarkdownPath;
         private string _lastDomainLedgerMarkdownPath;
         private string _lastRequirementMarkdownPath;
         private string _lastOperationSchemaMarkdownPath;
@@ -818,6 +820,9 @@ namespace ClientDataMatrix.UI
             _openRemainingWorkOperationFieldsMarkdownButton = new Button { Text = "Open Field Packets", AutoSize = true, Enabled = false };
             _openRemainingWorkOperationFieldsMarkdownButton.Click += (sender, args) => OpenPath(_lastRemainingWorkOperationFieldsMarkdownPath);
             actions.Controls.Add(_openRemainingWorkOperationFieldsMarkdownButton);
+            _openRemainingWorkLiteralCrosswalkMarkdownButton = new Button { Text = "Open Literal Crosswalk", AutoSize = true, Enabled = false };
+            _openRemainingWorkLiteralCrosswalkMarkdownButton.Click += (sender, args) => OpenPath(_lastRemainingWorkLiteralCrosswalkMarkdownPath);
+            actions.Controls.Add(_openRemainingWorkLiteralCrosswalkMarkdownButton);
             _openRemainingWorkFolderButton = new Button { Text = "Open Output Folder", AutoSize = true, Enabled = false };
             _openRemainingWorkFolderButton.Click += (sender, args) => OpenPath(string.IsNullOrWhiteSpace(_lastRemainingWorkMarkdownPath) ? null : Path.GetDirectoryName(_lastRemainingWorkMarkdownPath));
             actions.Controls.Add(_openRemainingWorkFolderButton);
@@ -942,6 +947,7 @@ namespace ClientDataMatrix.UI
                 _lastRemainingWorkMarkdownPath = null;
                 _lastRemainingWorkNextMarkdownPath = null;
                 _lastRemainingWorkOperationFieldsMarkdownPath = null;
+                _lastRemainingWorkLiteralCrosswalkMarkdownPath = null;
                 _lastDomainLedgerMarkdownPath = null;
                 _lastRequirementMarkdownPath = null;
                 _lastOperationSchemaMarkdownPath = null;
@@ -957,6 +963,7 @@ namespace ClientDataMatrix.UI
                 _openRemainingWorkMarkdownButton.Enabled = false;
                 _openRemainingWorkNextMarkdownButton.Enabled = false;
                 _openRemainingWorkOperationFieldsMarkdownButton.Enabled = false;
+                _openRemainingWorkLiteralCrosswalkMarkdownButton.Enabled = false;
                 _openRemainingWorkFolderButton.Enabled = false;
                 _openDomainsMarkdownButton.Enabled = false;
                 _openDomainsFolderButton.Enabled = false;
@@ -1027,6 +1034,7 @@ namespace ClientDataMatrix.UI
                 _lastRemainingWorkMarkdownPath = null;
                 _lastRemainingWorkNextMarkdownPath = null;
                 _lastRemainingWorkOperationFieldsMarkdownPath = null;
+                _lastRemainingWorkLiteralCrosswalkMarkdownPath = null;
                 _abilityGrid.DataSource = null;
                 _statusGrid.DataSource = null;
                 _abilityCatalogStatusLabel.Text = "Dataset load failed.";
@@ -1057,6 +1065,7 @@ namespace ClientDataMatrix.UI
                 _openRemainingWorkMarkdownButton.Enabled = false;
                 _openRemainingWorkNextMarkdownButton.Enabled = false;
                 _openRemainingWorkOperationFieldsMarkdownButton.Enabled = false;
+                _openRemainingWorkLiteralCrosswalkMarkdownButton.Enabled = false;
                 _openRemainingWorkFolderButton.Enabled = false;
                 _operationGrid.DataSource = null;
                 _operationFieldGrid.DataSource = null;
@@ -1403,13 +1412,19 @@ namespace ClientDataMatrix.UI
                     OperationFieldWorkPacketCatalog.DefaultPacketCount,
                     RemainingWorkCatalog.DefaultNextBatchMinimumPriorityBucket,
                     null));
+                ControlLiteralCrosswalkDocument literalReport = await Task.Run(() => _session.BuildControlLiteralCrosswalk(
+                    requirements,
+                    ControlLiteralCrosswalkCatalog.DefaultLiteralCount,
+                    null));
                 _lastRemainingWorkMarkdownPath = await Task.Run(() => _session.WriteRemainingWorkReport(outputRoot, report));
                 _lastRemainingWorkNextMarkdownPath = Path.Combine(Path.GetDirectoryName(_lastRemainingWorkMarkdownPath), "remaining-work-next.md");
                 _lastRemainingWorkOperationFieldsMarkdownPath = await Task.Run(() => _session.WriteOperationFieldWorkPacketReport(outputRoot, packetReport));
+                _lastRemainingWorkLiteralCrosswalkMarkdownPath = await Task.Run(() => _session.WriteControlLiteralCrosswalkReport(outputRoot, literalReport));
                 _lastRemainingWorkReport = report;
                 _openRemainingWorkMarkdownButton.Enabled = File.Exists(_lastRemainingWorkMarkdownPath);
                 _openRemainingWorkNextMarkdownButton.Enabled = File.Exists(_lastRemainingWorkNextMarkdownPath);
                 _openRemainingWorkOperationFieldsMarkdownButton.Enabled = File.Exists(_lastRemainingWorkOperationFieldsMarkdownPath);
+                _openRemainingWorkLiteralCrosswalkMarkdownButton.Enabled = File.Exists(_lastRemainingWorkLiteralCrosswalkMarkdownPath);
                 _openRemainingWorkFolderButton.Enabled = Directory.Exists(Path.GetDirectoryName(_lastRemainingWorkMarkdownPath));
                 _remainingWorkSummaryTextBox.Text = BuildRemainingWorkSummary(report, _lastRemainingWorkMarkdownPath);
                 _remainingWorkAreaGrid.DataSource = report.Areas == null
@@ -2263,9 +2278,11 @@ namespace ClientDataMatrix.UI
             RemainingWorkAreaRecord topArea = areas.OrderByDescending(row => row.PeakScore).ThenByDescending(row => row.ItemCount).FirstOrDefault();
             string nextMarkdownPath = string.IsNullOrWhiteSpace(markdownPath) ? string.Empty : Path.Combine(Path.GetDirectoryName(markdownPath), "remaining-work-next.md");
             string operationPacketPath = string.IsNullOrWhiteSpace(markdownPath) ? string.Empty : Path.Combine(Path.GetDirectoryName(markdownPath), "remaining-work-operation-fields.md");
+            string literalCrosswalkPath = string.IsNullOrWhiteSpace(markdownPath) ? string.Empty : Path.Combine(Path.GetDirectoryName(markdownPath), "remaining-work-control-literals.md");
             return "Markdown: " + markdownPath + Environment.NewLine
                 + "Next batch: " + nextMarkdownPath + Environment.NewLine
                 + "Field packets: " + operationPacketPath + Environment.NewLine
+                + "Literal crosswalk: " + literalCrosswalkPath + Environment.NewLine
                 + "Areas: " + (summary == null ? 0 : summary.AreaCount).ToString(CultureInfo.InvariantCulture) + Environment.NewLine
                 + "Items: " + (summary == null ? 0 : summary.ItemCount).ToString(CultureInfo.InvariantCulture) + Environment.NewLine
                 + "Critical: " + (summary == null ? 0 : summary.CriticalCount).ToString(CultureInfo.InvariantCulture) + Environment.NewLine

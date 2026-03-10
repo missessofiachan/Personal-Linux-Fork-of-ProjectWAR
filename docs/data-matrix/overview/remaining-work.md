@@ -1,6 +1,6 @@
 ﻿# Remaining Work
 
-Generated UTC: `2026-03-10T03:52:37.3303447Z`
+Generated UTC: `2026-03-10T17:37:30.5221170Z`
 
 Extracted root: `C:\Users\Admin\Pictures\WAR_extracted`
 
@@ -19,6 +19,7 @@ Extracted root: `C:\Users\Admin\Pictures\WAR_extracted`
 - Identity-domain risks: 1
 - Default next batch file: `overview/remaining-work-next.md`
 - Default operation field packet file: `overview/remaining-work-operation-fields.md`
+- Default control literal file: `overview/remaining-work-control-literals.md`
 
 ## Next Batch Preview
 

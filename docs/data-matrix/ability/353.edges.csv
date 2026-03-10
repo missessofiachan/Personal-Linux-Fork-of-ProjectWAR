@@ -1,0 +1,13 @@
+﻿Id,Kind,FromNodeId,ToNodeId,Label,ClaimId
+edge:1,declared_by,ability:353,row:abilities.csv|line=410;AbilityId=353,abilities.csv,
+edge:2,declared_by,ability:353,row:abilityexport.bin|record=1236;AbilityId=353;offset=240819,abilityexport.bin,
+edge:7,declared_by,component:12676,row:abilitycomponentexport.bin|record=6185;ComponentId=12676;offset=1082949,abilitycomponentexport.bin,
+edge:8,declared_by,component:12706,row:abilitycomponentexport.bin|record=6213;ComponentId=12706;offset=1087795,abilitycomponentexport.bin,
+edge:6,declared_by,effect:2476,row:effects.csv|line=2563;EffectId=2476,effects.csv,
+edge:5,declared_by,effect:353,row:effects.csv|line=394;EffectId=353,effects.csv,
+edge:11,localized_component_description,component:12676,row:componenteffects.txt|line=12677;EntryId=12676,componenteffects.txt,claim:21
+edge:12,localized_component_description,component:12706,row:componenteffects.txt|line=12707;EntryId=12706,componenteffects.txt,claim:22
+edge:10,localized_description,ability:353,row:abilitydesc.txt|line=354;EntryId=353,abilitydesc.txt,claim:20
+edge:9,localized_name,ability:353,row:abilitynames.txt|line=354;EntryId=353,abilitynames.txt,claim:19
+edge:4,uses_component,ability:353,component:12676,abilityexport.bin,
+edge:3,uses_component,ability:353,component:12706,abilityexport.bin,

@@ -1,0 +1,30 @@
+﻿digraph ClientDataMatrix {
+  rankdir=LR;
+  "ability:354" [label="Ability 354\nability"];
+  "component:12676" [label="Component 12676\ncomponent"];
+  "component:12707" [label="Component 12707\ncomponent"];
+  "effect:2476" [label="Effect 2476\neffect"];
+  "effect:354" [label="Effect 354\neffect"];
+  "row:abilities.csv|line=411;AbilityId=354" [label="abilities.csv line=411;AbilityId=354\nrow"];
+  "row:abilitycomponentexport.bin|record=6185;ComponentId=12676;offset=1082949" [label="abilitycomponentexport.bin record=6185;ComponentId=12676;offset=1082949\nrow"];
+  "row:abilitycomponentexport.bin|record=6214;ComponentId=12707;offset=1087928" [label="abilitycomponentexport.bin record=6214;ComponentId=12707;offset=1087928\nrow"];
+  "row:abilitydesc.txt|line=355;EntryId=354" [label="abilitydesc.txt line=355;EntryId=354\nrow"];
+  "row:abilityexport.bin|record=1237;AbilityId=354;offset=241013" [label="abilityexport.bin record=1237;AbilityId=354;offset=241013\nrow"];
+  "row:abilitynames.txt|line=355;EntryId=354" [label="abilitynames.txt line=355;EntryId=354\nrow"];
+  "row:componenteffects.txt|line=12677;EntryId=12676" [label="componenteffects.txt line=12677;EntryId=12676\nrow"];
+  "row:componenteffects.txt|line=12708;EntryId=12707" [label="componenteffects.txt line=12708;EntryId=12707\nrow"];
+  "row:effects.csv|line=2563;EffectId=2476" [label="effects.csv line=2563;EffectId=2476\nrow"];
+  "row:effects.csv|line=395;EffectId=354" [label="effects.csv line=395;EffectId=354\nrow"];
+  "ability:354" -> "row:abilities.csv|line=411;AbilityId=354" [label="declared_by abilities.csv"];
+  "ability:354" -> "row:abilityexport.bin|record=1237;AbilityId=354;offset=241013" [label="declared_by abilityexport.bin"];
+  "component:12676" -> "row:abilitycomponentexport.bin|record=6185;ComponentId=12676;offset=1082949" [label="declared_by abilitycomponentexport.bin"];
+  "component:12707" -> "row:abilitycomponentexport.bin|record=6214;ComponentId=12707;offset=1087928" [label="declared_by abilitycomponentexport.bin"];
+  "effect:2476" -> "row:effects.csv|line=2563;EffectId=2476" [label="declared_by effects.csv"];
+  "effect:354" -> "row:effects.csv|line=395;EffectId=354" [label="declared_by effects.csv"];
+  "component:12676" -> "row:componenteffects.txt|line=12677;EntryId=12676" [label="localized_component_description componenteffects.txt"];
+  "component:12707" -> "row:componenteffects.txt|line=12708;EntryId=12707" [label="localized_component_description componenteffects.txt"];
+  "ability:354" -> "row:abilitydesc.txt|line=355;EntryId=354" [label="localized_description abilitydesc.txt"];
+  "ability:354" -> "row:abilitynames.txt|line=355;EntryId=354" [label="localized_name abilitynames.txt"];
+  "ability:354" -> "component:12676" [label="uses_component abilityexport.bin"];
+  "ability:354" -> "component:12707" [label="uses_component abilityexport.bin"];
+}

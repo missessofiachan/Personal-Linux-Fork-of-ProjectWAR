@@ -621,7 +621,7 @@ namespace WorldServer.World.Objects
 
                 SetLevel(_Value.Level);
                 SetRenownLevel(_Value.RenownRank);
-                SetMaxActionPoints(_Value.RenownRank);
+                SetMaxActionPoints();
 
                 SendLocalizeString(/*Program.Config.Motd*/ _motd, ChatLogFilters.CHATLOGFILTERS_CITY_ANNOUNCE, Localized_text.TEXT_SERVER_MOTD);
                 MlInterface.SendMailCount();
@@ -723,22 +723,9 @@ namespace WorldServer.World.Objects
             }
         }
 
-        private void SetMaxActionPoints(byte valueRenownRank)
+        private void SetMaxActionPoints()
         {
-            int baseMaxActionPoints;
-
-            if (valueRenownRank >= 65 && valueRenownRank < 75)
-            {
-                baseMaxActionPoints = 275;
-            }
-            else if (valueRenownRank >= 75)
-            {
-                baseMaxActionPoints = 300;
-            }
-            else
-            {
-                baseMaxActionPoints = 250;
-            }
+            int baseMaxActionPoints = 250;
 
             int bonusFromStats = StsInterface?.GetBonusStat(Stats.MaxActionPoints) ?? 0;
             int itemBonusFromStats = StsInterface?.GetItemStat(Stats.MaxActionPoints) ?? 0;
@@ -3263,7 +3250,7 @@ namespace WorldServer.World.Objects
             //_Value.Renown = 0;
 
             AbtInterface?.OnPlayerRenownChanged(oldRenownRank, level);
-            SetMaxActionPoints(level);
+            SetMaxActionPoints();
 
             // Reset the bounty score for the player upon gaining an XP Level
             BountyManagerInstance?.ResetCharacterBounty(CharacterId, this);
@@ -3481,7 +3468,7 @@ namespace WorldServer.World.Objects
             _Value.RenownRank += 1;
             _Value.Renown = 0;
             AbtInterface?.OnPlayerRenownChanged(oldRenownRank, _Value.RenownRank);
-            SetMaxActionPoints(_Value.RenownRank);
+            SetMaxActionPoints();
             if (remainder > 0)
                 InternalAddRenown(remainder, true);
             else SendRenown();

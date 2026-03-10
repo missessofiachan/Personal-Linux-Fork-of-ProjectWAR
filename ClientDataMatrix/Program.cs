@@ -146,11 +146,12 @@ namespace ClientDataMatrix
             if (string.Equals(toolArguments.Command, "report_remaining", StringComparison.OrdinalIgnoreCase))
             {
                 OperationSchemaDocument operations = session.BuildOperationSchemas();
+                RequirementLedgerDocument requirements = session.BuildRequirementLedger();
                 RemainingWorkDocument report = session.BuildRemainingWorkReport(
                     session.BuildCoverageReport(),
                     session.BuildConflictReport(),
                     session.BuildDomainLedger(),
-                    session.BuildRequirementLedger(),
+                    requirements,
                     session.BuildTokenDictionary(),
                     operations);
                 OperationFieldWorkPacketDocument packetReport = session.BuildOperationFieldWorkPackets(
@@ -159,12 +160,18 @@ namespace ClientDataMatrix
                     OperationFieldWorkPacketCatalog.DefaultPacketCount,
                     RemainingWorkCatalog.DefaultNextBatchMinimumPriorityBucket,
                     null);
+                ControlLiteralCrosswalkDocument literalReport = session.BuildControlLiteralCrosswalk(
+                    requirements,
+                    ControlLiteralCrosswalkCatalog.DefaultLiteralCount,
+                    null);
                 session.WriteRemainingWorkReport(outputRoot, report);
                 session.WriteOperationFieldWorkPacketReport(outputRoot, packetReport);
+                session.WriteControlLiteralCrosswalkReport(outputRoot, literalReport);
                 Console.WriteLine("Remaining-work report written to " + Path.Combine(outputRoot, "overview"));
                 Console.WriteLine("Primary markdown: " + Path.Combine(outputRoot, "overview", "remaining-work.md"));
                 Console.WriteLine("Next-batch markdown: " + Path.Combine(outputRoot, "overview", "remaining-work-next.md"));
                 Console.WriteLine("Operation packet markdown: " + Path.Combine(outputRoot, "overview", "remaining-work-operation-fields.md"));
+                Console.WriteLine("Control literal markdown: " + Path.Combine(outputRoot, "overview", "remaining-work-control-literals.md"));
                 return 0;
             }
 
@@ -228,6 +235,23 @@ namespace ClientDataMatrix
                 Console.WriteLine("Operation-field packet report written to " + Path.Combine(outputRoot, "overview"));
                 Console.WriteLine("Primary markdown: " + packetPath);
                 Console.WriteLine("Packet count: " + (packetReport.Packets == null ? 0 : packetReport.Packets.Count).ToString(CultureInfo.InvariantCulture));
+                return 0;
+            }
+
+            if (string.Equals(toolArguments.Command, "report_remaining_literals", StringComparison.OrdinalIgnoreCase))
+            {
+                RequirementLedgerDocument requirements = session.BuildRequirementLedger();
+                int topCount = toolArguments.RemainingWorkTopCount.HasValue
+                    ? toolArguments.RemainingWorkTopCount.Value
+                    : ControlLiteralCrosswalkCatalog.DefaultLiteralCount;
+                ControlLiteralCrosswalkDocument report = session.BuildControlLiteralCrosswalk(
+                    requirements,
+                    topCount,
+                    toolArguments.RemainingWorkSearchText);
+                string reportPath = session.WriteControlLiteralCrosswalkReport(outputRoot, report);
+                Console.WriteLine("Control literal crosswalk written to " + Path.Combine(outputRoot, "overview"));
+                Console.WriteLine("Primary markdown: " + reportPath);
+                Console.WriteLine("Literal count: " + (report.Literals == null ? 0 : report.Literals.Count).ToString(CultureInfo.InvariantCulture));
                 return 0;
             }
 
@@ -411,6 +435,13 @@ namespace ClientDataMatrix
                     return parsedArguments;
                 }
 
+                if (positionalArguments.Count >= 3
+                    && string.Equals(positionalArguments[2], "literals", StringComparison.OrdinalIgnoreCase))
+                {
+                    parsedArguments.Command = "report_remaining_literals";
+                    return parsedArguments;
+                }
+
                 parsedArguments.Command = "report_remaining";
                 return parsedArguments;
             }
@@ -453,6 +484,7 @@ namespace ClientDataMatrix
             Console.WriteLine("  ClientDataMatrix report remaining [--root <path>] [--output <path>]");
             Console.WriteLine("  ClientDataMatrix report remaining next [--area <area>] [--priority <bucket>] [--search <text>] [--top <count>] [--root <path>] [--output <path>]");
             Console.WriteLine("  ClientDataMatrix report remaining packets [--priority <bucket>] [--search <text>] [--top <count>] [--root <path>] [--output <path>]");
+            Console.WriteLine("  ClientDataMatrix report remaining literals [--search <text>] [--top <count>] [--root <path>] [--output <path>]");
             Console.WriteLine();
             Console.WriteLine("Running without a command launches the GUI.");
             Console.WriteLine("Clean removes tmp-data-matrix* folders and local ClientDataMatrix log files from the workspace.");

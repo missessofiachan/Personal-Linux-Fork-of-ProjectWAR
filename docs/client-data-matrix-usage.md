@@ -213,6 +213,12 @@ The CLI commands still work, although this is now a Windows GUI executable and c
 .\bin\Debug\ClientDataMatrix.exe report remaining packets
 ```
 
+```powershell
+.\bin\Debug\ClientDataMatrix.exe report remaining literals
+```
+
+The control-literal crosswalk now carries recovered interpretations for stable families when discovery is strong enough, so entries like `445`, `708`, `1014`, `1016`, `1119`, and `1120` are surfaced with semantic notes instead of only raw clustering.
+
 If you want PowerShell to wait reliably for a CLI run and keep the printed status lines, use `Start-Process -Wait`:
 
 ```powershell
@@ -282,6 +288,10 @@ Primary files:
 - `remaining-work-operation-fields.csv`
 - `remaining-work-operation-fields.values.csv`
 - `remaining-work-operation-fields.abilities.csv`
+- `remaining-work-control-literals.md`
+- `remaining-work-control-literals.json`
+- `remaining-work-control-literals.csv`
+- `remaining-work-control-literals.sources.csv`
 - `remaining-work.areas.csv`
 - `remaining-work.items.csv`
 - `requirement-ledger.md`

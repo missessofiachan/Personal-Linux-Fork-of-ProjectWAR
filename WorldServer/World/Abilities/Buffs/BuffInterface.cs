@@ -652,6 +652,152 @@ namespace WorldServer.World.Abilities.Buffs
             }
         }
 
+        public bool HasBuffInAnyState(ushort entry, Unit caster)
+        {
+            bool needsLock = !_buffRWLock.IsReadLockHeld;
+            if (needsLock)
+                _buffRWLock.EnterReadLock();
+
+            try
+            {
+                foreach (NewBuff buff in _buffs)
+                {
+                    if (!buff.BuffHasExpired && buff.Entry == entry && (caster == null || buff.Caster == caster))
+                        return true;
+                }
+
+                foreach (NewBuff buff in _pendingBuffs)
+                {
+                    if (!buff.BuffHasExpired && buff.Entry == entry && (caster == null || buff.Caster == caster))
+                        return true;
+                }
+            }
+            finally
+            {
+                if (needsLock)
+                    _buffRWLock.ExitReadLock();
+            }
+
+            lock (_queuedInfo)
+            {
+                foreach (BuffQueueInfo queuedBuff in _queuedInfo)
+                {
+                    if (queuedBuff.BuffInfo != null && queuedBuff.BuffInfo.Entry == entry && (caster == null || queuedBuff.Caster == caster))
+                        return true;
+                }
+            }
+
+            if (_playerOwner?.Info?.Buffs != null)
+            {
+                foreach (CharacterSavedBuff savedBuff in _playerOwner.Info.Buffs)
+                {
+                    if (savedBuff.BuffId == entry)
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        public int CountAppliedOrQueuedBuffs(ushort entry, Unit caster)
+        {
+            int count = 0;
+            bool needsLock = !_buffRWLock.IsReadLockHeld;
+            if (needsLock)
+                _buffRWLock.EnterReadLock();
+
+            try
+            {
+                foreach (NewBuff buff in _buffs)
+                {
+                    if (!buff.BuffHasExpired && buff.Entry == entry && (caster == null || buff.Caster == caster))
+                        ++count;
+                }
+
+                foreach (NewBuff buff in _pendingBuffs)
+                {
+                    if (!buff.BuffHasExpired && buff.Entry == entry && (caster == null || buff.Caster == caster))
+                        ++count;
+                }
+            }
+            finally
+            {
+                if (needsLock)
+                    _buffRWLock.ExitReadLock();
+            }
+
+            lock (_queuedInfo)
+            {
+                foreach (BuffQueueInfo queuedBuff in _queuedInfo)
+                {
+                    if (queuedBuff.BuffInfo != null && queuedBuff.BuffInfo.Entry == entry && (caster == null || queuedBuff.Caster == caster))
+                        ++count;
+                }
+            }
+
+            return count;
+        }
+
+        public bool RemoveBuffFromAnyState(ushort entry, Unit caster)
+        {
+            bool changed = false;
+            bool needsLock = !_buffRWLock.IsReadLockHeld;
+            if (needsLock)
+                _buffRWLock.EnterReadLock();
+
+            try
+            {
+                foreach (NewBuff buff in _buffs)
+                {
+                    if (!buff.BuffHasExpired && buff.Entry == entry && (caster == null || buff.Caster == caster))
+                    {
+                        buff.BuffHasExpired = true;
+                        changed = true;
+                    }
+                }
+
+                foreach (NewBuff buff in _pendingBuffs)
+                {
+                    if (!buff.BuffHasExpired && buff.Entry == entry && (caster == null || buff.Caster == caster))
+                    {
+                        buff.BuffHasExpired = true;
+                        changed = true;
+                    }
+                }
+            }
+            finally
+            {
+                if (needsLock)
+                    _buffRWLock.ExitReadLock();
+            }
+
+            lock (_queuedInfo)
+            {
+                if (_queuedInfo.RemoveAll(queuedBuff => queuedBuff.BuffInfo != null
+                    && queuedBuff.BuffInfo.Entry == entry
+                    && (caster == null || queuedBuff.Caster == caster)) > 0)
+                {
+                    changed = true;
+                }
+            }
+
+            List<CharacterSavedBuff> savedBuffs = _playerOwner?.Info?.Buffs;
+            if (savedBuffs != null)
+            {
+                for (int i = savedBuffs.Count - 1; i >= 0; --i)
+                {
+                    if (savedBuffs[i].BuffId != entry)
+                        continue;
+
+                    CharMgr.Database.DeleteObject(savedBuffs[i]);
+                    savedBuffs.RemoveAt(i);
+                    changed = true;
+                }
+            }
+
+            return changed;
+        }
+
         // Mostly so that we can reliably poke the Witch Hunter Bullet buffs when we Execute
         public NewBuff GetCareerBuff(int index)
         {

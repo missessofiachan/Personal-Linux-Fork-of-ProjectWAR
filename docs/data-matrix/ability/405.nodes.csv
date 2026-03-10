@@ -1,0 +1,19 @@
+﻿Id,Kind,Key,Label,Properties
+ability:405,ability,405,Ability 405,
+component:332,component,332,Component 332,
+component:469,component,469,Component 469,
+component:470,component,470,Component 470,
+effect:105,effect,105,Effect 105,
+effect:405,effect,405,Effect 405,
+row:abilities.csv|line=468;AbilityId=405,row,abilities.csv|line=468;AbilityId=405,abilities.csv line=468;AbilityId=405,line_number=468 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\abilities.csv
+row:abilitycomponentexport.bin|record=6781;ComponentId=332;offset=1185713,row,abilitycomponentexport.bin|record=6781;ComponentId=332;offset=1185713,abilitycomponentexport.bin record=6781;ComponentId=332;offset=1185713,byte_offset=1185713 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilitycomponentexport.bin
+row:abilitycomponentexport.bin|record=6916;ComponentId=469;offset=1208585,row,abilitycomponentexport.bin|record=6916;ComponentId=469;offset=1208585,abilitycomponentexport.bin record=6916;ComponentId=469;offset=1208585,byte_offset=1208585 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilitycomponentexport.bin
+row:abilitycomponentexport.bin|record=6917;ComponentId=470;offset=1208883,row,abilitycomponentexport.bin|record=6917;ComponentId=470;offset=1208883,abilitycomponentexport.bin record=6917;ComponentId=470;offset=1208883,byte_offset=1208883 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilitycomponentexport.bin
+row:abilitydesc.txt|line=406;EntryId=405,row,abilitydesc.txt|line=406;EntryId=405,abilitydesc.txt line=406;EntryId=405,line_number=406 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\abilitydesc.txt
+row:abilityexport.bin|record=1272;AbilityId=405;offset=247803,row,abilityexport.bin|record=1272;AbilityId=405;offset=247803,abilityexport.bin record=1272;AbilityId=405;offset=247803,byte_offset=247803 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityexport.bin
+row:abilitynames.txt|line=406;EntryId=405,row,abilitynames.txt|line=406;EntryId=405,abilitynames.txt line=406;EntryId=405,line_number=406 | normalized_value=Unstoppable | raw_value=Unstoppable^n | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\abilitynames.txt
+row:componenteffects.txt|line=333;EntryId=332,row,componenteffects.txt|line=333;EntryId=332,componenteffects.txt line=333;EntryId=332,"line_number=333 | normalized_value=Immune to Stagger, Knockdown, Disarm, and Silence effects. | raw_value=Immune to Stagger, Knockdown, Disarm, and Silence effects. | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\componenteffects.txt"
+row:componenteffects.txt|line=470;EntryId=469,row,componenteffects.txt|line=470;EntryId=469,componenteffects.txt line=470;EntryId=469,line_number=470 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\componenteffects.txt
+row:componenteffects.txt|line=471;EntryId=470,row,componenteffects.txt|line=471;EntryId=470,componenteffects.txt line=471;EntryId=470,line_number=471 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\componenteffects.txt
+row:effects.csv|line=120;EffectId=105,row,effects.csv|line=120;EffectId=105,effects.csv line=120;EffectId=105,line_number=120 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=450;EffectId=405,row,effects.csv|line=450;EffectId=405,effects.csv line=450;EffectId=405,line_number=450 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv

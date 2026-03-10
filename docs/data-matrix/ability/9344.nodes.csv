@@ -1,0 +1,63 @@
+﻿Id,Kind,Key,Label,Properties
+ability:9344,ability,9344,Ability 9344,
+component:12333,component,12333,Component 12333,
+component:12374,component,12374,Component 12374,
+component:12736,component,12736,Component 12736,
+component:12737,component,12737,Component 12737,
+effect:1035,effect,1035,Effect 1035,
+effect:105,effect,105,Effect 105,
+effect:1181,effect,1181,Effect 1181,
+effect:1446,effect,1446,Effect 1446,
+effect:203,effect,203,Effect 203,
+effect:21,effect,21,Effect 21,
+effect:2110,effect,2110,Effect 2110,
+effect:219,effect,219,Effect 219,
+effect:2271,effect,2271,Effect 2271,
+effect:2480,effect,2480,Effect 2480,
+effect:2992,effect,2992,Effect 2992,
+effect:49,effect,49,Effect 49,
+effect:640,effect,640,Effect 640,
+effect:889,effect,889,Effect 889,
+requirement:9370,requirement,9370,Requirement 9370,
+requirement:9380,requirement,9380,Requirement 9380,
+requirement:9390,requirement,9390,Requirement 9390,
+requirement:9620,requirement,9620,Requirement 9620,
+requirement:9621,requirement,9621,Requirement 9621,
+requirement:9622,requirement,9622,Requirement 9622,
+requirement:9623,requirement,9623,Requirement 9623,
+requirement:9624,requirement,9624,Requirement 9624,
+requirement:9625,requirement,9625,Requirement 9625,
+row:abilitycomponentexport.bin|record=5849;ComponentId=12333;offset=1023378,row,abilitycomponentexport.bin|record=5849;ComponentId=12333;offset=1023378,abilitycomponentexport.bin record=5849;ComponentId=12333;offset=1023378,byte_offset=1023378 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilitycomponentexport.bin
+row:abilitycomponentexport.bin|record=5890;ComponentId=12374;offset=1031405,row,abilitycomponentexport.bin|record=5890;ComponentId=12374;offset=1031405,abilitycomponentexport.bin record=5890;ComponentId=12374;offset=1031405,byte_offset=1031405 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilitycomponentexport.bin
+row:abilitycomponentexport.bin|record=6242;ComponentId=12736;offset=1093335,row,abilitycomponentexport.bin|record=6242;ComponentId=12736;offset=1093335,abilitycomponentexport.bin record=6242;ComponentId=12736;offset=1093335,byte_offset=1093335 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilitycomponentexport.bin
+row:abilitycomponentexport.bin|record=6243;ComponentId=12737;offset=1093501,row,abilitycomponentexport.bin|record=6243;ComponentId=12737;offset=1093501,abilitycomponentexport.bin record=6243;ComponentId=12737;offset=1093501,byte_offset=1093501 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilitycomponentexport.bin
+row:abilitydesc.txt|line=9345;EntryId=9344,row,abilitydesc.txt|line=9345;EntryId=9344,abilitydesc.txt line=9345;EntryId=9344,line_number=9345 | normalized_value=A great cleave that strikes all targets {COM_1_RADI_FEET} in front of you for {COM_1_VAL0_DAMAGE} and making them {COM_2_VAL1}% more likely to be critically hit by others for {COM_2_DURA_SECONDS}. | raw_value=A great cleave that strikes all targets {COM_1_RADI_FEET} in front of you for {COM_1_VAL0_DAMAGE} and making them {COM_2_VAL1}% more likely to be critically hit by others for {COM_2_DURA_SECONDS}. | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\abilitydesc.txt
+row:abilityexport.bin|record=6566;AbilityId=9344;offset=1316452,row,abilityexport.bin|record=6566;AbilityId=9344;offset=1316452,abilityexport.bin record=6566;AbilityId=9344;offset=1316452,byte_offset=1316452 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityexport.bin
+row:abilitynames.txt|line=9345;EntryId=9344,row,abilitynames.txt|line=9345;EntryId=9344,abilitynames.txt line=9345;EntryId=9344,line_number=9345 | normalized_value=Crimson Death | raw_value=Crimson Death^n | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\abilitynames.txt
+row:abilityrequirementexport.bin|record=369;RequirementId=9370;offset=36174,row,abilityrequirementexport.bin|record=369;RequirementId=9370;offset=36174,abilityrequirementexport.bin record=369;RequirementId=9370;offset=36174,byte_offset=36174 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin
+row:abilityrequirementexport.bin|record=379;RequirementId=9380;offset=37160,row,abilityrequirementexport.bin|record=379;RequirementId=9380;offset=37160,abilityrequirementexport.bin record=379;RequirementId=9380;offset=37160,byte_offset=37160 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin
+row:abilityrequirementexport.bin|record=389;RequirementId=9390;offset=38146,row,abilityrequirementexport.bin|record=389;RequirementId=9390;offset=38146,abilityrequirementexport.bin record=389;RequirementId=9390;offset=38146,byte_offset=38146 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin
+row:abilityrequirementexport.bin|record=556;RequirementId=9620;offset=53378,row,abilityrequirementexport.bin|record=556;RequirementId=9620;offset=53378,abilityrequirementexport.bin record=556;RequirementId=9620;offset=53378,byte_offset=53378 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin
+row:abilityrequirementexport.bin|record=557;RequirementId=9621;offset=53470,row,abilityrequirementexport.bin|record=557;RequirementId=9621;offset=53470,abilityrequirementexport.bin record=557;RequirementId=9621;offset=53470,byte_offset=53470 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin
+row:abilityrequirementexport.bin|record=558;RequirementId=9622;offset=53562,row,abilityrequirementexport.bin|record=558;RequirementId=9622;offset=53562,abilityrequirementexport.bin record=558;RequirementId=9622;offset=53562,byte_offset=53562 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin
+row:abilityrequirementexport.bin|record=559;RequirementId=9623;offset=53654,row,abilityrequirementexport.bin|record=559;RequirementId=9623;offset=53654,abilityrequirementexport.bin record=559;RequirementId=9623;offset=53654,byte_offset=53654 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin
+row:abilityrequirementexport.bin|record=560;RequirementId=9624;offset=53746,row,abilityrequirementexport.bin|record=560;RequirementId=9624;offset=53746,abilityrequirementexport.bin record=560;RequirementId=9624;offset=53746,byte_offset=53746 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin
+row:abilityrequirementexport.bin|record=561;RequirementId=9625;offset=53838,row,abilityrequirementexport.bin|record=561;RequirementId=9625;offset=53838,abilityrequirementexport.bin record=561;RequirementId=9625;offset=53838,byte_offset=53838 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin
+row:componenteffects.txt|line=12334;EntryId=12333,row,componenteffects.txt|line=12334;EntryId=12333,componenteffects.txt line=12334;EntryId=12333,line_number=12334 | normalized_value=Chance to be critically hit by others increased <<1>>.% | raw_value=Chance to be critically hit by others increased <<1>>.% | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\componenteffects.txt
+row:componenteffects.txt|line=12375;EntryId=12374,row,componenteffects.txt|line=12375;EntryId=12374,componenteffects.txt line=12375;EntryId=12374,line_number=12375 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\componenteffects.txt
+row:componenteffects.txt|line=12737;EntryId=12736,row,componenteffects.txt|line=12737;EntryId=12736,componenteffects.txt line=12737;EntryId=12736,line_number=12737 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\componenteffects.txt
+row:componenteffects.txt|line=12738;EntryId=12737,row,componenteffects.txt|line=12738;EntryId=12737,componenteffects.txt line=12738;EntryId=12737,line_number=12738 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\componenteffects.txt
+row:effects.csv|line=1098;EffectId=1035,row,effects.csv|line=1098;EffectId=1035,effects.csv line=1098;EffectId=1035,line_number=1098 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=120;EffectId=105,row,effects.csv|line=120;EffectId=105,effects.csv line=120;EffectId=105,line_number=120 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=1243;EffectId=1181,row,effects.csv|line=1243;EffectId=1181,effects.csv line=1243;EffectId=1181,line_number=1243 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=1520;EffectId=1446,row,effects.csv|line=1520;EffectId=1446,effects.csv line=1520;EffectId=1446,line_number=1520 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=2181;EffectId=2110,row,effects.csv|line=2181;EffectId=2110,effects.csv line=2181;EffectId=2110,line_number=2181 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=223;EffectId=203,row,effects.csv|line=223;EffectId=203,effects.csv line=223;EffectId=203,line_number=223 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=2349;EffectId=2271,row,effects.csv|line=2349;EffectId=2271,effects.csv line=2349;EffectId=2271,line_number=2349 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=239;EffectId=219,row,effects.csv|line=239;EffectId=219,effects.csv line=239;EffectId=219,line_number=239 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=2567;EffectId=2480,row,effects.csv|line=2567;EffectId=2480,effects.csv line=2567;EffectId=2480,line_number=2567 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=27;EffectId=21,row,effects.csv|line=27;EffectId=21,effects.csv line=27;EffectId=21,line_number=27 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=3101;EffectId=2992,row,effects.csv|line=3101;EffectId=2992,effects.csv line=3101;EffectId=2992,line_number=3101 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=57;EffectId=49,row,effects.csv|line=57;EffectId=49,effects.csv line=57;EffectId=49,line_number=57 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=701;EffectId=640,row,effects.csv|line=701;EffectId=640,effects.csv line=701;EffectId=640,line_number=701 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=966;EffectId=889,row,effects.csv|line=966;EffectId=889,effects.csv line=966;EffectId=889,line_number=966 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv

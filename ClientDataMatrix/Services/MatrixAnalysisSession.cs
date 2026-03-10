@@ -13,6 +13,7 @@ namespace ClientDataMatrix.Services
     {
         private readonly AbilityGraphBuilder _builder;
         private readonly ComponentSchemaCatalog _componentSchemas;
+        private readonly ControlLiteralCrosswalkCatalog _controlLiteralCrosswalk;
         private readonly IdentityDomainCatalog _identityDomains;
         private readonly OperationFieldWorkPacketCatalog _operationFieldPackets;
         private readonly RemainingWorkCatalog _remainingWork;
@@ -24,6 +25,7 @@ namespace ClientDataMatrix.Services
             Dataset = dataset;
             _builder = new AbilityGraphBuilder(dataset);
             _componentSchemas = new ComponentSchemaCatalog(dataset);
+            _controlLiteralCrosswalk = new ControlLiteralCrosswalkCatalog(dataset);
             _identityDomains = new IdentityDomainCatalog(dataset);
             _operationFieldPackets = new OperationFieldWorkPacketCatalog(_componentSchemas);
             _remainingWork = new RemainingWorkCatalog(dataset);
@@ -112,6 +114,11 @@ namespace ClientDataMatrix.Services
             return _operationFieldPackets.BuildDocument(ExtractedRootPath, remainingWork, operations, topCount, minimumPriorityBucket, searchText);
         }
 
+        public ControlLiteralCrosswalkDocument BuildControlLiteralCrosswalk(RequirementLedgerDocument requirements, int topCount, string searchText)
+        {
+            return _controlLiteralCrosswalk.BuildDocument(ExtractedRootPath, requirements, topCount, searchText);
+        }
+
         public string WriteAbilityReport(string outputRoot, AbilityAnalysisResult report)
         {
             string resolvedOutputRoot = ResolveOutputRoot(outputRoot);
@@ -173,6 +180,13 @@ namespace ClientDataMatrix.Services
             string resolvedOutputRoot = ResolveOutputRoot(outputRoot);
             ReportWriters.WriteOperationFieldWorkPacketReport(resolvedOutputRoot, report);
             return Path.Combine(resolvedOutputRoot, "overview", "remaining-work-operation-fields.md");
+        }
+
+        public string WriteControlLiteralCrosswalkReport(string outputRoot, ControlLiteralCrosswalkDocument report)
+        {
+            string resolvedOutputRoot = ResolveOutputRoot(outputRoot);
+            ReportWriters.WriteControlLiteralCrosswalkReport(resolvedOutputRoot, report);
+            return Path.Combine(resolvedOutputRoot, "overview", "remaining-work-control-literals.md");
         }
 
         public List<AbilityCatalogEntry> BuildAbilityCatalog()

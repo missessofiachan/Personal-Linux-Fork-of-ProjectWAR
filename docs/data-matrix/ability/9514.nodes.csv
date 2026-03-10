@@ -1,0 +1,13 @@
+﻿Id,Kind,Key,Label,Properties
+ability:9514,ability,9514,Ability 9514,
+component:12513,component,12513,Component 12513,
+component:12514,component,12514,Component 12514,
+effect:2643,effect,2643,Effect 2643,
+row:abilitycomponentexport.bin|record=6025;ComponentId=12513;offset=1054376,row,abilitycomponentexport.bin|record=6025;ComponentId=12513;offset=1054376,abilitycomponentexport.bin record=6025;ComponentId=12513;offset=1054376,byte_offset=1054376 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilitycomponentexport.bin
+row:abilitycomponentexport.bin|record=6026;ComponentId=12514;offset=1054542,row,abilitycomponentexport.bin|record=6026;ComponentId=12514;offset=1054542,abilitycomponentexport.bin record=6026;ComponentId=12514;offset=1054542,byte_offset=1054542 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilitycomponentexport.bin
+row:abilitydesc.txt|line=9515;EntryId=9514,row,abilitydesc.txt|line=9515;EntryId=9514,abilitydesc.txt line=9515;EntryId=9514,"line_number=9515 | normalized_value=Any time you critically hit with a Path Of Destruction ability, the victim will be knocked backwards a moderate distance and mobs will be knocked down. | raw_value=Any time you critically hit with a Path Of Destruction ability, the victim will be knocked backwards a moderate distance and mobs will be knocked down. | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\abilitydesc.txt"
+row:abilityexport.bin|record=6684;AbilityId=9514;offset=1340169,row,abilityexport.bin|record=6684;AbilityId=9514;offset=1340169,abilityexport.bin record=6684;AbilityId=9514;offset=1340169,byte_offset=1340169 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityexport.bin
+row:abilitynames.txt|line=9515;EntryId=9514,row,abilitynames.txt|line=9515;EntryId=9514,abilitynames.txt line=9515;EntryId=9514,line_number=9515 | normalized_value=Triumphant Blasting | raw_value=Triumphant Blasting^n | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\abilitynames.txt
+row:componenteffects.txt|line=12514;EntryId=12513,row,componenteffects.txt|line=12514;EntryId=12513,componenteffects.txt line=12514;EntryId=12513,line_number=12514 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\componenteffects.txt
+row:componenteffects.txt|line=12515;EntryId=12514,row,componenteffects.txt|line=12515;EntryId=12514,componenteffects.txt line=12515;EntryId=12514,line_number=12515 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\componenteffects.txt
+row:effects.csv|line=2737;EffectId=2643,row,effects.csv|line=2737;EffectId=2643,effects.csv line=2737;EffectId=2643,line_number=2737 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv

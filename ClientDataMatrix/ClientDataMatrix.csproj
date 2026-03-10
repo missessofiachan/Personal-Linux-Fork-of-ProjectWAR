@@ -61,6 +61,7 @@
     <Compile Include="Services\AbilityNarrativeBuilder.cs" />
     <Compile Include="Services\ConsoleManager.cs" />
     <Compile Include="Services\ComponentSchemaCatalog.cs" />
+    <Compile Include="Services\ControlLiteralCrosswalkCatalog.cs" />
     <Compile Include="Services\DefinitionCatalog.cs" />
     <Compile Include="Services\IdentityDomainCatalog.cs" />
     <Compile Include="Services\MatrixAnalysisSession.cs" />

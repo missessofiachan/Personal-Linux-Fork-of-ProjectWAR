@@ -149,6 +149,18 @@ namespace ClientDataMatrix.Output
             WriteOperationFieldWorkPacketAbilitiesCsv(fileStem + ".abilities.csv", report == null ? new List<OperationFieldWorkPacketRecord>() : report.Packets ?? new List<OperationFieldWorkPacketRecord>());
         }
 
+        public static void WriteControlLiteralCrosswalkReport(string outputRoot, ControlLiteralCrosswalkDocument report)
+        {
+            string overviewDirectory = Path.Combine(outputRoot, "overview");
+            Directory.CreateDirectory(overviewDirectory);
+
+            string fileStem = Path.Combine(overviewDirectory, "remaining-work-control-literals");
+            File.WriteAllText(fileStem + ".md", BuildControlLiteralCrosswalkMarkdown(report), Encoding.UTF8);
+            WriteJson(fileStem + ".json", report, typeof(ControlLiteralCrosswalkDocument));
+            WriteControlLiteralCrosswalkCsv(fileStem + ".csv", report == null ? new List<ControlLiteralRecord>() : report.Literals ?? new List<ControlLiteralRecord>());
+            WriteControlLiteralCrosswalkSourcesCsv(fileStem + ".sources.csv", report == null ? new List<ControlLiteralRecord>() : report.Literals ?? new List<ControlLiteralRecord>());
+        }
+
         private static void WriteJson(string path, object instance, Type instanceType)
         {
             DataContractJsonSerializerSettings settings = new DataContractJsonSerializerSettings
@@ -469,6 +481,7 @@ namespace ClientDataMatrix.Output
             builder.AppendLine("- Identity-domain risks: " + (summary == null ? 0 : summary.DomainIssueCount).ToString(CultureInfo.InvariantCulture));
             builder.AppendLine("- Default next batch file: `overview/remaining-work-next.md`");
             builder.AppendLine("- Default operation field packet file: `overview/remaining-work-operation-fields.md`");
+            builder.AppendLine("- Default control literal file: `overview/remaining-work-control-literals.md`");
             builder.AppendLine();
 
             AppendTable(builder, "Next Batch Preview", nextItems,
@@ -656,6 +669,82 @@ namespace ClientDataMatrix.Output
                         row.TriggerText,
                         row.ContextTagsText,
                         row.TextExcerpt
+                    });
+            }
+
+            return builder.ToString();
+        }
+
+        private static string BuildControlLiteralCrosswalkMarkdown(ControlLiteralCrosswalkDocument report)
+        {
+            List<ControlLiteralRecord> literals = report == null || report.Literals == null
+                ? new List<ControlLiteralRecord>()
+                : report.Literals;
+
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine("# Remaining Work Control Literal Crosswalk");
+            builder.AppendLine();
+            builder.AppendLine("Generated UTC: `" + (report == null ? string.Empty : report.GeneratedAtUtc) + "`");
+            builder.AppendLine();
+            builder.AppendLine("Extracted root: `" + (report == null ? string.Empty : report.ExtractedRootPath) + "`");
+            builder.AppendLine();
+            builder.AppendLine("Filter: " + (report == null ? string.Empty : report.FilterDescription));
+            builder.AppendLine();
+            builder.AppendLine("Literals: " + literals.Count.ToString(CultureInfo.InvariantCulture));
+            builder.AppendLine();
+
+            AppendTable(builder, "Literal Summary", literals,
+                new[] { "Rank", "Score", "RawValue", "Obs", "Sources", "Abilities", "Requirements", "Interpretation", "Contexts", "SourceKeys" },
+                row => new[]
+                {
+                    row.GlobalRank.ToString(CultureInfo.InvariantCulture),
+                    row.PriorityScore.ToString(CultureInfo.InvariantCulture),
+                    row.RawValue,
+                    row.ObservationCount.ToString(CultureInfo.InvariantCulture),
+                    row.DistinctSourceCount.ToString(CultureInfo.InvariantCulture),
+                    row.DistinctAbilityCount.ToString(CultureInfo.InvariantCulture),
+                    row.DistinctRequirementCount.ToString(CultureInfo.InvariantCulture),
+                    row.Interpretation,
+                    row.ContextTagsText,
+                    row.SourceKeysText
+                });
+
+            foreach (ControlLiteralRecord literal in literals)
+            {
+                builder.AppendLine("## Literal `" + literal.RawValue + "`");
+                builder.AppendLine();
+                builder.AppendLine("- Rank: `" + literal.GlobalRank.ToString(CultureInfo.InvariantCulture) + "`");
+                builder.AppendLine("- Score: `" + literal.PriorityScore.ToString(CultureInfo.InvariantCulture) + "`");
+                builder.AppendLine("- Observations: `" + literal.ObservationCount.ToString(CultureInfo.InvariantCulture) + "`");
+                builder.AppendLine("- Distinct sources: `" + literal.DistinctSourceCount.ToString(CultureInfo.InvariantCulture) + "`");
+                builder.AppendLine("- Distinct components: `" + literal.DistinctComponentCount.ToString(CultureInfo.InvariantCulture) + "`");
+                builder.AppendLine("- Distinct abilities: `" + literal.DistinctAbilityCount.ToString(CultureInfo.InvariantCulture) + "`");
+                builder.AppendLine("- Distinct requirements: `" + literal.DistinctRequirementCount.ToString(CultureInfo.InvariantCulture) + "`");
+                builder.AppendLine("- Sample ability ids: `" + literal.SampleAbilityIdsText + "`");
+                builder.AppendLine("- Sample requirement ids: `" + literal.SampleRequirementIdsText + "`");
+                if (!string.IsNullOrWhiteSpace(literal.Interpretation))
+                    builder.AppendLine("- Interpretation: " + literal.Interpretation);
+                if (!string.IsNullOrWhiteSpace(literal.Notes))
+                    builder.AppendLine("- Notes: " + literal.Notes);
+                builder.AppendLine("- Contexts: " + literal.ContextTagsText);
+                builder.AppendLine();
+                builder.AppendLine("Summary: " + literal.Summary);
+                builder.AppendLine();
+
+                AppendTable(builder, "Source Breakdown", literal.Sources ?? new List<ControlLiteralSourceRecord>(),
+                    new[] { "Source", "Obs", "Components", "Abilities", "Requirements", "AbilityIds", "RequirementIds", "Triggers", "Contexts", "Companions" },
+                    row => new[]
+                    {
+                        row.SourceLabel,
+                        row.ObservationCount.ToString(CultureInfo.InvariantCulture),
+                        row.DistinctComponentCount.ToString(CultureInfo.InvariantCulture),
+                        row.DistinctAbilityCount.ToString(CultureInfo.InvariantCulture),
+                        row.DistinctRequirementCount.ToString(CultureInfo.InvariantCulture),
+                        row.SampleAbilityIdsText,
+                        row.SampleRequirementIdsText,
+                        row.TriggerSummaryText,
+                        row.ContextTagSummaryText,
+                        row.CompanionSummaryText
                     });
             }
 
@@ -1223,6 +1312,65 @@ namespace ClientDataMatrix.Output
                             EscapeCsv(ability.SourceLocation)
                         }));
                     }
+                }
+            }
+
+            File.WriteAllText(path, builder.ToString(), Encoding.UTF8);
+        }
+
+        private static void WriteControlLiteralCrosswalkCsv(string path, IList<ControlLiteralRecord> literals)
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine("GlobalRank,PriorityScore,RawValue,ObservationCount,DistinctSourceCount,DistinctComponentCount,DistinctAbilityCount,DistinctRequirementCount,SourceKeys,ContextTags,SampleAbilityIds,SampleRequirementIds,Interpretation,Notes,Summary");
+            foreach (ControlLiteralRecord literal in literals)
+            {
+                builder.AppendLine(string.Join(",", new[]
+                {
+                    EscapeCsv(literal.GlobalRank.ToString(CultureInfo.InvariantCulture)),
+                    EscapeCsv(literal.PriorityScore.ToString(CultureInfo.InvariantCulture)),
+                    EscapeCsv(literal.RawValue),
+                    EscapeCsv(literal.ObservationCount.ToString(CultureInfo.InvariantCulture)),
+                    EscapeCsv(literal.DistinctSourceCount.ToString(CultureInfo.InvariantCulture)),
+                    EscapeCsv(literal.DistinctComponentCount.ToString(CultureInfo.InvariantCulture)),
+                    EscapeCsv(literal.DistinctAbilityCount.ToString(CultureInfo.InvariantCulture)),
+                    EscapeCsv(literal.DistinctRequirementCount.ToString(CultureInfo.InvariantCulture)),
+                    EscapeCsv(literal.SourceKeysText),
+                    EscapeCsv(literal.ContextTagsText),
+                    EscapeCsv(literal.SampleAbilityIdsText),
+                    EscapeCsv(literal.SampleRequirementIdsText),
+                    EscapeCsv(literal.Interpretation),
+                    EscapeCsv(literal.Notes),
+                    EscapeCsv(literal.Summary)
+                }));
+            }
+
+            File.WriteAllText(path, builder.ToString(), Encoding.UTF8);
+        }
+
+        private static void WriteControlLiteralCrosswalkSourcesCsv(string path, IList<ControlLiteralRecord> literals)
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine("RawValue,SourceKey,SourceLabel,ObservationCount,DistinctComponentCount,DistinctAbilityCount,DistinctRequirementCount,SampleComponentIds,SampleAbilityIds,SampleRequirementIds,TriggerSummary,ContextTagSummary,CompanionSummary");
+            foreach (ControlLiteralRecord literal in literals)
+            {
+                foreach (ControlLiteralSourceRecord source in literal.Sources ?? new List<ControlLiteralSourceRecord>())
+                {
+                    builder.AppendLine(string.Join(",", new[]
+                    {
+                        EscapeCsv(literal.RawValue),
+                        EscapeCsv(source.SourceKey),
+                        EscapeCsv(source.SourceLabel),
+                        EscapeCsv(source.ObservationCount.ToString(CultureInfo.InvariantCulture)),
+                        EscapeCsv(source.DistinctComponentCount.ToString(CultureInfo.InvariantCulture)),
+                        EscapeCsv(source.DistinctAbilityCount.ToString(CultureInfo.InvariantCulture)),
+                        EscapeCsv(source.DistinctRequirementCount.ToString(CultureInfo.InvariantCulture)),
+                        EscapeCsv(source.SampleComponentIdsText),
+                        EscapeCsv(source.SampleAbilityIdsText),
+                        EscapeCsv(source.SampleRequirementIdsText),
+                        EscapeCsv(source.TriggerSummaryText),
+                        EscapeCsv(source.ContextTagSummaryText),
+                        EscapeCsv(source.CompanionSummaryText)
+                    }));
                 }
             }
 
