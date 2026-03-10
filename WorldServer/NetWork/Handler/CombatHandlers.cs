@@ -3,6 +3,7 @@ using SystemData;
 using FrameWork;
 using GameData;
 using WorldServer.Services.World;
+using WorldServer.World.Map;
 using WorldServer.World.Objects;
 using Object = WorldServer.World.Objects.Object;
 
@@ -64,11 +65,12 @@ namespace WorldServer.NetWork.Handler
         public static void F_INTERACT(BaseClient client, PacketIn packet)
         {
             GameClient cclient = client as GameClient;
+            Player player = cclient?.Plr;
 
-            if (cclient.Plr == null || !cclient.Plr.IsInWorld())
+            if (player == null || !player.IsInWorld())
                 return;
 
-            if (cclient.Plr.IsDead)
+            if (player.IsDead)
                 return;
 
             // don't change anything here or it will brake loot dyes and alot of other stuff !!!!!!!!!!!!!!!!
@@ -85,33 +87,37 @@ namespace WorldServer.NetWork.Handler
             // don't change anything here or it will brake loot dyes and alot of other stuff !!!!!!!!!!!!!!!!
 
             // loot need greed pass
-            if (Menu.Oid == 4207 && cclient.Plr.PriorityGroup != null)
+            if (Menu.Oid == 4207 && player.PriorityGroup != null)
             {
                 Menu.Packet = packet;
-                cclient.Plr.PriorityGroup.LootVote(cclient.Plr, Menu.Num, Menu.Packet.GetUint16());
+                player.PriorityGroup.LootVote(player, Menu.Num, Menu.Packet.GetUint16());
             }
-            
-            Object Obj = cclient.Plr.Region.GetObject(Menu.Oid);
+
+            RegionMgr region = player.Region;
+            if (region == null)
+                return;
+
+            Object Obj = region.GetObject(Menu.Oid);
             if (Obj == null)
                 return;
-            
-            if (!Obj.AllowInteract(cclient.Plr))
+
+            if (!Obj.AllowInteract(player))
             {
-                //Log.Error("F_INTERACT", "Distance = " + Obj.GetDistanceBetweenObjects(cclient.Plr));
+                //Log.Error("F_INTERACT", "Distance = " + Obj.GetDistanceBetweenObjects(player));
                 return;
             }
 
             //this is to prevent double clicking on doors and getting ported back to original clicking position
-            if (cclient.Plr.LastInteractTime.HasValue && DateTime.Now.Subtract(cclient.Plr.LastInteractTime.Value).TotalMilliseconds < 500)
+            if (player.LastInteractTime.HasValue && DateTime.Now.Subtract(player.LastInteractTime.Value).TotalMilliseconds < 500)
             {
                 //Log.Error("F_INTERACT", "InteractTime < 1500ms");
                 return;
             }
 
             Menu.Packet = packet;
-            Obj.SendInteract(cclient.Plr, Menu);
+            Obj.SendInteract(player, Menu);
             if (Obj is GameObject)
-                cclient.Plr.LastInteractTime = DateTime.Now;
+                player.LastInteractTime = DateTime.Now;
         }
 
         [PacketHandler(PacketHandlerType.TCP, (int)Opcodes.F_DO_ABILITY, (int)eClientState.Playing, "F_DO_ABILITY")]

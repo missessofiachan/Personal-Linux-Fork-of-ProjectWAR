@@ -1,0 +1,15 @@
+﻿Id,Kind,Key,Label,Properties
+ability:74,ability,74,Ability 74,
+component:11,component,11,Component 11,
+effect:538,effect,538,Effect 538,
+effect:74,effect,74,Effect 74,
+requirement:9100,requirement,9100,Requirement 9100,
+row:abilities.csv|line=89;AbilityId=74,row,abilities.csv|line=89;AbilityId=74,abilities.csv line=89;AbilityId=74,line_number=89 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\abilities.csv
+row:abilitycomponentexport.bin|record=6502;ComponentId=11;offset=1136990,row,abilitycomponentexport.bin|record=6502;ComponentId=11;offset=1136990,abilitycomponentexport.bin record=6502;ComponentId=11;offset=1136990,byte_offset=1136990 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilitycomponentexport.bin
+row:abilitydesc.txt|line=75;EntryId=74,row,abilitydesc.txt|line=75;EntryId=74,abilitydesc.txt line=75;EntryId=74,line_number=75 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\abilitydesc.txt
+row:abilityexport.bin|record=991;AbilityId=74;offset=193091,row,abilityexport.bin|record=991;AbilityId=74;offset=193091,abilityexport.bin record=991;AbilityId=74;offset=193091,byte_offset=193091 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityexport.bin
+row:abilitynames.txt|line=75;EntryId=74,row,abilitynames.txt|line=75;EntryId=74,abilitynames.txt line=75;EntryId=74,line_number=75 | normalized_value=Sub Test | raw_value=Sub Test^n | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\abilitynames.txt
+row:abilityrequirementexport.bin|record=99;RequirementId=9100;offset=9024,row,abilityrequirementexport.bin|record=99;RequirementId=9100;offset=9024,abilityrequirementexport.bin record=99;RequirementId=9100;offset=9024,byte_offset=9024 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin
+row:componenteffects.txt|line=12;EntryId=11,row,componenteffects.txt|line=12;EntryId=11,componenteffects.txt line=12;EntryId=11,line_number=12 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\componenteffects.txt
+row:effects.csv|line=596;EffectId=538,row,effects.csv|line=596;EffectId=538,effects.csv line=596;EffectId=538,line_number=596 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=88;EffectId=74,row,effects.csv|line=88;EffectId=74,effects.csv line=88;EffectId=74,line_number=88 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv

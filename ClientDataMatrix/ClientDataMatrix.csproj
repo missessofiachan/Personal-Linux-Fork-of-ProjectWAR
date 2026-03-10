@@ -64,7 +64,10 @@
     <Compile Include="Services\DefinitionCatalog.cs" />
     <Compile Include="Services\IdentityDomainCatalog.cs" />
     <Compile Include="Services\MatrixAnalysisSession.cs" />
+    <Compile Include="Services\OperationFieldWorkPacketCatalog.cs" />
+    <Compile Include="Services\RemainingWorkCatalog.cs" />
     <Compile Include="Services\RequirementCatalog.cs" />
+    <Compile Include="Services\WorkspaceCleanupService.cs" />
     <Compile Include="Services\AbilityGraphBuilder.cs" />
     <Compile Include="UI\DefinitionExplorerForm.cs" />
     <Compile Include="UI\MainForm.cs" />

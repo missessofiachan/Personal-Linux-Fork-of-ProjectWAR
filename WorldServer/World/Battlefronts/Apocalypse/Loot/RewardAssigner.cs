@@ -220,7 +220,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse.Loot
                 Logger.Debug($"===== Loot Assignment Bonuses (KLT) : {keepLockTracker.ToString()}");
                 if (configSettings.DebugLootRolls == "Y")
                 {
-                    var player = Player._Players.SingleOrDefault(x => x.CharacterId == keepLockTracker.CharacterId);
+                    var player = Player.GetPlayer(keepLockTracker.CharacterId);
                     if (player != null) player.SendClientMessage($"{player.Name} Loot Rolls: {keepLockTracker.ToString()}");
                 }
             }

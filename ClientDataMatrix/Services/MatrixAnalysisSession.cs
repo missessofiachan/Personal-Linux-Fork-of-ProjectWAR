@@ -14,6 +14,8 @@ namespace ClientDataMatrix.Services
         private readonly AbilityGraphBuilder _builder;
         private readonly ComponentSchemaCatalog _componentSchemas;
         private readonly IdentityDomainCatalog _identityDomains;
+        private readonly OperationFieldWorkPacketCatalog _operationFieldPackets;
+        private readonly RemainingWorkCatalog _remainingWork;
         private readonly RequirementCatalog _requirements;
 
         private MatrixAnalysisSession(string extractedRootPath, AbilityDataset dataset)
@@ -23,6 +25,8 @@ namespace ClientDataMatrix.Services
             _builder = new AbilityGraphBuilder(dataset);
             _componentSchemas = new ComponentSchemaCatalog(dataset);
             _identityDomains = new IdentityDomainCatalog(dataset);
+            _operationFieldPackets = new OperationFieldWorkPacketCatalog(_componentSchemas);
+            _remainingWork = new RemainingWorkCatalog(dataset);
             _requirements = new RequirementCatalog(dataset);
         }
 
@@ -71,6 +75,28 @@ namespace ClientDataMatrix.Services
             return _componentSchemas.BuildOperationSchemas(ExtractedRootPath);
         }
 
+        public RemainingWorkDocument BuildRemainingWorkReport()
+        {
+            return BuildRemainingWorkReport(
+                BuildCoverageReport(),
+                BuildConflictReport(),
+                BuildDomainLedger(),
+                BuildRequirementLedger(),
+                BuildTokenDictionary(),
+                BuildOperationSchemas());
+        }
+
+        public RemainingWorkDocument BuildRemainingWorkReport(
+            CoverageReportDocument coverage,
+            ConflictReportDocument conflicts,
+            DomainLedgerDocument domains,
+            RequirementLedgerDocument requirements,
+            TokenDictionaryDocument tokens,
+            OperationSchemaDocument operations)
+        {
+            return _remainingWork.BuildRemainingWorkReport(ExtractedRootPath, coverage, conflicts, domains, requirements, tokens, operations);
+        }
+
         public List<ComponentOperationFieldValueRecord> BuildOperationFieldValueEvidence(uint operationId, string fieldKey)
         {
             return _componentSchemas.BuildOperationFieldValueEvidence(operationId, fieldKey);
@@ -79,6 +105,11 @@ namespace ClientDataMatrix.Services
         public ComponentOperationFieldValueInsightRecord BuildOperationFieldValueInsight(uint operationId, string fieldKey, string rawValue)
         {
             return _componentSchemas.BuildOperationFieldValueInsight(operationId, fieldKey, rawValue);
+        }
+
+        public OperationFieldWorkPacketDocument BuildOperationFieldWorkPackets(RemainingWorkDocument remainingWork, OperationSchemaDocument operations, int topCount, string minimumPriorityBucket, string searchText)
+        {
+            return _operationFieldPackets.BuildDocument(ExtractedRootPath, remainingWork, operations, topCount, minimumPriorityBucket, searchText);
         }
 
         public string WriteAbilityReport(string outputRoot, AbilityAnalysisResult report)
@@ -128,6 +159,20 @@ namespace ClientDataMatrix.Services
             string resolvedOutputRoot = ResolveOutputRoot(outputRoot);
             ReportWriters.WriteOperationSchemaReport(resolvedOutputRoot, report);
             return Path.Combine(resolvedOutputRoot, "reference", "component-operation-schemas.md");
+        }
+
+        public string WriteRemainingWorkReport(string outputRoot, RemainingWorkDocument report)
+        {
+            string resolvedOutputRoot = ResolveOutputRoot(outputRoot);
+            ReportWriters.WriteRemainingWorkReport(resolvedOutputRoot, report);
+            return Path.Combine(resolvedOutputRoot, "overview", "remaining-work.md");
+        }
+
+        public string WriteOperationFieldWorkPacketReport(string outputRoot, OperationFieldWorkPacketDocument report)
+        {
+            string resolvedOutputRoot = ResolveOutputRoot(outputRoot);
+            ReportWriters.WriteOperationFieldWorkPacketReport(resolvedOutputRoot, report);
+            return Path.Combine(resolvedOutputRoot, "overview", "remaining-work-operation-fields.md");
         }
 
         public List<AbilityCatalogEntry> BuildAbilityCatalog()

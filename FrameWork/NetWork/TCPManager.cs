@@ -9,6 +9,7 @@ using System.Threading;
 using System.Reflection;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Cryptography;
 using System.Net.Security;
 using System.Security.Authentication;
 
@@ -16,6 +17,10 @@ namespace FrameWork
 {
     public class TCPManager
     {
+        private const string TlsEnableEnvironmentVariable = "PROJECTWAR_ENABLE_TLS";
+        private const string TlsCertificatePath = "cert.pfx";
+        private const string TlsCertificatePasswordEnvironmentVariable = "PROJECTWAR_TLS_CERT_PASSWORD";
+
         #region Manager
 
         private static Dictionary<string, TCPManager> _Tcps = new Dictionary<string, TCPManager>();
@@ -43,12 +48,7 @@ namespace FrameWork
                     return false;
 
                 TCPManager Tcp = ConvertTcp<T>();
-
-                if (System.IO.File.Exists("cert.pfx"))
-                {
-                    try { Tcp.SslCertificate = new X509Certificate2("cert.pfx", "password123"); }
-                    catch (Exception ex) { Log.Error("TCPManager", "Failed to load cert.pfx: " + ex.Message); }
-                }
+                Tcp.SslCertificate = LoadServerCertificate();
 
                 if (Tcp == null || !Tcp.Start(port))
                 {
@@ -94,6 +94,49 @@ namespace FrameWork
                 return (T)Convert.ChangeType(_Tcps[Name], typeof(T));
 
             return (T)Convert.ChangeType(null, typeof(T));
+        }
+
+        private static X509Certificate2 LoadServerCertificate()
+        {
+            if (!IsTlsEnabled())
+                return null;
+
+            if (!File.Exists(TlsCertificatePath))
+            {
+                Log.Error("TCPManager", $"TLS was requested but {TlsCertificatePath} was not found.");
+                return null;
+            }
+
+            string password = Environment.GetEnvironmentVariable(TlsCertificatePasswordEnvironmentVariable);
+            try
+            {
+                return new X509Certificate2(TlsCertificatePath, password ?? string.Empty);
+            }
+            catch (CryptographicException ex)
+            {
+                if (string.IsNullOrWhiteSpace(password))
+                    Log.Error("TCPManager", $"Failed to load {TlsCertificatePath}: set {TlsCertificatePasswordEnvironmentVariable} before starting TLS. {ex.Message}");
+                else
+                    Log.Error("TCPManager", $"Failed to load {TlsCertificatePath}: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Log.Error("TCPManager", $"Failed to load {TlsCertificatePath}: {ex.Message}");
+            }
+
+            return null;
+        }
+
+        private static bool IsTlsEnabled()
+        {
+            string value = Environment.GetEnvironmentVariable(TlsEnableEnvironmentVariable);
+            if (string.IsNullOrWhiteSpace(value))
+                return false;
+
+            return value.Equals("1", StringComparison.OrdinalIgnoreCase)
+                || value.Equals("true", StringComparison.OrdinalIgnoreCase)
+                || value.Equals("yes", StringComparison.OrdinalIgnoreCase)
+                || value.Equals("on", StringComparison.OrdinalIgnoreCase);
         }
 
         #endregion
@@ -355,6 +398,7 @@ namespace FrameWork
 
             try
             {
+                CountryBlockPolicy.Warmup();
                 LoadPacketHandler();
                 LoadCryptHandler();
 
@@ -501,6 +545,23 @@ namespace FrameWork
                 sock.ReceiveBufferSize = BUF_SIZE;
                 sock.NoDelay = false;
                 sock.Blocking = false;
+
+                string blockedCountryCode;
+                string blockReason;
+                if (CountryBlockPolicy.ShouldReject(sock.RemoteEndPoint, out blockedCountryCode, out blockReason))
+                {
+                    string remoteAddress = sock.RemoteEndPoint == null ? "unknown" : sock.RemoteEndPoint.ToString();
+                    Log.Notice("TCPManager", "Rejected connection from " + remoteAddress + " (" + blockedCountryCode + "): " + blockReason);
+                    try
+                    {
+                        sock.Close();
+                    }
+                    catch
+                    {
+                    }
+
+                    return;
+                }
 
                 BaseClient baseClient = null;
 

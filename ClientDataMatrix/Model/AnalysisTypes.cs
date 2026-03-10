@@ -569,6 +569,63 @@ namespace ClientDataMatrix.Model
         public string Notes { get; set; }
     }
 
+    public sealed class RemainingWorkDocument
+    {
+        public string GeneratedAtUtc { get; set; }
+        public string ExtractedRootPath { get; set; }
+        public List<TableLoadStatus> TableStatuses { get; set; }
+        public RemainingWorkSummaryRecord Summary { get; set; }
+        public List<RemainingWorkAreaRecord> Areas { get; set; }
+        public List<RemainingWorkItemRecord> Items { get; set; }
+    }
+
+    public sealed class RemainingWorkSummaryRecord
+    {
+        public int AreaCount { get; set; }
+        public int ItemCount { get; set; }
+        public int CriticalCount { get; set; }
+        public int HighCount { get; set; }
+        public int CoverageGapAbilityCount { get; set; }
+        public int HighSignalConflictCount { get; set; }
+        public int UnknownFieldCount { get; set; }
+        public int StructuralFieldCount { get; set; }
+        public int RequirementGapCount { get; set; }
+        public int TokenGapCount { get; set; }
+        public int DomainIssueCount { get; set; }
+    }
+
+    public sealed class RemainingWorkAreaRecord
+    {
+        public string AreaKey { get; set; }
+        public string Title { get; set; }
+        public int ItemCount { get; set; }
+        public int CriticalCount { get; set; }
+        public int HighCount { get; set; }
+        public int PeakScore { get; set; }
+        public string PeakBucket { get; set; }
+        public string Summary { get; set; }
+        public string RecommendedNextStep { get; set; }
+    }
+
+    public sealed class RemainingWorkItemRecord
+    {
+        public string AreaKey { get; set; }
+        public string AreaTitle { get; set; }
+        public int Rank { get; set; }
+        public int GlobalRank { get; set; }
+        public string PriorityBucket { get; set; }
+        public int PriorityScore { get; set; }
+        public string SubjectKind { get; set; }
+        public string SubjectKey { get; set; }
+        public string Title { get; set; }
+        public string Summary { get; set; }
+        public string Evidence { get; set; }
+        public string RecommendedAction { get; set; }
+        public ushort? ExampleAbilityId { get; set; }
+        public string ReferencePath { get; set; }
+        public string ReferenceLocation { get; set; }
+    }
+
     public sealed class OperationSchemaDocument
     {
         public string GeneratedAtUtc { get; set; }
@@ -577,6 +634,46 @@ namespace ClientDataMatrix.Model
         public List<TableLoadStatus> TableStatuses { get; set; }
         public List<uint> PriorityOperationIds { get; set; }
         public List<ComponentOperationSchemaRecord> Operations { get; set; }
+    }
+
+    public sealed class OperationFieldWorkPacketDocument
+    {
+        public string GeneratedAtUtc { get; set; }
+        public string ExtractedRootPath { get; set; }
+        public string FilterDescription { get; set; }
+        public List<OperationFieldWorkPacketRecord> Packets { get; set; }
+    }
+
+    public sealed class OperationFieldWorkPacketRecord
+    {
+        public int GlobalRank { get; set; }
+        public int AreaRank { get; set; }
+        public uint OperationId { get; set; }
+        public string OperationName { get; set; }
+        public string FieldKey { get; set; }
+        public string PriorityBucket { get; set; }
+        public int PriorityScore { get; set; }
+        public string Title { get; set; }
+        public string Summary { get; set; }
+        public string Evidence { get; set; }
+        public string RecommendedAction { get; set; }
+        public ushort? ExampleAbilityId { get; set; }
+        public string SampleValuesText { get; set; }
+        public List<OperationFieldWorkPacketValueRecord> TopValues { get; set; }
+    }
+
+    public sealed class OperationFieldWorkPacketValueRecord
+    {
+        public string RawValue { get; set; }
+        public int ObservationCount { get; set; }
+        public int DistinctComponentCount { get; set; }
+        public int DistinctAbilityCount { get; set; }
+        public string SampleComponentIdsText { get; set; }
+        public string SampleAbilityIdsText { get; set; }
+        public string TriggerSummaryText { get; set; }
+        public string ContextTagSummaryText { get; set; }
+        public string CompanionSummaryText { get; set; }
+        public List<ComponentOperationAbilityRecord> SampleAbilities { get; set; }
     }
 
     public sealed class ComponentOperationSchemaRecord

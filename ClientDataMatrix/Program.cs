@@ -2,6 +2,7 @@ using ClientDataMatrix.Configuration;
 using ClientDataMatrix.Model;
 using ClientDataMatrix.Services;
 using ClientDataMatrix.UI;
+using ClientDataMatrix.Output;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -18,6 +19,10 @@ namespace ClientDataMatrix
             public ushort AbilityId { get; set; }
             public string OutputRoot { get; set; }
             public string ExtractedRootPath { get; set; }
+            public string RemainingWorkAreaKey { get; set; }
+            public string RemainingWorkMinimumPriorityBucket { get; set; }
+            public string RemainingWorkSearchText { get; set; }
+            public int? RemainingWorkTopCount { get; set; }
             public bool ShowUsage { get; set; }
         }
 
@@ -60,6 +65,18 @@ namespace ClientDataMatrix
             }
 
             ConsoleManager.EnsureConsole();
+
+            if (string.Equals(toolArguments.Command, "clean_workspace", StringComparison.OrdinalIgnoreCase))
+            {
+                WorkspaceCleanupReport report = WorkspaceCleanupService.CleanWorkspace(Environment.CurrentDirectory);
+                Console.WriteLine(report.BuildSummary());
+                foreach (string removedPath in report.RemovedPaths)
+                    Console.WriteLine("Removed: " + removedPath);
+                foreach (string failedPath in report.FailedPaths)
+                    Console.WriteLine("Failed: " + failedPath);
+                return report.HasFailures ? 1 : 0;
+            }
+
             MatrixAnalysisSession session = MatrixAnalysisSession.Load(toolArguments.ExtractedRootPath);
 
             if (string.Equals(toolArguments.Command, "doctor_ability", StringComparison.OrdinalIgnoreCase)
@@ -126,6 +143,94 @@ namespace ClientDataMatrix
                 return 0;
             }
 
+            if (string.Equals(toolArguments.Command, "report_remaining", StringComparison.OrdinalIgnoreCase))
+            {
+                OperationSchemaDocument operations = session.BuildOperationSchemas();
+                RemainingWorkDocument report = session.BuildRemainingWorkReport(
+                    session.BuildCoverageReport(),
+                    session.BuildConflictReport(),
+                    session.BuildDomainLedger(),
+                    session.BuildRequirementLedger(),
+                    session.BuildTokenDictionary(),
+                    operations);
+                OperationFieldWorkPacketDocument packetReport = session.BuildOperationFieldWorkPackets(
+                    report,
+                    operations,
+                    OperationFieldWorkPacketCatalog.DefaultPacketCount,
+                    RemainingWorkCatalog.DefaultNextBatchMinimumPriorityBucket,
+                    null);
+                session.WriteRemainingWorkReport(outputRoot, report);
+                session.WriteOperationFieldWorkPacketReport(outputRoot, packetReport);
+                Console.WriteLine("Remaining-work report written to " + Path.Combine(outputRoot, "overview"));
+                Console.WriteLine("Primary markdown: " + Path.Combine(outputRoot, "overview", "remaining-work.md"));
+                Console.WriteLine("Next-batch markdown: " + Path.Combine(outputRoot, "overview", "remaining-work-next.md"));
+                Console.WriteLine("Operation packet markdown: " + Path.Combine(outputRoot, "overview", "remaining-work-operation-fields.md"));
+                return 0;
+            }
+
+            if (string.Equals(toolArguments.Command, "report_remaining_next", StringComparison.OrdinalIgnoreCase))
+            {
+                RemainingWorkDocument report = session.BuildRemainingWorkReport();
+                bool useDefaultNextBatch = string.IsNullOrWhiteSpace(toolArguments.RemainingWorkAreaKey)
+                    && string.IsNullOrWhiteSpace(toolArguments.RemainingWorkMinimumPriorityBucket)
+                    && string.IsNullOrWhiteSpace(toolArguments.RemainingWorkSearchText)
+                    && !toolArguments.RemainingWorkTopCount.HasValue;
+                string minimumPriorityBucket = useDefaultNextBatch
+                    ? RemainingWorkCatalog.DefaultNextBatchMinimumPriorityBucket
+                    : toolArguments.RemainingWorkMinimumPriorityBucket;
+                int topCount = useDefaultNextBatch
+                    ? RemainingWorkCatalog.DefaultNextBatchTopCount
+                    : toolArguments.RemainingWorkTopCount.GetValueOrDefault();
+                List<RemainingWorkItemRecord> items = RemainingWorkCatalog.FilterItems(
+                    report,
+                    toolArguments.RemainingWorkAreaKey,
+                    minimumPriorityBucket,
+                    toolArguments.RemainingWorkSearchText,
+                    topCount);
+                string resolvedOutputRoot = session.ResolveOutputRoot(outputRoot);
+                string fileStem = useDefaultNextBatch ? "remaining-work-next" : "remaining-work-focus";
+                string title = useDefaultNextBatch ? "Remaining Work Next Batch" : "Remaining Work Focus";
+                string filterDescription = RemainingWorkCatalog.BuildFilterDescription(
+                    toolArguments.RemainingWorkAreaKey,
+                    minimumPriorityBucket,
+                    toolArguments.RemainingWorkSearchText,
+                    topCount);
+                ReportWriters.WriteRemainingWorkFocusReport(resolvedOutputRoot, report, fileStem, items, title, filterDescription);
+                Console.WriteLine("Remaining-work focus report written to " + Path.Combine(outputRoot, "overview"));
+                Console.WriteLine("Primary markdown: " + Path.Combine(outputRoot, "overview", fileStem + ".md"));
+                Console.WriteLine("Matching items: " + items.Count.ToString(CultureInfo.InvariantCulture));
+                return 0;
+            }
+
+            if (string.Equals(toolArguments.Command, "report_remaining_packets", StringComparison.OrdinalIgnoreCase))
+            {
+                OperationSchemaDocument operations = session.BuildOperationSchemas();
+                RemainingWorkDocument report = session.BuildRemainingWorkReport(
+                    session.BuildCoverageReport(),
+                    session.BuildConflictReport(),
+                    session.BuildDomainLedger(),
+                    session.BuildRequirementLedger(),
+                    session.BuildTokenDictionary(),
+                    operations);
+                string minimumPriorityBucket = string.IsNullOrWhiteSpace(toolArguments.RemainingWorkMinimumPriorityBucket)
+                    ? RemainingWorkCatalog.DefaultNextBatchMinimumPriorityBucket
+                    : toolArguments.RemainingWorkMinimumPriorityBucket;
+                int topCount = toolArguments.RemainingWorkTopCount.HasValue && toolArguments.RemainingWorkTopCount.Value > 0
+                    ? toolArguments.RemainingWorkTopCount.Value
+                    : OperationFieldWorkPacketCatalog.DefaultPacketCount;
+                OperationFieldWorkPacketDocument packetReport = session.BuildOperationFieldWorkPackets(
+                    report,
+                    operations,
+                    topCount,
+                    minimumPriorityBucket,
+                    toolArguments.RemainingWorkSearchText);
+                string packetPath = session.WriteOperationFieldWorkPacketReport(outputRoot, packetReport);
+                Console.WriteLine("Operation-field packet report written to " + Path.Combine(outputRoot, "overview"));
+                Console.WriteLine("Primary markdown: " + packetPath);
+                Console.WriteLine("Packet count: " + (packetReport.Packets == null ? 0 : packetReport.Packets.Count).ToString(CultureInfo.InvariantCulture));
+                return 0;
+            }
+
             PrintUsage();
             return 1;
         }
@@ -166,12 +271,51 @@ namespace ClientDataMatrix
                     return parsedArguments;
                 }
 
+                if (string.Equals(currentArgument, "--area", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (index + 1 >= args.Length)
+                        throw new ArgumentException("Missing value for --area.");
+                    parsedArguments.RemainingWorkAreaKey = args[++index];
+                    continue;
+                }
+
+                if (string.Equals(currentArgument, "--priority", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (index + 1 >= args.Length)
+                        throw new ArgumentException("Missing value for --priority.");
+                    parsedArguments.RemainingWorkMinimumPriorityBucket = args[++index];
+                    continue;
+                }
+
+                if (string.Equals(currentArgument, "--search", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (index + 1 >= args.Length)
+                        throw new ArgumentException("Missing value for --search.");
+                    parsedArguments.RemainingWorkSearchText = args[++index];
+                    continue;
+                }
+
+                if (string.Equals(currentArgument, "--top", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (index + 1 >= args.Length)
+                        throw new ArgumentException("Missing value for --top.");
+                    parsedArguments.RemainingWorkTopCount = ParseTopCount(args[++index]);
+                    continue;
+                }
+
                 positionalArguments.Add(currentArgument);
             }
 
             if (positionalArguments.Count == 0)
             {
                 parsedArguments.Command = "gui";
+                return parsedArguments;
+            }
+
+            if (positionalArguments.Count >= 1
+                && string.Equals(positionalArguments[0], "clean", StringComparison.OrdinalIgnoreCase))
+            {
+                parsedArguments.Command = "clean_workspace";
                 return parsedArguments;
             }
 
@@ -249,6 +393,28 @@ namespace ClientDataMatrix
                 return parsedArguments;
             }
 
+            if (positionalArguments.Count >= 2
+                && string.Equals(positionalArguments[0], "report", StringComparison.OrdinalIgnoreCase)
+                && string.Equals(positionalArguments[1], "remaining", StringComparison.OrdinalIgnoreCase))
+            {
+                if (positionalArguments.Count >= 3
+                    && string.Equals(positionalArguments[2], "next", StringComparison.OrdinalIgnoreCase))
+                {
+                    parsedArguments.Command = "report_remaining_next";
+                    return parsedArguments;
+                }
+
+                if (positionalArguments.Count >= 3
+                    && string.Equals(positionalArguments[2], "packets", StringComparison.OrdinalIgnoreCase))
+                {
+                    parsedArguments.Command = "report_remaining_packets";
+                    return parsedArguments;
+                }
+
+                parsedArguments.Command = "report_remaining";
+                return parsedArguments;
+            }
+
             parsedArguments.ShowUsage = true;
             return parsedArguments;
         }
@@ -261,12 +427,21 @@ namespace ClientDataMatrix
             return abilityId;
         }
 
+        private static int ParseTopCount(string rawValue)
+        {
+            int topCount;
+            if (!int.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out topCount) || topCount < 0)
+                throw new ArgumentException("--top must be a non-negative integer.");
+            return topCount;
+        }
+
         private static void PrintUsage()
         {
             Console.WriteLine("ClientDataMatrix");
             Console.WriteLine();
             Console.WriteLine("Usage:");
             Console.WriteLine("  ClientDataMatrix [gui] [--root <path>] [--output <path>]");
+            Console.WriteLine("  ClientDataMatrix clean");
             Console.WriteLine("  ClientDataMatrix doctor ability <abilityId> [--root <path>] [--output <path>]");
             Console.WriteLine("  ClientDataMatrix export graph ability <abilityId> [--root <path>] [--output <path>]");
             Console.WriteLine("  ClientDataMatrix report conflicts [--root <path>] [--output <path>]");
@@ -275,8 +450,14 @@ namespace ClientDataMatrix
             Console.WriteLine("  ClientDataMatrix report requirements [--root <path>] [--output <path>]");
             Console.WriteLine("  ClientDataMatrix report tokens [--root <path>] [--output <path>]");
             Console.WriteLine("  ClientDataMatrix report operations [--root <path>] [--output <path>]");
+            Console.WriteLine("  ClientDataMatrix report remaining [--root <path>] [--output <path>]");
+            Console.WriteLine("  ClientDataMatrix report remaining next [--area <area>] [--priority <bucket>] [--search <text>] [--top <count>] [--root <path>] [--output <path>]");
+            Console.WriteLine("  ClientDataMatrix report remaining packets [--priority <bucket>] [--search <text>] [--top <count>] [--root <path>] [--output <path>]");
             Console.WriteLine();
             Console.WriteLine("Running without a command launches the GUI.");
+            Console.WriteLine("Clean removes tmp-data-matrix* folders and local ClientDataMatrix log files from the workspace.");
+            Console.WriteLine("Remaining-work focus filters use area keys like Coverage or Operations; priority buckets are Critical, High, Medium, or Low.");
+            Console.WriteLine("--top 0 means keep every matching item.");
             Console.WriteLine("Default output path: docs\\data-matrix");
             Console.WriteLine("Default extracted root: C:\\Users\\Admin\\Pictures\\WAR_extracted");
         }

@@ -239,33 +239,27 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             if (plr == null)
             {
                 byte[] buffer = Out.ToArray();
+                var players = Player.GetPlayersSnapshot();
+                if (players.Count == 0)
+                    return;
 
-                if (Player._Players.Count == 0)
-                    plr.SendPacket(Out);
-                else
+                foreach (Player player in players)
                 {
+                    if (player == null || player.IsDisposed || !player.IsInWorld())
+                        continue;
 
-                    lock (Player._Players)
-                    {
-                        foreach (Player player in Player._Players)
-                        {
-                            if (player == null || player.IsDisposed || !player.IsInWorld())
-                                continue;
+                    PacketOut playerCampaignStatus = new PacketOut(0, 159) { Position = 0 };
+                    playerCampaignStatus.Write(buffer, 0, buffer.Length);
 
-                            PacketOut playerCampaignStatus = new PacketOut(0, 159) { Position = 0 };
-                            playerCampaignStatus.Write(buffer, 0, buffer.Length);
+                    if (player.Region?.Campaign != null)
+                        WriteVictoryPoints(player.Realm, playerCampaignStatus, vpp);
 
-                            if (player.Region?.Campaign != null)
-                                WriteVictoryPoints(player.Realm, playerCampaignStatus, vpp);
+                    else
+                        playerCampaignStatus.Fill(0, 9);
 
-                            else
-                                playerCampaignStatus.Fill(0, 9);
+                    playerCampaignStatus.Fill(0, 4);
 
-                            playerCampaignStatus.Fill(0, 4);
-
-                            player.SendPacket(playerCampaignStatus);
-                        }
-                    }
+                    player.SendPacket(playerCampaignStatus);
                 }
             }
             else

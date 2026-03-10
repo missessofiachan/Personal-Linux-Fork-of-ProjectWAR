@@ -186,6 +186,19 @@ namespace WorldServer.World.Objects
                 return player;
             }
         }
+
+        public static int GetPlayerCount()
+        {
+            lock (_Players)
+                return _Players.Count;
+        }
+
+        public static List<Player> GetPlayersSnapshot()
+        {
+            lock (_Players)
+                return _Players.ToList();
+        }
+
         public static Player CreatePlayer(GameClient client, Character Char)
         {
             GameClient other = ((TCPServer)client.Server).GetClientByAccount(client, Char.AccountId);

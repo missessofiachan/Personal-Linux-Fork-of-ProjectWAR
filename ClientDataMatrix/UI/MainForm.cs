@@ -19,6 +19,7 @@ namespace ClientDataMatrix.UI
         private TextBox _outputPathTextBox;
         private Button _reloadButton;
         private Button _generateAllButton;
+        private Button _cleanWorkspaceButton;
         private TextBox _abilitySearchTextBox;
         private Label _abilityCatalogStatusLabel;
         private DataGridView _abilityGrid;
@@ -41,6 +42,19 @@ namespace ClientDataMatrix.UI
         private Button _openCoverageFolderButton;
         private TextBox _coverageSummaryTextBox;
         private DataGridView _coverageGrid;
+        private Button _generateRemainingWorkButton;
+        private Button _openRemainingWorkMarkdownButton;
+        private Button _openRemainingWorkNextMarkdownButton;
+        private Button _openRemainingWorkOperationFieldsMarkdownButton;
+        private Button _openRemainingWorkFolderButton;
+        private CheckBox _remainingWorkAllAreasCheckBox;
+        private ComboBox _remainingWorkPriorityFilterComboBox;
+        private NumericUpDown _remainingWorkTopCountUpDown;
+        private TextBox _remainingWorkSearchTextBox;
+        private TextBox _remainingWorkSummaryTextBox;
+        private DataGridView _remainingWorkAreaGrid;
+        private DataGridView _remainingWorkItemGrid;
+        private TextBox _remainingWorkDetailTextBox;
         private Button _generateDomainsButton;
         private Button _openDomainsMarkdownButton;
         private Button _openDomainsFolderButton;
@@ -96,6 +110,7 @@ namespace ClientDataMatrix.UI
         private AbilityAnalysisResult _lastAbilityReport;
         private TokenDictionaryDocument _lastTokenDictionary;
         private CoverageReportDocument _lastCoverageReport;
+        private RemainingWorkDocument _lastRemainingWorkReport;
         private DomainLedgerDocument _lastDomainLedger;
         private RequirementLedgerDocument _lastRequirementLedger;
         private OperationSchemaDocument _lastOperationSchema;
@@ -103,6 +118,9 @@ namespace ClientDataMatrix.UI
         private string _lastAbilityMarkdownPath;
         private string _lastTokenDictionaryMarkdownPath;
         private string _lastCoverageMarkdownPath;
+        private string _lastRemainingWorkMarkdownPath;
+        private string _lastRemainingWorkNextMarkdownPath;
+        private string _lastRemainingWorkOperationFieldsMarkdownPath;
         private string _lastDomainLedgerMarkdownPath;
         private string _lastRequirementMarkdownPath;
         private string _lastOperationSchemaMarkdownPath;
@@ -137,9 +155,10 @@ namespace ClientDataMatrix.UI
 
         private Control CreatePathPanel(string extractedRootPath, string outputRoot)
         {
-            TableLayoutPanel panel = new TableLayoutPanel { Dock = DockStyle.Top, ColumnCount = 5, RowCount = 2, Padding = new Padding(10, 10, 10, 4) };
+            TableLayoutPanel panel = new TableLayoutPanel { Dock = DockStyle.Top, ColumnCount = 6, RowCount = 2, Padding = new Padding(10, 10, 10, 4) };
             panel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            panel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             panel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             panel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             panel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
@@ -156,6 +175,9 @@ namespace ClientDataMatrix.UI
             _generateAllButton = new Button { Text = "Generate All", AutoSize = true, Enabled = false };
             _generateAllButton.Click += async (sender, args) => await GenerateAllReportsAsync();
             panel.Controls.Add(_generateAllButton, 4, 0);
+            _cleanWorkspaceButton = new Button { Text = "Clean Temp", AutoSize = true };
+            _cleanWorkspaceButton.Click += (sender, args) => CleanWorkspace();
+            panel.Controls.Add(_cleanWorkspaceButton, 5, 0);
 
             panel.Controls.Add(new Label { Text = "Output root", AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(0, 8, 8, 0) }, 0, 1);
             _outputPathTextBox = new TextBox { Dock = DockStyle.Fill, Text = outputRoot ?? string.Empty, Margin = new Padding(0, 4, 8, 4) };
@@ -165,7 +187,7 @@ namespace ClientDataMatrix.UI
             panel.Controls.Add(browseOutput, 2, 1);
             Label hint = new Label { Text = "GUI analysis stays read-only against extracted client files.", AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(0, 8, 0, 0) };
             panel.Controls.Add(hint, 3, 1);
-            panel.SetColumnSpan(hint, 2);
+            panel.SetColumnSpan(hint, 3);
 
             return panel;
         }
@@ -178,6 +200,7 @@ namespace ClientDataMatrix.UI
             _mainTabs.TabPages.Add(CreateDomainTab());
             _mainTabs.TabPages.Add(CreateRequirementTab());
             _mainTabs.TabPages.Add(CreateCoverageTab());
+            _mainTabs.TabPages.Add(CreateRemainingWorkTab());
             _mainTabs.TabPages.Add(CreateOperationTab());
             _mainTabs.TabPages.Add(CreateUnknownTab());
             _mainTabs.TabPages.Add(CreateConflictTab());
@@ -774,6 +797,100 @@ namespace ClientDataMatrix.UI
             return tab;
         }
 
+        private TabPage CreateRemainingWorkTab()
+        {
+            TabPage tab = new TabPage("Remaining Work");
+            TableLayoutPanel layout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3 };
+            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 140F));
+            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+            FlowLayoutPanel actions = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true };
+            _generateRemainingWorkButton = new Button { Text = "Generate Remaining Work", AutoSize = true, Enabled = false };
+            _generateRemainingWorkButton.Click += async (sender, args) => await GenerateRemainingWorkReportAsync();
+            actions.Controls.Add(_generateRemainingWorkButton);
+            _openRemainingWorkMarkdownButton = new Button { Text = "Open Markdown", AutoSize = true, Enabled = false };
+            _openRemainingWorkMarkdownButton.Click += (sender, args) => OpenPath(_lastRemainingWorkMarkdownPath);
+            actions.Controls.Add(_openRemainingWorkMarkdownButton);
+            _openRemainingWorkNextMarkdownButton = new Button { Text = "Open Next Batch", AutoSize = true, Enabled = false };
+            _openRemainingWorkNextMarkdownButton.Click += (sender, args) => OpenPath(_lastRemainingWorkNextMarkdownPath);
+            actions.Controls.Add(_openRemainingWorkNextMarkdownButton);
+            _openRemainingWorkOperationFieldsMarkdownButton = new Button { Text = "Open Field Packets", AutoSize = true, Enabled = false };
+            _openRemainingWorkOperationFieldsMarkdownButton.Click += (sender, args) => OpenPath(_lastRemainingWorkOperationFieldsMarkdownPath);
+            actions.Controls.Add(_openRemainingWorkOperationFieldsMarkdownButton);
+            _openRemainingWorkFolderButton = new Button { Text = "Open Output Folder", AutoSize = true, Enabled = false };
+            _openRemainingWorkFolderButton.Click += (sender, args) => OpenPath(string.IsNullOrWhiteSpace(_lastRemainingWorkMarkdownPath) ? null : Path.GetDirectoryName(_lastRemainingWorkMarkdownPath));
+            actions.Controls.Add(_openRemainingWorkFolderButton);
+            _remainingWorkAllAreasCheckBox = new CheckBox { Text = "All Areas", AutoSize = true };
+            _remainingWorkAllAreasCheckBox.CheckedChanged += (sender, args) => RefreshRemainingWorkItems();
+            actions.Controls.Add(_remainingWorkAllAreasCheckBox);
+            actions.Controls.Add(new Label { Text = "Priority", AutoSize = true, Margin = new Padding(10, 8, 4, 0) });
+            _remainingWorkPriorityFilterComboBox = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 90 };
+            _remainingWorkPriorityFilterComboBox.Items.AddRange(new object[] { "All", "Critical", "High", "Medium", "Low" });
+            _remainingWorkPriorityFilterComboBox.SelectedIndex = 0;
+            _remainingWorkPriorityFilterComboBox.SelectedIndexChanged += (sender, args) => RefreshRemainingWorkItems();
+            actions.Controls.Add(_remainingWorkPriorityFilterComboBox);
+            actions.Controls.Add(new Label { Text = "Search", AutoSize = true, Margin = new Padding(10, 8, 4, 0) });
+            _remainingWorkSearchTextBox = new TextBox { Width = 180 };
+            _remainingWorkSearchTextBox.TextChanged += (sender, args) => RefreshRemainingWorkItems();
+            actions.Controls.Add(_remainingWorkSearchTextBox);
+            actions.Controls.Add(new Label { Text = "Top (0=all)", AutoSize = true, Margin = new Padding(10, 8, 4, 0) });
+            _remainingWorkTopCountUpDown = new NumericUpDown { Minimum = 0, Maximum = 5000, Value = 0, Width = 70 };
+            _remainingWorkTopCountUpDown.ValueChanged += (sender, args) => RefreshRemainingWorkItems();
+            actions.Controls.Add(_remainingWorkTopCountUpDown);
+            Button resetRemainingFiltersButton = new Button { Text = "Reset Filters", AutoSize = true };
+            resetRemainingFiltersButton.Click += (sender, args) =>
+            {
+                _remainingWorkAllAreasCheckBox.Checked = false;
+                _remainingWorkPriorityFilterComboBox.SelectedIndex = 0;
+                _remainingWorkSearchTextBox.Text = string.Empty;
+                _remainingWorkTopCountUpDown.Value = 0;
+            };
+            actions.Controls.Add(resetRemainingFiltersButton);
+
+            _remainingWorkSummaryTextBox = CreateReadOnlyTextBox();
+            _remainingWorkSummaryTextBox.Text = "Generate the remaining-work report to rank the outstanding matrix backlog across coverage, conflicts, unknown fields, requirements, tokens, and identity domains.";
+
+            SplitContainer split = new SplitContainer { Dock = DockStyle.Fill, Orientation = Orientation.Vertical, SplitterDistance = 360 };
+            _remainingWorkAreaGrid = CreateReadOnlyGrid();
+            _remainingWorkAreaGrid.AutoGenerateColumns = false;
+            _remainingWorkAreaGrid.Columns.Add(CreateTextColumn("Area", "Title", 170));
+            _remainingWorkAreaGrid.Columns.Add(CreateTextColumn("Peak", "PeakScore", 70));
+            _remainingWorkAreaGrid.Columns.Add(CreateTextColumn("Bucket", "PeakBucket", 80));
+            _remainingWorkAreaGrid.Columns.Add(CreateTextColumn("Critical", "CriticalCount", 70));
+            _remainingWorkAreaGrid.Columns.Add(CreateTextColumn("High", "HighCount", 70));
+            _remainingWorkAreaGrid.Columns.Add(CreateTextColumn("Items", "ItemCount", 70));
+            _remainingWorkAreaGrid.SelectionChanged += (sender, args) => RefreshRemainingWorkItems();
+            split.Panel1.Controls.Add(WrapInGroup("Backlog Areas", _remainingWorkAreaGrid));
+
+            SplitContainer detailSplit = new SplitContainer { Dock = DockStyle.Fill, Orientation = Orientation.Horizontal, SplitterDistance = 360 };
+            _remainingWorkItemGrid = CreateReadOnlyGrid();
+            _remainingWorkItemGrid.AutoGenerateColumns = false;
+            _remainingWorkItemGrid.Columns.Add(CreateTextColumn("Rank", "Rank", 55));
+            _remainingWorkItemGrid.Columns.Add(CreateTextColumn("Global", "GlobalRank", 55));
+            _remainingWorkItemGrid.Columns.Add(CreateTextColumn("Priority", "PriorityBucket", 75));
+            _remainingWorkItemGrid.Columns.Add(CreateTextColumn("Score", "PriorityScore", 60));
+            _remainingWorkItemGrid.Columns.Add(CreateTextColumn("Title", "Title", 240));
+            _remainingWorkItemGrid.Columns.Add(CreateTextColumn("Subject", "SubjectKey", 190));
+            _remainingWorkItemGrid.Columns.Add(CreateTextColumn("Ability", "ExampleAbilityIdText", 70));
+            _remainingWorkItemGrid.Columns.Add(CreateTextColumn("Summary", "Summary", 420));
+            _remainingWorkItemGrid.SelectionChanged += (sender, args) => RefreshRemainingWorkDetail();
+            _remainingWorkItemGrid.CellDoubleClick += async (sender, args) => { if (args.RowIndex >= 0) await NavigateSelectedRemainingWorkAbilityAsync(); };
+            detailSplit.Panel1.Controls.Add(WrapInGroup("Backlog Items", _remainingWorkItemGrid));
+
+            _remainingWorkDetailTextBox = CreateReadOnlyTextBox();
+            _remainingWorkDetailTextBox.Text = "Select a remaining-work item to inspect its summary, evidence, and suggested next action.";
+            detailSplit.Panel2.Controls.Add(WrapInGroup("Item Detail", _remainingWorkDetailTextBox));
+
+            split.Panel2.Controls.Add(detailSplit);
+
+            layout.Controls.Add(actions, 0, 0);
+            layout.Controls.Add(_remainingWorkSummaryTextBox, 0, 1);
+            layout.Controls.Add(split, 0, 2);
+            tab.Controls.Add(layout);
+            return tab;
+        }
+
         private TabPage CreateStatusTab()
         {
             TabPage tab = new TabPage("Source Status");
@@ -814,6 +931,7 @@ namespace ClientDataMatrix.UI
                 _lastAbilityReport = null;
                 _lastTokenDictionary = null;
                 _lastCoverageReport = null;
+                _lastRemainingWorkReport = null;
                 _lastDomainLedger = null;
                 _lastRequirementLedger = null;
                 _lastOperationSchema = null;
@@ -821,6 +939,9 @@ namespace ClientDataMatrix.UI
                 _lastAbilityMarkdownPath = null;
                 _lastTokenDictionaryMarkdownPath = null;
                 _lastCoverageMarkdownPath = null;
+                _lastRemainingWorkMarkdownPath = null;
+                _lastRemainingWorkNextMarkdownPath = null;
+                _lastRemainingWorkOperationFieldsMarkdownPath = null;
                 _lastDomainLedgerMarkdownPath = null;
                 _lastRequirementMarkdownPath = null;
                 _lastOperationSchemaMarkdownPath = null;
@@ -833,6 +954,10 @@ namespace ClientDataMatrix.UI
                 _openTokenDictionaryFolderButton.Enabled = false;
                 _openCoverageMarkdownButton.Enabled = false;
                 _openCoverageFolderButton.Enabled = false;
+                _openRemainingWorkMarkdownButton.Enabled = false;
+                _openRemainingWorkNextMarkdownButton.Enabled = false;
+                _openRemainingWorkOperationFieldsMarkdownButton.Enabled = false;
+                _openRemainingWorkFolderButton.Enabled = false;
                 _openDomainsMarkdownButton.Enabled = false;
                 _openDomainsFolderButton.Enabled = false;
                 _openRequirementsMarkdownButton.Enabled = false;
@@ -863,6 +988,10 @@ namespace ClientDataMatrix.UI
                 _requirementReferenceGrid.DataSource = null;
                 _coverageSummaryTextBox.Text = "Generate the coverage report to see which abilities are fully mapped and which still have extracted-client gaps.";
                 _coverageGrid.DataSource = null;
+                _remainingWorkSummaryTextBox.Text = "Generate the remaining-work report to rank the outstanding matrix backlog across coverage, conflicts, unknown fields, requirements, tokens, and identity domains.";
+                _remainingWorkAreaGrid.DataSource = null;
+                _remainingWorkItemGrid.DataSource = null;
+                _remainingWorkDetailTextBox.Text = "Select a remaining-work item to inspect its summary, evidence, and suggested next action.";
                 _operationSummaryTextBox.Text = "Generate operation schemas to inspect component operations, their non-zero fields, semantic hints, and sample abilities.";
                 _operationGrid.DataSource = null;
                 _operationFieldGrid.DataSource = null;
@@ -894,6 +1023,10 @@ namespace ClientDataMatrix.UI
                 _lastDomainLedgerMarkdownPath = null;
                 _lastRequirementLedger = null;
                 _lastRequirementMarkdownPath = null;
+                _lastRemainingWorkReport = null;
+                _lastRemainingWorkMarkdownPath = null;
+                _lastRemainingWorkNextMarkdownPath = null;
+                _lastRemainingWorkOperationFieldsMarkdownPath = null;
                 _abilityGrid.DataSource = null;
                 _statusGrid.DataSource = null;
                 _abilityCatalogStatusLabel.Text = "Dataset load failed.";
@@ -917,6 +1050,14 @@ namespace ClientDataMatrix.UI
                 _coverageSummaryTextBox.Text = "Dataset load failed. Fix the extracted root path and reload.";
                 _openCoverageMarkdownButton.Enabled = false;
                 _openCoverageFolderButton.Enabled = false;
+                _remainingWorkAreaGrid.DataSource = null;
+                _remainingWorkItemGrid.DataSource = null;
+                _remainingWorkSummaryTextBox.Text = "Dataset load failed. Fix the extracted root path and reload.";
+                _remainingWorkDetailTextBox.Text = "Dataset load failed. Fix the extracted root path and reload.";
+                _openRemainingWorkMarkdownButton.Enabled = false;
+                _openRemainingWorkNextMarkdownButton.Enabled = false;
+                _openRemainingWorkOperationFieldsMarkdownButton.Enabled = false;
+                _openRemainingWorkFolderButton.Enabled = false;
                 _operationGrid.DataSource = null;
                 _operationFieldGrid.DataSource = null;
                 _operationAbilityGrid.DataSource = null;
@@ -1240,6 +1381,66 @@ namespace ClientDataMatrix.UI
             }
         }
 
+        private async Task<bool> GenerateRemainingWorkReportAsync()
+        {
+            if (_isBusy || _session == null)
+                return false;
+
+            try
+            {
+                SetBusy(true, "Generating remaining-work report...");
+                string outputRoot = ResolveOutputRoot();
+                CoverageReportDocument coverage = _lastCoverageReport ?? await Task.Run(() => _session.BuildCoverageReport());
+                ConflictReportDocument conflicts = _lastConflictReport ?? await Task.Run(() => _session.BuildConflictReport());
+                DomainLedgerDocument domains = _lastDomainLedger ?? await Task.Run(() => _session.BuildDomainLedger());
+                RequirementLedgerDocument requirements = _lastRequirementLedger ?? await Task.Run(() => _session.BuildRequirementLedger());
+                TokenDictionaryDocument tokens = _lastTokenDictionary ?? await Task.Run(() => _session.BuildTokenDictionary());
+                OperationSchemaDocument operations = _lastOperationSchema ?? await Task.Run(() => _session.BuildOperationSchemas());
+                RemainingWorkDocument report = await Task.Run(() => _session.BuildRemainingWorkReport(coverage, conflicts, domains, requirements, tokens, operations));
+                OperationFieldWorkPacketDocument packetReport = await Task.Run(() => _session.BuildOperationFieldWorkPackets(
+                    report,
+                    operations,
+                    OperationFieldWorkPacketCatalog.DefaultPacketCount,
+                    RemainingWorkCatalog.DefaultNextBatchMinimumPriorityBucket,
+                    null));
+                _lastRemainingWorkMarkdownPath = await Task.Run(() => _session.WriteRemainingWorkReport(outputRoot, report));
+                _lastRemainingWorkNextMarkdownPath = Path.Combine(Path.GetDirectoryName(_lastRemainingWorkMarkdownPath), "remaining-work-next.md");
+                _lastRemainingWorkOperationFieldsMarkdownPath = await Task.Run(() => _session.WriteOperationFieldWorkPacketReport(outputRoot, packetReport));
+                _lastRemainingWorkReport = report;
+                _openRemainingWorkMarkdownButton.Enabled = File.Exists(_lastRemainingWorkMarkdownPath);
+                _openRemainingWorkNextMarkdownButton.Enabled = File.Exists(_lastRemainingWorkNextMarkdownPath);
+                _openRemainingWorkOperationFieldsMarkdownButton.Enabled = File.Exists(_lastRemainingWorkOperationFieldsMarkdownPath);
+                _openRemainingWorkFolderButton.Enabled = Directory.Exists(Path.GetDirectoryName(_lastRemainingWorkMarkdownPath));
+                _remainingWorkSummaryTextBox.Text = BuildRemainingWorkSummary(report, _lastRemainingWorkMarkdownPath);
+                _remainingWorkAreaGrid.DataSource = report.Areas == null
+                    ? new List<RemainingWorkAreaListRow>()
+                    : report.Areas.Select(row => new RemainingWorkAreaListRow
+                    {
+                        AreaKey = row.AreaKey,
+                        Title = row.Title,
+                        ItemCount = row.ItemCount,
+                        CriticalCount = row.CriticalCount,
+                        HighCount = row.HighCount,
+                        PeakScore = row.PeakScore,
+                        PeakBucket = row.PeakBucket,
+                        Summary = row.Summary,
+                        RecommendedNextStep = row.RecommendedNextStep
+                    }).ToList();
+                SelectFirstRow(_remainingWorkAreaGrid);
+                RefreshRemainingWorkItems();
+                AppendLog("Remaining-work report written to " + _lastRemainingWorkMarkdownPath + ".");
+                SetBusy(false, "Remaining-work report generated.");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                AppendLog("Remaining-work report failed: " + ex.Message);
+                SetBusy(false, "Remaining-work report failed.");
+                MessageBox.Show(this, ex.ToString(), "ClientDataMatrix Remaining Work Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+        }
+
         private async Task GenerateAllReportsAsync()
         {
             if (_isBusy || _session == null)
@@ -1258,6 +1459,8 @@ namespace ClientDataMatrix.UI
             if (!await GenerateOperationSchemaReportAsync())
                 return;
             if (!await GenerateConflictReportAsync())
+                return;
+            if (!await GenerateRemainingWorkReportAsync())
                 return;
 
             ushort abilityId;
@@ -1285,6 +1488,15 @@ namespace ClientDataMatrix.UI
                 return;
 
             await NavigateToAbilityAsync(selected.AbilityId, true);
+        }
+
+        private async Task NavigateSelectedRemainingWorkAbilityAsync()
+        {
+            RemainingWorkItemListRow selected = _remainingWorkItemGrid.CurrentRow == null ? null : _remainingWorkItemGrid.CurrentRow.DataBoundItem as RemainingWorkItemListRow;
+            if (selected == null || !selected.ExampleAbilityId.HasValue)
+                return;
+
+            await NavigateToAbilityAsync(selected.ExampleAbilityId.Value, true);
         }
 
         private async Task NavigateSelectedConflictAbilityAsync()
@@ -2044,6 +2256,32 @@ namespace ClientDataMatrix.UI
                 + "This ledger shows which extracted-client abilities have the minimum pieces needed for a strong analysis and which ones are still missing strings, effects, components, or requirement evidence.";
         }
 
+        private string BuildRemainingWorkSummary(RemainingWorkDocument report, string markdownPath)
+        {
+            RemainingWorkSummaryRecord summary = report == null ? null : report.Summary;
+            List<RemainingWorkAreaRecord> areas = report == null || report.Areas == null ? new List<RemainingWorkAreaRecord>() : report.Areas;
+            RemainingWorkAreaRecord topArea = areas.OrderByDescending(row => row.PeakScore).ThenByDescending(row => row.ItemCount).FirstOrDefault();
+            string nextMarkdownPath = string.IsNullOrWhiteSpace(markdownPath) ? string.Empty : Path.Combine(Path.GetDirectoryName(markdownPath), "remaining-work-next.md");
+            string operationPacketPath = string.IsNullOrWhiteSpace(markdownPath) ? string.Empty : Path.Combine(Path.GetDirectoryName(markdownPath), "remaining-work-operation-fields.md");
+            return "Markdown: " + markdownPath + Environment.NewLine
+                + "Next batch: " + nextMarkdownPath + Environment.NewLine
+                + "Field packets: " + operationPacketPath + Environment.NewLine
+                + "Areas: " + (summary == null ? 0 : summary.AreaCount).ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "Items: " + (summary == null ? 0 : summary.ItemCount).ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "Critical: " + (summary == null ? 0 : summary.CriticalCount).ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "High: " + (summary == null ? 0 : summary.HighCount).ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "Coverage gaps: " + (summary == null ? 0 : summary.CoverageGapAbilityCount).ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "High-signal conflicts: " + (summary == null ? 0 : summary.HighSignalConflictCount).ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "Unknown fields: " + (summary == null ? 0 : summary.UnknownFieldCount).ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "Structural fields: " + (summary == null ? 0 : summary.StructuralFieldCount).ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "Requirement rows with unresolved fields: " + (summary == null ? 0 : summary.RequirementGapCount).ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "Token gaps: " + (summary == null ? 0 : summary.TokenGapCount).ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + "Identity-domain risks: " + (summary == null ? 0 : summary.DomainIssueCount).ToString(CultureInfo.InvariantCulture) + Environment.NewLine
+                + (topArea == null
+                    ? "Generate the report to rank the backlog."
+                    : "Top pressure area: " + topArea.Title + " [" + topArea.PeakBucket + " " + topArea.PeakScore.ToString(CultureInfo.InvariantCulture) + "] with " + topArea.ItemCount.ToString(CultureInfo.InvariantCulture) + " items.");
+        }
+
         private string BuildOperationSummary(OperationSchemaDocument report, string markdownPath)
         {
             int operationCount = report == null || report.Operations == null ? 0 : report.Operations.Count;
@@ -2153,6 +2391,85 @@ namespace ClientDataMatrix.UI
             }).OrderByDescending(x => x.HighSignalCount).ThenByDescending(x => x.PeakTriageScore).ThenByDescending(x => x.ConflictCount).ThenBy(x => x.Domain).ToList();
         }
 
+        private void RefreshRemainingWorkItems()
+        {
+            if (_lastRemainingWorkReport == null)
+            {
+                _remainingWorkItemGrid.DataSource = null;
+                _remainingWorkDetailTextBox.Text = "Generate the remaining-work report to inspect the ranked backlog.";
+                return;
+            }
+
+            RemainingWorkAreaListRow selectedArea = _remainingWorkAreaGrid.CurrentRow == null ? null : _remainingWorkAreaGrid.CurrentRow.DataBoundItem as RemainingWorkAreaListRow;
+            string areaKey = _remainingWorkAllAreasCheckBox != null && _remainingWorkAllAreasCheckBox.Checked
+                ? null
+                : selectedArea == null ? null : selectedArea.AreaKey;
+            string minimumPriorityBucket = _remainingWorkPriorityFilterComboBox == null || _remainingWorkPriorityFilterComboBox.SelectedItem == null
+                ? null
+                : _remainingWorkPriorityFilterComboBox.SelectedItem.ToString();
+            string searchText = _remainingWorkSearchTextBox == null ? null : _remainingWorkSearchTextBox.Text;
+            int topCount = _remainingWorkTopCountUpDown == null ? 0 : Decimal.ToInt32(_remainingWorkTopCountUpDown.Value);
+            List<RemainingWorkItemRecord> items = RemainingWorkCatalog.FilterItems(_lastRemainingWorkReport, areaKey, minimumPriorityBucket, searchText, topCount);
+
+            _remainingWorkItemGrid.DataSource = items.Select(row => new RemainingWorkItemListRow
+            {
+                Rank = row.Rank,
+                GlobalRank = row.GlobalRank,
+                PriorityBucket = row.PriorityBucket,
+                PriorityScore = row.PriorityScore,
+                SubjectKind = row.SubjectKind,
+                SubjectKey = row.SubjectKey,
+                Title = row.Title,
+                Summary = row.Summary,
+                Evidence = row.Evidence,
+                RecommendedAction = row.RecommendedAction,
+                ExampleAbilityId = row.ExampleAbilityId,
+                ExampleAbilityIdText = row.ExampleAbilityId.HasValue ? row.ExampleAbilityId.Value.ToString(CultureInfo.InvariantCulture) : string.Empty,
+                ReferencePath = row.ReferencePath,
+                ReferenceLocation = row.ReferenceLocation
+            }).ToList();
+            if (_remainingWorkItemGrid.Rows.Count > 0)
+                SelectFirstRow(_remainingWorkItemGrid);
+            RefreshRemainingWorkDetail();
+        }
+
+        private void RefreshRemainingWorkDetail()
+        {
+            RemainingWorkItemListRow selected = _remainingWorkItemGrid.CurrentRow == null ? null : _remainingWorkItemGrid.CurrentRow.DataBoundItem as RemainingWorkItemListRow;
+            if (selected == null)
+            {
+                _remainingWorkDetailTextBox.Text = _remainingWorkItemGrid.Rows.Count <= 0
+                    ? "No remaining-work items match the current filters."
+                    : "Select a remaining-work item to inspect its summary, evidence, and suggested next action.";
+                return;
+            }
+
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine("Title: " + NullToPlaceholder(selected.Title));
+            builder.AppendLine("Priority: " + NullToPlaceholder(selected.PriorityBucket) + " " + selected.PriorityScore.ToString(CultureInfo.InvariantCulture));
+            builder.AppendLine("Ranks: area " + selected.Rank.ToString(CultureInfo.InvariantCulture) + ", global " + selected.GlobalRank.ToString(CultureInfo.InvariantCulture));
+            builder.AppendLine("Subject: " + NullToPlaceholder(selected.SubjectKind) + " :: " + NullToPlaceholder(selected.SubjectKey));
+            builder.AppendLine("Example ability: " + (selected.ExampleAbilityId.HasValue ? selected.ExampleAbilityId.Value.ToString(CultureInfo.InvariantCulture) : "(none)"));
+            builder.AppendLine();
+            builder.AppendLine("Summary:");
+            builder.AppendLine(NullToPlaceholder(selected.Summary));
+            builder.AppendLine();
+            builder.AppendLine("Evidence:");
+            builder.AppendLine(NullToPlaceholder(selected.Evidence));
+            builder.AppendLine();
+            builder.AppendLine("Recommended next action:");
+            builder.AppendLine(NullToPlaceholder(selected.RecommendedAction));
+
+            if (!string.IsNullOrWhiteSpace(selected.ReferencePath) || !string.IsNullOrWhiteSpace(selected.ReferenceLocation))
+            {
+                builder.AppendLine();
+                builder.AppendLine("Reference:");
+                builder.AppendLine(NullToPlaceholder(selected.ReferencePath) + " " + NullToPlaceholder(selected.ReferenceLocation));
+            }
+
+            _remainingWorkDetailTextBox.Text = builder.ToString().TrimEnd();
+        }
+
         private string ResolveOutputRoot()
         {
             return _session == null ? Path.GetFullPath(_outputPathTextBox.Text.Trim()) : _session.ResolveOutputRoot(_outputPathTextBox.Text.Trim());
@@ -2165,11 +2482,13 @@ namespace ClientDataMatrix.UI
             Cursor = isBusy ? Cursors.WaitCursor : Cursors.Default;
             _reloadButton.Enabled = !isBusy;
             _generateAllButton.Enabled = !isBusy && _session != null;
+            _cleanWorkspaceButton.Enabled = !isBusy;
             _generateAbilityButton.Enabled = !isBusy && _session != null;
             _generateTokenDictionaryButton.Enabled = !isBusy && _session != null;
             _generateDomainsButton.Enabled = !isBusy && _session != null;
             _generateRequirementsButton.Enabled = !isBusy && _session != null;
             _generateCoverageButton.Enabled = !isBusy && _session != null;
+            _generateRemainingWorkButton.Enabled = !isBusy && _session != null;
             _generateOperationSchemasButton.Enabled = !isBusy && _session != null;
             _generateUnknownsButton.Enabled = !isBusy && _session != null;
             _generateConflictsButton.Enabled = !isBusy && _session != null;
@@ -2202,6 +2521,36 @@ namespace ClientDataMatrix.UI
             }
 
             Process.Start(path);
+        }
+
+        private void CleanWorkspace()
+        {
+            if (_isBusy)
+                return;
+
+            try
+            {
+                WorkspaceCleanupReport report = WorkspaceCleanupService.CleanWorkspace(Environment.CurrentDirectory);
+                AppendLog(report.BuildSummary());
+                foreach (string removedPath in report.RemovedPaths)
+                    AppendLog("Removed temp artifact: " + removedPath);
+                foreach (string failedPath in report.FailedPaths)
+                    AppendLog("Failed to remove temp artifact: " + failedPath);
+
+                _statusLabel.Text = report.HasFailures ? "Workspace cleanup completed with errors." : "Workspace cleanup completed.";
+                MessageBox.Show(
+                    this,
+                    report.BuildSummary(),
+                    "ClientDataMatrix",
+                    MessageBoxButtons.OK,
+                    report.HasFailures ? MessageBoxIcon.Warning : MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                AppendLog("Workspace cleanup failed: " + ex.Message);
+                _statusLabel.Text = "Workspace cleanup failed.";
+                MessageBox.Show(this, ex.ToString(), "ClientDataMatrix Cleanup Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void AppendLog(string message)
@@ -2426,6 +2775,8 @@ namespace ClientDataMatrix.UI
         private sealed class RequirementFieldListRow { public string FieldKey { get; set; } public int NonZeroCount { get; set; } public int DistinctValueCount { get; set; } public string SampleValuesText { get; set; } public string SemanticSummary { get; set; } public string Confidence { get; set; } public string Notes { get; set; } }
         private sealed class RequirementReferenceListRow { public string Direction { get; set; } public string SourceKind { get; set; } public ushort SourceId { get; set; } public string SourceLabel { get; set; } public string SourceField { get; set; } public ushort LinkedRequirementId { get; set; } public string RelatedAbilitiesText { get; set; } public string ContextTagsText { get; set; } public string SourcePath { get; set; } public string SourceLocation { get; set; } public string Notes { get; set; } }
         private sealed class CoverageListRow { public ushort AbilityId { get; set; } public string Name { get; set; } public string CoverageStatus { get; set; } public string EffectIdText { get; set; } public string HasClientCsvText { get; set; } public string HasClientBinText { get; set; } public string HasLocalizedNameText { get; set; } public string HasDescriptionTextText { get; set; } public string HasEffectTextText { get; set; } public string HasRootEffectRowText { get; set; } public int ComponentCount { get; set; } public int RequirementLinkCount { get; set; } public int RequirementRowCount { get; set; } public string SourcesText { get; set; } public string MissingText { get; set; } }
+        private sealed class RemainingWorkAreaListRow { public string AreaKey { get; set; } public string Title { get; set; } public int ItemCount { get; set; } public int CriticalCount { get; set; } public int HighCount { get; set; } public int PeakScore { get; set; } public string PeakBucket { get; set; } public string Summary { get; set; } public string RecommendedNextStep { get; set; } }
+        private sealed class RemainingWorkItemListRow { public int Rank { get; set; } public int GlobalRank { get; set; } public string PriorityBucket { get; set; } public int PriorityScore { get; set; } public string SubjectKind { get; set; } public string SubjectKey { get; set; } public string Title { get; set; } public string Summary { get; set; } public string Evidence { get; set; } public string RecommendedAction { get; set; } public ushort? ExampleAbilityId { get; set; } public string ExampleAbilityIdText { get; set; } public string ReferencePath { get; set; } public string ReferenceLocation { get; set; } }
         private sealed class OperationSchemaListRow { public uint OperationId { get; set; } public string OperationName { get; set; } public string PriorityText { get; set; } public int ComponentCount { get; set; } public int AbilityCount { get; set; } public string ContextTagsText { get; set; } public string LayoutVariantsText { get; set; } }
         private sealed class OperationFieldListRow { public string FieldKey { get; set; } public string TriageBucket { get; set; } public int TriageScore { get; set; } public int NonZeroCount { get; set; } public int DistinctValueCount { get; set; } public string SampleValuesText { get; set; } public string TokenRenderingsText { get; set; } public string SemanticSummary { get; set; } public string Confidence { get; set; } public string ContextTagsText { get; set; } public string Notes { get; set; } }
         private sealed class OperationAbilityListRow { public ushort AbilityId { get; set; } public string AbilityName { get; set; } public ushort ComponentId { get; set; } public int ComponentSlotIndex { get; set; } public string TriggerText { get; set; } public string ContextTagsText { get; set; } public string TextExcerpt { get; set; } public string SourcePath { get; set; } public string SourceLocation { get; set; } }

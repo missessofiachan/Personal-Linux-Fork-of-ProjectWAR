@@ -1,0 +1,19 @@
+﻿Id,Kind,Key,Label,Properties
+ability:122,ability,122,Ability 122,
+component:1194,component,1194,Component 1194,
+component:212,component,212,Component 212,
+effect:122,effect,122,Effect 122,
+effect:1886,effect,1886,Effect 1886,
+requirement:9093,requirement,9093,Requirement 9093,
+row:abilities.csv|line=141;AbilityId=122,row,abilities.csv|line=141;AbilityId=122,abilities.csv line=141;AbilityId=122,line_number=141 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\abilities.csv
+row:abilitycomponentexport.bin|record=6673;ComponentId=212;offset=1169435,row,abilitycomponentexport.bin|record=6673;ComponentId=212;offset=1169435,abilitycomponentexport.bin record=6673;ComponentId=212;offset=1169435,byte_offset=1169435 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilitycomponentexport.bin
+row:abilitycomponentexport.bin|record=694;ComponentId=1194;offset=115376,row,abilitycomponentexport.bin|record=694;ComponentId=1194;offset=115376,abilitycomponentexport.bin record=694;ComponentId=1194;offset=115376,byte_offset=115376 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilitycomponentexport.bin
+row:abilitydesc.txt|line=123;EntryId=122,row,abilitydesc.txt|line=123;EntryId=122,abilitydesc.txt line=123;EntryId=122,line_number=123 | normalized_value=AE Root | raw_value=AE Root | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\abilitydesc.txt
+row:abilityeffect.txt|line=123;EntryId=122,row,abilityeffect.txt|line=123;EntryId=122,abilityeffect.txt line=123;EntryId=122,line_number=123 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\abilityeffect.txt
+row:abilityexport.bin|record=1028;AbilityId=122;offset=200269,row,abilityexport.bin|record=1028;AbilityId=122;offset=200269,abilityexport.bin record=1028;AbilityId=122;offset=200269,byte_offset=200269 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityexport.bin
+row:abilitynames.txt|line=123;EntryId=122,row,abilitynames.txt|line=123;EntryId=122,abilitynames.txt line=123;EntryId=122,line_number=123 | normalized_value=Grasp of the Dead | raw_value=Grasp of the Dead ^n | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\abilitynames.txt
+row:abilityrequirementexport.bin|record=92;RequirementId=9093;offset=8479,row,abilityrequirementexport.bin|record=92;RequirementId=9093;offset=8479,abilityrequirementexport.bin record=92;RequirementId=9093;offset=8479,byte_offset=8479 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin
+row:componenteffects.txt|line=1195;EntryId=1194,row,componenteffects.txt|line=1195;EntryId=1194,componenteffects.txt line=1195;EntryId=1194,line_number=1195 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\componenteffects.txt
+row:componenteffects.txt|line=213;EntryId=212,row,componenteffects.txt|line=213;EntryId=212,componenteffects.txt line=213;EntryId=212,line_number=213 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\componenteffects.txt
+row:effects.csv|line=138;EffectId=122,row,effects.csv|line=138;EffectId=122,effects.csv line=138;EffectId=122,line_number=138 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=1960;EffectId=1886,row,effects.csv|line=1960;EffectId=1886,effects.csv line=1960;EffectId=1886,line_number=1960 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv

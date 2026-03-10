@@ -45,6 +45,7 @@ namespace WorldServer.API
         public void Start()
         {
             _online = true;
+            CountryBlockPolicy.Warmup();
             _listener = new TcpListener(_port);
             _listener.Server.ReceiveBufferSize = _bufferSize;
             _listener.Server.SendBufferSize = _bufferSize;
@@ -83,6 +84,17 @@ namespace WorldServer.API
                 acceptSocket.ReceiveBufferSize = _bufferSize;
                 acceptSocket.NoDelay = true;
                 acceptSocket.Blocking = false;
+
+                string blockedCountryCode;
+                string blockReason;
+                if (CountryBlockPolicy.ShouldReject(acceptSocket.RemoteEndPoint, out blockedCountryCode, out blockReason))
+                {
+                    string remoteAddress = acceptSocket.RemoteEndPoint == null ? "unknown" : acceptSocket.RemoteEndPoint.ToString();
+                    Log.Notice("API", "Rejected connection from " + remoteAddress + " (" + blockedCountryCode + "): " + blockReason);
+                    acceptSocket.Close();
+                    return;
+                }
+
                 Client client = new Client(this);
                 client.ID = client.GetHashCode();
 

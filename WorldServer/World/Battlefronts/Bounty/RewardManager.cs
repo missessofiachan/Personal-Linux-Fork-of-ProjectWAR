@@ -693,8 +693,9 @@ namespace WorldServer.World.Battlefronts.Bounty
             //    randomScaleMultiplier = 1;
 
             RewardLogger.Debug($"### {victim.Name} / {victim.RenownRank} : AAOBonus {killer.AAOBonus} Multiplier {randomScaleMultiplier}");
+            int onlinePlayerCount = Player.GetPlayerCount();
 
-            if (Player._Players.Count < PLAYER_DROP_TIER)
+            if (onlinePlayerCount < PLAYER_DROP_TIER)
                 rand = StaticRandom.Instance.Next(0, (int)(6000 * randomScaleMultiplier));
             else
             {
@@ -709,7 +710,7 @@ namespace WorldServer.World.Battlefronts.Bounty
 
             //Randomise list
             availableGearDrops = availableGearDrops?.OrderBy(a => StaticRandom.Instance.Next()).ToList();
-            RewardLogger.Debug($"### {victim.Name} / {victim.RenownRank} Nbr Gear Drops : {availableGearDrops.Count()} RVR Gear items available for killer {killer}. PlayerCount = {Player._Players.Count}");
+            RewardLogger.Debug($"### {victim.Name} / {victim.RenownRank} Nbr Gear Drops : {availableGearDrops.Count()} RVR Gear items available for killer {killer}. PlayerCount = {onlinePlayerCount}");
             var playerItemList = (from item in killer.ItmInterface.Items where item != null select item.Info.Entry).ToList();
 
             foreach (var availableGearDrop in availableGearDrops)

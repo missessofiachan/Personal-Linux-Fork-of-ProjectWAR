@@ -27,7 +27,8 @@ Default roots:
 2. Confirm or change the output root where generated docs should be written.
 3. Click `Reload Data`.
 4. Use `Generate All` on the main page when you want to build every shared ledger in one pass. If the current ability id box contains a valid value, it also generates that ability report.
-5. Use `Ability Doctor` to:
+5. Use `Clean Temp` on the main page when you want the tool to remove `tmp-data-matrix*` folders and local `ClientDataMatrix` log files from the repository workspace.
+6. Use `Ability Doctor` to:
    - search the catalog by ID or name
    - select an ability
    - generate the report
@@ -37,7 +38,7 @@ Default roots:
    - inspect inferred requirement links and linked `abilityrequirementexport.bin` rows when the tool finds `ExtData[*].Val6` values that match known `RequirementId` rows
    - double-click any definition row to open the field-domain explorer and see every known raw value, its plain-English meaning, and the source file or offset where that mapping came from
    - open the markdown file or output folder
-6. Use `Conflict Ledger` to:
+7. Use `Conflict Ledger` to:
    - generate the full conflict ledger
    - browse conflict counts grouped by domain
    - use the `High` column in the domain grid to see which domains still contain real critical/high work after filters are applied
@@ -52,25 +53,34 @@ Default roots:
    - inspect the claim-evidence grid for the selected conflict so you can see the exact values, source file, field name, and confidence without leaving the GUI
    - double-click an ability-backed conflict row to jump straight into `Ability Doctor` and generate that ability report
    - open the full markdown ledger on disk
-7. Use `Token Dictionary` to:
+8. Use `Token Dictionary` to:
    - generate the COM token glossary from extracted client strings
    - review plain-English definitions for tokens like `COM_0_DURA_SECONDS`, `COM_0_RADI_FEET`, and `COM_0_VAL0_DAMAGE`
    - see whether each definition is `Confirmed`, `Inferred`, `Unknown`, or `Londo`
    - inspect context tags like `Knockback`, `Knockdown`, `Immunity`, and `CrowdControl` that were inferred from the surrounding client text
    - open the generated markdown glossary on disk
-8. Use `Coverage` to:
+9. Use `Coverage` to:
    - generate a whole-dataset ledger of ability readiness
    - browse which abilities are `MappedWithRequirements`, `Mapped`, `Partial`, or `StringsOnly`
    - see exactly which extracted-client pieces are missing for each ability, such as BIN rows, effect rows, localized text, or component rows
    - open the generated markdown ledger on disk
-9. Use `Requirements` to:
+10. Use `Remaining Work` to:
+   - generate a consolidated backlog that pulls together coverage gaps, high-signal conflicts, unknown or structural operation fields, unresolved requirement rows, token gaps, and identity-domain risks
+   - use the area grid to focus one backlog slice at a time instead of manually cross-reading multiple tabs
+   - toggle `All Areas`, `Priority`, `Search`, and `Top` filters when you want a focused backlog slice instead of the full area list
+   - inspect the item detail panel for the current summary, evidence, and suggested next action
+   - double-click an item with an example ability when you want to jump straight into `Ability Doctor`
+   - open the generated markdown overview on disk
+   - open the generated `Next Batch` markdown when you want the default top-50 `Critical`/`High` work queue across all areas
+   - open the generated `Field Packets` markdown when you want the top operation-field hotspots expanded into value evidence, companion-field summaries, and sample abilities
+11. Use `Requirements` to:
    - generate the requirement ledger from `abilityrequirementexport.bin`
    - browse each `RequirementId` row in a summary grid with direct-ability counts, component counts, parent/child requirement links, and context tags
    - inspect the raw exported ext-data rows for the selected requirement
    - inspect active ext-data fields and see when `ExtData[*].Val6` behaves like a nested `RequirementId` pointer under the current narrow rule
    - inspect inbound and outbound links for the selected requirement, including which abilities or components pointed at it
    - open the generated markdown ledger on disk
-10. Use `Operation Schemas` to:
+12. Use `Operation Schemas` to:
    - generate an operation-family ledger from extracted client BIN rows and client string evidence
    - inspect which fields are non-zero for each component operation
    - see recurring sample values, COM-token renderings, semantic summaries, and confidence levels for those fields
@@ -78,7 +88,7 @@ Default roots:
    - spot inline requirement-reference hints when `ExtData[*].Val6` values exactly match known `abilityrequirementexport.bin` rows
    - browse sample abilities that use the selected operation, including trigger text and client-text excerpts
    - focus first on priority operations such as `CC`, `APPLY_ABILITY`, `KNOCKBACK`, and `IMMUNITY`
-11. Use `Unknown Triage` to:
+13. Use `Unknown Triage` to:
    - rank remaining `Unknown` and `Structural` component fields by triage score, priority, and observation count
    - treat `Structural` confidence as a partial decode: the field role is inferred from extracted BIN clustering, but exact per-value semantics still need manual work
    - use those partial decodes to separate recurring layout roles such as `DAMAGE` / `BONUS_TYPE_ADJUST` / `APPLY_ABILITY` / `CC` / `KNOCKBACK` / `IMMUNITY` `ExtData[*].Val1/2/3/4/5/6/7/8/9` blocks, generic `FlagsRaw` masks, `CC` `Value15`, and `KNOCKBACK` `Value[0]` / `Value[1]` / `Value[2]` / `Value[3]` from truly opaque fields
@@ -90,8 +100,8 @@ Default roots:
    - inspect the `Correlated Fields` grid to find recurring `Val1`/`Val3`/`Val4`/`Val7` style clusters around a selected raw value without leaving the GUI
    - inspect sample abilities for the selected raw value so each unknown stays grounded in client text and trigger context
    - double-click a sample ability to jump straight into `Ability Doctor` for that row
-12. Use `Source Status` to review file load success, row counts, and parse failures.
-13. Use `Log` to keep a timestamped execution trail for the current session.
+14. Use `Source Status` to review file load success, row counts, and parse failures.
+15. Use `Log` to keep a timestamped execution trail for the current session.
 
 ## Definition Explorer
 
@@ -160,6 +170,10 @@ The CLI commands still work, although this is now a Windows GUI executable and c
 ```
 
 ```powershell
+.\bin\Debug\ClientDataMatrix.exe clean
+```
+
+```powershell
 .\bin\Debug\ClientDataMatrix.exe export graph ability 1
 ```
 
@@ -171,6 +185,7 @@ The CLI commands still work, although this is now a Windows GUI executable and c
 .\bin\Debug\ClientDataMatrix.exe report coverage
 ```
 
+```powershell
 .\bin\Debug\ClientDataMatrix.exe report requirements
 ```
 
@@ -180,6 +195,22 @@ The CLI commands still work, although this is now a Windows GUI executable and c
 
 ```powershell
 .\bin\Debug\ClientDataMatrix.exe report operations
+```
+
+```powershell
+.\bin\Debug\ClientDataMatrix.exe report remaining
+```
+
+```powershell
+.\bin\Debug\ClientDataMatrix.exe report remaining next
+```
+
+```powershell
+.\bin\Debug\ClientDataMatrix.exe report remaining next --area Operations --priority Critical --search APPLY_ABILITY --top 20
+```
+
+```powershell
+.\bin\Debug\ClientDataMatrix.exe report remaining packets
 ```
 
 If you want PowerShell to wait reliably for a CLI run and keep the printed status lines, use `Start-Process -Wait`:
@@ -192,6 +223,10 @@ Optional overrides:
 
 - `--root <path>` to point at a different extracted client tree
 - `--output <path>` to change the generated-doc output root
+- `--area <area>` to filter remaining-work focus output to one area key such as `Coverage`, `Conflicts`, `Operations`, `Requirements`, `Tokens`, or `Domains`
+- `--priority <bucket>` to keep only `Critical`, `High`, `Medium`, or `Low` backlog buckets and above
+- `--search <text>` to filter remaining-work focus output by title, subject, evidence, action, path, or example ability id
+- `--top <count>` to cap remaining-work focus output; use `0` for every match
 
 ## Output Files
 
@@ -206,6 +241,10 @@ Generated conflict ledgers are written under:
 Generated coverage ledgers are written under:
 
 - `docs\data-matrix\coverage\`
+
+Generated remaining-work overviews are written under:
+
+- `docs\data-matrix\overview\`
 
 Generated token dictionaries are written under:
 
@@ -233,6 +272,18 @@ Primary files:
 - `ability-coverage.md`
 - `ability-coverage.json`
 - `ability-coverage.csv`
+- `remaining-work.md`
+- `remaining-work.json`
+- `remaining-work-next.md`
+- `remaining-work-next.json`
+- `remaining-work-next.csv`
+- `remaining-work-operation-fields.md`
+- `remaining-work-operation-fields.json`
+- `remaining-work-operation-fields.csv`
+- `remaining-work-operation-fields.values.csv`
+- `remaining-work-operation-fields.abilities.csv`
+- `remaining-work.areas.csv`
+- `remaining-work.items.csv`
 - `requirement-ledger.md`
 - `requirement-ledger.json`
 - `requirement-ledger.csv`

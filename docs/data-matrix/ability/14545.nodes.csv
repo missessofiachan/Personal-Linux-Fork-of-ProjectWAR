@@ -1,0 +1,23 @@
+﻿Id,Kind,Key,Label,Properties
+ability:14545,ability,14545,Ability 14545,
+component:14371,component,14371,Component 14371,
+component:239,component,239,Component 239,
+effect:405,effect,405,Effect 405,
+requirement:9260,requirement,9260,Requirement 9260,
+requirement:9266,requirement,9266,Requirement 9266,
+requirement:9269,requirement,9269,Requirement 9269,
+requirement:9273,requirement,9273,Requirement 9273,
+requirement:9274,requirement,9274,Requirement 9274,
+row:abilitycomponentexport.bin|record=6700;ComponentId=239;offset=1173224,row,abilitycomponentexport.bin|record=6700;ComponentId=239;offset=1173224,abilitycomponentexport.bin record=6700;ComponentId=239;offset=1173224,byte_offset=1173224 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilitycomponentexport.bin
+row:abilitycomponentexport.bin|record=9078;ComponentId=14371;offset=1549195,row,abilitycomponentexport.bin|record=9078;ComponentId=14371;offset=1549195,abilitycomponentexport.bin record=9078;ComponentId=14371;offset=1549195,byte_offset=1549195 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilitycomponentexport.bin
+row:abilitydesc.txt|line=14546;EntryId=14545,row,abilitydesc.txt|line=14546;EntryId=14545,abilitydesc.txt line=14546;EntryId=14545,line_number=14546 | normalized_value=Increases Strength by {COM_0_VAL0}%.<BR>Will only affect a maximum of 36 players. | raw_value=Increases Strength by {COM_0_VAL0}%.<BR>Will only affect a maximum of 36 players. | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\abilitydesc.txt
+row:abilityexport.bin|record=3729;AbilityId=14545;offset=728091,row,abilityexport.bin|record=3729;AbilityId=14545;offset=728091,abilityexport.bin record=3729;AbilityId=14545;offset=728091,byte_offset=728091 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityexport.bin
+row:abilitynames.txt|line=14546;EntryId=14545,row,abilitynames.txt|line=14546;EntryId=14545,abilitynames.txt line=14546;EntryId=14545,line_number=14546 | normalized_value=Enhanced Brawn I | raw_value=Enhanced Brawn I^n | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\abilitynames.txt
+row:abilityrequirementexport.bin|record=259;RequirementId=9260;offset=26087,row,abilityrequirementexport.bin|record=259;RequirementId=9260;offset=26087,abilityrequirementexport.bin record=259;RequirementId=9260;offset=26087,byte_offset=26087 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin
+row:abilityrequirementexport.bin|record=265;RequirementId=9266;offset=26639,row,abilityrequirementexport.bin|record=265;RequirementId=9266;offset=26639,abilityrequirementexport.bin record=265;RequirementId=9266;offset=26639,byte_offset=26639 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin
+row:abilityrequirementexport.bin|record=268;RequirementId=9269;offset=26915,row,abilityrequirementexport.bin|record=268;RequirementId=9269;offset=26915,abilityrequirementexport.bin record=268;RequirementId=9269;offset=26915,byte_offset=26915 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin
+row:abilityrequirementexport.bin|record=272;RequirementId=9273;offset=27283,row,abilityrequirementexport.bin|record=272;RequirementId=9273;offset=27283,abilityrequirementexport.bin record=272;RequirementId=9273;offset=27283,byte_offset=27283 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin
+row:abilityrequirementexport.bin|record=273;RequirementId=9274;offset=27408,row,abilityrequirementexport.bin|record=273;RequirementId=9274;offset=27408,abilityrequirementexport.bin record=273;RequirementId=9274;offset=27408,byte_offset=27408 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin
+row:componenteffects.txt|line=14372;EntryId=14371,row,componenteffects.txt|line=14372;EntryId=14371,componenteffects.txt line=14372;EntryId=14371,line_number=14372 | normalized_value=Strength increased by <<1>>%. | raw_value=Strength increased by <<1>>%. | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\componenteffects.txt
+row:componenteffects.txt|line=240;EntryId=239,row,componenteffects.txt|line=240;EntryId=239,componenteffects.txt line=240;EntryId=239,line_number=240 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\componenteffects.txt
+row:effects.csv|line=450;EffectId=405,row,effects.csv|line=450;EffectId=405,effects.csv line=450;EffectId=405,line_number=450 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv

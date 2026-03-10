@@ -1,0 +1,656 @@
+﻿RequirementId,RecordIndex,ExtData,SourcePath,SourceLocation
+9002,1,"slot0=[1,19,1,9,0,0,2,0,0] ; slot1=[1,19,1,0,0,0,3,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 8
+9003,2,"slot0=[1,47,6,0,0,0,0,0,1]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 100
+9004,3,"slot0=[1,9,4,8,0,100,99,0,0] ; slot1=[1,12,1,0,0,0,2,0,1]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 159
+9005,4,"slot0=[1,9,4,8,0,100,21,0,0] ; slot1=[1,12,1,0,0,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 251
+9006,5,"slot0=[1,9,4,8,0,100,6,0,0] ; slot1=[1,12,1,0,0,0,2,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 343
+9007,6,"slot0=[1,9,4,0,0,100,99,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 435
+9008,7,"slot0=[1,9,4,8,0,100,16,0,0] ; slot1=[1,12,1,0,0,0,2,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 494
+9009,8,"slot0=[1,44,1,9,0,11,4,0,0] ; slot1=[1,44,1,9,0,11,5,0,0] ; slot2=[1,44,1,0,0,11,10,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 586
+9010,9,"slot0=[1,86,1,0,0,0,3,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 711
+9011,10,"slot0=[1,86,1,0,0,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 770
+9012,11,"slot0=[1,86,1,0,0,0,2,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 829
+9013,12,"slot0=[1,1,1,8,0,0,1,0,0] ; slot1=[1,4,4,0,0,0,480,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 888
+9014,13,"slot0=[1,6,3,8,0,50,7,0,0] ; slot1=[1,6,1,0,0,51,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 980
+9015,14,"slot0=[1,11,1,9,3,0,0,0,0] ; slot1=[1,6,6,0,3,82,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 1072
+9016,15,"slot0=[1,21,6,9,0,0,1,0,0] ; slot1=[1,6,1,0,0,237,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 1164
+9017,16,"slot0=[1,6,1,8,1,60,0,0,0] ; slot1=[1,6,1,0,1,61,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 1256
+9018,17,"slot0=[1,6,4,0,1,60,2,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 1348
+9019,18,"slot0=[1,10,1,9,0,9015,1,0,0] ; slot1=[1,10,1,9,0,9016,1,0,0] ; slot2=[1,10,1,0,0,9017,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 1407
+9020,19,"slot0=[1,13,1,0,0,0,12,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 1532
+9021,20,"slot0=[1,6,5,0,1,60,2,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 1591
+9022,21,"slot0=[1,6,1,8,1,60,1,0,0] ; slot1=[1,6,1,0,1,61,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 1650
+9023,22,"slot0=[1,6,5,0,1,61,2,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 1742
+9024,23,"slot0=[1,8,1,0,0,62,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 1801
+9025,24,"slot0=[1,8,1,0,0,63,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 1860
+9026,25,"slot0=[1,10,1,9,0,9021,1,0,0] ; slot1=[1,10,1,9,0,9022,1,0,0] ; slot2=[1,10,1,0,0,9023,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 1919
+9027,26,"slot0=[1,10,1,8,0,9024,1,0,0] ; slot1=[1,10,1,0,0,9026,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 2044
+9028,27,"slot0=[1,8,6,9,0,14,0,0,0] ; slot1=[1,8,6,9,0,24,0,0,0] ; slot2=[1,8,6,0,0,19,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 2136
+9029,28,"slot0=[1,86,1,0,0,0,22,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 2261
+9030,29,"slot0=[1,4,4,8,0,0,750,0,0] ; slot1=[1,1,1,8,0,0,1,0,0] ; slot2=[1,18,4,0,0,0,25,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 2320
+9031,30,"slot0=[1,3,3,9,0,59,10,0,0] ; slot1=[1,10,6,0,0,9052,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 2445
+9032,31,"slot0=[1,6,1,0,0,60,2,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 2537
+9033,32,"slot0=[1,6,1,8,0,60,1,0,0] ; slot1=[1,6,1,0,0,61,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 2596
+9034,33,"slot0=[1,6,1,0,0,61,2,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 2688
+9035,34,"slot0=[1,10,1,9,0,9032,1,0,0] ; slot1=[1,10,1,9,0,9033,1,0,0] ; slot2=[1,10,1,9,0,9034,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 2747
+9036,35,"slot0=[1,44,1,9,0,10,1,0,0] ; slot1=[1,44,1,9,0,10,2,0,0] ; slot2=[1,44,1,9,0,10,3,0,0] ; slot3=[1,44,1,9,0,10,12,0,0] ; slot4=[1,44,1,9,0,10,14,0,0] ; slot5=[1,44,1,0,0,10,15,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 2872
+9037,36,"slot0=[1,44,1,9,0,11,1,0,0] ; slot1=[1,44,1,9,0,11,2,0,0] ; slot2=[1,44,1,9,0,11,3,0,0] ; slot3=[1,44,1,9,0,11,12,0,0] ; slot4=[1,44,1,9,0,11,14,0,0] ; slot5=[1,44,1,0,0,11,15,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 3096
+9038,37,"slot0=[1,10,1,8,0,9036,1,0,0] ; slot1=[1,10,1,0,0,9037,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 3320
+9039,38,"slot0=[1,6,6,8,0,77,0,0,0] ; slot1=[1,6,1,0,0,78,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 3412
+9040,39,"slot0=[1,6,6,0,0,78,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 3504
+9041,40,"slot0=[1,6,1,8,0,77,0,0,0] ; slot1=[1,6,1,0,0,78,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 3563
+9042,41,"slot0=[1,6,1,8,0,79,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 3655
+9043,42,"slot0=[1,6,1,8,0,70,0,0,0] ; slot1=[1,6,1,0,0,76,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 3714
+9044,43,"slot0=[1,6,4,8,0,70,2,0,0] ; slot1=[1,6,1,0,0,76,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 3806
+9045,44,"slot0=[1,10,1,9,0,9043,1,0,0] ; slot1=[1,10,1,0,0,9044,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 3898
+9046,45,"slot0=[1,4,4,8,0,0,360,0,0] ; slot1=[1,1,1,8,0,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 3990
+9047,46,"slot0=[1,8,6,9,0,17,0,0,0] ; slot1=[1,8,6,8,0,24,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 4082
+9048,47,"slot0=[1,3,7,11,0,81,0,0,0] ; slot1=[1,3,7,0,0,83,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 4174
+9049,48,"slot0=[1,3,7,11,0,82,0,0,0] ; slot1=[1,3,7,0,0,84,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 4266
+9050,49,"slot0=[1,3,7,11,0,81,0,0,0] ; slot1=[1,53,7,10,0,77,0,0,0] ; slot2=[1,23,7,0,1,9058,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 4358
+9051,50,"slot0=[1,3,7,11,0,82,0,0,0] ; slot1=[1,53,7,0,0,78,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 4483
+9052,51,"slot0=[1,6,6,8,0,88,0,0,0] ; slot1=[1,3,3,0,0,59,15,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 4575
+9053,52,"slot0=[1,6,5,8,0,50,1,0,0] ; slot1=[1,26,3,0,0,0,100,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 4667
+9054,53,"slot0=[1,58,1,8,0,9804,0,0,0] ; slot1=[1,58,1,8,0,9805,0,0,0] ; slot2=[1,58,1,8,0,9806,0,0,0] ; slot3=[1,58,1,0,0,9807,0,0,0] ; slot5=[1,58,1,0,0,9807,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 4759
+9055,54,"slot0=[1,58,1,8,0,9808,0,0,0] ; slot1=[1,58,1,8,0,9809,0,0,0] ; slot2=[1,10,1,0,0,9054,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 4950
+9056,55,"slot0=[1,58,1,8,0,9810,0,0,0] ; slot1=[1,58,1,8,0,9811,0,0,0] ; slot2=[1,58,1,0,0,9812,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 5075
+9057,56,"slot0=[1,8,6,8,0,106,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 5200
+9058,57,"slot0=[1,8,6,8,0,77,0,0,0] ; slot1=[1,11,6,0,3,0,0,0,1]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 5292
+9059,58,"slot0=[1,3,7,11,0,105,0,0,0] ; slot1=[1,53,7,0,0,107,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 5384
+9060,59,"slot0=[1,8,6,8,0,107,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 5476
+9061,60,"slot0=[1,6,5,0,0,107,2,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 5568
+9062,61,"slot0=[1,23,1,8,0,9060,0,0,0] ; slot1=[1,10,1,0,0,9061,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 5627
+9063,62,"slot0=[1,6,5,0,0,61,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 5719
+9064,63,"slot0=[1,6,5,0,0,61,2,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 5778
+9065,64,"slot0=[1,8,6,8,0,1020,0,0,0] ; slot1=[1,11,6,0,3,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 5837
+9066,65,"slot0=[1,82,6,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 5929
+9067,66,"slot0=[1,3,7,11,0,143,0,0,0] ; slot1=[1,3,7,0,0,144,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 5988
+9068,67,"slot0=[1,3,7,11,0,142,0,0,0] ; slot1=[1,53,7,10,0,77,0,0,0] ; slot2=[1,10,6,0,1,9069,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 6080
+9069,68,"slot0=[1,10,6,9,0,9070,0,0,0] ; slot1=[1,10,6,9,0,9071,0,0,0] ; slot2=[1,10,6,9,0,9072,0,0,0] ; slot3=[1,10,6,9,0,9073,0,0,0] ; slot4=[1,10,6,0,0,9084,0,0,0] ; slot5=[1,10,6,9,0,9073,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 6205
+9070,69,"slot0=[1,8,6,8,0,150,0,0,0] ; slot1=[1,6,6,0,1,150,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 6429
+9071,70,"slot0=[1,8,6,8,0,151,0,0,0] ; slot1=[1,6,6,0,1,151,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 6521
+9072,71,"slot0=[1,8,6,8,0,152,0,0,0] ; slot1=[1,6,6,0,1,152,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 6613
+9073,72,"slot0=[1,8,6,8,0,153,0,0,0] ; slot1=[1,6,6,0,1,153,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 6705
+9074,73,"slot0=[1,6,3,9,1,154,2,0,0] ; slot1=[1,10,6,0,1,9069,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 6797
+9075,74,"slot0=[1,10,6,8,0,9074,0,0,0] ; slot1=[1,10,5,0,0,9068,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 6889
+9076,75,"slot0=[1,82,6,0,0,2,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 6981
+9077,76,"slot0=[1,8,6,8,0,149,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 7040
+9078,77,"slot0=[1,3,7,11,0,157,0,0,0] ; slot1=[1,53,7,10,0,158,0,0,0] ; slot2=[1,23,7,0,1,9079,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 7132
+9079,78,"slot0=[1,8,6,8,0,158,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 7257
+9080,79,"slot0=[1,6,1,8,0,79,0,0,0] ; slot1=[1,6,1,0,0,161,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 7349
+9081,80,"slot0=[1,6,4,8,0,79,1,0,0] ; slot1=[1,6,6,0,0,161,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 7441
+9082,81,"slot0=[1,10,1,9,0,9080,1,0,0] ; slot1=[1,10,1,0,0,9081,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 7533
+9083,82,"slot0=[1,75,1,8,0,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 7625
+9084,83,"slot0=[1,8,6,8,0,163,0,0,0] ; slot1=[1,6,6,0,1,163,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 7684
+9085,84,"slot0=[1,82,6,0,0,6,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 7776
+9086,85,"slot0=[1,8,1,9,0,28,1,0,0] ; slot1=[1,8,1,0,0,31,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 7835
+9087,86,"slot0=[1,23,6,8,0,9077,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 7927
+9088,87,"slot0=[1,6,1,8,0,114,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 7986
+9089,88,"slot0=[1,16,1,9,0,0,900,0,0] ; slot1=[1,16,1,9,0,0,2000,0,0] ; slot2=[1,19,1,9,0,0,7,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 8045
+9090,89,"slot0=[1,8,1,9,0,21,1,0,1] ; slot1=[1,8,1,9,0,23,1,0,1] ; slot2=[1,8,1,9,0,27,1,0,1] ; slot3=[1,8,1,0,0,44,1,0,1] ; slot5=[1,8,1,0,0,44,1,0,1]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 8170
+9091,90,"slot0=[1,6,1,8,0,708,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 8361
+9092,91,"slot0=[1,6,1,8,0,48,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 8420
+9093,92,"slot0=[1,6,1,8,0,1016,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 8479
+9094,93,"slot0=[1,6,1,8,0,48,0,0,0] ; slot1=[1,6,1,0,0,1018,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 8538
+9095,94,"slot0=[1,6,1,8,0,48,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 8630
+9096,95,"slot0=[1,6,1,8,0,48,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 8689
+9097,96,"slot0=[1,20,1,9,0,0,1,0,0] ; slot1=[1,11,1,0,0,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 8748
+9098,97,"slot0=[1,2,1,9,0,0,1,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 8840
+9099,98,"slot0=[1,20,1,8,0,0,1,0,0] ; slot1=[1,11,6,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 8932
+9100,99,"slot0=[1,14,1,9,0,0,1,0,0] ; slot1=[1,81,1,9,0,0,1,0,0] ; slot2=[1,16,1,0,0,908,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 9024
+9101,100,"slot0=[1,14,1,8,0,0,1,0,1]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 9149
+9102,101,"slot0=[1,8,6,8,0,242,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 9208
+9103,102,"slot0=[1,8,6,9,0,25,0,0,0] ; slot1=[1,8,6,9,0,16,0,0,0] ; slot2=[1,8,6,9,0,19,0,0,0] ; slot3=[1,8,6,9,0,17,0,0,0] ; slot4=[1,8,6,0,0,24,0,0,0] ; slot5=[1,8,6,9,0,17,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 9300
+9104,103,"slot0=[1,13,1,9,0,0,9,0,0] ; slot1=[1,13,1,9,0,0,12,0,0] ; slot2=[1,13,1,0,0,0,21,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 9524
+9105,104,"slot0=[1,3,5,8,0,174,2,0,0] ; slot1=[1,6,1,0,0,255,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 9649
+9106,105,"slot0=[1,3,5,8,0,174,1,0,0] ; slot1=[1,6,1,0,0,255,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 9741
+9107,106,"slot0=[1,10,1,9,0,9105,1,0,0] ; slot1=[1,10,1,0,0,9106,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 9833
+9108,107,"slot0=[1,3,5,8,0,174,4,0,0] ; slot1=[1,6,1,0,0,259,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 9925
+9109,108,"slot0=[1,3,5,8,0,174,3,0,0] ; slot1=[1,6,1,0,0,259,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 10017
+9110,109,"slot0=[1,10,1,9,0,9108,1,0,0] ; slot1=[1,10,1,0,0,9109,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 10109
+9111,110,"slot0=[1,53,1,8,0,106,0,0,0] ; slot1=[1,6,1,0,0,278,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 10201
+9112,111,"slot0=[1,53,4,8,0,106,1,0,0] ; slot1=[1,6,1,0,0,278,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 10293
+9113,112,"slot0=[1,10,1,9,0,9111,1,0,0] ; slot1=[1,10,1,0,0,9112,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 10385
+9114,113,"slot0=[1,51,1,9,0,0,2,0,1] ; slot1=[1,6,1,9,0,314,1,0,0] ; slot2=[1,6,1,0,0,598,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 10477
+9115,114,"slot0=[1,21,1,9,0,0,1,0,0] ; slot1=[1,6,1,0,0,327,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 10602
+9116,115,"slot0=[1,9,4,8,0,100,20,0,0] ; slot1=[1,6,1,0,0,328,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 10694
+9117,116,"slot0=[1,9,4,8,0,100,33,0,0] ; slot1=[1,6,1,0,0,328,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 10786
+9118,117,"slot0=[1,10,1,9,0,9116,1,0,0] ; slot1=[1,10,1,0,0,9117,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 10878
+9119,118,"slot0=[1,6,1,9,0,329,1,0,0] ; slot1=[1,6,1,0,0,346,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 10970
+9120,119,"slot0=[1,6,1,9,0,330,1,0,0] ; slot1=[1,6,1,0,0,346,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 11062
+9121,120,"slot0=[1,6,1,9,0,331,1,0,0] ; slot1=[1,6,1,0,0,346,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 11154
+9122,121,"slot0=[1,10,1,9,0,9119,1,0,0] ; slot1=[1,10,1,9,0,9120,1,0,0] ; slot2=[1,10,1,0,0,9121,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 11246
+9123,122,"slot0=[1,6,1,0,0,354,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 11371
+9124,123,"slot0=[1,6,1,0,0,355,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 11430
+9125,124,"slot0=[1,6,1,8,0,354,0,0,0] ; slot1=[1,6,1,0,0,355,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 11489
+9126,125,"slot0=[1,9,4,8,0,100,50,0,0] ; slot1=[1,6,1,0,0,28,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 11581
+9127,126,"slot0=[1,6,5,9,0,28,1,0,0] ; slot1=[1,10,1,0,0,9126,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 11673
+9128,127,"slot0=[1,9,4,8,0,100,50,0,0] ; slot1=[1,6,1,0,0,17,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 11765
+9129,128,"slot0=[1,6,5,9,0,17,1,0,0] ; slot1=[1,10,1,0,0,9128,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 11857
+9130,129,"slot0=[1,9,4,8,0,100,50,0,0] ; slot1=[1,6,1,0,0,27,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 11949
+9131,130,"slot0=[1,6,5,9,0,27,1,0,0] ; slot1=[1,10,1,0,0,9130,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 12041
+9132,131,"slot0=[1,9,4,8,0,100,25,0,0] ; slot1=[1,6,1,8,0,362,0,0,0] ; slot2=[1,8,1,0,0,72,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 12133
+9133,132,"slot0=[1,9,4,8,0,100,50,0,0] ; slot1=[1,6,1,8,0,362,1,0,0] ; slot2=[1,8,1,0,0,72,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 12258
+9134,133,"slot0=[1,3,5,8,0,305,1,0,0] ; slot1=[1,44,1,0,0,11,15,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 12383
+9135,134,"slot0=[1,10,1,9,0,9094,1,0,0] ; slot1=[1,10,1,0,0,9095,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 12475
+9136,135,"slot0=[1,8,6,8,0,376,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 12567
+9137,136,"slot0=[1,8,6,8,0,378,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 12659
+9138,137,"slot0=[1,25,5,9,0,0,25,0,0] ; slot1=[1,6,1,0,3,390,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 12751
+9139,138,"slot0=[1,3,5,8,0,379,4,0,0] ; slot1=[1,6,1,9,0,391,0,0,0] ; slot2=[1,10,1,0,0,9140,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 12843
+9140,139,"slot0=[1,3,5,8,0,379,3,0,0] ; slot1=[1,6,1,0,0,391,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 12968
+9141,140,"slot0=[1,8,6,8,0,31,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 13060
+9142,141,"slot0=[1,8,6,9,0,41,0,0,0] ; slot1=[1,8,6,0,0,42,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 13152
+9143,142,"slot0=[1,12,1,9,0,0,2,0,0] ; slot1=[1,10,1,0,0,9153,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 13244
+9144,143,"slot0=[1,8,6,8,0,28,0,0,0] ; slot1=[1,11,1,0,3,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 13336
+9145,144,"slot0=[1,9,7,11,0,120,0,0,0] ; slot1=[1,9,7,0,0,240,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 13428
+9146,145,"slot0=[1,9,7,11,0,100,0,0,0] ; slot1=[1,3,7,0,0,420,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 13520
+9147,146,"slot0=[1,13,1,8,0,0,0,0,0] ; slot1=[1,10,1,0,0,9159,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 13612
+9148,147,"slot0=[1,6,1,9,0,409,1,0,0] ; slot1=[1,6,1,0,0,411,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 13704
+9149,148,"slot0=[1,6,1,9,0,409,1,0,0] ; slot1=[1,6,1,0,0,410,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 13796
+9150,149,"slot0=[1,6,1,9,0,410,1,0,0] ; slot1=[1,6,1,0,0,411,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 13888
+9151,150,"slot0=[1,8,6,8,0,425,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 13980
+9152,151,"slot0=[1,82,6,0,0,3,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 14072
+9153,152,"slot0=[1,13,1,8,0,0,0,0,0] ; slot1=[1,10,1,0,0,9159,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 14131
+9154,153,"slot0=[1,86,4,9,0,0,3,0,0] ; slot1=[1,86,1,9,0,0,11,0,0] ; slot2=[1,86,1,9,0,0,12,0,0] ; slot3=[1,86,1,9,0,0,14,0,0] ; slot4=[1,86,1,9,0,0,16,0,0] ; slot5=[1,86,1,0,0,0,14,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 14223
+9155,154,"slot0=[1,9,7,11,0,100,0,0,0] ; slot1=[1,3,7,0,0,457,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 14447
+9156,155,"slot0=[1,8,6,8,0,1023,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 14539
+9157,156,"slot0=[1,16,1,8,0,4000,1,0,0] ; slot1=[1,88,1,8,0,0,0,0,0] ; slot2=[1,10,5,0,0,9158,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 14631
+9158,157,"slot0=[1,77,7,11,3,0,0,0,0] ; slot1=[1,77,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 14756
+9159,158,"slot0=[1,86,1,9,0,0,7,0,0] ; slot1=[1,86,1,9,0,0,8,0,0] ; slot2=[1,86,1,9,0,0,9,0,0] ; slot3=[1,86,1,0,0,0,17,0,0] ; slot5=[1,86,1,0,0,0,17,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 14848
+9160,159,"slot0=[1,10,1,8,0,9159,1,0,0] ; slot1=[1,10,1,0,0,9154,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 15039
+9161,160,"slot0=[1,51,1,9,0,0,2,0,1] ; slot1=[1,6,1,9,3,473,1,0,0] ; slot2=[1,35,5,0,1,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 15131
+9162,161,"slot0=[1,10,1,9,0,9121,1,0,0] ; slot1=[1,10,1,0,0,9119,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 15256
+9163,162,"slot0=[1,10,1,9,0,9120,1,0,0] ; slot1=[1,10,1,0,0,9121,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 15348
+9164,163,"slot0=[1,10,1,9,0,9119,1,0,0] ; slot1=[1,10,1,0,0,9120,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 15440
+9165,164,"slot0=[1,6,6,8,0,486,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 15532
+9166,165,"slot0=[1,82,6,9,0,1,0,0,0] ; slot1=[1,10,6,0,0,9152,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 15624
+9167,166,"slot0=[1,6,6,8,0,541,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 15716
+9168,167,"slot0=[1,6,1,9,0,354,1,0,0] ; slot1=[1,6,1,9,0,355,1,0,0] ; slot2=[1,6,1,0,0,356,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 15808
+9169,168,"slot0=[1,9,4,8,0,100,80,0,0] ; slot1=[1,6,1,0,3,229,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 15933
+9170,169,"slot0=[1,8,6,9,0,1021,0,0,0] ; slot1=[1,8,6,0,0,1022,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 16025
+9171,170,"slot0=[1,9,7,11,0,100,0,0,0] ; slot1=[1,3,7,0,0,501,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 16117
+9172,171,"slot0=[1,8,6,8,0,95,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 16209
+9173,172,"slot0=[1,3,5,8,0,501,1,0,0] ; slot1=[1,3,4,0,0,501,10,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 16301
+9174,173,"slot0=[1,3,5,8,0,501,11,0,0] ; slot1=[1,3,4,0,0,501,30,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 16393
+9175,174,"slot0=[1,3,5,8,0,501,31,0,0] ; slot1=[1,3,4,0,0,501,70,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 16485
+9176,175,"slot0=[1,3,5,8,0,501,71,0,0] ; slot1=[1,3,4,0,0,501,90,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 16577
+9177,176,"slot0=[1,3,5,8,0,501,91,0,0] ; slot1=[1,3,4,0,0,501,100,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 16669
+9178,177,"slot0=[1,10,1,8,0,9173,1,0,0] ; slot1=[1,9,4,0,0,100,4,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 16761
+9179,178,"slot0=[1,10,1,8,0,9174,1,0,0] ; slot1=[1,9,4,0,0,100,8,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 16853
+9180,179,"slot0=[1,10,1,8,0,9175,1,0,0] ; slot1=[1,9,4,0,0,100,15,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 16945
+9181,180,"slot0=[1,10,1,8,0,9176,1,0,0] ; slot1=[1,9,4,0,0,100,25,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 17037
+9182,181,"slot0=[1,10,1,8,0,9177,1,0,0] ; slot1=[1,9,4,0,0,100,35,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 17129
+9183,182,"slot0=[1,3,5,8,0,420,1,0,0] ; slot1=[1,3,4,0,0,420,10,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 17221
+9184,183,"slot0=[1,3,5,8,0,420,11,0,0] ; slot1=[1,3,4,0,0,420,30,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 17313
+9185,184,"slot0=[1,3,5,8,0,420,31,0,0] ; slot1=[1,3,4,0,0,420,70,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 17405
+9186,185,"slot0=[1,3,5,8,0,420,71,0,0] ; slot1=[1,3,4,0,0,420,90,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 17497
+9187,186,"slot0=[1,3,5,8,0,420,91,0,0] ; slot1=[1,3,4,0,0,420,100,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 17589
+9188,187,"slot0=[1,10,1,8,0,9183,1,0,0] ; slot1=[1,9,4,9,0,100,4,0,0] ; slot2=[1,10,1,0,0,9586,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 17681
+9189,188,"slot0=[1,10,1,8,0,9183,1,0,0] ; slot1=[1,9,4,9,0,100,8,0,0] ; slot2=[1,10,1,0,0,9586,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 17806
+9190,189,"slot0=[1,10,1,8,0,9185,1,0,0] ; slot1=[1,9,4,9,0,100,15,0,0] ; slot2=[1,10,1,0,0,9586,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 17931
+9191,190,"slot0=[1,10,1,8,0,9186,1,0,0] ; slot1=[1,9,4,9,0,100,25,0,0] ; slot2=[1,10,1,0,0,9586,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 18056
+9192,191,"slot0=[1,10,1,8,0,9187,1,0,0] ; slot1=[1,9,4,9,0,100,35,0,0] ; slot2=[1,10,1,0,0,9586,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 18181
+9193,192,"slot0=[1,8,6,8,0,298,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 18306
+9194,193,"slot0=[1,6,1,8,3,301,0,0,0] ; slot1=[1,9,4,0,0,100,20,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 18398
+9195,194,"slot0=[1,6,1,8,3,301,1,0,0] ; slot1=[1,9,4,0,0,100,30,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 18490
+9196,195,"slot0=[1,10,1,9,0,9194,1,0,0] ; slot1=[1,10,1,0,0,9195,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 18582
+9197,196,"slot0=[1,64,1,9,0,6178,1,0,0] ; slot1=[1,64,1,9,0,13730,1,0,0] ; slot2=[1,64,1,0,0,11791,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 18674
+9198,197,"slot0=[1,75,1,9,0,0,1,0,0] ; slot1=[1,75,1,9,0,0,2,0,0] ; slot2=[1,75,1,9,0,0,3,0,0] ; slot3=[1,75,1,0,0,0,4,0,0] ; slot5=[1,75,1,0,0,0,4,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 18799
+9199,198,"slot0=[1,19,1,9,0,0,2,0,0] ; slot1=[1,19,1,0,0,0,3,0,0] ; slot5=[1,75,1,0,0,0,8,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 18990
+9200,199,"slot0=[1,75,1,9,0,0,9,0,0] ; slot1=[1,75,1,9,0,0,10,0,0] ; slot2=[1,75,1,9,0,0,11,0,0] ; slot3=[1,75,1,0,0,0,12,0,0] ; slot5=[1,75,1,0,0,0,12,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 19115
+9201,200,"slot0=[1,75,1,9,0,0,13,0,0] ; slot1=[1,75,1,9,0,0,14,0,0] ; slot2=[1,75,1,9,0,0,15,0,0] ; slot3=[1,75,1,0,0,0,16,0,0] ; slot5=[1,75,1,0,0,0,16,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 19306
+9202,201,"slot0=[1,75,1,9,0,0,17,0,0] ; slot1=[1,75,1,9,0,0,18,0,0] ; slot2=[1,75,1,9,0,0,19,0,0] ; slot3=[1,75,1,0,0,0,20,0,0] ; slot5=[1,75,1,0,0,0,20,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 19497
+9203,202,"slot0=[1,75,1,9,0,0,21,0,0] ; slot1=[1,75,1,9,0,0,22,0,0] ; slot2=[1,75,1,9,0,0,23,0,0] ; slot3=[1,75,1,0,0,0,24,0,0] ; slot5=[1,75,1,0,0,0,24,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 19688
+9204,203,"slot0=[1,51,1,9,0,0,2,0,1] ; slot1=[1,6,1,0,0,598,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 19879
+9205,204,"slot0=[1,20,1,8,3,0,1,0,0] ; slot1=[1,19,1,8,0,0,1,0,0] ; slot2=[1,4,4,8,0,0,2000,0,0] ; slot3=[1,11,1,0,3,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 19971
+9206,205,"slot0=[1,20,1,8,3,0,1,0,0] ; slot1=[1,19,1,8,0,0,2,0,0] ; slot2=[1,4,4,8,0,0,2000,0,0] ; slot3=[1,11,1,0,3,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 20129
+9207,206,"slot0=[1,20,1,8,3,0,1,0,0] ; slot1=[1,19,1,8,0,0,6,0,0] ; slot2=[1,4,4,8,0,0,2000,0,0] ; slot3=[1,11,1,0,3,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 20287
+9208,207,"slot0=[1,20,1,8,3,0,1,0,0] ; slot1=[1,19,1,8,0,0,7,0,0] ; slot2=[1,4,4,8,0,0,2000,0,0] ; slot3=[1,11,1,0,3,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 20445
+9209,208,"slot0=[1,20,1,8,3,0,1,0,0] ; slot1=[1,19,1,8,0,0,4,0,0] ; slot2=[1,4,4,8,0,0,2000,0,0] ; slot3=[1,11,1,0,3,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 20603
+9210,209,"slot0=[1,20,1,8,3,0,1,0,0] ; slot1=[1,19,1,8,0,0,5,0,0] ; slot2=[1,4,4,8,0,0,2000,0,0] ; slot3=[1,11,1,0,3,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 20761
+9211,210,"slot0=[1,20,1,8,0,0,1,0,0] ; slot1=[1,19,1,8,0,0,3,0,0] ; slot2=[1,4,4,8,0,0,2000,0,0] ; slot3=[1,11,1,0,3,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 20919
+9212,211,"slot0=[1,10,1,9,0,9076,1,0,0] ; slot1=[1,10,1,0,0,9066,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 21077
+9213,212,"slot0=[1,82,6,9,0,3,0,0,0] ; slot1=[1,82,6,0,0,5,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 21169
+9214,213,"slot0=[1,8,6,9,0,23,0,0,0] ; slot1=[1,8,6,0,0,1016,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 21261
+9215,214,"slot1=[1,8,6,0,0,1011,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 21353
+9216,215,"slot1=[1,8,6,0,0,1018,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 21412
+9217,216,"slot1=[1,8,6,0,0,1030,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 21471
+9218,217,"slot0=[1,8,1,9,0,666,1,0,0] ; slot1=[1,8,1,9,0,668,1,0,0] ; slot2=[1,8,1,0,0,669,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 21530
+9219,218,"slot0=[1,12,1,9,0,0,1,0,0] ; slot1=[1,10,1,0,0,9147,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 21655
+9220,219,"slot0=[1,9,4,8,0,100,50,0,0] ; slot1=[1,6,1,0,0,1019,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 21747
+9221,220,"slot0=[1,6,5,9,0,1019,1,0,0] ; slot1=[1,10,1,0,0,9220,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 21839
+9222,221,"slot0=[1,14,1,8,0,0,1,0,1] ; slot1=[1,11,1,0,3,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 21931
+9223,222,"slot0=[1,9,4,8,0,100,25,0,0] ; slot1=[1,6,1,0,0,583,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 22023
+9224,223,"slot0=[1,9,4,8,0,100,30,0,0] ; slot1=[1,6,5,9,0,583,1,0,0] ; slot2=[1,10,1,0,0,9223,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 22115
+9225,224,"slot0=[1,6,1,8,0,589,1,0,0] ; slot1=[1,11,6,0,3,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 22240
+9226,225,"slot0=[1,8,6,8,0,598,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 22332
+9227,226,"slot0=[1,8,1,9,0,499,1,0,0] ; slot1=[1,8,1,9,0,648,1,0,0] ; slot2=[1,8,1,0,0,649,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 22424
+9228,227,"slot0=[1,11,1,9,3,0,1,0,0] ; slot1=[1,51,1,0,3,0,2,0,1]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 22549
+9229,228,"slot0=[1,51,1,9,0,0,2,0,1] ; slot1=[1,6,5,0,0,598,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 22641
+9230,229,"slot0=[1,8,6,8,0,656,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 22733
+9231,230,"slot0=[1,8,6,8,0,675,0,0,0] ; slot1=[1,11,1,8,3,0,1,0,0] ; slot2=[1,6,1,0,3,674,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 22825
+9232,231,"slot0=[1,8,6,8,0,680,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 22950
+9233,232,"slot0=[1,8,6,8,0,681,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 23042
+9234,233,"slot0=[1,8,6,8,0,682,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 23134
+9235,234,"slot0=[1,10,1,9,0,9236,1,0,0] ; slot1=[1,10,1,9,0,9237,1,0,0] ; slot2=[1,10,1,0,0,9238,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 23226
+9236,235,"slot0=[1,9,4,8,5,100,100,0,0] ; slot1=[1,4,4,8,5,0,100,0,0] ; slot2=[1,4,5,0,5,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 23351
+9237,236,"slot0=[1,9,4,8,5,100,100,0,0] ; slot1=[1,4,4,8,5,0,200,0,0] ; slot2=[1,4,5,0,5,0,101,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 23476
+9238,237,"slot0=[1,9,4,8,5,100,100,0,0] ; slot1=[1,4,4,8,5,0,360,0,0] ; slot2=[1,4,5,0,5,0,201,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 23601
+9239,238,"slot0=[1,28,1,8,0,0,1,0,0] ; slot1=[1,16,1,0,0,8340,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 23726
+9240,239,"slot0=[1,14,1,8,0,0,1,0,0] ; slot1=[1,2,1,0,0,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 23818
+9241,240,"slot0=[1,44,1,9,0,11,0,0,0] ; slot1=[1,10,1,0,0,9242,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 23910
+9242,241,"slot0=[1,6,1,9,0,329,1,0,0] ; slot1=[1,6,1,9,0,330,1,0,0] ; slot2=[1,6,1,0,0,331,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 24002
+9243,242,"slot0=[1,81,1,8,0,0,1,0,0] ; slot1=[1,2,1,0,0,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 24127
+9244,243,"slot0=[1,15,1,8,0,0,1,0,0] ; slot1=[1,2,1,0,0,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 24219
+9245,244,"slot0=[1,23,1,9,0,9057,0,0,0] ; slot1=[1,6,1,0,3,651,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 24311
+9246,245,"slot0=[1,6,6,9,1,1002,0,0,0] ; slot1=[1,6,1,0,3,740,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 24403
+9247,246,"slot0=[1,70,1,9,0,187701,1,0,0] ; slot1=[1,70,1,0,0,187704,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 24495
+9248,247,"slot0=[1,70,1,9,0,187702,1,0,0] ; slot1=[1,70,1,0,0,187705,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 24587
+9249,248,"slot0=[1,70,1,9,0,187703,1,0,0] ; slot1=[1,70,1,0,0,187706,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 24679
+9250,249,"slot0=[1,43,1,8,0,0,1,0,0] ; slot1=[1,10,1,0,0,9247,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 24771
+9251,250,"slot0=[1,43,1,8,0,0,1,0,0] ; slot1=[1,10,1,0,0,9248,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 24863
+9252,251,"slot0=[1,43,1,8,0,0,1,0,0] ; slot1=[1,10,1,0,0,9249,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 24955
+9253,252,"slot0=[1,45,1,8,0,1,1,1,0] ; slot1=[1,10,1,8,0,9247,1,0,0] ; slot2=[1,6,1,8,0,600,0,0,0] ; slot3=[1,43,1,8,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 25047
+9254,253,"slot0=[1,45,1,8,0,1,1,2,0] ; slot1=[1,10,1,8,0,9248,1,0,0] ; slot2=[1,6,1,8,0,600,0,0,0] ; slot3=[1,43,1,8,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 25205
+9255,254,"slot0=[1,45,1,8,0,1,1,3,0] ; slot1=[1,10,1,8,0,9249,1,0,0] ; slot2=[1,6,1,8,0,600,0,0,0] ; slot3=[1,43,1,8,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 25363
+9256,255,"slot0=[1,10,6,9,0,9254,0,0,0] ; slot1=[1,10,6,0,0,9255,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 25521
+9257,256,"slot0=[1,70,6,9,0,187701,0,0,0] ; slot1=[1,70,6,9,0,187702,0,0,0] ; slot2=[1,70,6,9,0,187703,0,0,0] ; slot3=[1,70,6,9,0,187704,0,0,0] ; slot4=[1,70,6,9,0,187705,0,0,0] ; slot5=[1,70,6,0,0,187706,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 25613
+9258,257,"slot0=[1,28,1,9,0,0,1,0,0] ; slot1=[1,35,1,9,0,0,1,0,0] ; slot2=[1,10,1,0,0,9259,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 25837
+9259,258,"slot0=[1,14,1,8,0,0,1,0,0] ; slot1=[1,89,1,8,0,0,1,0,0] ; slot2=[1,89,1,8,8,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 25962
+9260,259,"slot0=[1,27,7,11,0,0,0,0,1] ; slot1=[1,27,7,0,3,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 26087
+9261,260,"slot0=[1,6,1,9,0,56,0,0,0] ; slot1=[1,3,1,0,0,56,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 26179
+9262,261,"slot0=[1,4,5,8,10,0,241,0,0] ; slot1=[1,14,1,0,0,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 26271
+9263,262,"slot0=[1,28,1,9,0,0,1,0,0] ; slot1=[1,10,1,0,0,9262,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 26363
+9264,263,"slot0=[1,9,4,9,0,100,50,0,0] ; slot1=[1,6,5,0,0,1020,1,0,1]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 26455
+9265,264,"slot0=[1,10,1,9,0,9169,1,0,0] ; slot1=[1,6,1,0,3,229,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 26547
+9266,265,"slot0=[1,8,6,8,0,785,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 26639
+9267,266,"slot0=[1,8,6,8,0,786,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 26731
+9268,267,"slot0=[1,8,6,8,0,787,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 26823
+9269,268,"slot0=[1,10,1,8,0,9274,1,0,0] ; slot1=[1,10,1,0,0,9273,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 26915
+9270,269,"slot0=[1,10,1,8,0,9275,1,0,0] ; slot1=[1,10,1,0,0,9273,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 27007
+9271,270,"slot0=[1,10,1,8,0,9276,1,0,0] ; slot1=[1,10,1,0,0,9273,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 27099
+9272,271,"slot0=[1,89,5,8,0,0,2,0,0] ; slot1=[1,89,5,0,3,0,2,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 27191
+9273,272,"slot0=[1,89,1,9,0,0,0,0,0] ; slot1=[1,89,5,9,3,0,2,0,0] ; slot2=[1,28,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 27283
+9274,273,"slot0=[1,6,1,9,0,785,0,0,0] ; slot1=[1,23,1,0,0,9266,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 27408
+9275,274,"slot0=[1,6,1,9,0,786,0,0,0] ; slot1=[1,23,1,0,0,9267,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 27500
+9276,275,"slot0=[1,6,1,9,0,787,0,0,0] ; slot1=[1,23,1,0,0,9268,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 27592
+9277,276,"slot0=[1,11,1,9,3,0,1,0,0] ; slot1=[1,23,6,0,0,9079,0,0,1]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 27684
+9278,277,"slot0=[1,81,1,9,0,0,0,0,0] ; slot1=[1,10,6,0,0,9279,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 27776
+9279,278,"slot0=[1,81,1,8,0,0,1,0,0] ; slot1=[1,6,6,0,8,90,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 27868
+9280,279,"slot0=[1,8,6,8,0,603,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 27960
+9281,280,"slot0=[1,6,1,9,0,603,0,0,0] ; slot1=[1,23,1,0,0,9280,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 28052
+9282,281,"slot0=[1,10,1,8,0,9281,1,0,0] ; slot1=[1,10,1,0,0,9273,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 28144
+9283,282,"slot0=[1,8,6,8,0,604,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 28236
+9284,283,"slot0=[1,6,1,9,0,604,0,0,0] ; slot1=[1,23,1,0,0,9283,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 28328
+9285,284,"slot0=[1,10,1,8,0,9284,1,0,0] ; slot1=[1,10,1,0,0,9273,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 28420
+9286,285,"slot0=[1,9,4,8,0,100,20,0,0] ; slot1=[1,6,1,0,3,945,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 28512
+9287,286,"slot0=[1,9,4,8,0,100,35,0,0] ; slot1=[1,6,6,0,3,945,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 28604
+9288,287,"slot0=[1,10,1,9,0,9286,1,0,0] ; slot1=[1,10,1,0,0,9287,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 28696
+9289,288,"slot0=[1,9,4,8,0,100,80,0,0] ; slot1=[1,6,1,0,3,398,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 28788
+9290,289,"slot0=[1,10,1,9,0,9289,1,0,0] ; slot1=[1,6,1,0,3,398,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 28880
+9291,290,"slot0=[1,9,4,8,0,100,25,0,0] ; slot1=[1,6,1,0,3,940,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 28972
+9292,291,"slot0=[1,9,4,8,0,100,75,0,0] ; slot1=[1,6,6,0,3,940,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 29064
+9293,292,"slot0=[1,10,1,9,0,9291,1,0,0] ; slot1=[1,10,1,0,0,9292,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 29156
+9294,293,"slot0=[1,21,6,9,0,0,1,0,0] ; slot1=[1,6,5,0,0,598,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 29248
+9295,294,"slot0=[1,82,6,9,0,0,0,0,0] ; slot1=[1,82,6,9,0,2,0,0,0] ; slot2=[1,82,6,9,0,4,0,0,0] ; slot3=[1,82,6,0,0,6,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 29340
+9296,295,"slot0=[1,8,6,8,0,1020,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 29498
+9297,296,"slot0=[1,81,1,9,0,0,1,0,0] ; slot1=[1,89,5,0,0,0,2,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 29590
+9298,297,"slot0=[1,17,6,9,0,0,0,0,0] ; slot1=[1,17,6,0,0,1,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 29682
+9299,298,"slot0=[1,55,1,8,0,0,1,0,1] ; slot1=[1,14,1,8,0,0,1,0,1] ; slot2=[1,6,1,0,0,1256,0,0,1]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 29774
+9300,299,"slot0=[1,6,6,9,0,1002,0,0,1] ; slot1=[1,6,6,0,0,1004,0,0,1]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 29899
+9301,300,"slot0=[1,6,6,9,0,1002,0,0,1] ; slot1=[1,6,6,0,0,1001,0,0,1]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 29991
+9302,301,"slot0=[1,6,6,9,0,1004,0,0,1] ; slot1=[1,6,6,0,0,1001,0,0,1]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 30083
+9303,302,"slot0=[1,6,6,9,0,1002,0,0,1] ; slot1=[1,6,6,9,0,1004,0,0,1] ; slot2=[1,6,6,0,0,1001,0,0,1]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 30175
+9304,303,"slot0=[1,8,6,8,0,1091,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 30300
+9305,304,"slot0=[1,89,5,9,3,0,2,0,0] ; slot1=[1,89,1,0,0,0,0,0,1]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 30392
+9306,305,"slot0=[1,8,6,8,0,1092,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 30484
+9307,306,"slot0=[1,13,1,9,0,0,1,0,0] ; slot1=[1,13,1,9,0,0,0,0,0] ; slot2=[1,10,6,0,0,9593,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 30576
+9308,307,"slot0=[1,8,6,8,0,1102,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 30701
+9309,308,"slot0=[1,10,1,8,0,9257,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 30793
+9310,309,"slot0=[1,87,7,11,0,0,0,1,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 30852
+9311,310,"slot0=[1,87,7,11,0,0,0,2,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 30944
+9312,311,"slot0=[1,87,7,11,0,0,0,3,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 31036
+9313,312,"slot0=[1,87,7,11,0,0,0,4,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 31128
+9314,313,"slot0=[1,87,7,11,0,0,0,5,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 31220
+9315,314,"slot0=[1,87,7,11,0,0,0,6,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 31312
+9316,315,"slot0=[1,87,7,11,0,0,0,7,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 31404
+9317,316,"slot0=[1,87,7,11,0,0,0,8,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 31496
+9318,317,"slot0=[1,87,7,11,0,0,0,9,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 31588
+9319,318,"slot0=[1,87,7,11,0,0,0,10,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 31680
+9320,319,"slot0=[1,87,7,11,0,0,0,11,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 31772
+9321,320,"slot0=[1,87,7,11,0,0,0,12,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 31864
+9322,321,"slot0=[1,87,7,11,0,0,0,13,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 31956
+9323,322,"slot0=[1,87,7,11,0,0,0,14,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 32048
+9324,323,"slot0=[1,87,7,11,0,0,0,15,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 32140
+9325,324,"slot0=[1,87,7,11,0,0,0,16,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 32232
+9326,325,"slot0=[1,87,7,11,0,0,0,17,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 32324
+9327,326,"slot0=[1,87,7,11,0,0,0,18,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 32416
+9328,327,"slot0=[1,87,7,11,0,0,0,19,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 32508
+9329,328,"slot0=[1,87,7,11,0,0,0,20,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 32600
+9330,329,"slot0=[1,87,7,11,0,0,0,21,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 32692
+9331,330,"slot0=[1,87,7,11,0,0,0,22,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 32784
+9332,331,"slot0=[1,87,7,11,0,0,0,23,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 32876
+9333,332,"slot0=[1,87,7,11,0,0,0,24,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 32968
+9334,333,"slot0=[1,87,7,11,0,0,0,25,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 33060
+9335,334,"slot0=[1,87,7,11,0,0,0,26,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 33152
+9336,335,"slot0=[1,87,7,11,0,0,0,27,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 33244
+9337,336,"slot0=[1,87,7,11,0,0,0,28,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 33336
+9338,337,"slot0=[1,87,7,11,0,0,0,29,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 33428
+9339,338,"slot0=[1,87,7,11,0,0,0,30,0] ; slot1=[1,27,7,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 33520
+9340,339,"slot0=[1,8,1,9,0,1021,1,0,0] ; slot1=[1,8,1,0,0,1022,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 33612
+9341,340,"slot0=[1,13,1,9,0,0,0,0,0] ; slot1=[1,13,1,0,0,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 33704
+9342,341,"slot0=[1,27,1,8,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 33796
+9343,342,"slot0=[1,27,1,8,3,0,2,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 33855
+9344,343,"slot1=[1,77,7,0,3,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 33914
+9345,344,"slot1=[1,77,7,0,3,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 33973
+9346,345,"slot0=[1,27,1,8,3,0,1,0,0] ; slot1=[1,10,5,0,0,9344,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 34032
+9347,346,"slot0=[1,27,1,8,3,0,2,0,0] ; slot1=[1,10,5,0,0,9345,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 34124
+9348,347,"slot0=[1,10,6,9,0,9346,0,0,0] ; slot1=[1,10,6,0,0,9347,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 34216
+9349,348,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 34308
+9350,349,"slot0=[1,10,1,9,0,9309,1,0,0] ; slot1=[1,70,6,0,0,187701,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 34334
+9351,350,"slot0=[1,10,1,9,0,9309,1,0,0] ; slot1=[1,70,6,0,0,187702,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 34426
+9352,351,"slot0=[1,10,1,9,0,9309,1,0,0] ; slot1=[1,70,6,0,0,187703,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 34518
+9353,352,"slot0=[1,10,1,9,0,9309,1,0,0] ; slot1=[1,70,6,0,0,187704,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 34610
+9354,353,"slot0=[1,10,1,9,0,9309,1,0,0] ; slot1=[1,70,6,0,0,187705,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 34702
+9355,354,"slot0=[1,10,1,9,0,9309,1,0,0] ; slot1=[1,70,6,0,0,187706,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 34794
+9356,355,"slot0=[1,31,1,8,0,0,0,0,0] ; slot1=[1,85,1,0,0,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 34886
+9357,356,"slot0=[1,31,1,8,0,0,0,0,0] ; slot1=[1,89,1,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 34978
+9358,357,"slot0=[1,85,1,8,0,0,0,0,0] ; slot1=[1,89,6,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 35070
+9359,358,"slot0=[1,12,1,8,0,0,1,0,0] ; slot1=[1,13,1,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 35162
+9360,359,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 35254
+9361,360,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 35280
+9362,361,"slot0=[1,10,1,9,0,9356,1,0,0] ; slot1=[1,10,1,0,0,9357,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 35306
+9363,362,"slot0=[1,10,1,9,0,9373,1,0,0] ; slot1=[1,10,1,0,0,9383,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 35398
+9364,363,"slot0=[1,10,1,9,0,9374,1,0,0] ; slot1=[1,10,1,9,0,9384,1,0,0] ; slot2=[1,10,1,9,0,9394,1,0,0] ; slot3=[1,10,1,0,0,9397,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 35490
+9365,364,"slot0=[1,10,1,9,0,9375,1,0,0] ; slot1=[1,10,1,9,0,9385,1,0,0] ; slot2=[1,10,1,9,0,9395,1,0,0] ; slot3=[1,10,1,0,0,9398,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 35648
+9366,365,"slot0=[1,10,1,9,0,9376,1,0,0] ; slot1=[1,10,1,0,0,9386,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 35806
+9367,366,"slot0=[1,10,1,9,0,9377,1,0,0] ; slot1=[1,10,1,0,0,9387,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 35898
+9368,367,"slot0=[1,10,1,9,0,9378,1,0,0] ; slot1=[1,10,1,0,0,9388,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 35990
+9369,368,"slot0=[1,10,1,9,0,9379,1,0,0] ; slot1=[1,10,1,0,0,9389,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 36082
+9370,369,"slot0=[1,10,1,9,0,9380,1,0,0] ; slot1=[1,10,1,0,0,9390,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 36174
+9371,370,"slot0=[1,10,1,9,0,9381,1,0,0] ; slot1=[1,10,1,0,0,9391,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 36266
+9372,371,"slot0=[1,10,1,9,0,9382,1,0,0] ; slot1=[1,10,1,0,0,9392,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 36358
+9373,372,"slot0=[1,3,5,8,0,445,30,0,0] ; slot1=[1,6,1,0,0,1119,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 36450
+9374,373,"slot0=[1,3,5,8,0,445,15,0,0] ; slot1=[1,6,1,8,0,1119,0,0,0] ; slot2=[1,6,1,0,0,1120,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 36542
+9375,374,"slot0=[1,3,5,8,0,445,30,0,0] ; slot1=[1,6,1,8,0,1119,0,0,0] ; slot2=[1,6,1,0,0,1120,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 36667
+9376,375,"slot0=[1,3,5,8,0,445,40,0,0] ; slot1=[1,6,1,0,0,1119,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 36792
+9377,376,"slot0=[1,3,5,8,0,445,25,0,0] ; slot1=[1,6,1,0,0,1119,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 36884
+9378,377,"slot0=[1,3,5,8,0,445,20,0,0] ; slot1=[1,6,1,0,0,1119,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 36976
+9379,378,"slot0=[1,3,5,8,0,445,15,0,0] ; slot1=[1,6,1,0,0,1119,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 37068
+9380,379,"slot0=[1,3,5,8,0,445,30,0,0] ; slot1=[1,6,1,0,0,1119,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 37160
+9381,380,"slot0=[1,3,5,8,0,445,20,0,0] ; slot1=[1,6,1,0,0,1119,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 37252
+9382,381,"slot0=[1,3,5,8,0,445,20,0,0] ; slot1=[1,6,1,0,0,1119,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 37344
+9383,382,"slot0=[1,3,5,8,0,445,25,0,0] ; slot1=[1,6,1,0,0,1119,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 37436
+9384,383,"slot0=[1,3,5,8,0,445,10,0,0] ; slot1=[1,6,1,8,0,1119,1,0,0] ; slot2=[1,6,1,0,0,1120,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 37528
+9385,384,"slot0=[1,3,5,8,0,445,25,0,0] ; slot1=[1,6,1,8,0,1119,1,0,0] ; slot2=[1,6,1,0,0,1120,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 37653
+9386,385,"slot0=[1,3,5,8,0,445,35,0,0] ; slot1=[1,6,1,0,0,1119,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 37778
+9387,386,"slot0=[1,3,5,8,0,445,20,0,0] ; slot1=[1,6,1,0,0,1119,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 37870
+9388,387,"slot0=[1,3,5,8,0,445,15,0,0] ; slot1=[1,6,1,0,0,1119,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 37962
+9389,388,"slot0=[1,3,5,8,0,445,10,0,0] ; slot1=[1,6,1,0,0,1119,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 38054
+9390,389,"slot0=[1,3,5,8,0,445,25,0,0] ; slot1=[1,6,1,0,0,1119,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 38146
+9391,390,"slot0=[1,3,5,8,0,445,15,0,0] ; slot1=[1,6,1,0,0,1119,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 38238
+9392,391,"slot0=[1,3,5,8,0,445,15,0,0] ; slot1=[1,6,1,0,0,1119,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 38330
+9393,392,"slot0=[1,3,5,8,0,445,20,0,0] ; slot1=[1,6,1,8,0,1119,0,0,0] ; slot2=[1,6,1,0,0,1120,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 38422
+9394,393,"slot0=[1,3,5,8,0,445,5,0,0] ; slot1=[1,6,1,8,0,1119,0,0,0] ; slot2=[1,6,1,0,0,1120,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 38547
+9395,394,"slot0=[1,3,5,8,0,445,20,0,0] ; slot1=[1,6,1,8,0,1119,0,0,0] ; slot2=[1,6,1,0,0,1120,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 38672
+9396,395,"slot0=[1,3,5,8,0,445,15,0,0] ; slot1=[1,6,1,8,0,1119,1,0,0] ; slot2=[1,6,1,0,0,1120,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 38797
+9397,396,"slot0=[1,3,5,8,0,445,0,0,0] ; slot1=[1,6,1,8,0,1119,1,0,0] ; slot2=[1,6,1,0,0,1120,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 38922
+9398,397,"slot0=[1,3,5,8,0,445,15,0,0] ; slot1=[1,6,1,8,0,1119,1,0,0] ; slot2=[1,6,1,0,0,1120,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 39047
+9399,398,"slot0=[1,6,1,8,0,1119,0,0,0] ; slot1=[1,6,1,0,0,1120,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 39172
+9400,399,"slot0=[1,6,1,8,0,1119,1,0,0] ; slot1=[1,6,1,0,0,1120,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 39264
+9401,400,"slot0=[1,6,1,8,0,1119,0,0,0] ; slot1=[1,6,1,0,0,1120,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 39356
+9402,401,"slot0=[1,6,1,8,0,1119,1,0,0] ; slot1=[1,6,1,0,0,1120,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 39448
+9403,402,"slot0=[1,17,6,9,0,1,0,0,0] ; slot1=[1,17,6,9,0,2,0,0,0] ; slot2=[1,17,6,9,0,3,0,0,0] ; slot3=[1,17,6,9,0,4,0,0,0] ; slot4=[1,17,6,9,0,5,0,0,0] ; slot5=[1,17,6,9,0,6,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 39540
+9404,403,"slot0=[1,3,5,8,3,1125,25,0,0] ; slot1=[1,3,4,8,3,1125,74,0,0] ; slot2=[1,8,6,0,3,1131,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 39764
+9405,404,"slot0=[1,8,6,8,0,1127,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 39889
+9406,405,"slot0=[1,3,5,8,3,1151,25,0,0] ; slot1=[1,3,4,8,3,1151,74,0,0] ; slot2=[1,8,6,0,3,1150,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 39981
+9407,406,"slot0=[1,17,1,9,0,0,1,0,0] ; slot1=[1,17,1,9,0,1,1,0,0] ; slot2=[1,17,1,9,0,2,1,0,0] ; slot3=[1,17,1,9,0,3,1,0,0] ; slot4=[1,17,1,9,0,4,1,0,0] ; slot5=[1,17,1,0,0,5,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 40106
+9408,407,"slot0=[1,24,1,8,3,0,1,0,0] ; slot1=[1,6,6,8,3,1142,0,0,0] ; slot2=[1,8,1,0,3,1131,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 40330
+9409,408,"slot0=[1,8,6,9,0,1030,0,0,0] ; slot1=[1,8,6,9,0,1018,0,0,0] ; slot2=[1,8,6,9,0,1011,0,0,0] ; slot3=[1,8,6,9,0,1015,0,0,0] ; slot4=[1,52,1,8,0,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 40455
+9410,409,"slot0=[1,6,6,9,0,1019,0,0,0] ; slot1=[1,6,6,9,0,1016,0,0,0] ; slot2=[1,6,6,9,0,1011,0,0,0] ; slot3=[1,6,6,0,0,1018,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 40646
+9411,410,"slot0=[1,3,5,8,3,1125,25,0,0] ; slot1=[1,3,4,0,3,1125,74,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 40804
+9412,411,"slot0=[1,8,1,8,0,1187,1,0,0] ; slot1=[1,11,1,0,0,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 40896
+9413,412,"slot0=[1,23,1,9,0,9412,1,0,1] ; slot1=[1,3,1,0,0,1187,0,0,1]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 40988
+9414,413,"slot0=[1,33,7,10,0,9415,0,0,1] ; slot1=[1,33,7,0,0,9415,0,1,1]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 41080
+9415,414,"slot0=[1,4,4,8,0,0,240,0,0] ; slot1=[1,2,1,8,0,0,1,0,0] ; slot2=[1,55,1,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 41172
+9416,415,"slot0=[1,82,6,8,0,1,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 41297
+9417,416,"slot0=[1,3,5,8,0,1125,25,0,0] ; slot1=[1,3,4,0,0,1125,100,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 41356
+9418,417,"slot0=[1,10,6,9,0,9404,0,0,0] ; slot1=[1,10,6,0,0,9408,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 41448
+9419,418,"slot0=[1,3,5,8,0,1151,25,0,0] ; slot1=[1,3,4,0,0,1151,100,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 41540
+9420,419,"slot0=[1,3,5,8,3,1151,25,0,0] ; slot1=[1,3,4,0,3,1151,74,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 41632
+9421,420,"slot0=[1,10,1,9,3,9406,1,0,0] ; slot1=[1,10,6,0,3,9430,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 41724
+9422,421,"slot0=[1,28,1,8,0,0,1,0,0] ; slot1=[1,31,1,0,0,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 41816
+9423,422,"slot0=[1,10,6,9,0,9240,0,0,0] ; slot1=[1,10,6,0,0,9422,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 41908
+9424,423,"slot0=[1,10,2,12,0,9414,6,0,0] ; slot2=[1,10,7,0,0,9414,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 42000
+9425,424,"slot0=[1,6,6,8,0,106,0,0,0] ; slot1=[1,11,1,8,0,0,0,0,0] ; slot2=[1,4,4,0,0,0,1200,1,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 42092
+9426,425,"slot0=[1,33,6,9,0,9425,0,1,0] ; slot1=[1,33,6,0,0,9425,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 42217
+9427,426,"slot0=[1,77,7,11,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 42309
+9428,427,"slot0=[1,8,6,8,0,56,0,0,0] ; slot1=[1,11,6,0,3,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 42368
+9429,428,"slot0=[1,23,1,9,0,9429,1,0,1] ; slot1=[1,3,1,0,0,1190,0,0,1]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 42460
+9430,429,"slot0=[1,24,1,8,3,0,1,0,0] ; slot1=[1,6,6,8,3,1169,0,0,0] ; slot2=[1,8,1,0,3,1150,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 42552
+9431,430,"slot0=[1,8,6,8,0,1183,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 42677
+9432,431,"slot0=[1,10,2,12,0,9433,3,0,0] ; slot2=[1,10,7,0,0,9433,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 42769
+9433,432,"slot0=[1,6,7,8,3,540,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 42861
+9434,433,"slot0=[1,6,7,8,3,1054,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 42953
+9435,434,"slot0=[1,8,6,8,0,1179,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 43045
+9436,435,"slot0=[1,8,6,8,0,1180,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 43137
+9437,436,"slot0=[1,8,6,8,0,1184,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 43229
+9438,437,"slot0=[1,82,6,9,0,2,0,0,0] ; slot1=[1,82,6,9,0,0,0,0,0] ; slot2=[1,82,6,9,0,4,0,0,0] ; slot3=[1,82,6,0,0,6,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 43321
+9439,438,"slot0=[1,8,6,8,0,1132,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 43479
+9440,439,"slot0=[1,12,1,8,0,0,1,0,0] ; slot1=[1,10,1,0,0,9147,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 43571
+9441,440,"slot0=[1,6,1,9,0,1016,1,0,0] ; slot1=[1,6,1,0,0,1220,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 43663
+9442,441,"slot0=[1,35,5,9,1,0,1,0,0] ; slot1=[1,10,1,0,0,9204,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 43755
+9443,442,"slot0=[1,35,5,9,1,0,1,0,0] ; slot1=[1,21,1,0,0,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 43847
+9444,443,"slot0=[1,35,5,9,1,0,1,0,0] ; slot1=[1,21,6,0,0,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 43939
+9445,444,"slot0=[1,75,1,9,3,0,15,0,0] ; slot1=[1,19,1,9,3,0,5,0,0] ; slot2=[1,19,1,0,3,0,3,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 44031
+9446,445,"slot0=[1,75,1,0,3,0,16,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 44156
+9447,446,"slot0=[1,6,6,9,0,1002,0,0,1] ; slot1=[1,6,6,9,0,1001,0,0,1] ; slot2=[1,6,6,0,3,1214,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 44215
+9448,447,"slot0=[1,8,6,8,0,1234,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 44340
+9449,448,"slot0=[1,8,6,8,0,1235,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 44432
+9450,449,"slot0=[1,8,6,8,0,1236,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 44524
+9451,450,"slot0=[1,6,1,9,0,1234,0,0,0] ; slot1=[1,23,1,0,0,9448,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 44616
+9452,451,"slot0=[1,6,1,9,0,1235,0,0,0] ; slot1=[1,23,1,0,0,9449,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 44708
+9453,452,"slot0=[1,6,1,9,0,1236,0,0,0] ; slot1=[1,23,1,0,0,9450,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 44800
+9454,453,"slot0=[1,6,7,10,3,1002,0,0,0] ; slot1=[1,6,7,10,3,1001,0,0,0] ; slot2=[1,6,7,0,3,1004,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 44892
+9455,454,"slot0=[1,11,1,9,8,0,1,0,0] ; slot1=[1,11,1,0,0,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 45017
+9456,455,"slot0=[1,6,1,8,0,1442,0,0,0] ; slot1=[1,64,1,0,0,0,17636,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 45109
+9457,456,"slot0=[1,8,6,8,0,1442,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 45201
+9458,457,"slot0=[1,6,1,9,0,1442,0,0,0] ; slot1=[1,23,6,0,0,9457,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 45293
+9459,458,"slot0=[1,10,6,12,0,9204,0,0,0] ; slot1=[1,74,7,12,3,8399,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 45385
+9460,459,"slot0=[1,10,6,12,0,9204,0,0,0] ; slot1=[1,74,7,12,3,9165,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 45477
+9461,460,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 45569
+9462,461,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 45595
+9463,462,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 45621
+9464,463,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 45647
+9465,464,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 45673
+9466,465,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 45699
+9467,466,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 45725
+9468,467,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 45751
+9469,468,"slot0=[1,10,1,8,3,9461,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 45777
+9470,469,"slot0=[1,10,1,8,3,9462,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 45836
+9471,470,"slot0=[1,10,1,8,3,9463,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 45895
+9472,471,"slot0=[1,10,1,8,3,9464,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 45954
+9473,472,"slot0=[1,10,1,8,3,9465,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 46013
+9474,473,"slot0=[1,10,1,8,3,9466,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 46072
+9475,474,"slot0=[1,10,1,8,3,9467,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 46131
+9476,475,"slot0=[1,10,1,8,3,9468,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 46190
+9477,476,"slot0=[1,10,1,8,3,9478,0,0,0] ; slot1=[1,10,1,8,3,9479,0,0,0] ; slot2=[1,10,1,8,3,9480,0,0,0] ; slot3=[1,10,1,8,3,9481,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 46249
+9478,477,"slot0=[1,6,6,8,3,1396,0,0,0] ; slot1=[1,6,1,8,3,1397,0,0,0] ; slot2=[1,6,1,8,3,1398,0,0,0] ; slot3=[1,6,1,8,3,1399,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 46407
+9479,478,"slot0=[1,6,6,8,3,1397,0,0,0] ; slot1=[1,6,1,8,3,1398,0,0,0] ; slot2=[1,6,1,8,3,1399,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 46565
+9480,479,"slot0=[1,6,6,8,3,1398,0,0,0] ; slot1=[1,6,1,8,3,1399,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 46690
+9481,480,"slot0=[1,6,6,8,3,1399,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 46782
+9482,481,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 46841
+9483,482,"slot0=[1,16,1,9,0,8341,1,0,0] ; slot1=[1,16,1,9,0,8342,1,0,0] ; slot2=[1,16,1,0,0,8343,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 46867
+9484,483,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 46992
+9485,484,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 47018
+9486,485,"slot0=[1,10,1,8,3,9485,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 47044
+9487,486,"slot0=[1,6,1,8,0,1044,0,0,0] ; slot1=[1,6,1,8,0,1016,0,0,0] ; slot2=[1,6,1,8,0,1015,0,0,0] ; slot3=[1,6,1,8,0,1030,0,0,0] ; slot4=[1,6,1,0,0,1220,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 47103
+9488,487,"slot0=[1,8,6,8,0,1015,0,0,0] ; slot1=[1,8,1,0,0,1324,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 47294
+9490,488,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 47386
+9491,489,"slot0=[1,10,1,8,3,9490,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 47412
+9492,490,"slot0=[1,31,1,8,3,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 47471
+9493,491,"slot1=[1,18,7,0,5,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 47530
+9494,492,"slot0=[1,6,6,9,0,1007,0,0,1] ; slot1=[1,6,6,0,0,1008,0,0,1]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 47589
+9495,493,"slot0=[1,16,1,9,0,8342,1,0,0] ; slot1=[1,16,1,0,0,8343,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 47681
+9553,494,"slot0=[1,10,1,9,0,9593,0,0,1] ; slot1=[1,8,6,0,0,1215,0,0,1]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 47773
+9554,495,"slot0=[1,17,6,9,3,0,0,0,0] ; slot1=[1,17,6,9,3,1,0,0,0] ; slot2=[1,17,6,9,3,2,0,0,0] ; slot3=[1,17,6,9,3,3,0,0,0] ; slot4=[1,17,6,9,3,4,0,0,0] ; slot5=[1,17,6,0,3,5,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 47865
+9555,496,"slot0=[1,8,6,8,0,1217,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 48089
+9556,497,"slot0=[1,23,1,0,0,9555,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 48181
+9557,498,"slot0=[1,33,7,10,0,9556,0,1,0] ; slot1=[1,33,7,0,0,9556,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 48240
+9558,499,"slot0=[1,19,1,0,3,0,2,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 48332
+9559,500,"slot0=[1,75,1,9,3,0,13,0,0] ; slot1=[1,75,1,0,3,0,14,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 48391
+9560,501,"slot0=[1,6,1,8,3,1214,1,0,0] ; slot1=[1,20,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 48483
+9561,502,"slot0=[1,77,7,11,3,0,0,0,0] ; slot1=[1,77,7,0,0,0,0,0,1]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 48575
+9562,503,"slot0=[1,70,1,9,3,207385,1,0,0] ; slot1=[1,70,1,0,3,207386,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 48667
+9563,504,"slot0=[1,10,6,9,0,9565,0,0,0] ; slot1=[1,10,6,8,0,9566,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 48759
+9564,505,"slot0=[1,18,4,8,0,0,60,0,0] ; slot1=[1,4,4,8,0,0,360,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 48851
+9565,506,"slot0=[1,65,6,8,0,10760,0,0,0] ; slot1=[1,35,1,8,0,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 48943
+9566,507,"slot0=[1,65,6,8,0,10760,0,0,0] ; slot1=[1,35,1,8,0,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 49035
+9567,508,"slot0=[1,8,6,8,0,597,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 49127
+9568,509,"slot0=[1,4,4,8,10,0,180,1,1] ; slot1=[1,6,1,0,3,1209,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 49219
+9569,510,"slot0=[1,4,4,9,10,0,120,1,1] ; slot1=[1,10,1,0,3,9568,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 49311
+9571,511,"slot0=[1,4,4,8,0,0,240,1,0] ; slot1=[1,55,1,0,0,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 49403
+9572,512,"slot0=[1,4,4,8,0,0,240,1,0] ; slot1=[1,20,1,8,0,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 49495
+9573,513,"slot0=[1,33,5,8,0,9571,1,0,0] ; slot1=[1,33,5,0,0,9572,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 49587
+9574,514,"slot0=[1,6,1,8,0,1226,0,0,0] ; slot1=[1,6,1,8,0,1227,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 49679
+9575,515,"slot0=[1,55,6,8,3,0,1,0,0] ; slot1=[1,11,6,8,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 49771
+9576,516,"slot0=[1,11,1,8,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 49863
+9577,517,"slot0=[1,10,1,9,0,9575,1,0,0] ; slot1=[1,10,1,0,0,9576,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 49922
+9578,518,"slot0=[1,6,1,8,3,1256,0,0,1]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 50014
+9579,519,"slot0=[1,55,6,8,0,0,0,0,1] ; slot1=[1,14,6,0,0,0,0,0,1]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 50073
+9580,520,"slot0=[1,8,6,8,3,732,0,0,0] ; slot1=[1,11,1,0,8,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 50165
+9581,521,"slot0=[1,8,6,8,3,733,0,0,0] ; slot1=[1,11,1,0,9,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 50257
+9582,522,"slot0=[1,77,7,8,3,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 50349
+9583,523,"slot0=[1,77,7,11,3,0,0,0,0] ; slot1=[1,77,7,0,11,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 50408
+9584,524,"slot0=[1,8,6,8,3,1040,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 50500
+9585,525,"slot0=[1,77,7,11,3,0,0,0,0] ; slot1=[1,77,7,0,5,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 50592
+9586,526,"slot0=[1,8,6,8,0,1270,0,0,0] ; slot1=[1,6,6,0,0,467,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 50684
+9587,527,"slot0=[1,55,1,9,0,0,1,0,0] ; slot1=[1,55,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 50776
+9588,528,"slot0=[1,9,4,8,0,100,25,0,0] ; slot1=[1,6,1,0,3,1249,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 50868
+9589,529,"slot0=[1,9,4,8,0,100,75,0,0] ; slot1=[1,6,6,0,3,1249,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 50960
+9590,530,"slot0=[1,10,1,9,0,9588,1,0,0] ; slot1=[1,10,1,0,0,9589,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 51052
+9591,531,"slot0=[1,55,1,9,3,0,1,0,0] ; slot1=[1,55,1,0,0,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 51144
+9592,532,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 51236
+9593,533,"slot0=[1,13,1,8,0,0,1,0,0] ; slot1=[1,52,6,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 51262
+9594,534,"slot0=[1,13,1,8,0,0,12,0,0] ; slot1=[1,52,6,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 51354
+9595,535,"slot0=[1,13,1,8,0,0,8,0,0] ; slot1=[1,52,6,0,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 51446
+9596,536,"slot0=[1,10,1,9,0,9594,1,0,0] ; slot1=[1,10,1,0,0,9595,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 51538
+9597,537,"slot0=[1,8,6,8,0,1284,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 51630
+9598,538,"slot0=[1,23,1,9,0,9597,1,0,0] ; slot1=[1,6,1,0,0,1284,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 51722
+9599,539,"slot0=[1,8,6,8,0,1285,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 51814
+9600,540,"slot0=[1,23,1,9,0,9599,1,0,0] ; slot1=[1,6,1,0,0,1285,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 51906
+9601,541,"slot0=[1,8,6,8,0,1263,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 51998
+9602,542,"slot0=[1,23,6,9,0,9601,0,0,1] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 52090
+9603,543,"slot0=[1,6,6,9,3,1002,0,0,0] ; slot1=[1,6,6,9,3,1004,0,0,0] ; slot2=[1,6,6,0,3,1001,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 52182
+9604,544,"slot0=[1,59,1,9,0,191,1,108,0] ; slot1=[1,59,1,0,0,191,1,7,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 52307
+9605,545,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 52399
+9606,546,"slot0=[1,8,6,8,3,343,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 52425
+9607,547,"slot0=[1,4,4,8,0,0,1500,1,0] ; slot1=[1,6,1,0,3,1293,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 52517
+9608,548,"slot0=[1,4,4,9,0,0,1200,1,0] ; slot1=[1,10,1,0,0,9607,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 52609
+9609,549,"slot0=[1,4,4,8,0,0,1200,1,0] ; slot1=[1,4,5,0,0,0,60,1,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 52701
+9610,550,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 52793
+9611,551,"slot0=[1,8,6,8,0,1309,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 52819
+9612,552,"slot0=[1,8,6,8,0,1310,0,0,0] ; slot1=[1,11,1,0,3,0,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 52911
+9613,553,"slot0=[1,64,1,9,0,17613,0,0,0] ; slot1=[1,64,1,9,0,17632,0,0,0] ; slot2=[1,64,1,9,0,17610,0,0,0] ; slot3=[1,64,1,0,0,17633,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 53003
+9614,554,"slot0=[1,6,6,9,0,1002,0,0,0] ; slot1=[1,6,6,9,0,1001,0,0,0] ; slot2=[1,6,6,0,0,1004,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 53161
+9615,555,"slot0=[1,8,6,8,0,1014,0,0,0] ; slot1=[1,8,1,9,0,1324,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 53286
+9620,556,"slot0=[1,44,6,12,3,12,0,0,0] ; slot1=[1,7,7,0,3,0,0,2,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 53378
+9621,557,"slot0=[1,7,7,12,0,0,0,0,0] ; slot1=[1,44,1,0,3,12,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 53470
+9622,558,"slot0=[1,10,7,10,3,9620,0,0,0] ; slot1=[1,10,7,0,3,9621,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 53562
+9623,559,"slot0=[1,7,7,12,0,0,0,0,0] ; slot1=[1,44,6,0,3,12,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 53654
+9624,560,"slot0=[1,7,7,12,0,0,0,1,0] ; slot1=[1,44,1,0,3,12,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 53746
+9625,561,"slot0=[1,10,7,10,3,9623,0,0,0] ; slot1=[1,10,7,0,3,9624,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 53838
+23739,576,"slot0=[1,85,1,8,0,0,0,0,0] ; slot1=[1,89,1,8,0,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 55581
+24868,562,"slot1=[1,10,1,9,0,24869,1,0,0] ; slot2=[1,10,1,0,0,24870,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 53930
+24869,563,"slot1=[1,14,1,0,1,0,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 54022
+24870,564,"slot1=[1,14,1,8,1,0,1,0,0] ; slot2=[1,10,1,0,0,24871,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 54081
+24871,565,"slot0=[1,67,1,9,1,14008,1,0,0] ; slot1=[1,67,1,9,1,14024,1,0,0] ; slot2=[1,6,6,9,1,4176,0,0,0] ; slot3=[1,6,6,0,1,4177,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 54173
+24877,566,"slot0=[1,10,1,8,0,24868,1,0,0] ; slot2=[1,14,1,8,11,0,1,0,0] ; slot3=[1,67,1,8,11,14008,0,0,0] ; slot4=[1,6,1,8,11,4177,0,0,0] ; slot5=[1,6,1,0,11,4176,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 54331
+24878,567,"slot1=[1,14,1,8,1,0,1,0,0] ; slot2=[1,67,1,8,1,14008,0,0,0] ; slot3=[1,67,1,8,1,14024,0,0,0] ; slot4=[1,6,1,8,1,4176,0,0,0] ; slot5=[1,6,1,0,1,4177,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 54522
+24879,568,"slot0=[1,10,1,9,0,24877,1,0,0] ; slot1=[1,10,1,0,0,24878,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 54713
+25129,569,"slot0=[1,59,5,9,11,102,1,1,0] ; slot1=[1,59,5,9,11,108,1,1,0] ; slot2=[1,59,5,9,11,101,1,1,0] ; slot3=[1,59,5,9,11,107,1,1,0] ; slot4=[1,59,5,9,11,100,1,1,0] ; slot5=[1,59,5,0,11,106,1,1,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 54805
+25130,570,"slot0=[1,59,5,8,11,105,1,1,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 55029
+25131,571,"slot0=[1,59,5,8,11,109,1,1,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 55088
+25132,572,"slot0=[1,59,5,8,11,103,1,1,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 55147
+25133,573,"slot0=[1,10,1,9,0,25129,1,0,0] ; slot1=[1,10,1,9,0,25130,1,0,0] ; slot2=[1,10,1,9,0,25131,1,0,0] ; slot3=[1,10,1,0,0,25132,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 55206
+25134,574,"slot0=[1,14,6,8,11,0,0,0,0] ; slot1=[1,67,1,8,11,24728,0,0,0] ; slot2=[1,55,1,8,11,0,0,0,0] ; slot3=[1,10,1,0,0,25133,1,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 55364
+25473,575,"slot0=[1,6,6,0,0,4232,0,0,0]",C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 55522
+32825,581,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 55777
+32826,582,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 55803
+32875,583,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 55829
+32876,584,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 55855
+32899,585,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 55881
+32925,586,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 55907
+32926,587,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 55933
+32975,588,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 55959
+32976,589,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 55985
+32999,590,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56011
+33025,591,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56037
+33026,592,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56063
+33075,593,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56089
+33076,594,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56115
+33099,595,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56141
+33125,596,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56167
+33126,597,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56193
+33175,598,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56219
+33176,599,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56245
+33199,600,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56271
+33225,577,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 55673
+33225,601,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56297
+33226,578,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 55699
+33226,602,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56323
+33275,579,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 55725
+33275,603,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56349
+33276,580,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 55751
+33276,604,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56375
+33299,605,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56401
+33325,606,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56427
+33326,607,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56453
+33375,608,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56479
+33376,609,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56505
+33399,610,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56531
+33525,611,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56557
+33526,612,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56583
+33575,613,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56609
+33576,614,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56635
+33599,615,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56661
+33625,616,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56687
+33626,617,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56713
+33675,618,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56739
+33676,619,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56765
+33699,620,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56791
+33725,621,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56817
+33726,622,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56843
+33775,623,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56869
+33776,624,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56895
+33799,625,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56921
+33825,626,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56947
+33826,627,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56973
+33875,628,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 56999
+33876,629,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57025
+33899,630,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57051
+33925,631,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57077
+33926,632,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57103
+33975,633,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57129
+33976,634,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57155
+33999,635,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57181
+34025,636,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57207
+34026,637,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57233
+34075,638,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57259
+34076,639,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57285
+34099,640,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57311
+34125,641,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57337
+34126,642,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57363
+34175,643,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57389
+34176,644,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57415
+34199,645,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57441
+34225,646,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57467
+34226,647,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57493
+34275,648,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57519
+34276,649,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57545
+34299,650,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57571
+34325,651,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57597
+34326,652,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57623
+34375,653,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57649
+34376,654,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57675
+34399,655,,C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityrequirementexport.bin,byte 57701

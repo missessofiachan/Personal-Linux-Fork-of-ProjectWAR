@@ -70,13 +70,14 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                 var activeBattleFrontId = WorldMgr.UpperTierCampaignManager.ActiveBattleFront.BattleFrontId;
                 var activeBattleFrontStatus =
                     WorldMgr.UpperTierCampaignManager.GetActiveBattleFrontStatus(activeBattleFrontId);
+                List<Player> players = Player.GetPlayersSnapshot();
 
                 LastAAORallyCall = FrameWork.TCPManager.GetTimeStamp();
 
                 // _aaoTracker.AgainstAllOddsMult is defined in multiples of 20 (eg 400 AAO is 20). Negative numbers means Order has AAO, Positive numbers means Dest has AAO
                 if (GetActiveCampaign().AgainstAllOddsTracker.AgainstAllOddsMult <= RALLY_CALL_ORDER_BROADCAST_BOUNDARY)
                 {
-                    foreach (var player in Player._Players)
+                    foreach (var player in players)
                     {
                         if (player.Realm == Realms.REALMS_REALM_ORDER)
                         {
@@ -94,7 +95,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                 if (GetActiveCampaign().AgainstAllOddsTracker.AgainstAllOddsMult >= RALLY_CALL_DEST_BROADCAST_BOUNDARY)
                 {
 
-                    foreach (var player in Player._Players)
+                    foreach (var player in players)
                     {
                         if (player.Realm == Realms.REALMS_REALM_DESTRUCTION)
                         {

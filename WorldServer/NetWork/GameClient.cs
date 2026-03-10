@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Net.Sockets;
 using Common;
 using FrameWork;
 using WorldServer.World.Objects;
@@ -26,6 +27,9 @@ namespace WorldServer.NetWork
         public Account _Account = null;
         public Player Plr = null;
         private Thread _logThread = null;
+        private readonly AutoResetEvent _packetLogWakeEvent = new AutoResetEvent(false);
+        private readonly object _packetLogThreadLock = new object();
+        private volatile bool _packetLogThreadStopRequested;
         private List<string> _packetLog = new List<string>();
 
         private CircularBuffer<object> _pLogBuf = new CircularBuffer<object>(100);
@@ -59,16 +63,7 @@ namespace WorldServer.NetWork
             Log.Debug($"{ _Account?.Username ?? "Unknown user" } ({ipString}) disconnected", reason);
 
             if (_logThread != null)
-            {
-                FlushPacketLog();
-                try
-                {
-                    _logThread.Abort();
-                }
-                catch (Exception)
-                {
-                }
-            }
+                StopPacketLogThread();
 
             if (Plr != null)
             {
@@ -99,41 +94,102 @@ namespace WorldServer.NetWork
 
         private void LogInPacket(PacketIn packet)
         {
-            if (_logThread == null)
-            {
-                _logThread = new Thread(new ThreadStart(PacketLogThread));
-                _logThread.Start();
-            }
+            EnsurePacketLogThread();
 
             lock(_packetLog)
             {
                 _packetLog.Add(Utils.ToLogHexString((byte)packet.Opcode, false, packet.ToArray()));
             }
+
+            _packetLogWakeEvent.Set();
         }
 
         private void LogOutPacket(PacketOut packet)
         {
-            if (_logThread == null)
-            {
-                _logThread = new Thread(new ThreadStart(PacketLogThread));
-                _logThread.Start();
-            }
+            EnsurePacketLogThread();
 
             lock (_packetLog)
             {
                 _packetLog.Add(Utils.ToLogHexString((byte)packet.Opcode, true, packet.ToArray()));
             }
+
+            _packetLogWakeEvent.Set();
+        }
+
+        private void EnsurePacketLogThread()
+        {
+            if (_logThread != null)
+                return;
+
+            lock (_packetLogThreadLock)
+            {
+                if (_logThread != null)
+                    return;
+
+                _packetLogThreadStopRequested = false;
+                _logThread = new Thread(PacketLogThread)
+                {
+                    IsBackground = true,
+                    Name = "GameClientPacketLog"
+                };
+                _logThread.Start();
+            }
+        }
+
+        private void StopPacketLogThread()
+        {
+            Thread logThread;
+            lock (_packetLogThreadLock)
+            {
+                logThread = _logThread;
+                if (logThread == null)
+                    return;
+
+                _packetLogThreadStopRequested = true;
+                _packetLogWakeEvent.Set();
+            }
+
+            try
+            {
+                if (!logThread.Join(2000))
+                    Log.Notice("GameClient", "Timed out while waiting for the packet log thread to stop.");
+            }
+            catch (Exception ex)
+            {
+                Log.Error("GameClient", "Failed to stop packet log thread: " + ex.Message);
+            }
+
+            lock (_packetLogThreadLock)
+            {
+                if (ReferenceEquals(_logThread, logThread))
+                    _logThread = null;
+            }
         }
 
         private void PacketLogThread()
         {
-            while (true)
+            try
             {
-                FlushPacketLog();
-                if (!Socket.Connected)
-                    return;
+                while (true)
+                {
+                    FlushPacketLog();
+                    if (_packetLogThreadStopRequested)
+                        return;
 
-                Thread.Sleep(5000);
+                    Socket socket = Socket;
+                    if (socket == null || !socket.Connected)
+                        return;
+
+                    _packetLogWakeEvent.WaitOne(5000);
+                }
+            }
+            finally
+            {
+                lock (_packetLogThreadLock)
+                {
+                    if (ReferenceEquals(_logThread, Thread.CurrentThread))
+                        _logThread = null;
+                }
             }
         }
         private void FlushPacketLog()

@@ -1,0 +1,39 @@
+﻿Id,Kind,Key,Label,Properties
+ability:10,ability,10,Ability 10,
+component:142,component,142,Component 142,
+component:2,component,2,Component 2,
+component:72,component,72,Component 72,
+effect:10,effect,10,Effect 10,
+effect:11,effect,11,Effect 11,
+effect:1181,effect,1181,Effect 1181,
+effect:1298,effect,1298,Effect 1298,
+effect:1446,effect,1446,Effect 1446,
+effect:1701,effect,1701,Effect 1701,
+effect:2256,effect,2256,Effect 2256,
+effect:2719,effect,2719,Effect 2719,
+effect:2720,effect,2720,Effect 2720,
+effect:2806,effect,2806,Effect 2806,
+effect:49,effect,49,Effect 49,
+effect:646,effect,646,Effect 646,
+row:abilities.csv|line=15;AbilityId=10,row,abilities.csv|line=15;AbilityId=10,abilities.csv line=15;AbilityId=10,line_number=15 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\abilities.csv
+row:abilitycomponentexport.bin|record=6493;ComponentId=2;offset=1135397,row,abilitycomponentexport.bin|record=6493;ComponentId=2;offset=1135397,abilitycomponentexport.bin record=6493;ComponentId=2;offset=1135397,byte_offset=1135397 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilitycomponentexport.bin
+row:abilitycomponentexport.bin|record=6557;ComponentId=72;offset=1146813,row,abilitycomponentexport.bin|record=6557;ComponentId=72;offset=1146813,abilitycomponentexport.bin record=6557;ComponentId=72;offset=1146813,byte_offset=1146813 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilitycomponentexport.bin
+row:abilitycomponentexport.bin|record=6615;ComponentId=142;offset=1156903,row,abilitycomponentexport.bin|record=6615;ComponentId=142;offset=1156903,abilitycomponentexport.bin record=6615;ComponentId=142;offset=1156903,byte_offset=1156903 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilitycomponentexport.bin
+row:abilitydesc.txt|line=11;EntryId=10,row,abilitydesc.txt|line=11;EntryId=10,abilitydesc.txt line=11;EntryId=10,"line_number=11 | normalized_value=Your Squig slams it's head in to it's target, dealing {COM_0_VAL0_DAMAGE} and knocking them back. | raw_value=Your Squig slams it's head in to it's target, dealing {COM_0_VAL0_DAMAGE} and knocking them back. | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\abilitydesc.txt"
+row:abilityexport.bin|record=941;AbilityId=10;offset=182731,row,abilityexport.bin|record=941;AbilityId=10;offset=182731,abilityexport.bin record=941;AbilityId=10;offset=182731,byte_offset=182731 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\bin\abilityexport.bin
+row:abilitynames.txt|line=11;EntryId=10,row,abilitynames.txt|line=11;EntryId=10,abilitynames.txt line=11;EntryId=10,line_number=11 | normalized_value=Head Butt | raw_value=Head Butt^n | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\abilitynames.txt
+row:componenteffects.txt|line=143;EntryId=142,row,componenteffects.txt|line=143;EntryId=142,componenteffects.txt line=143;EntryId=142,line_number=143 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\componenteffects.txt
+row:componenteffects.txt|line=3;EntryId=2,row,componenteffects.txt|line=3;EntryId=2,componenteffects.txt line=3;EntryId=2,line_number=3 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\componenteffects.txt
+row:componenteffects.txt|line=73;EntryId=72,row,componenteffects.txt|line=73;EntryId=72,componenteffects.txt line=73;EntryId=72,line_number=73 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\strings\english\componenteffects.txt
+row:effects.csv|line=1243;EffectId=1181,row,effects.csv|line=1243;EffectId=1181,effects.csv line=1243;EffectId=1181,line_number=1243 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=1365;EffectId=1298,row,effects.csv|line=1365;EffectId=1298,effects.csv line=1365;EffectId=1298,line_number=1365 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=15;EffectId=10,row,effects.csv|line=15;EffectId=10,effects.csv line=15;EffectId=10,line_number=15 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=1520;EffectId=1446,row,effects.csv|line=1520;EffectId=1446,effects.csv line=1520;EffectId=1446,line_number=1520 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=16;EffectId=11,row,effects.csv|line=16;EffectId=11,effects.csv line=16;EffectId=11,line_number=16 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=1786;EffectId=1701,row,effects.csv|line=1786;EffectId=1701,effects.csv line=1786;EffectId=1701,line_number=1786 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=2333;EffectId=2256,row,effects.csv|line=2333;EffectId=2256,effects.csv line=2333;EffectId=2256,line_number=2333 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=2816;EffectId=2719,row,effects.csv|line=2816;EffectId=2719,effects.csv line=2816;EffectId=2719,line_number=2816 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=2817;EffectId=2720,row,effects.csv|line=2817;EffectId=2720,effects.csv line=2817;EffectId=2720,line_number=2817 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=2908;EffectId=2806,row,effects.csv|line=2908;EffectId=2806,effects.csv line=2908;EffectId=2806,line_number=2908 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=57;EffectId=49,row,effects.csv|line=57;EffectId=49,effects.csv line=57;EffectId=49,line_number=57 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv
+row:effects.csv|line=707;EffectId=646,row,effects.csv|line=707;EffectId=646,effects.csv line=707;EffectId=646,line_number=707 | source_path=C:\Users\Admin\Pictures\WAR_extracted\data\gamedata\effects.csv

@@ -297,13 +297,18 @@ namespace FrameWork
             if (SslStream != null)
             {
                 try { SslStream.Close(); } catch { }
+                try { SslStream.Dispose(); } catch { }
+                SslStream = null;
             }
-            if (_socket != null && _socket.Connected)
+
+            Socket socket = _socket;
+            _socket = null;
+            if (socket != null)
             {
                 try
                 {
-                    //_blockSend = true;
-                    _socket.Shutdown(SocketShutdown.Both);
+                    if (socket.Connected)
+                        socket.Shutdown(SocketShutdown.Both);
                 }
                 catch (Exception e)
                 {
@@ -312,7 +317,7 @@ namespace FrameWork
 
                 try
                 {
-                    _socket.Close();
+                    socket.Close();
                 }
                 catch (Exception e)
                 {
@@ -325,6 +330,13 @@ namespace FrameWork
             {
                 _pBuf = null;
                 Server.ReleasePacketBuffer(buff);
+            }
+
+            byte[] sendBuffer = m_tcpSendBuffer;
+            if (sendBuffer != null)
+            {
+                m_tcpSendBuffer = null;
+                Server.ReleasePacketBuffer(sendBuffer);
             }
         }
 

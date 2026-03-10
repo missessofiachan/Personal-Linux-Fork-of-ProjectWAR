@@ -1,4 +1,5 @@
 using ClientDataMatrix.Model;
+using ClientDataMatrix.Services;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -95,6 +96,57 @@ namespace ClientDataMatrix.Output
             WriteOperationSchemasCsv(fileStem + ".csv", report.Operations ?? new List<ComponentOperationSchemaRecord>());
             WriteOperationFieldsCsv(fileStem + ".fields.csv", report.Operations ?? new List<ComponentOperationSchemaRecord>());
             WriteOperationAbilitiesCsv(fileStem + ".abilities.csv", report.Operations ?? new List<ComponentOperationSchemaRecord>());
+        }
+
+        public static void WriteRemainingWorkReport(string outputRoot, RemainingWorkDocument report)
+        {
+            string overviewDirectory = Path.Combine(outputRoot, "overview");
+            Directory.CreateDirectory(overviewDirectory);
+
+            string fileStem = Path.Combine(overviewDirectory, "remaining-work");
+            File.WriteAllText(fileStem + ".md", BuildRemainingWorkMarkdown(report), Encoding.UTF8);
+            WriteJson(fileStem + ".json", report, typeof(RemainingWorkDocument));
+            WriteRemainingWorkAreasCsv(fileStem + ".areas.csv", report.Areas ?? new List<RemainingWorkAreaRecord>());
+            WriteRemainingWorkItemsCsv(fileStem + ".items.csv", report.Items ?? new List<RemainingWorkItemRecord>());
+
+            List<RemainingWorkItemRecord> nextItems = RemainingWorkCatalog.BuildNextBatch(report);
+            string nextFileStem = Path.Combine(overviewDirectory, "remaining-work-next");
+            File.WriteAllText(
+                nextFileStem + ".md",
+                BuildRemainingWorkFocusMarkdown(
+                    report,
+                    nextItems,
+                    "Remaining Work Next Batch",
+                    RemainingWorkCatalog.BuildFilterDescription(null, RemainingWorkCatalog.DefaultNextBatchMinimumPriorityBucket, null, RemainingWorkCatalog.DefaultNextBatchTopCount)),
+                Encoding.UTF8);
+            WriteJson(nextFileStem + ".json", nextItems, typeof(List<RemainingWorkItemRecord>));
+            WriteRemainingWorkItemsCsv(nextFileStem + ".csv", nextItems);
+        }
+
+        public static void WriteRemainingWorkFocusReport(string outputRoot, RemainingWorkDocument report, string fileNameStem, IList<RemainingWorkItemRecord> items, string title, string filterDescription)
+        {
+            string overviewDirectory = Path.Combine(outputRoot, "overview");
+            Directory.CreateDirectory(overviewDirectory);
+
+            string safeStem = string.IsNullOrWhiteSpace(fileNameStem) ? "remaining-work-focus" : fileNameStem;
+            string fullStem = Path.Combine(overviewDirectory, safeStem);
+            List<RemainingWorkItemRecord> safeItems = items == null ? new List<RemainingWorkItemRecord>() : items.ToList();
+            File.WriteAllText(fullStem + ".md", BuildRemainingWorkFocusMarkdown(report, safeItems, title, filterDescription), Encoding.UTF8);
+            WriteJson(fullStem + ".json", safeItems, typeof(List<RemainingWorkItemRecord>));
+            WriteRemainingWorkItemsCsv(fullStem + ".csv", safeItems);
+        }
+
+        public static void WriteOperationFieldWorkPacketReport(string outputRoot, OperationFieldWorkPacketDocument report)
+        {
+            string overviewDirectory = Path.Combine(outputRoot, "overview");
+            Directory.CreateDirectory(overviewDirectory);
+
+            string fileStem = Path.Combine(overviewDirectory, "remaining-work-operation-fields");
+            File.WriteAllText(fileStem + ".md", BuildOperationFieldWorkPacketMarkdown(report), Encoding.UTF8);
+            WriteJson(fileStem + ".json", report, typeof(OperationFieldWorkPacketDocument));
+            WriteOperationFieldWorkPacketCsv(fileStem + ".csv", report == null ? new List<OperationFieldWorkPacketRecord>() : report.Packets ?? new List<OperationFieldWorkPacketRecord>());
+            WriteOperationFieldWorkPacketValuesCsv(fileStem + ".values.csv", report == null ? new List<OperationFieldWorkPacketRecord>() : report.Packets ?? new List<OperationFieldWorkPacketRecord>());
+            WriteOperationFieldWorkPacketAbilitiesCsv(fileStem + ".abilities.csv", report == null ? new List<OperationFieldWorkPacketRecord>() : report.Packets ?? new List<OperationFieldWorkPacketRecord>());
         }
 
         private static void WriteJson(string path, object instance, Type instanceType)
@@ -384,6 +436,228 @@ namespace ClientDataMatrix.Output
                     row.SourcesText,
                     row.MissingText
                 });
+
+            return builder.ToString();
+        }
+
+        private static string BuildRemainingWorkMarkdown(RemainingWorkDocument report)
+        {
+            RemainingWorkSummaryRecord summary = report == null ? null : report.Summary;
+            List<RemainingWorkAreaRecord> areas = report == null || report.Areas == null ? new List<RemainingWorkAreaRecord>() : report.Areas;
+            List<RemainingWorkItemRecord> items = report == null || report.Items == null ? new List<RemainingWorkItemRecord>() : report.Items;
+            List<RemainingWorkItemRecord> nextItems = RemainingWorkCatalog.BuildNextBatch(report).Take(25).ToList();
+
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine("# Remaining Work");
+            builder.AppendLine();
+            builder.AppendLine("Generated UTC: `" + (report == null ? string.Empty : report.GeneratedAtUtc) + "`");
+            builder.AppendLine();
+            builder.AppendLine("Extracted root: `" + (report == null ? string.Empty : report.ExtractedRootPath) + "`");
+            builder.AppendLine();
+            builder.AppendLine("## Summary");
+            builder.AppendLine();
+            builder.AppendLine("- Areas: " + (summary == null ? 0 : summary.AreaCount).ToString(CultureInfo.InvariantCulture));
+            builder.AppendLine("- Items: " + (summary == null ? 0 : summary.ItemCount).ToString(CultureInfo.InvariantCulture));
+            builder.AppendLine("- Critical: " + (summary == null ? 0 : summary.CriticalCount).ToString(CultureInfo.InvariantCulture));
+            builder.AppendLine("- High: " + (summary == null ? 0 : summary.HighCount).ToString(CultureInfo.InvariantCulture));
+            builder.AppendLine("- Coverage gaps: " + (summary == null ? 0 : summary.CoverageGapAbilityCount).ToString(CultureInfo.InvariantCulture));
+            builder.AppendLine("- High-signal conflicts: " + (summary == null ? 0 : summary.HighSignalConflictCount).ToString(CultureInfo.InvariantCulture));
+            builder.AppendLine("- Unknown fields: " + (summary == null ? 0 : summary.UnknownFieldCount).ToString(CultureInfo.InvariantCulture));
+            builder.AppendLine("- Structural fields: " + (summary == null ? 0 : summary.StructuralFieldCount).ToString(CultureInfo.InvariantCulture));
+            builder.AppendLine("- Requirement rows with unresolved fields: " + (summary == null ? 0 : summary.RequirementGapCount).ToString(CultureInfo.InvariantCulture));
+            builder.AppendLine("- Token gaps: " + (summary == null ? 0 : summary.TokenGapCount).ToString(CultureInfo.InvariantCulture));
+            builder.AppendLine("- Identity-domain risks: " + (summary == null ? 0 : summary.DomainIssueCount).ToString(CultureInfo.InvariantCulture));
+            builder.AppendLine("- Default next batch file: `overview/remaining-work-next.md`");
+            builder.AppendLine("- Default operation field packet file: `overview/remaining-work-operation-fields.md`");
+            builder.AppendLine();
+
+            AppendTable(builder, "Next Batch Preview", nextItems,
+                new[] { "Global", "Area", "Priority", "Score", "Title", "Subject", "Action", "ExampleAbilityId" },
+                row => new[]
+                {
+                    row.GlobalRank.ToString(CultureInfo.InvariantCulture),
+                    row.AreaTitle,
+                    row.PriorityBucket,
+                    row.PriorityScore.ToString(CultureInfo.InvariantCulture),
+                    row.Title,
+                    row.SubjectKey,
+                    row.RecommendedAction,
+                    row.ExampleAbilityId.HasValue ? row.ExampleAbilityId.Value.ToString(CultureInfo.InvariantCulture) : string.Empty
+                });
+
+            AppendTable(builder, "Area Summary", areas,
+                new[] { "Area", "Items", "Critical", "High", "Peak", "Bucket", "Summary", "Next Step" },
+                row => new[]
+                {
+                    row.Title,
+                    row.ItemCount.ToString(CultureInfo.InvariantCulture),
+                    row.CriticalCount.ToString(CultureInfo.InvariantCulture),
+                    row.HighCount.ToString(CultureInfo.InvariantCulture),
+                    row.PeakScore.ToString(CultureInfo.InvariantCulture),
+                    row.PeakBucket,
+                    row.Summary,
+                    row.RecommendedNextStep
+                });
+
+            foreach (RemainingWorkAreaRecord area in areas)
+            {
+                List<RemainingWorkItemRecord> areaItems = items
+                    .Where(row => string.Equals(row.AreaKey, area.AreaKey, StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(row => row.Rank)
+                    .ThenByDescending(row => row.PriorityScore)
+                    .Take(20)
+                    .ToList();
+
+                AppendTable(builder, area.Title + " Top Items", areaItems,
+                    new[] { "Rank", "Global", "Priority", "Score", "Title", "Subject", "Summary", "Evidence", "Action", "ExampleAbilityId" },
+                    row => new[]
+                    {
+                        row.Rank.ToString(CultureInfo.InvariantCulture),
+                        row.GlobalRank.ToString(CultureInfo.InvariantCulture),
+                        row.PriorityBucket,
+                        row.PriorityScore.ToString(CultureInfo.InvariantCulture),
+                        row.Title,
+                        row.SubjectKey,
+                        row.Summary,
+                        row.Evidence,
+                        row.RecommendedAction,
+                        row.ExampleAbilityId.HasValue ? row.ExampleAbilityId.Value.ToString(CultureInfo.InvariantCulture) : string.Empty
+                    });
+            }
+
+            return builder.ToString();
+        }
+
+        private static string BuildRemainingWorkFocusMarkdown(RemainingWorkDocument report, IList<RemainingWorkItemRecord> items, string title, string filterDescription)
+        {
+            List<RemainingWorkItemRecord> safeItems = items == null ? new List<RemainingWorkItemRecord>() : items.ToList();
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine("# " + (string.IsNullOrWhiteSpace(title) ? "Remaining Work Focus" : title));
+            builder.AppendLine();
+            builder.AppendLine("Generated UTC: `" + (report == null ? string.Empty : report.GeneratedAtUtc) + "`");
+            builder.AppendLine();
+            builder.AppendLine("Extracted root: `" + (report == null ? string.Empty : report.ExtractedRootPath) + "`");
+            builder.AppendLine();
+            builder.AppendLine("Filter: " + (string.IsNullOrWhiteSpace(filterDescription) ? "(none)" : filterDescription));
+            builder.AppendLine();
+            builder.AppendLine("Matching items: " + safeItems.Count.ToString(CultureInfo.InvariantCulture));
+            builder.AppendLine();
+
+            AppendTable(builder, "Focus Items", safeItems,
+                new[] { "Global", "Area", "AreaRank", "Priority", "Score", "Title", "Subject", "Summary", "Action", "ExampleAbilityId" },
+                row => new[]
+                {
+                    row.GlobalRank.ToString(CultureInfo.InvariantCulture),
+                    row.AreaTitle,
+                    row.Rank.ToString(CultureInfo.InvariantCulture),
+                    row.PriorityBucket,
+                    row.PriorityScore.ToString(CultureInfo.InvariantCulture),
+                    row.Title,
+                    row.SubjectKey,
+                    row.Summary,
+                    row.RecommendedAction,
+                    row.ExampleAbilityId.HasValue ? row.ExampleAbilityId.Value.ToString(CultureInfo.InvariantCulture) : string.Empty
+                });
+
+            return builder.ToString();
+        }
+
+        private static string BuildOperationFieldWorkPacketMarkdown(OperationFieldWorkPacketDocument report)
+        {
+            List<OperationFieldWorkPacketRecord> packets = report == null || report.Packets == null
+                ? new List<OperationFieldWorkPacketRecord>()
+                : report.Packets;
+
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine("# Remaining Work Operation Field Packets");
+            builder.AppendLine();
+            builder.AppendLine("Generated UTC: `" + (report == null ? string.Empty : report.GeneratedAtUtc) + "`");
+            builder.AppendLine();
+            builder.AppendLine("Extracted root: `" + (report == null ? string.Empty : report.ExtractedRootPath) + "`");
+            builder.AppendLine();
+            builder.AppendLine("Filter: " + (report == null ? string.Empty : report.FilterDescription));
+            builder.AppendLine();
+            builder.AppendLine("Packets: " + packets.Count.ToString(CultureInfo.InvariantCulture));
+            builder.AppendLine();
+
+            AppendTable(builder, "Packet Summary", packets,
+                new[] { "Global", "AreaRank", "Operation", "Field", "Priority", "Score", "Title", "ExampleAbilityId", "SampleValues" },
+                row => new[]
+                {
+                    row.GlobalRank.ToString(CultureInfo.InvariantCulture),
+                    row.AreaRank.ToString(CultureInfo.InvariantCulture),
+                    row.OperationName + " (" + row.OperationId.ToString(CultureInfo.InvariantCulture) + ")",
+                    row.FieldKey,
+                    row.PriorityBucket,
+                    row.PriorityScore.ToString(CultureInfo.InvariantCulture),
+                    row.Title,
+                    row.ExampleAbilityId.HasValue ? row.ExampleAbilityId.Value.ToString(CultureInfo.InvariantCulture) : string.Empty,
+                    row.SampleValuesText
+                });
+
+            foreach (OperationFieldWorkPacketRecord packet in packets)
+            {
+                builder.AppendLine("## " + packet.Title);
+                builder.AppendLine();
+                builder.AppendLine("- Operation: `" + packet.OperationName + "` (`" + packet.OperationId.ToString(CultureInfo.InvariantCulture) + "`)");
+                builder.AppendLine("- Field: `" + packet.FieldKey + "`");
+                builder.AppendLine("- Ranks: global `" + packet.GlobalRank.ToString(CultureInfo.InvariantCulture) + "`, area `" + packet.AreaRank.ToString(CultureInfo.InvariantCulture) + "`");
+                builder.AppendLine("- Priority: `" + packet.PriorityBucket + "` `" + packet.PriorityScore.ToString(CultureInfo.InvariantCulture) + "`");
+                builder.AppendLine("- Example ability: `" + (packet.ExampleAbilityId.HasValue ? packet.ExampleAbilityId.Value.ToString(CultureInfo.InvariantCulture) : string.Empty) + "`");
+                builder.AppendLine();
+                builder.AppendLine("Summary: " + packet.Summary);
+                builder.AppendLine();
+                builder.AppendLine("Evidence: " + packet.Evidence);
+                builder.AppendLine();
+                builder.AppendLine("Recommended action: " + packet.RecommendedAction);
+                builder.AppendLine();
+
+                AppendTable(builder, "Top Values", packet.TopValues ?? new List<OperationFieldWorkPacketValueRecord>(),
+                    new[] { "RawValue", "Obs", "Components", "Abilities", "SampleAbilityIds", "Triggers", "Context", "Companions" },
+                    row => new[]
+                    {
+                        row.RawValue,
+                        row.ObservationCount.ToString(CultureInfo.InvariantCulture),
+                        row.DistinctComponentCount.ToString(CultureInfo.InvariantCulture),
+                        row.DistinctAbilityCount.ToString(CultureInfo.InvariantCulture),
+                        row.SampleAbilityIdsText,
+                        row.TriggerSummaryText,
+                        row.ContextTagSummaryText,
+                        row.CompanionSummaryText
+                    });
+
+                List<OperationFieldWorkPacketAbilityRow> abilityRows = (packet.TopValues ?? new List<OperationFieldWorkPacketValueRecord>())
+                    .SelectMany(value => (value.SampleAbilities ?? new List<ComponentOperationAbilityRecord>())
+                        .Select(ability => new OperationFieldWorkPacketAbilityRow
+                        {
+                            RawValue = value.RawValue,
+                            AbilityId = ability.AbilityId,
+                            AbilityName = ability.AbilityName,
+                            ComponentId = ability.ComponentId,
+                            ComponentSlotIndex = ability.ComponentSlotIndex,
+                            TriggerText = ability.TriggerText,
+                            ContextTagsText = ability.ContextTagsText,
+                            TextExcerpt = ability.TextExcerpt,
+                            SourcePath = ability.SourcePath,
+                            SourceLocation = ability.SourceLocation
+                        }))
+                    .Take(18)
+                    .ToList();
+
+                AppendTable(builder, "Sample Abilities", abilityRows,
+                    new[] { "RawValue", "AbilityId", "AbilityName", "ComponentId", "Slot", "Trigger", "Context", "TextExcerpt" },
+                    row => new[]
+                    {
+                        row.RawValue,
+                        row.AbilityId.ToString(CultureInfo.InvariantCulture),
+                        row.AbilityName,
+                        row.ComponentId.ToString(CultureInfo.InvariantCulture),
+                        row.ComponentSlotIndex.ToString(CultureInfo.InvariantCulture),
+                        row.TriggerText,
+                        row.ContextTagsText,
+                        row.TextExcerpt
+                    });
+            }
 
             return builder.ToString();
         }
@@ -814,6 +1088,147 @@ namespace ClientDataMatrix.Output
             File.WriteAllText(path, builder.ToString(), Encoding.UTF8);
         }
 
+        private static void WriteRemainingWorkAreasCsv(string path, IList<RemainingWorkAreaRecord> areas)
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine("AreaKey,Title,ItemCount,CriticalCount,HighCount,PeakScore,PeakBucket,Summary,RecommendedNextStep");
+            foreach (RemainingWorkAreaRecord area in areas)
+            {
+                builder.AppendLine(string.Join(",", new[]
+                {
+                    EscapeCsv(area.AreaKey),
+                    EscapeCsv(area.Title),
+                    EscapeCsv(area.ItemCount.ToString(CultureInfo.InvariantCulture)),
+                    EscapeCsv(area.CriticalCount.ToString(CultureInfo.InvariantCulture)),
+                    EscapeCsv(area.HighCount.ToString(CultureInfo.InvariantCulture)),
+                    EscapeCsv(area.PeakScore.ToString(CultureInfo.InvariantCulture)),
+                    EscapeCsv(area.PeakBucket),
+                    EscapeCsv(area.Summary),
+                    EscapeCsv(area.RecommendedNextStep)
+                }));
+            }
+
+            File.WriteAllText(path, builder.ToString(), Encoding.UTF8);
+        }
+
+        private static void WriteRemainingWorkItemsCsv(string path, IList<RemainingWorkItemRecord> items)
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine("AreaKey,AreaTitle,Rank,GlobalRank,PriorityBucket,PriorityScore,SubjectKind,SubjectKey,Title,Summary,Evidence,RecommendedAction,ExampleAbilityId,ReferencePath,ReferenceLocation");
+            foreach (RemainingWorkItemRecord item in items)
+            {
+                builder.AppendLine(string.Join(",", new[]
+                {
+                    EscapeCsv(item.AreaKey),
+                    EscapeCsv(item.AreaTitle),
+                    EscapeCsv(item.Rank.ToString(CultureInfo.InvariantCulture)),
+                    EscapeCsv(item.GlobalRank.ToString(CultureInfo.InvariantCulture)),
+                    EscapeCsv(item.PriorityBucket),
+                    EscapeCsv(item.PriorityScore.ToString(CultureInfo.InvariantCulture)),
+                    EscapeCsv(item.SubjectKind),
+                    EscapeCsv(item.SubjectKey),
+                    EscapeCsv(item.Title),
+                    EscapeCsv(item.Summary),
+                    EscapeCsv(item.Evidence),
+                    EscapeCsv(item.RecommendedAction),
+                    EscapeCsv(item.ExampleAbilityId.HasValue ? item.ExampleAbilityId.Value.ToString(CultureInfo.InvariantCulture) : string.Empty),
+                    EscapeCsv(item.ReferencePath),
+                    EscapeCsv(item.ReferenceLocation)
+                }));
+            }
+
+            File.WriteAllText(path, builder.ToString(), Encoding.UTF8);
+        }
+
+        private static void WriteOperationFieldWorkPacketCsv(string path, IList<OperationFieldWorkPacketRecord> packets)
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine("GlobalRank,AreaRank,OperationId,OperationName,FieldKey,PriorityBucket,PriorityScore,Title,Summary,Evidence,RecommendedAction,ExampleAbilityId,SampleValues");
+            foreach (OperationFieldWorkPacketRecord packet in packets)
+            {
+                builder.AppendLine(string.Join(",", new[]
+                {
+                    EscapeCsv(packet.GlobalRank.ToString(CultureInfo.InvariantCulture)),
+                    EscapeCsv(packet.AreaRank.ToString(CultureInfo.InvariantCulture)),
+                    EscapeCsv(packet.OperationId.ToString(CultureInfo.InvariantCulture)),
+                    EscapeCsv(packet.OperationName),
+                    EscapeCsv(packet.FieldKey),
+                    EscapeCsv(packet.PriorityBucket),
+                    EscapeCsv(packet.PriorityScore.ToString(CultureInfo.InvariantCulture)),
+                    EscapeCsv(packet.Title),
+                    EscapeCsv(packet.Summary),
+                    EscapeCsv(packet.Evidence),
+                    EscapeCsv(packet.RecommendedAction),
+                    EscapeCsv(packet.ExampleAbilityId.HasValue ? packet.ExampleAbilityId.Value.ToString(CultureInfo.InvariantCulture) : string.Empty),
+                    EscapeCsv(packet.SampleValuesText)
+                }));
+            }
+
+            File.WriteAllText(path, builder.ToString(), Encoding.UTF8);
+        }
+
+        private static void WriteOperationFieldWorkPacketValuesCsv(string path, IList<OperationFieldWorkPacketRecord> packets)
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine("OperationId,OperationName,FieldKey,RawValue,ObservationCount,DistinctComponentCount,DistinctAbilityCount,SampleComponentIds,SampleAbilityIds,TriggerSummary,ContextTagSummary,CompanionSummary");
+            foreach (OperationFieldWorkPacketRecord packet in packets)
+            {
+                foreach (OperationFieldWorkPacketValueRecord value in packet.TopValues ?? new List<OperationFieldWorkPacketValueRecord>())
+                {
+                    builder.AppendLine(string.Join(",", new[]
+                    {
+                        EscapeCsv(packet.OperationId.ToString(CultureInfo.InvariantCulture)),
+                        EscapeCsv(packet.OperationName),
+                        EscapeCsv(packet.FieldKey),
+                        EscapeCsv(value.RawValue),
+                        EscapeCsv(value.ObservationCount.ToString(CultureInfo.InvariantCulture)),
+                        EscapeCsv(value.DistinctComponentCount.ToString(CultureInfo.InvariantCulture)),
+                        EscapeCsv(value.DistinctAbilityCount.ToString(CultureInfo.InvariantCulture)),
+                        EscapeCsv(value.SampleComponentIdsText),
+                        EscapeCsv(value.SampleAbilityIdsText),
+                        EscapeCsv(value.TriggerSummaryText),
+                        EscapeCsv(value.ContextTagSummaryText),
+                        EscapeCsv(value.CompanionSummaryText)
+                    }));
+                }
+            }
+
+            File.WriteAllText(path, builder.ToString(), Encoding.UTF8);
+        }
+
+        private static void WriteOperationFieldWorkPacketAbilitiesCsv(string path, IList<OperationFieldWorkPacketRecord> packets)
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine("OperationId,OperationName,FieldKey,RawValue,AbilityId,AbilityName,ComponentId,ComponentSlotIndex,TriggerText,ContextTagsText,TextExcerpt,SourcePath,SourceLocation");
+            foreach (OperationFieldWorkPacketRecord packet in packets)
+            {
+                foreach (OperationFieldWorkPacketValueRecord value in packet.TopValues ?? new List<OperationFieldWorkPacketValueRecord>())
+                {
+                    foreach (ComponentOperationAbilityRecord ability in value.SampleAbilities ?? new List<ComponentOperationAbilityRecord>())
+                    {
+                        builder.AppendLine(string.Join(",", new[]
+                        {
+                            EscapeCsv(packet.OperationId.ToString(CultureInfo.InvariantCulture)),
+                            EscapeCsv(packet.OperationName),
+                            EscapeCsv(packet.FieldKey),
+                            EscapeCsv(value.RawValue),
+                            EscapeCsv(ability.AbilityId.ToString(CultureInfo.InvariantCulture)),
+                            EscapeCsv(ability.AbilityName),
+                            EscapeCsv(ability.ComponentId.ToString(CultureInfo.InvariantCulture)),
+                            EscapeCsv(ability.ComponentSlotIndex.ToString(CultureInfo.InvariantCulture)),
+                            EscapeCsv(ability.TriggerText),
+                            EscapeCsv(ability.ContextTagsText),
+                            EscapeCsv(ability.TextExcerpt),
+                            EscapeCsv(ability.SourcePath),
+                            EscapeCsv(ability.SourceLocation)
+                        }));
+                    }
+                }
+            }
+
+            File.WriteAllText(path, builder.ToString(), Encoding.UTF8);
+        }
+
         private static void WriteDomainLedgerCsv(string path, IList<IdentityDomainRecord> domains)
         {
             StringBuilder builder = new StringBuilder();
@@ -1050,6 +1465,20 @@ namespace ClientDataMatrix.Output
             }
 
             File.WriteAllText(path, builder.ToString(), Encoding.UTF8);
+        }
+
+        private sealed class OperationFieldWorkPacketAbilityRow
+        {
+            public string RawValue { get; set; }
+            public ushort AbilityId { get; set; }
+            public string AbilityName { get; set; }
+            public ushort ComponentId { get; set; }
+            public int ComponentSlotIndex { get; set; }
+            public string TriggerText { get; set; }
+            public string ContextTagsText { get; set; }
+            public string TextExcerpt { get; set; }
+            public string SourcePath { get; set; }
+            public string SourceLocation { get; set; }
         }
 
         private static string FormatExtData(IList<BinaryExtDataRecord> extData)

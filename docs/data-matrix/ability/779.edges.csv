@@ -1,0 +1,16 @@
+﻿Id,Kind,FromNodeId,ToNodeId,Label,ClaimId
+edge:1,declared_by,ability:779,row:abilities.csv|line=868;AbilityId=779,abilities.csv,
+edge:2,declared_by,ability:779,row:abilityexport.bin|record=1444;AbilityId=779;offset=282029,abilityexport.bin,
+edge:8,declared_by,component:1119,row:abilitycomponentexport.bin|record=619;ComponentId=1119;offset=103817,abilitycomponentexport.bin,
+edge:9,declared_by,component:1192,row:abilitycomponentexport.bin|record=692;ComponentId=1192;offset=115044,abilitycomponentexport.bin,
+edge:10,declared_by,component:3189,row:abilitycomponentexport.bin|record=1683;ComponentId=3189;offset=290077,abilitycomponentexport.bin,
+edge:6,declared_by,effect:313,row:effects.csv|line=350;EffectId=313,effects.csv,
+edge:7,declared_by,effect:779,row:effects.csv|line=851;EffectId=779,effects.csv,
+edge:13,localized_component_description,component:1119,row:componenteffects.txt|line=1120;EntryId=1119,componenteffects.txt,claim:25
+edge:14,localized_component_description,component:1192,row:componenteffects.txt|line=1193;EntryId=1192,componenteffects.txt,claim:26
+edge:15,localized_component_description,component:3189,row:componenteffects.txt|line=3190;EntryId=3189,componenteffects.txt,claim:27
+edge:12,localized_description,ability:779,row:abilitydesc.txt|line=780;EntryId=779,abilitydesc.txt,claim:24
+edge:11,localized_name,ability:779,row:abilitynames.txt|line=780;EntryId=779,abilitynames.txt,claim:23
+edge:3,uses_component,ability:779,component:1119,abilityexport.bin,
+edge:4,uses_component,ability:779,component:1192,abilityexport.bin,
+edge:5,uses_component,ability:779,component:3189,abilityexport.bin,
