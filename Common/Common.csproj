@@ -131,6 +131,7 @@
     <Compile Include="Database\Character\Guild_members.cs" />
     <Compile Include="Database\Character\Guild_rank.cs" />
     <Compile Include="Database\Character\ScenarioDurationRecord.cs" />
+    <Compile Include="Database\CharacterIdentityCatalog.cs" />
     <Compile Include="Database\GameData.cs" />
     <Compile Include="Database\SystemData.cs" />
     <Compile Include="Database\World\Ability\AbilityKnockbackInfo.cs" />

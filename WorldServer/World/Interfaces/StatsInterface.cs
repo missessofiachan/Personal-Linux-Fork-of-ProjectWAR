@@ -820,11 +820,8 @@ namespace WorldServer.World.Interfaces
                     break;
                 // RB   4/17/2016   Added support for adjusting max AP pool
                 case Stats.MaxActionPoints:
-                        if (_Owner.Loaded && _Owner.IsPlayer())
-                        {
-                            Player p = (_Owner as Player);
-                            p.MaxActionPoints += stat;
-                        }
+                    if (_Owner.IsPlayer())
+                        ((Player)_Owner).SetMaxActionPoints();
                     break;
             }
                     
@@ -859,11 +856,8 @@ namespace WorldServer.World.Interfaces
 
                 // RB   4/17/2016   Added support for adjusting max AP pool
                 case Stats.MaxActionPoints:
-                    if (_Owner.Loaded && _Owner.IsPlayer())
-                    {
-                        Player p = (_Owner as Player);
-                        p.MaxActionPoints -= stat;
-                    }
+                    if (_Owner.IsPlayer())
+                        ((Player)_Owner).SetMaxActionPoints();
                     break;
             }
         }
@@ -884,8 +878,8 @@ namespace WorldServer.World.Interfaces
                         ArmPen -= stat;
                     break;
                 case Stats.MaxActionPoints:
-                    if (_Owner.Loaded && _Owner.IsPlayer())
-                        ((Player) _Owner).MaxActionPoints -= stat;
+                    if (_Owner.IsPlayer())
+                        ((Player)_Owner).SetMaxActionPoints();
                     break;
             }
         }
@@ -906,11 +900,8 @@ namespace WorldServer.World.Interfaces
                         ArmPen += stat;
                     break;
                 case Stats.MaxActionPoints:
-                    if (_Owner.Loaded && _Owner.IsPlayer())
-                    {
-                        Player p = (_Owner as Player);
-                        p.MaxActionPoints += stat;
-                    }
+                    if (_Owner.IsPlayer())
+                        ((Player)_Owner).SetMaxActionPoints();
                     break;
             }
         }
@@ -957,11 +948,8 @@ namespace WorldServer.World.Interfaces
                     }
                     break;
                 case Stats.MaxActionPoints:
-                        if (_Owner.Loaded && _Owner.IsPlayer())
-                        {
-                            Player p = (_Owner as Player);
-                            p.MaxActionPoints += stat;
-                        }
+                    if (_Owner.IsPlayer())
+                        ((Player)_Owner).SetMaxActionPoints();
                     break;
             }
         }
@@ -1005,11 +993,8 @@ namespace WorldServer.World.Interfaces
                     }
                     break;
                 case Stats.MaxActionPoints:
-                    if (_Owner.Loaded && _Owner.IsPlayer())
-                        {
-                            Player p = (_Owner as Player);
-                            p.MaxActionPoints -= stat;
-                        }
+                    if (_Owner.IsPlayer())
+                        ((Player)_Owner).SetMaxActionPoints();
                     break;
             }
         }

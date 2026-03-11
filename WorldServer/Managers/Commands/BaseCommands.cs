@@ -2408,9 +2408,9 @@ namespace WorldServer.Managers.Commands
                     continue;
 
                 if (curChar.Value == null)
-                    plr.SendClientMessage($"Slot {i}: {curChar.Name}, {Constants.CareerNames[curChar.CareerLine]} (Missing characters_value!)");
+                    plr.SendClientMessage($"Slot {i}: {curChar.Name}, {CharacterIdentityCatalog.GetCareerName(curChar.CareerLine)} (Missing characters_value!)");
                 else
-                    plr.SendClientMessage($"Slot {i}: {curChar.Name}, {curChar.Value.Level}/{curChar.Value.RenownRank} {Constants.CareerNames[curChar.CareerLine]}");
+                    plr.SendClientMessage($"Slot {i}: {curChar.Name}, {curChar.Value.Level}/{curChar.Value.RenownRank} {CharacterIdentityCatalog.GetCareerName(curChar.CareerLine)}");
             }
             return true;
         }
@@ -3045,7 +3045,7 @@ namespace WorldServer.Managers.Commands
                 string online = "";
                 if (c.Value.Online)
                     online = "--ONLINE";
-                result += $"  {faction} NAME:{c.Name} LEVEL:{c.Value.Level} RENOWN:{c.Value.RenownRank} CLASS:{((CareerLine)c.CareerLine).ToString().Replace("CAREERLINE_", "")}{online}\n";
+                result += $"  {faction} NAME:{c.Name} LEVEL:{c.Value.Level} RENOWN:{c.Value.RenownRank} CLASS:{CharacterIdentityCatalog.GetCareerName(c.CareerLine)}{online}\n";
             }
             plr.SendClientMessage(result);
             return true;

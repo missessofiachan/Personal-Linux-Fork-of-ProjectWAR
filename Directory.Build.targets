@@ -1,15 +1,18 @@
 <Project>
   <Target Name="MoveLibrariesToLibs" AfterTargets="Build" Condition="'$(OutputType)' == 'Exe' Or '$(OutputType)' == 'WinExe'">
     <ItemGroup>
-      <!-- Move runtime libraries/symbols while keeping app XML config files beside executables. -->
-      <FilesToCopy Include="$(OutDir)*.dll;$(OutDir)*.pdb;$(OutDir)*.xml"
-                   Exclude="$(OutDir)$(TargetName).pdb;$(OutDir)$(TargetName).xml;$(OutDir)FrameWork.dll;$(OutDir)Common.dll;$(OutDir)*config.xml" />
+      <!-- Move runtime DLLs while keeping app configs and shared project outputs beside executables. -->
+      <FilesToRelocate Include="$(OutDir)*.dll;$(OutDir)*.dll.config"
+                       Exclude="$(OutDir)*config.xml;$(OutDir)Common.dll;$(OutDir)Common.dll.config;$(OutDir)FrameWork.dll;$(OutDir)FrameWork.dll.config" />
     </ItemGroup>
-    <MakeDir Directories="$(OutDir)libs" Condition="'@(FilesToCopy)' != ''" />
-    <Copy SourceFiles="@(FilesToCopy)"
+    <MakeDir Directories="$(OutDir)libs" Condition="'@(FilesToRelocate)' != ''" />
+    <Copy SourceFiles="@(FilesToRelocate)"
           DestinationFolder="$(OutDir)libs"
           SkipUnchangedFiles="true"
-          Condition="'@(FilesToCopy)' != ''"
+          Condition="'@(FilesToRelocate)' != ''"
           ContinueOnError="WarnAndContinue" />
+    <Delete Files="@(FilesToRelocate)"
+            Condition="'@(FilesToRelocate)' != ''"
+            ContinueOnError="WarnAndContinue" />
   </Target>
 </Project>

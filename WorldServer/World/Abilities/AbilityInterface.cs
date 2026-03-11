@@ -93,7 +93,9 @@ namespace WorldServer.World.Abilities
 
         private void LoadCareerAbilities()
         {
-            _abilities = AbilityMgr.GetAvailableCareerAbilities(_playerOwner.Info.CareerLine, 0, _playerOwner.Level);
+            _abilities = AbilityMgr
+                .GetAvailableCareerAbilities(_playerOwner.Info.CareerLine, 0, _playerOwner.Level)
+                .FindAll(ab => MeetsAbilityUnlockRequirements(ab, _playerOwner));
 
             foreach (AbilityInfo ab in _abilities)
                 _abilitySet.Add(ab.Entry);
@@ -139,6 +141,16 @@ namespace WorldServer.World.Abilities
 
             byte requiredRenown = GetRequiredRenownForTactic(tacticEntry, constants.MinimumRenown);
             return _playerOwner.Level >= constants.MinimumRank && _playerOwner.RenownRank >= requiredRenown;
+        }
+
+        private bool MeetsAbilityUnlockRequirements(AbilityInfo abilityInfo, Player player)
+        {
+            AbilityConstants constants = abilityInfo?.ConstantInfo;
+            if (player == null || constants == null)
+                return false;
+
+            byte requiredRenown = GetRequiredRenownForTactic(abilityInfo.Entry, constants.MinimumRenown);
+            return constants.MinimumRank <= player.Level && requiredRenown <= player.RenownRank;
         }
 
         private bool SyncRenownMasteryTactics()
@@ -317,7 +329,9 @@ namespace WorldServer.World.Abilities
         /// <param name="newLevel"></param>
         public void OnPlayerLeveled(byte oldLevel, byte newLevel)
         {
-            List<AbilityInfo> newAbilities = AbilityMgr.GetAvailableCareerAbilities(((Player)_unitOwner).Info.CareerLine, oldLevel + 1, newLevel);
+            List<AbilityInfo> newAbilities = AbilityMgr
+                .GetAvailableCareerAbilities(((Player)_unitOwner).Info.CareerLine, oldLevel + 1, newLevel)
+                .FindAll(ab => MeetsAbilityUnlockRequirements(ab, _playerOwner));
 
             _abilities.AddRange(newAbilities);
 
@@ -379,7 +393,9 @@ namespace WorldServer.World.Abilities
                 return new List<AbilityInfo>();
 
             Player plr = GetPlayer();
-            List<AbilityInfo> allAvailable = AbilityMgr.GetAvailableCareerAbilities(plr.Info.CareerLine, 0, plr.Level);
+            List<AbilityInfo> allAvailable = AbilityMgr
+                .GetAvailableCareerAbilities(plr.Info.CareerLine, 0, plr.Level)
+                .FindAll(ab => MeetsAbilityUnlockRequirements(ab, plr));
             List<AbilityInfo> purchasable = new List<AbilityInfo>();
 
             foreach (AbilityInfo ab in allAvailable)
@@ -461,7 +477,8 @@ namespace WorldServer.World.Abilities
                     return false;
             }
 
-            if (info.ConstantInfo.MinimumRank > plr.AdjustedLevel || info.ConstantInfo.MinimumRenown > plr.RenownRank)
+            byte requiredRenown = GetRequiredRenownForTactic(info.Entry, info.ConstantInfo.MinimumRenown);
+            if (info.ConstantInfo.MinimumRank > plr.AdjustedLevel || requiredRenown > plr.RenownRank)
                 return false;
 
             if (info.CareerLine != 0 && (plr.Info.CareerFlags & info.ConstantInfo.CareerLine) == 0)
@@ -960,6 +977,9 @@ namespace WorldServer.World.Abilities
         /// </summary>
         public void RefreshBonusMasteryPoints()
         {
+            if (_playerOwner?.BuffInterface?.Stopping == true)
+                return;
+
             byte[] oldBonus = (byte[])_bonusMasteryPoints.Clone();
 
             _bonusMasteryPoints[0] = Convert.ToByte(_playerOwner.StsInterface.GetBonusStat(Stats.Mastery1Bonus));

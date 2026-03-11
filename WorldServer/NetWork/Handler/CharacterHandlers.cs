@@ -62,9 +62,54 @@ namespace WorldServer.NetWork.Handler
                 if (CharInfo == null)
                 {
                     Log.Error("ON_CREATE", "Can not find career :" + Info.career);
+                    PacketOut errorOut = new PacketOut((byte)Opcodes.F_SEND_CHARACTER_ERROR, 64);
+                    errorOut.FillString(cclient._Account.Username, 24);
+                    errorOut.WriteStringBytes("Character templates are not configured for that career.");
+                    cclient.SendPacket(errorOut);
+                    return;
                 }
                 else
                 {
+                    CharacterIdentityRecord identity;
+                    if (!CharacterIdentityCatalog.TryGetByCareerLine(CharInfo.CareerLine, out identity))
+                    {
+                        Log.Error("CreateCharacter", "CharacterInfo career line " + CharInfo.CareerLine + " is not mapped to a canonical identity.");
+                        PacketOut errorOut = new PacketOut((byte)Opcodes.F_SEND_CHARACTER_ERROR, 64);
+                        errorOut.FillString(cclient._Account.Username, 24);
+                        errorOut.WriteStringBytes("Character templates are not configured for that career.");
+                        cclient.SendPacket(errorOut);
+                        return;
+                    }
+
+                    if (Info.race != identity.Race)
+                    {
+                        Log.Info("CreateCharacter",
+                            "Client race "
+                            + Info.race
+                            + " does not match canonical race "
+                            + identity.Race
+                            + " for career "
+                            + Info.career
+                            + ". Using canonical mapping.");
+                    }
+
+                    if (CharInfo.Realm != identity.Realm || !string.Equals(CharInfo.CareerName ?? string.Empty, identity.CareerName, StringComparison.Ordinal))
+                    {
+                        Log.Info("CreateCharacter",
+                            "CharacterInfo mismatch for career "
+                            + Info.career
+                            + ": CareerLine="
+                            + CharInfo.CareerLine
+                            + ", Realm="
+                            + CharInfo.Realm
+                            + ", CareerName='"
+                            + (CharInfo.CareerName ?? string.Empty)
+                            + "'; expected Realm="
+                            + identity.Realm
+                            + ", CareerName='"
+                            + identity.CareerName
+                            + "'.");
+                    }
 
                     //Log.Success("OnCreate", "New Character : " + Name);
 
@@ -73,11 +118,11 @@ namespace WorldServer.NetWork.Handler
                         AccountId = cclient._Account.AccountId,
                         bTraits = traits,
                         Career = Info.career,
-                        CareerLine = CharInfo.CareerLine,
+                        CareerLine = identity.CareerLine,
                         ModelId = Info.model,
                         Name = name,
-                        Race = Info.race,
-                        Realm = CharInfo.Realm,
+                        Race = identity.Race,
+                        Realm = identity.Realm,
                         RealmId = Program.Rm.RealmId,
                         Sex = Info.sex,
                         FirstConnect = true

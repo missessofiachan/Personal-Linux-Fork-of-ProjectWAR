@@ -106,8 +106,30 @@ namespace WorldServer.Managers
         {
             IList<CharacterInfo> chars = WorldMgr.Database.SelectAllObjects<CharacterInfo>();
             foreach (CharacterInfo info in chars)
+            {
+                CharacterIdentityRecord identity;
+                if (CharacterIdentityCatalog.TryGetByCareerLine(info.CareerLine, out identity))
+                {
+                    if (info.Realm != identity.Realm || !string.Equals(info.CareerName ?? string.Empty, identity.CareerName, StringComparison.Ordinal))
+                    {
+                        Log.Info("CharacterMgr",
+                            "CharacterInfo identity mismatch for CareerLine "
+                            + info.CareerLine
+                            + ": Realm="
+                            + info.Realm
+                            + ", CareerName='"
+                            + (info.CareerName ?? string.Empty)
+                            + "'; expected Realm="
+                            + identity.Realm
+                            + ", CareerName='"
+                            + identity.CareerName
+                            + "'.");
+                    }
+                }
+
                 if (!CharacterInfos.ContainsKey(info.Career))
                     CharacterInfos.Add(info.Career, info);
+            }
 
             RandomNameList = WorldMgr.Database.SelectAllObjects<Random_name>() as List<Random_name>;
 
@@ -491,6 +513,13 @@ namespace WorldServer.Managers
 
         public static bool CreateChar(Character Char)
         {
+            CharacterIdentityRecord identity;
+            if (CharacterIdentityCatalog.TryGetByCareerLine(Char.CareerLine, out identity))
+            {
+                Char.Race = identity.Race;
+                Char.Realm = identity.Realm;
+            }
+
             AccountChars chars = GetAccountChar(Char.AccountId);
             Char.SlotId = chars.GenerateFreeSlot();
 

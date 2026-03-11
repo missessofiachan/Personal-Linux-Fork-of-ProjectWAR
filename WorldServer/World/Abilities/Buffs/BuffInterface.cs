@@ -634,7 +634,7 @@ namespace WorldServer.World.Abilities.Buffs
 
         public NewBuff GetBuff(ushort entry, Unit caster)
         {
-            bool needsLock = !_buffRWLock.IsReadLockHeld;
+            bool needsLock = !_buffRWLock.IsReadLockHeld && !_buffRWLock.IsWriteLockHeld;
             if (needsLock)
                 _buffRWLock.EnterReadLock();
 
@@ -654,7 +654,7 @@ namespace WorldServer.World.Abilities.Buffs
 
         public bool HasBuffInAnyState(ushort entry, Unit caster)
         {
-            bool needsLock = !_buffRWLock.IsReadLockHeld;
+            bool needsLock = !_buffRWLock.IsReadLockHeld && !_buffRWLock.IsWriteLockHeld;
             if (needsLock)
                 _buffRWLock.EnterReadLock();
 
@@ -702,7 +702,7 @@ namespace WorldServer.World.Abilities.Buffs
         public int CountAppliedOrQueuedBuffs(ushort entry, Unit caster)
         {
             int count = 0;
-            bool needsLock = !_buffRWLock.IsReadLockHeld;
+            bool needsLock = !_buffRWLock.IsReadLockHeld && !_buffRWLock.IsWriteLockHeld;
             if (needsLock)
                 _buffRWLock.EnterReadLock();
 
@@ -741,7 +741,7 @@ namespace WorldServer.World.Abilities.Buffs
         public bool RemoveBuffFromAnyState(ushort entry, Unit caster)
         {
             bool changed = false;
-            bool needsLock = !_buffRWLock.IsReadLockHeld;
+            bool needsLock = !_buffRWLock.IsReadLockHeld && !_buffRWLock.IsWriteLockHeld;
             if (needsLock)
                 _buffRWLock.EnterReadLock();
 
@@ -977,7 +977,9 @@ namespace WorldServer.World.Abilities.Buffs
 
         public void RemoveCasterBuffs()
         {
-            _buffRWLock.EnterReadLock();
+            bool needsLock = !_buffRWLock.IsReadLockHeld && !_buffRWLock.IsWriteLockHeld;
+            if (needsLock)
+                _buffRWLock.EnterReadLock();
             try
             {
                 foreach (NewBuff buff in _buffs)
@@ -989,7 +991,11 @@ namespace WorldServer.World.Abilities.Buffs
                     }
                 }
             }
-            finally { _buffRWLock.ExitReadLock(); }
+            finally
+            {
+                if (needsLock)
+                    _buffRWLock.ExitReadLock();
+            }
         }
 
         #endregion
@@ -1206,23 +1212,24 @@ namespace WorldServer.World.Abilities.Buffs
             lock (_queuedInfo)
                 _queuedInfo.Clear();
 
-            _buffRWLock.EnterReadLock();
+            List<NewBuff> buffsToStop = null;
 
+            _buffRWLock.EnterReadLock();
             try
             {
                 if (_buffs.Count > 0)
-                {
-                    foreach (NewBuff buff in _buffs)
-                    {
-                        buff.BuffHasExpired = true;
+                    buffsToStop = new List<NewBuff>(_buffs);
+            }
+            finally { _buffRWLock.ExitReadLock(); }
 
-                        #warning Danger of lock recursion exception.
-                        buff.RemoveBuff(true);
-                    }
+            if (buffsToStop != null)
+            {
+                foreach (NewBuff buff in buffsToStop)
+                {
+                    buff.BuffHasExpired = true;
+                    buff.RemoveBuff(true);
                 }
             }
-
-            finally { _buffRWLock.ExitReadLock(); }
 
             Update(TCPManager.GetTimeStampMS());
 

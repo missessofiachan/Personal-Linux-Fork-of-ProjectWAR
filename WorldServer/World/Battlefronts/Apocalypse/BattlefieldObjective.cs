@@ -334,18 +334,8 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
         public void OpenBattleFront()
         {
-            if (fsm.IsRunning)
-            {
-                BattlefrontLogger.Debug($"Restarting BattlefieldObjective {Name} FSM...");
-                fsm.Stop();
-            }
-            else
-                BattlefrontLogger.Debug($"Starting BattlefieldObjective {Name} FSM...");
-
-            fsm.Initialize(CampaignObjectiveStateMachine.ProcessState.Neutral);
-            fsm.Start();
+            BattlefrontLogger.Debug($"Opening BattlefieldObjective {Name}...");
             fsm.Fire(CampaignObjectiveStateMachine.Command.OnOpenBattleFront);
-
         }
 
         /// <summary>

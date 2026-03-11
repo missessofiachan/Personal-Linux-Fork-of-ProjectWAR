@@ -420,16 +420,17 @@ namespace FrameWork
         // Stop all threads and incomming connections
         public virtual void Stop()
         {
-            Log.Debug("TCPManager", "TCP Manager shutdown [" + Listener.LocalEndpoint + "]");
+            TcpListener listener = Listener;
+            if (listener == null)
+                return;
+
+            Log.Debug("TCPManager", "TCP Manager shutdown [" + listener.LocalEndpoint + "]");
+            Listener = null;
 
             try
             {
-                if (Listener != null)
-                {
-                    Listener.Stop();
-
-                    Log.Debug("TCPManager", "Stop incoming connections");
-                }
+                listener.Stop();
+                Log.Debug("TCPManager", "Stop incoming connections");
             }
             catch (Exception e)
             {
@@ -621,7 +622,16 @@ namespace FrameWork
             {
                 if (Listener != null) // Quoi qu'il arrive on continu d'écouter le socket
                 {
-                    Listener.BeginAcceptSocket(_asyncAcceptCallback, this);
+                    try
+                    {
+                        Listener.BeginAcceptSocket(_asyncAcceptCallback, this);
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                    }
+                    catch (InvalidOperationException)
+                    {
+                    }
                 }
             }
         }

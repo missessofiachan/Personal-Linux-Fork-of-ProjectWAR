@@ -723,7 +723,7 @@ namespace WorldServer.World.Objects
             }
         }
 
-        private void SetMaxActionPoints()
+        internal void SetMaxActionPoints()
         {
             int baseMaxActionPoints = 250;
 

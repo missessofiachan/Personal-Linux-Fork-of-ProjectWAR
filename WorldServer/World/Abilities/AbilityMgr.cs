@@ -54,7 +54,7 @@ namespace WorldServer.World.Abilities
         internal const ushort RenownAugmentVigorEntry = 27873;
         private const ushort RenownSilentBonusRankOneEntry = 22275;
         private const ushort RenownSilentBonusRankTwoEntry = 27875;
-        private const ushort RenownSilentActionPointBonus = 50;
+        private const ushort RenownSilentActionPointBonus = 25;
         private const ushort ImDaBiggestBuffEntry = 734;
 
         /// <summary>
@@ -873,7 +873,7 @@ namespace WorldServer.World.Abilities
         private static void EnsureRenownSilentBonusBuffs()
         {
             EnsureRenownSilentBonusBuff(RenownSilentBonusRankOneEntry, "Booster Renown Bonuses", true);
-            EnsureRenownSilentBonusBuff(RenownSilentBonusRankTwoEntry, "Booster Renown Bonuses II", false);
+            EnsureRenownSilentBonusBuff(RenownSilentBonusRankTwoEntry, "Booster Renown Bonuses II", true);
         }
 
         private static void EnsureRenownSilentBonusBuff(ushort entry, string name, bool addsActionPoints)
