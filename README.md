@@ -42,6 +42,53 @@ Zone files are too large for git and must be downloaded separately.
 
 Checkpoint: you should see folders like `deps/zones/zone001/`.
 
+### Optional: Generate LOS Data Natively
+
+By default, `WorldServer` still uses prebuilt LOS binaries from `deps/los/`.
+
+If you want the repo to generate `los/*.bin` natively from an extracted WAR client:
+
+1. Make sure your extracted client root contains:
+   - `assetdb/figleaf.db`
+   - `assetdb/`
+   - `zones/`
+   - raw zone terrain inputs such as `terrain.pcx`, `offset.pcx`, and `sector.dat` for the zones you want to build
+2. Set these environment variables before building:
+   - `PROJECTWAR_GENERATE_LOS=1`
+   - `PROJECTWAR_EXTRACTED_ROOT=C:\path\to\WAR_extracted`
+   - optional: `PROJECTWAR_LOS_ZONE=280` to generate one zone while testing
+3. Build `WorldServer` or the full solution.
+
+This will:
+- build `LosBuilder`
+- regenerate `bin/Release/los/` from the extracted client data
+- skip copying `deps/los`
+
+If your extracted client only has partial zone terrain data, native LOS generation will only work for the zones that still have those raw terrain files. In that case, use `PROJECTWAR_LOS_ZONE` to test one zone at a time or keep the existing `deps/los` fallback.
+
+Manual example:
+
+```powershell
+$env:PROJECTWAR_GENERATE_LOS = '1'
+$env:PROJECTWAR_EXTRACTED_ROOT = 'C:\Users\Admin\Pictures\WAR_extracted'
+msbuild ProjectWAR.sln /p:Configuration=Release /p:Platform=x64
+```
+
+Direct tool usage:
+
+```powershell
+bin\Release\LosBuilder.exe generate --input-root C:\Users\Admin\Pictures\WAR_extracted --output-root bin\Release\los
+```
+
+Inspect shipped or generated LOS binaries:
+
+```powershell
+bin\Release\LosBuilder.exe inspect --input-bin bin\Release\los\280.bin
+bin\Release\LosBuilder.exe compare --left-bin bin\Release\los\280.bin --right-bin C:\temp\los\280.bin
+```
+
+Reverse-engineering notes for the shipped `OCC` format are tracked in [docs/los/occ-re-notes.md](docs/los/occ-re-notes.md).
+
 ### 2. Create and import databases
 
 Create three databases:

@@ -38,6 +38,13 @@
     <BaseOutputPath>..\bin\</BaseOutputPath>
     <OutputPath>..\bin\$(Configuration)\</OutputPath>
   </PropertyGroup>
+  <PropertyGroup>
+    <ProjectWarGenerateLos Condition="'$(ProjectWarGenerateLos)' == ''">$([System.Environment]::GetEnvironmentVariable('PROJECTWAR_GENERATE_LOS'))</ProjectWarGenerateLos>
+    <ProjectWarLosInputRoot Condition="'$(ProjectWarLosInputRoot)' == ''">$([System.Environment]::GetEnvironmentVariable('PROJECTWAR_EXTRACTED_ROOT'))</ProjectWarLosInputRoot>
+    <ProjectWarLosOutputRoot Condition="'$(ProjectWarLosOutputRoot)' == ''">$(TargetDir)los</ProjectWarLosOutputRoot>
+    <ProjectWarLosZoneId Condition="'$(ProjectWarLosZoneId)' == ''">$([System.Environment]::GetEnvironmentVariable('PROJECTWAR_LOS_ZONE'))</ProjectWarLosZoneId>
+    <ProjectWarLosZoneArgs Condition="'$(ProjectWarLosZoneId)' != ''">--zone $(ProjectWarLosZoneId)</ProjectWarLosZoneArgs>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -833,11 +840,26 @@ if not exist $(TargetDir)\TempFilesDirectory mkdir $(TargetDir)\TempFilesDirecto
   </PropertyGroup>
   <Target Name="AfterBuild">
     <ItemGroup>
-      <DepsLosFiles Include="$(ProjectDir)..\deps\los\**\*.*" />
       <DepsZonesFiles Include="$(ProjectDir)..\deps\zones\**\*.*" />
+      <DepsLosFiles Include="$(ProjectDir)..\deps\los\**\*.*"
+                    Condition="'$(ProjectWarGenerateLos)' != '1' And '$(ProjectWarGenerateLos)' != 'true' And '$(ProjectWarGenerateLos)' != 'True'" />
     </ItemGroup>
-    <Copy SourceFiles="@(DepsLosFiles)" DestinationFolder="$(TargetDir)los\%(RecursiveDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(DepsZonesFiles)" DestinationFolder="$(TargetDir)zones\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(DepsLosFiles)" DestinationFolder="$(TargetDir)los\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <Error Condition="('$(ProjectWarGenerateLos)' == '1' Or '$(ProjectWarGenerateLos)' == 'true' Or '$(ProjectWarGenerateLos)' == 'True') And '$(ProjectWarLosInputRoot)' == ''"
+           Text="Native LOS generation requires ProjectWarLosInputRoot or PROJECTWAR_EXTRACTED_ROOT." />
+    <Error Condition="('$(ProjectWarGenerateLos)' == '1' Or '$(ProjectWarGenerateLos)' == 'true' Or '$(ProjectWarGenerateLos)' == 'True') And !Exists('$(ProjectWarLosInputRoot)')"
+           Text="Native LOS generation input root does not exist: $(ProjectWarLosInputRoot)" />
+    <MSBuild Projects="$(ProjectDir)..\LosBuilder\LosBuilder.csproj"
+             Targets="Build"
+             Properties="Configuration=$(Configuration);Platform=$(Platform)"
+             Condition="'$(ProjectWarGenerateLos)' == '1' Or '$(ProjectWarGenerateLos)' == 'true' Or '$(ProjectWarGenerateLos)' == 'True'" />
+    <RemoveDir Directories="$(ProjectWarLosOutputRoot)"
+               Condition="('$(ProjectWarGenerateLos)' == '1' Or '$(ProjectWarGenerateLos)' == 'true' Or '$(ProjectWarGenerateLos)' == 'True') And Exists('$(ProjectWarLosOutputRoot)')" />
+    <MakeDir Directories="$(ProjectWarLosOutputRoot)"
+             Condition="'$(ProjectWarGenerateLos)' == '1' Or '$(ProjectWarGenerateLos)' == 'true' Or '$(ProjectWarGenerateLos)' == 'True'" />
+    <Exec Command="&quot;$(ProjectDir)..\bin\$(Configuration)\LosBuilder.exe&quot; generate --input-root &quot;$(ProjectWarLosInputRoot)&quot; $(ProjectWarLosZoneArgs) --output-root &quot;$(ProjectWarLosOutputRoot)&quot;"
+          Condition="'$(ProjectWarGenerateLos)' == '1' Or '$(ProjectWarGenerateLos)' == 'true' Or '$(ProjectWarGenerateLos)' == 'True'" />
   </Target>
   <Import Project="..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets" Condition="Exists('..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
