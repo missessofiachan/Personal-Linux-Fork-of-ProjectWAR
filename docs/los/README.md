@@ -26,7 +26,6 @@ This folder tracks the server-side line-of-sight (`LOS`) and occlusion reverse-e
   - `LosBuilder/Generation/OccModels.cs`
 - Notes:
   - `docs/los/occ-re-notes.md`
-  - `docs/los/agent-handoff-2026-03-10.md`
 
 ## Useful Commands
 
@@ -56,13 +55,14 @@ bin\Release\LosBuilder.exe generate --input-root C:\Users\Admin\Pictures\WAR_ext
 
 ## What Matters
 
-The shipped `los/*.bin` files are currently the golden master.
+The shipped `los/*.bin` files are the golden master.
 
-The native generator is structurally correct, but not yet parity-correct. The main remaining gaps are:
+The four main structural parity gaps (region offset scaling, terrain orientation, holemap serialization, collision geometry selection) are all resolved. Zone 280 triangle hash matches shipped exactly.
 
-- region offset scaling
-- terrain and holemap serialization parity
-- water chunk generation parity
-- collision simplification parity
+Remaining gaps:
 
-Future LOS work should use the shipped files as the oracle and move the native generator toward those outputs incrementally.
+- vertex position precision (~16-unit max Y error from NIF world-matrix accumulation)
+- water chunk generation (zone 280 has no `water.xml` in current extracted data)
+- multi-zone coverage (only zone 280 has all required source files in current extraction)
+
+See `docs/los/occ-re-notes.md` for full format documentation and per-chunk details.
