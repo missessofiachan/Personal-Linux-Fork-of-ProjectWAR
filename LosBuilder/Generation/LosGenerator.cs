@@ -255,22 +255,24 @@ namespace LosBuilder.Generation
             using (BinaryReader reader = new BinaryReader(stream))
             {
                 NiFile file = new NiFile(reader);
-                TriangleCollection combined = new TriangleCollection
-                {
-                    Vertices = new Vector3[0],
-                    Indices = new TriangleIndex[0]
-                };
+                TriangleCollection collision = new TriangleCollection { Vertices = new Vector3[0], Indices = new TriangleIndex[0] };
+                TriangleCollection allGeo = new TriangleCollection { Vertices = new Vector3[0], Indices = new TriangleIndex[0] };
 
                 foreach (NiNode root in file.GetRoots())
                 {
-                    TriangleCollection rootTriangles = root.GetTrianglesFromNode();
-                    TriangleCollection next;
-                    TriangleWalker.Concat(ref combined, ref rootTriangles, out next);
-                    combined = next;
+                    TriangleCollection col = root.GetCollisionTrianglesFromNode();
+                    TriangleCollection all = root.GetTrianglesFromNode(onlyDrawable: false);
+                    TriangleCollection nextCol, nextAll;
+                    TriangleWalker.Concat(ref collision, ref col, out nextCol);
+                    TriangleWalker.Concat(ref allGeo, ref all, out nextAll);
+                    collision = nextCol;
+                    allGeo = nextAll;
                 }
 
-                meshCache[meshPath] = combined;
-                return combined;
+                // Use collision-flagged (invisible) nodes; fall back to all geometry if none.
+                TriangleCollection result = collision.Indices.Length > 0 ? collision : allGeo;
+                meshCache[meshPath] = result;
+                return result;
             }
         }
 

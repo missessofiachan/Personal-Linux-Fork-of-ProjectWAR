@@ -128,8 +128,8 @@ namespace LosBuilder.Generation
                     {
                         ZoneId = zoneId,
                         RegionId = (int)regionId,
-                        OffsetX = zoneXOff << 12,
-                        OffsetY = zoneYOff << 12
+                        OffsetX = zoneXOff << 13,
+                        OffsetY = zoneYOff << 13
                     };
                 }
             }

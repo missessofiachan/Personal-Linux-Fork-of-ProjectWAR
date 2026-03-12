@@ -21,35 +21,26 @@ namespace LosBuilder.Generation
 
             int width = terrain.Width;
             int height = terrain.Height;
-            int holeWidth = holemap != null ? holemap.Width : Math.Max(1, width / 4);
-            int holeHeight = holemap != null ? holemap.Height : Math.Max(1, height / 4);
+            int holeWidth = holemap != null ? holemap.Width : 0;
+            int holeHeight = holemap != null ? holemap.Height : 0;
 
             ushort[] heights = new ushort[width * height];
             for (int y = 0; y < height; y++)
             {
                 for (int x = 0; x < width; x++)
                 {
-                    int sourceX = width - x - 1;
-                    int value = scaleFactor * terrain.GetValue(sourceX, y) + offsetFactor * offset.GetValue(sourceX, y);
+                    int value = scaleFactor * terrain.GetValue(x, y) + offsetFactor * offset.GetValue(x, y);
                     heights[(y * width) + x] = (ushort)Math.Max(0, value);
                 }
             }
 
             byte[] holes = new byte[holeWidth * holeHeight];
-            if (holemap == null)
-            {
-                for (int i = 0; i < holes.Length; i++)
-                    holes[i] = 1;
-            }
-            else
+            if (holemap != null)
             {
                 for (int y = 0; y < holeHeight; y++)
                 {
                     for (int x = 0; x < holeWidth; x++)
-                    {
-                        int sourceX = holeWidth - x - 1;
-                        holes[(y * holeWidth) + x] = holemap.GetValue(sourceX, y);
-                    }
+                        holes[(y * holeWidth) + x] = holemap.GetValue(x, y);
                 }
             }
 

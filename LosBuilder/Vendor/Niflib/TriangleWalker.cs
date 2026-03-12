@@ -111,6 +111,24 @@ namespace Niflib.Extensions
 		}
 		
 		/// <summary>
+		/// Get only invisible (collision-flagged) triangle geometry from a node tree.
+		/// </summary>
+		public static TriangleCollection GetCollisionTrianglesFromNode(this NiNode node)
+		{
+			TriangleCollection result = new TriangleCollection { Vertices = new Vector3[0], Indices = new TriangleIndex[0] };
+			foreach (var trinode in node.GetTriBasedNode())
+			{
+				if (!trinode.IsInvisible())
+					continue;
+				var triangles = trinode.GetTrianglesFromGeometry();
+				TriangleCollection intermediate;
+				Concat(ref result, ref triangles, out intermediate);
+				result = intermediate;
+			}
+			return result;
+		}
+
+		/// <summary>
 		/// Get Triangle From Node Root Retrieving Geometry Based Meshes
 		/// </summary>
 		/// <param name="node"></param>

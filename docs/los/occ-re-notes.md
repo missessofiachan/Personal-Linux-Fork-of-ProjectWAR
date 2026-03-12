@@ -151,18 +151,66 @@ Observed water `uniqueID` examples:
 
 This suggests water uses synthetic fixture ids starting around `65536`, with the surface type carried in the high byte exactly like collision fixtures.
 
-## Current Native Generator Gaps
+## Resolved Parity Gaps (as of 2026-03-11)
 
-The comparison work so far points to four concrete parity gaps:
+All four structural parity gaps are now fixed:
 
-1. Region offsets are wrong.
-   - For zone `280`, shipped offsets are exactly double the current native offsets.
-2. Terrain serialization is not parity-correct.
-   - Even when min/max heights match, the full height hash differs.
-3. Holemap behavior is not parity-correct.
-   - Many shipped files omit the holemap entirely.
-4. Collision output is far too dense.
-   - Native generation is closer to full mesh emission than to shipped LOS output.
+### 1. Region Offsets (FigleafMetadataReader.cs)
+
+- Root cause: figleaf.db stores zone cell offsets in 8192-unit cells, not 4096-unit cells.
+- Fix: changed `zoneXOff << 12` to `zoneXOff << 13` (and same for Y).
+- Verification: zone `280` gives `92 << 13 = 753664` which matches shipped.
+
+### 2. Terrain Height Orientation (TerrainRasterReader.cs)
+
+- Root cause: generator applied an X-axis flip (`sourceX = width - x - 1`) when reading terrain.pcx.
+- Fix: removed the flip; column order is direct (`sourceX = x`).
+- Verification: terrain height hash now matches `0x3E95E510C190B6D2`.
+
+### 3. Holemap Behavior (TerrainRasterReader.cs)
+
+- Root cause: when `holemap.pcx` is absent, generator emitted a `256×256` all-ones fallback.
+  Shipped uses `0×0` (no holemap data at all) when the file is absent.
+- Fix: set `holeWidth = 0, holeHeight = 0` when holemap.pcx is missing.
+- Verification: holemap dimensions now match shipped (`0×0`), hole hash matches.
+
+### 4. Collision Density (TriangleWalker.cs + LosGenerator.cs)
+
+- Root cause: generator loaded all NIF geometry (visual + collision). WAR fixture NIFs contain
+  embedded collision-proxy geometry in invisible NiTriShape nodes (flag bit 0 = 1). The shipped
+  LOS tool uses only those invisible nodes. For trees the proxy is a 33-triangle bounding
+  cylinder; for towers it is a simplified hull.
+- Fix: added `GetCollisionTrianglesFromNode()` which filters to invisible-flagged nodes.
+  Generator now loads collision geometry only; falls back to all geometry only if no invisible
+  nodes exist.
+- Verification: zone `280` collision counts now match shipped exactly (6074 vertices, 7115
+  triangles, triangle hash `0xBAAEA5D12555DEB1`).
+
+### Confirmed via MYP Extraction
+
+- `he_el_tree01_var01_collision.nif` and `he_tower01_collision.nif` referenced by figleaf
+  do NOT exist in any WAR MYP archive (searched ART.myp, ART2.myp, ART3.myp exhaustively).
+- The collision geometry is embedded inside the visual NIF as invisible sub-nodes.
+- This is confirmed: `fi.0.0.he_el_tree01_var01.nif` has `col=33` invisible triangles and
+  `all=1954` total; `fi.0.0.he_tower01.nif` has `col=2852` invisible and `all=10893` total.
+
+## Zone 280 Current Compare State (2026-03-11)
+
+- Region: all fields match ✓
+- Terrain: size, holemap, min/max, height hash, hole hash all match ✓
+- Collision: vertex count, triangle count, all bucket counts, triangle hash all match ✓
+- Vertex hash: minor floating-point difference due to NIF world-matrix accumulation (~16 units max Y)
+- Water: absent in native (zone `280` has no `water.xml` in extracted source data)
+- File size: 2284132 (shipped) vs 2283996 (native) — 136-byte gap = exactly the water chunk
+
+## Remaining Open Items
+
+1. **Vertex position precision** — ~16-unit max Y error from NIF transform accumulation.
+   The triangle hash matches so topology is correct. This is a minor positional bias.
+2. **Water generation for zone 280** — source data limitation (no `water.xml`).
+   Other zones (e.g. `201`) do have `water.xml` but lack PCX rasters.
+3. **Multi-zone coverage** — only zone `280` has all required source files in current extraction.
+   More zone data needed to verify broad coverage.
 
 ## Practical Use
 
