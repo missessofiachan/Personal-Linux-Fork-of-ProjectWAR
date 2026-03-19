@@ -50,9 +50,9 @@ namespace WorldServer.World.Map
         public Scenario Scenario;
         public List<Zone_Info> ZonesInfo;
 
-        public RegionMgr(ushort regionId, List<Zone_Info> zones, string name, IApocCommunications apocCommunications)
+        public RegionMgr(ushort regionId, List<Zone_Info> zones, string name, IBattlefrontCommunications battlefrontCommunications)
         {
-            ApocCommunications = apocCommunications;
+            BattlefrontCommunications = battlefrontCommunications;
             RegionId = regionId;
             ZonesInfo = zones;
             RegionName = name;
@@ -88,7 +88,7 @@ namespace WorldServer.World.Map
             RegionCreatures = GetObjects<Creature>().ToList();
         }
 
-        public IApocCommunications ApocCommunications { get; set; }
+        public IBattlefrontCommunications BattlefrontCommunications { get; set; }
 
 
         public void Stop()
@@ -312,8 +312,8 @@ namespace WorldServer.World.Map
                                 Objects[removeInfo.Oid] = null;
 
                                 /*
-                                    Player Oid could previously be zeroed after another region had set it. 
-                                    If this were to happen, NPC mounts in the zone would display 
+                                    Player Oid could previously be zeroed after another region had set it.
+                                    If this were to happen, NPC mounts in the zone would display
                                     the player's name, title and guild, and the player's mount would not display.
                                 */
                                 if (removeInfo.Obj.Oid == removeInfo.Oid && removeInfo.Zone == removeInfo.Obj.Zone)
@@ -364,7 +364,7 @@ namespace WorldServer.World.Map
                         ((Player) obj).SendClientMessage(e.GetType().Name + " was thrown from " + e.TargetSite?.Name +
                                                          ".");
                     }
-                    else if (obj is IApocBattleFront)
+                    else if (obj is IBattlefront)
                     {
                         try
                         {

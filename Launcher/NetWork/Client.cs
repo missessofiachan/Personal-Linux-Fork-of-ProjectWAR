@@ -11,562 +11,289 @@ using System.Windows.Forms;
 
 namespace Launcher
 {
+    /// <summary>
+    /// Manages the launcher's TCP session, packet processing, and client patch/start workflow.
+    /// </summary>
     public static class Client
     {
-        public static int Version = 1;
-        public static string LocalServerIP = "127.0.0.1";
-        public static int LocalServerPort = 8000;
-        public static int TestServerPort = 8000;
-        public static bool Started;
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private static readonly AsyncCallback AsyncTcpSendCallbackDelegate = AsyncTcpSendCallback;
+        private static readonly AsyncCallback ReceiveCallback = OnReceiveHandler;
+        private static readonly Queue<byte[]> TcpQueue = new Queue<byte[]>(256);
+        private static byte[] _tcpSendBuffer = new byte[65000];
+        private static bool _isSendingTcp;
+        private static byte[] _packetBuffer = new byte[2048];
+        private static int _packetBufferOffset;
+        private static Socket _socket;
 
-        public static string User;
-        public static string authToken;
-        public static string Language = "English";
+        /// <summary>
+        /// Gets or sets the launcher protocol version sent during the initial handshake.
+        /// </summary>
+        public static int Version { get; set; } = 1;
 
-        // TCP
-        public static Socket _Socket;
+        /// <summary>
+        /// Gets or sets the local server IP address used by the launcher.
+        /// </summary>
+        public static string LocalServerIP { get; set; } = "127.0.0.1";
 
-        private static Logger _logger = NLog.LogManager.GetCurrentClassLogger();
+        /// <summary>
+        /// Gets or sets the local server TCP port used by the launcher.
+        /// </summary>
+        public static int LocalServerPort { get; set; } = 8000;
 
-        public static void Print(string Message)
+        /// <summary>
+        /// Gets or sets the test server TCP port used by the launcher.
+        /// </summary>
+        public static int TestServerPort { get; set; } = 8000;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the launcher has completed the startup handshake.
+        /// </summary>
+        public static bool Started { get; set; }
+
+        /// <summary>
+        /// Gets or sets the current account name used for login.
+        /// </summary>
+        public static string User { get; set; }
+
+        /// <summary>
+        /// Gets or sets the authentication token returned by the launcher server.
+        /// </summary>
+        public static string AuthToken { get; set; }
+
+        /// <summary>
+        /// Gets or sets the configured client language.
+        /// </summary>
+        public static string Language { get; set; } = "English";
+
+        /// <summary>
+        /// Writes a diagnostic message to the launcher form.
+        /// </summary>
+        /// <param name="message">The message to display.</param>
+        public static void PrintStatus(string message)
         {
-            ApocLauncher.Acc.Print(Message);
+            LauncherForm.Instance?.Print(message);
         }
 
+        /// <summary>
+        /// Opens a TCP connection to the launcher server and starts the handshake.
+        /// </summary>
+        /// <param name="ip">The server IP address.</param>
+        /// <param name="port">The server TCP port.</param>
+        /// <returns><c>true</c> if the connection succeeds; otherwise, <c>false</c>.</returns>
         public static bool Connect(string ip, int port)
         {
             try
             {
+                Close();
 
-
-                if (_Socket != null)
-                    _Socket.Close();
-
-                _Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                _logger.Info($"Connecting to Launcher Server {ip}:{port}");
-                _Socket.Connect(ip, port);
-
-                int size = sizeof(UInt32);
-                UInt32 on = 1;
-                UInt32 keepAliveInterval = 10000; //Send a packet once every 10 seconds.
-                UInt32 retryInterval = 1000; //If no response, resend every second.
-                byte[] inArray = new byte[size * 3];
-                Array.Copy(BitConverter.GetBytes(on), 0, inArray, 0, size);
-                Array.Copy(BitConverter.GetBytes(keepAliveInterval), 0, inArray, size, size);
-                Array.Copy(BitConverter.GetBytes(retryInterval), 0, inArray, size * 2, size);
-                _Socket.IOControl(IOControlCode.KeepAliveValues, inArray, null);
-
+                _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                Logger.Info($"Connecting to Launcher Server {ip}:{port}");
+                _socket.Connect(ip, port);
+                ConfigureKeepAlive();
                 BeginReceive();
-
-                SendCheck();
+                SendVersionCheck();
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                if (ApocLauncher.Acc != null && ApocLauncher.Acc.InvokeRequired)
-                {
-                    ApocLauncher.Acc.Invoke(new Action(() => MessageBox.Show("Can not connect to : " + ip + ":" + port + "\n" + e.Message)));
-                }
-                else
-                {
-                    MessageBox.Show("Can not connect to : " + ip + ":" + port + "\n" + e.Message);
-                }
+                ShowConnectionError(ip, port, exception.Message);
                 return false;
             }
 
             return true;
         }
 
+        /// <summary>
+        /// Closes the active TCP socket if one exists.
+        /// </summary>
         public static void Close()
         {
             try
             {
-                if (_Socket != null)
-                    _Socket.Close();
-
+                _socket?.Close();
+                _socket = null;
             }
             catch (Exception)
             {
-
             }
         }
 
+        /// <summary>
+        /// Updates the user's client language identifier inside <c>UserSettings.xml</c>.
+        /// </summary>
         public static void UpdateLanguage()
         {
             if (Language.Length <= 0)
                 return;
 
-            int LangueId = 1;
-            switch (Language)
-            {
-                case "French":
-                    LangueId = 2;
-                    break;
-                case "English":
-                    LangueId = 1;
-                    break;
-                case "Deutch":
-                    LangueId = 3;
-                    break;
-                case "Italian":
-                    LangueId = 4;
-                    break;
-                case "Spanish":
-                    LangueId = 5;
-                    break;
-                case "Korean":
-                    LangueId = 6;
-                    break;
-                case "Chinese":
-                    LangueId = 7;
-                    break;
-                case "Japanese":
-                    LangueId = 9;
-                    break;
-                case "Russian":
-                    LangueId = 10;
-                    break;
-            };
-
-            string CurDir = Directory.GetCurrentDirectory();
+            int languageId = GetLanguageId(Language);
+            string currentDirectory = Directory.GetCurrentDirectory();
 
             try
             {
-                Directory.SetCurrentDirectory(CurDir + "\\..\\user\\");
+                Directory.SetCurrentDirectory(currentDirectory + "\\..\\user\\");
 
-                StreamReader Reader = new StreamReader("UserSettings.xml");
-                string line = "";
-                string TotalStream = "";
-                while ((line = Reader.ReadLine()) != null)
+                using (StreamReader reader = new StreamReader("UserSettings.xml"))
                 {
-                    Print(line);
-                    int Pos = line.IndexOf("Language id=");
-                    if (Pos > 0)
+                    string line;
+                    StringBuilder totalStream = new StringBuilder();
+                    while ((line = reader.ReadLine()) != null)
                     {
-                        Pos = line.IndexOf("\"") + 1;
-                        int Pos2 = line.LastIndexOf("\"");
-                        line = line.Remove(Pos, Pos2 - Pos);
-                        line = line.Insert(Pos, "" + LangueId);
-                    }
-
-                    TotalStream += line + "\n";
-                }
-                Reader.Close();
-
-                StreamWriter Writer = new StreamWriter("UserSettings.xml", false);
-                Writer.Write(TotalStream);
-                Writer.Flush();
-                Writer.Close();
-            }
-            catch (Exception e)
-            {
-                Print("Writing : " + e);
-            }
-        }
-
-        public static void UpdateRealms()
-        {
-            PacketOut Out = new PacketOut((byte)Opcodes.CL_INFO);
-            SendTCP(Out);
-        }
-
-        #region Sender
-
-        // Buffer en train d'être envoyé
-        static byte[] m_tcpSendBuffer = new byte[65000];
-
-        // Liste des packets a sender
-        static readonly Queue<byte[]> m_tcpQueue = new Queue<byte[]>(256);
-
-        // True si un send est en cours
-        static bool m_sendingTcp;
-
-        // Envoi un packet
-        public static void SendTCP(PacketOut packet)
-        {
-            _logger.Info($"Sending TCP Packet {packet.Opcode}");
-            //Fix the packet size
-            packet.WritePacketLength();
-
-            //Get the packet buffer
-            byte[] buf = packet.ToArray();
-
-            //Send the buffer
-            SendTCP(buf);
-        }
-
-        public static void SendTCP(byte[] buf)
-        {
-            if (m_tcpSendBuffer == null)
-                return;
-
-            //Check if client is connected
-            if (_Socket != null && _Socket.Connected)
-            {
-
-                try
-                {
-                    lock (m_tcpQueue)
-                    {
-                        if (m_sendingTcp)
+                        PrintStatus(line);
+                        int position = line.IndexOf("Language id=");
+                        if (position > 0)
                         {
-                            m_tcpQueue.Enqueue(buf);
-                            return;
+                            position = line.IndexOf("\"") + 1;
+                            int endPosition = line.LastIndexOf("\"");
+                            line = line.Remove(position, endPosition - position);
+                            line = line.Insert(position, languageId.ToString());
                         }
 
-                        m_sendingTcp = true;
+                        totalStream.AppendLine(line);
                     }
 
-                    Buffer.BlockCopy(buf, 0, m_tcpSendBuffer, 0, buf.Length);
-
-                    _Socket.BeginSend(m_tcpSendBuffer, 0, buf.Length, SocketFlags.None, m_asyncTcpCallback, null);
+                    File.WriteAllText("UserSettings.xml", totalStream.ToString());
                 }
-                catch (Exception e)
-                {
-                    _logger.Trace($"{e.Message}");
-                    Close();
-                }
+            }
+            catch (Exception exception)
+            {
+                PrintStatus("Writing : " + exception);
             }
         }
 
-        static readonly AsyncCallback m_asyncTcpCallback = AsyncTcpSendCallback;
-
-        static void AsyncTcpSendCallback(IAsyncResult ar)
+        /// <summary>
+        /// Requests the latest realm list from the launcher server.
+        /// </summary>
+        public static void RequestRealmList()
         {
+            PacketOut packet = new PacketOut((byte)Opcodes.CL_INFO);
+            SendTCP(packet);
+        }
+
+        /// <summary>
+        /// Sends a launcher packet after finalizing its length header.
+        /// </summary>
+        /// <param name="packet">The packet to transmit.</param>
+        public static void SendTCP(PacketOut packet)
+        {
+            Logger.Info($"Sending TCP Packet {packet.Opcode}");
+            packet.WritePacketLength();
+            SendTCP(packet.ToArray());
+        }
+
+        /// <summary>
+        /// Sends a raw byte buffer over the active TCP connection.
+        /// </summary>
+        /// <param name="buffer">The serialized packet buffer.</param>
+        public static void SendTCP(byte[] buffer)
+        {
+            if (_tcpSendBuffer == null)
+                return;
+
+            if (_socket == null || !_socket.Connected)
+                return;
+
             try
             {
-                Queue<byte[]> q = m_tcpQueue;
-
-                int sent = _Socket.EndSend(ar);
-
-                int count = 0;
-                byte[] data = m_tcpSendBuffer;
-
-                if (data == null)
-                    return;
-
-                lock (q)
+                lock (TcpQueue)
                 {
-                    if (q.Count > 0)
+                    if (_isSendingTcp)
                     {
-                        //						Log.WarnFormat("async sent {0} bytes, sending queued packets count: {1}", sent, q.Count);
-                        count = CombinePackets(data, q, data.Length);
-                    }
-                    if (count <= 0)
-                    {
-                        //						Log.WarnFormat("async sent {0} bytes", sent);
-                        m_sendingTcp = false;
+                        TcpQueue.Enqueue(buffer);
                         return;
                     }
+
+                    _isSendingTcp = true;
                 }
 
-                _Socket.BeginSend(data, 0, count, SocketFlags.None, m_asyncTcpCallback, null);
-
+                Buffer.BlockCopy(buffer, 0, _tcpSendBuffer, 0, buffer.Length);
+                _socket.BeginSend(_tcpSendBuffer, 0, buffer.Length, SocketFlags.None, AsyncTcpSendCallbackDelegate, null);
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                Logger.Trace(exception.Message);
                 Close();
             }
         }
 
-        private static int CombinePackets(byte[] buf, Queue<byte[]> q, int length)
-        {
-            int i = 0;
-            do
-            {
-                var pak = q.Peek();
-                if (i + pak.Length > buf.Length)
-                {
-                    if (i == 0)
-                    {
-                        q.Dequeue();
-                        continue;
-                    }
-                    break;
-                }
-
-                Buffer.BlockCopy(pak, 0, buf, i, pak.Length);
-                i += pak.Length;
-
-                q.Dequeue();
-            } while (q.Count > 0);
-
-            return i;
-        }
-
+        /// <summary>
+        /// Sends a packet buffer without rewriting its packet length.
+        /// </summary>
+        /// <param name="packet">The packet to transmit.</param>
         public static void SendTCPRaw(PacketOut packet)
         {
             SendTCP(packet.ToArray());
         }
 
-        #endregion
-
-        #region Receiver
-
-        private static readonly AsyncCallback ReceiveCallback = OnReceiveHandler;
-        static byte[] _pBuf = new byte[2048];
-        static int _pBufOffset = 0;
-
-        private static void OnReceiveHandler(IAsyncResult ar)
-        {
-            try
-            {
-                int numBytes = _Socket.EndReceive(ar);
-                _logger.Debug($"Recieving {numBytes} bytes");
-
-                if (numBytes > 0)
-                {
-                    int bufferSize = _pBufOffset + numBytes;
-                    byte[] packetStream = new byte[bufferSize];
-                    Buffer.BlockCopy(_pBuf, 0, packetStream, 0, bufferSize);
-                    _pBufOffset = 0;
-
-                    int offset = 0;
-                    while (offset < packetStream.Length)
-                    {
-                        if (packetStream.Length - offset < 5)
-                            break;
-
-                        uint size = (uint)((packetStream[offset] << 24) | (packetStream[offset + 1] << 16) | (packetStream[offset + 2] << 8) | packetStream[offset + 3]);
-                        uint totalSize = size + 1;
-
-                        if (packetStream.Length - offset < totalSize)
-                            break;
-
-                        PacketIn pack = new PacketIn(packetStream, offset, (int)totalSize);
-                        OnReceive(pack);
-                        
-                        offset += (int)totalSize;
-                    }
-
-                    if (offset < packetStream.Length)
-                    {
-                        _pBufOffset = packetStream.Length - offset;
-                        Buffer.BlockCopy(packetStream, offset, _pBuf, 0, _pBufOffset);
-                    }
-
-                    BeginReceive();
-                }
-                else
-                {
-                    Close();
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Debug($"Exception : {ex.Message}");
-            }
-        }
-
+        /// <summary>
+        /// Begins an asynchronous read on the active TCP socket.
+        /// </summary>
         public static void BeginReceive()
         {
-            _logger.Debug($"Socket Connected {_Socket.Connected}");
+            Logger.Debug($"Socket Connected {_socket?.Connected}");
 
-            if (_Socket != null && _Socket.Connected)
+            if (_socket == null || !_socket.Connected)
+                return;
+
+            int bufferSize = _packetBuffer.Length;
+            if (_packetBufferOffset >= bufferSize)
             {
-                int bufSize = _pBuf.Length;
-
-                if (_pBufOffset >= bufSize) //Buffer overflow
-                {
-                    Close();
-                }
-                else
-                {
-                    _Socket.BeginReceive(_pBuf, _pBufOffset, bufSize - _pBufOffset, SocketFlags.None, ReceiveCallback, null);
-                }
-            }
-        }
-
-        #endregion
-
-        public static void OnReceive(PacketIn packet)
-        {
-            lock (packet)
-            {
-
-                packet.Size = packet.GetUint32();
-                packet.Opcode = packet.GetUint8();
-                _logger.Debug($"OnReceive Packet size : {packet.Size} opCode : {packet.Opcode}");
-
-                Handle(packet);
-            }
-        }
-
-        #region Packet
-
-        public static void Handle(PacketIn packet)
-        {
-            if (!Enum.IsDefined(typeof(Opcodes), (byte)packet.Opcode))
-            {
-                Print($"Invalid opcode : {packet.Opcode.ToString("X02")}");
+                Close();
                 return;
             }
 
-            _logger.Trace($"HandlePacket{packet}");
+            _socket.BeginReceive(_packetBuffer, _packetBufferOffset, bufferSize - _packetBufferOffset, SocketFlags.None, ReceiveCallback, null);
+        }
+
+        /// <summary>
+        /// Parses a fully buffered packet and dispatches it to the opcode handler.
+        /// </summary>
+        /// <param name="packet">The packet to process.</param>
+        public static void ProcessReceivedPacket(PacketIn packet)
+        {
+            lock (packet)
+            {
+                packet.Size = packet.GetUint32();
+                packet.Opcode = packet.GetUint8();
+                Logger.Debug($"ProcessReceivedPacket size : {packet.Size} opcode : {packet.Opcode}");
+                HandlePacket(packet);
+            }
+        }
+
+        /// <summary>
+        /// Routes an incoming launcher packet to the appropriate handler.
+        /// </summary>
+        /// <param name="packet">The packet to handle.</param>
+        public static void HandlePacket(PacketIn packet)
+        {
+            if (!Enum.IsDefined(typeof(Opcodes), (byte)packet.Opcode))
+            {
+                PrintStatus($"Invalid opcode : {packet.Opcode:X02}");
+                return;
+            }
+
+            Logger.Trace($"HandlePacket{packet}");
 
             switch ((Opcodes)packet.Opcode)
             {
                 case Opcodes.LCR_CHECK:
-
-                    byte Result = packet.GetUint8();
-
-                    switch ((CheckResult)Result)
-                    {
-                        case CheckResult.LAUNCHER_OK:
-                            Start();
-                            break;
-                        case CheckResult.LAUNCHER_VERSION:
-                            string Message = packet.GetString();
-                            Print(Message);
-                            Close();
-                            break;
-                        case CheckResult.LAUNCHER_FILE:
-
-                            string File = packet.GetString();
-                            byte[] Bt = Encoding.ASCII.GetBytes(File);
-
-                            FileInfo Info = new FileInfo("mythloginserviceconfig.xml");
-                            FileStream Str = Info.Create();
-                            Str.Write(Bt, 0, Bt.Length);  // Bt is sent from the server (configs/mythloginserviceconfig.xml) - it overwrites the file on the client side.
-                            Str.Close();
-                            break;
-                    }
+                    HandleCheckPacket(packet);
                     break;
-
                 case Opcodes.LCR_START:
-
-                    ApocLauncher.Acc.ReceiveStart();
-
-                    byte response = packet.GetUint8();
-                    _logger.Debug($"HandlePacket. Response Code : {response}");
-
-                    if (response == 1) //invalud user/pass
-                    {
-                        _logger.Warn($"Invalid User / Pass");
-                        ApocLauncher.Acc.sendUI("Invalid User / Pass");
-
-                        return;
-                    }
-                    else if (response == 2) //banned
-                    {
-                        _logger.Warn($"Account is banned");
-                        ApocLauncher.Acc.sendUI("Account is banned");
-
-                        return;
-                    }
-                    else if (response == 3) //account not active
-                    {
-                        _logger.Warn($"Account is not active");
-                        ApocLauncher.Acc.sendUI("Account is not active");
-
-                        return;
-                    }
-                    else if (response > 3)
-                    {
-                        _logger.Error($"Unknown Response");
-                        ApocLauncher.Acc.sendUI("Unknown Response");
-
-                        return;
-                    }
-                    else
-                    {
-                        authToken = packet.GetString();
-                        _logger.Info($"Authentication Token Received : {authToken}");
-                        try
-                        {
-
-                            var warDirectory = Directory.GetParent(Application.StartupPath);
-                            ApocLauncher.Acc.sendUI("Patching..");
-                            patchExe();
-                            UpdateWarData();
-                            ApocLauncher.Acc.sendUI("Patched. Starting WAR.exe");
-
-                            _logger.Info($"Double checking mythlogin file exists.");
-                            if (!File.Exists(Application.StartupPath + "\\mythloginserviceconfig.xml"))
-                            {
-                                _logger.Warn($"{Application.StartupPath + "\\mythloginserviceconfig.xml"} does not exist.");
-                                ApocLauncher.Acc.sendUI("Cannot locate mythloginserviceconfig.xml");
-                                return;
-                            }
-                            // Use world.myp to determine whether we are in the correct directory.
-                            if (!File.Exists(warDirectory.FullName + "\\world.myp"))
-                            {
-                                _logger.Warn($"{warDirectory.FullName + "\\world.myp"} does not exist.");
-                                ApocLauncher.Acc.sendUI("Is your launcher in the Launcher folder?");
-                                return;
-                            }
-
-                            _logger.Info($"Starting Client {warDirectory.FullName}\\WAR.exe");
-
-                            if (ApocLauncher.Acc.AllowWarClientLaunch)
-                            {
-
-                                Process process = new Process
-                                {
-                                    StartInfo =
-                                    {
-                                        WorkingDirectory = warDirectory.FullName,
-                                        FileName = "WAR.exe",
-                                        Arguments = " --acctname=" + Convert.ToBase64String(Encoding.ASCII.GetBytes(User)) + " --sesstoken=" +
-                                                    Convert.ToBase64String(Encoding.ASCII.GetBytes(authToken))
-                                    }
-                                };
-                                _logger.Info($"Starting process WAR.exe (in {warDirectory})");
-                                process.Start();
-                                Directory.SetCurrentDirectory(warDirectory.FullName);
-                            }
-                            else
-                            {
-                                _logger.Info($"Not launching WAR.Exe (in {warDirectory}) "+ " --acctname=" + Convert.ToBase64String(Encoding.ASCII.GetBytes(User)) + " --sesstoken=" +
-                                             Convert.ToBase64String(Encoding.ASCII.GetBytes(authToken)));
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            _logger.Info($"Failed to start Client {e.ToString()}");
-                            ApocLauncher.Acc.sendUI("Failed to start client.");
-                        }
-                    }
-
+                    HandleStartPacket(packet);
                     break;
-
                 case Opcodes.LCR_INFO:
-                    {
-                        _logger.Info($"Processing LCR_INFO : Number Realms : {packet.GetUint8()} Name : {packet.GetString()} Parsed : {packet.GetParsedString()}");
-
-                    }
+                    Logger.Info($"Processing LCR_INFO : Number Realms : {packet.GetUint8()} Name : {packet.GetString()} Parsed : {packet.GetParsedString()}");
                     break;
-
                 case Opcodes.LCR_CREATE:
-
-                    byte respons = packet.GetUint8();
-                    _logger.Debug($"HandlePacket. Response Code : {respons}");
-
-                    if (respons == 0) //invalud user/pass
-                    {
-                        _logger.Warn($"Account Name busy!");
-                        ApocLauncher.Acc.sendUI("Account Name busy!");
-
-                        return;
-                    }
-                    else if (respons == 1) //success
-                    {
-                        _logger.Warn($"Account created!");
-                        ApocLauncher.Acc.sendUI("Account created!");
-                        return;
-                    }
-                    else if (respons == 2) //banned
-                    {
-                        _logger.Warn($"Account is banned!");
-                        ApocLauncher.Acc.sendUI("Account is banned!");
-
-                        return;
-                    }
-
-
+                    HandleCreatePacket(packet);
                     break;
             }
         }
 
+        /// <summary>
+        /// Marks the launcher handshake as complete.
+        /// </summary>
         public static void Start()
         {
             if (Started)
@@ -575,76 +302,77 @@ namespace Launcher
             Started = true;
         }
 
-        public static void SendCheck()
+        /// <summary>
+        /// Sends the launcher's version check and optional config file size to the server.
+        /// </summary>
+        public static void SendVersionCheck()
         {
-            _logger.Info("Starting SendCheck (CL_CHECK)");
-            PacketOut Out = new PacketOut((byte)Opcodes.CL_CHECK);
-            Out.WriteUInt32((uint)Version);
+            Logger.Info("Starting SendVersionCheck (CL_CHECK)");
+            PacketOut packet = new PacketOut((byte)Opcodes.CL_CHECK);
+            packet.WriteUInt32((uint)Version);
 
-            FileInfo Info = new FileInfo("mythloginserviceconfig.xml");
-            if (Info.Exists)
+            FileInfo configurationFile = new FileInfo("mythloginserviceconfig.xml");
+            if (configurationFile.Exists)
             {
-                Out.WriteByte(1);
-                Out.WriteUInt64((ulong)Info.Length);
+                packet.WriteByte(1);
+                packet.WriteUInt64((ulong)configurationFile.Length);
             }
             else
             {
-                Out.WriteByte(0);
+                packet.WriteByte(0);
             }
 
-            SendTCP(Out);
+            SendTCP(packet);
         }
-        public static void patchExe()
+
+        /// <summary>
+        /// Applies the executable patch required for private server connectivity.
+        /// </summary>
+        public static void PatchWarExecutable()
         {
-            if (ApocLauncher.Acc.AllowServerPatch)
+            if (!LauncherForm.Instance.AllowServerPatch)
             {
-
-                _logger.Info("Patching WAR.exe");
-                using (Stream stream = new FileStream(Directory.GetCurrentDirectory() + "\\..\\WAR.exe", FileMode.OpenOrCreate))
-                {
-
-                    int encryptAddress = (0x00957FBE + 3) - 0x00400000;
-                    stream.Seek(encryptAddress, SeekOrigin.Begin);
-                    stream.WriteByte(0x01);
-
-                    //0x90 == 144
-                    //0x57 == 87
-                    //0x8B == 139
-                    //0xF8 == 248
-                    //0xEB == 235
-                    //0x32 == 50
-
-
-                    //0x934b468a ==147.75.70.138
-
-                    byte[] decryptPatch1 = { 0x90, 0x90, 0x90, 0x90, 0x57, 0x8B, 0xF8, 0xEB, 0x32 };
-                    int decryptAddress1 = (0x009580CB) - 0x00400000;
-                    stream.Seek(decryptAddress1, SeekOrigin.Begin);
-                    stream.Write(decryptPatch1, 0, 9);
-
-                    byte[] decryptPatch2 = { 0x90, 0x90, 0x90, 0x90, 0xEB, 0x08 };
-                    int decryptAddress2 = (0x0095814B) - 0x00400000;
-                    stream.Seek(decryptAddress2, SeekOrigin.Begin);
-                    stream.Write(decryptPatch2, 0, 6);
-
-                    //stream.WriteByte(0x01);
-                }
-                _logger.Info("Done patching WAR.exe");
+                Logger.Info("Not patching WAR.exe");
+                return;
             }
-            else
+
+            Logger.Info("Patching WAR.exe");
+            using (Stream stream = new FileStream(Directory.GetCurrentDirectory() + "\\..\\WAR.exe", FileMode.OpenOrCreate))
             {
-                _logger.Info("Not Patching WAR.exe");
+                int encryptAddress = (0x00957FBE + 3) - 0x00400000;
+                stream.Seek(encryptAddress, SeekOrigin.Begin);
+                stream.WriteByte(0x01);
+
+                byte[] decryptPatch1 = { 0x90, 0x90, 0x90, 0x90, 0x57, 0x8B, 0xF8, 0xEB, 0x32 };
+                int decryptAddress1 = 0x009580CB - 0x00400000;
+                stream.Seek(decryptAddress1, SeekOrigin.Begin);
+                stream.Write(decryptPatch1, 0, decryptPatch1.Length);
+
+                byte[] decryptPatch2 = { 0x90, 0x90, 0x90, 0x90, 0xEB, 0x08 };
+                int decryptAddress2 = 0x0095814B - 0x00400000;
+                stream.Seek(decryptAddress2, SeekOrigin.Begin);
+                stream.Write(decryptPatch2, 0, decryptPatch2.Length);
             }
+
+            Logger.Info("Done patching WAR.exe");
         }
-        public static void UpdateWarData()
-        {
-            if (ApocLauncher.Acc.AllowServerPatch)
-            {
-                try
-                {
-                    _logger.Info("Updating mythloginserviceconfig.xml and data.myp");
-                    FileStream fs = new FileStream(Application.StartupPath + "\\mythloginserviceconfig.xml", FileMode.Open, FileAccess.Read);
 
+        /// <summary>
+        /// Replaces the launcher config inside <c>data.myp</c> so the client connects to the selected server.
+        /// </summary>
+        public static void UpdateWarArchiveData()
+        {
+            if (!LauncherForm.Instance.AllowServerPatch)
+            {
+                Logger.Info("Not patching data.myp");
+                return;
+            }
+
+            try
+            {
+                Logger.Info("Updating mythloginserviceconfig.xml and data.myp");
+                using (FileStream fileStream = new FileStream(Application.StartupPath + "\\mythloginserviceconfig.xml", FileMode.Open, FileAccess.Read))
+                {
                     Directory.SetCurrentDirectory(Directory.GetCurrentDirectory() + "\\..\\");
 
                     HashDictionary hashDictionary = new HashDictionary();
@@ -652,39 +380,387 @@ namespace Launcher
                     MYPHandler.MYPHandler mypHandler = new MYPHandler.MYPHandler("data.myp", null, null, hashDictionary);
                     mypHandler.GetFileTable();
 
-                    FileInArchive theFile = mypHandler.SearchForFile("mythloginserviceconfig.xml");
-
-                    if (theFile == null)
+                    FileInArchive archiveFile = mypHandler.SearchForFile("mythloginserviceconfig.xml");
+                    if (archiveFile == null)
                     {
-                        _logger.Error("Can not find config file in data.myp");
+                        Logger.Error("Can not find config file in data.myp");
                         return;
                     }
 
-                    if (File.Exists(Application.StartupPath + "\\mythloginserviceconfig.xml") == false)
+                    if (!File.Exists(Application.StartupPath + "\\mythloginserviceconfig.xml"))
                     {
-                        _logger.Error("Missing file : mythloginserviceconfig.xml");
+                        Logger.Error("Missing file : mythloginserviceconfig.xml");
                         return;
                     }
 
-                    mypHandler.ReplaceFile(theFile, fs);
-
-                    fs.Close();
-                }
-                catch (Exception e)
-                {
-                    Print(e.ToString());
+                    mypHandler.ReplaceFile(archiveFile, fileStream);
                 }
             }
-            else
+            catch (Exception exception)
             {
-                _logger.Info("Not Patching data.myp");
+                PrintStatus(exception.ToString());
             }
         }
 
+        /// <summary>
+        /// Configures TCP keepalive timers for the launcher socket.
+        /// </summary>
+        private static void ConfigureKeepAlive()
+        {
+            int size = sizeof(uint);
+            uint enabled = 1;
+            uint keepAliveInterval = 10000;
+            uint retryInterval = 1000;
+            byte[] keepAliveSettings = new byte[size * 3];
 
+            Array.Copy(BitConverter.GetBytes(enabled), 0, keepAliveSettings, 0, size);
+            Array.Copy(BitConverter.GetBytes(keepAliveInterval), 0, keepAliveSettings, size, size);
+            Array.Copy(BitConverter.GetBytes(retryInterval), 0, keepAliveSettings, size * 2, size);
+            _socket.IOControl(IOControlCode.KeepAliveValues, keepAliveSettings, null);
+        }
 
+        /// <summary>
+        /// Displays a connection failure message on the UI thread when necessary.
+        /// </summary>
+        /// <param name="ip">The target IP address.</param>
+        /// <param name="port">The target port.</param>
+        /// <param name="message">The failure description.</param>
+        private static void ShowConnectionError(string ip, int port, string message)
+        {
+            string errorMessage = "Can not connect to : " + ip + ":" + port + "\n" + message;
+            if (LauncherForm.Instance != null && LauncherForm.Instance.InvokeRequired)
+            {
+                LauncherForm.Instance.Invoke(new Action(() => MessageBox.Show(errorMessage)));
+                return;
+            }
 
+            MessageBox.Show(errorMessage);
+        }
 
-        #endregion
+        /// <summary>
+        /// Maps the configured language name to the numeric WAR language identifier.
+        /// </summary>
+        /// <param name="language">The language name.</param>
+        /// <returns>The WAR client language identifier.</returns>
+        private static int GetLanguageId(string language)
+        {
+            switch (language)
+            {
+                case "French":
+                    return 2;
+                case "English":
+                    return 1;
+                case "Deutch":
+                    return 3;
+                case "Italian":
+                    return 4;
+                case "Spanish":
+                    return 5;
+                case "Korean":
+                    return 6;
+                case "Chinese":
+                    return 7;
+                case "Japanese":
+                    return 9;
+                case "Russian":
+                    return 10;
+                default:
+                    return 1;
+            }
+        }
+
+        /// <summary>
+        /// Continues sending queued TCP packets after an asynchronous send completes.
+        /// </summary>
+        /// <param name="result">The asynchronous send result.</param>
+        private static void AsyncTcpSendCallback(IAsyncResult result)
+        {
+            try
+            {
+                Queue<byte[]> queue = TcpQueue;
+                _socket.EndSend(result);
+
+                int count = 0;
+                byte[] data = _tcpSendBuffer;
+                if (data == null)
+                    return;
+
+                lock (queue)
+                {
+                    if (queue.Count > 0)
+                        count = CombinePackets(data, queue);
+
+                    if (count <= 0)
+                    {
+                        _isSendingTcp = false;
+                        return;
+                    }
+                }
+
+                _socket.BeginSend(data, 0, count, SocketFlags.None, AsyncTcpSendCallbackDelegate, null);
+            }
+            catch (Exception)
+            {
+                Close();
+            }
+        }
+
+        /// <summary>
+        /// Combines queued packets into a single send buffer when space allows.
+        /// </summary>
+        /// <param name="buffer">The destination send buffer.</param>
+        /// <param name="queue">The queued packet buffers.</param>
+        /// <returns>The number of bytes copied into <paramref name="buffer"/>.</returns>
+        private static int CombinePackets(byte[] buffer, Queue<byte[]> queue)
+        {
+            int index = 0;
+            do
+            {
+                byte[] packet = queue.Peek();
+                if (index + packet.Length > buffer.Length)
+                {
+                    if (index == 0)
+                    {
+                        queue.Dequeue();
+                        continue;
+                    }
+
+                    break;
+                }
+
+                Buffer.BlockCopy(packet, 0, buffer, index, packet.Length);
+                index += packet.Length;
+                queue.Dequeue();
+            }
+            while (queue.Count > 0);
+
+            return index;
+        }
+
+        /// <summary>
+        /// Buffers data from the socket, reconstructs complete packets, and dispatches them.
+        /// </summary>
+        /// <param name="result">The asynchronous receive result.</param>
+        private static void OnReceiveHandler(IAsyncResult result)
+        {
+            try
+            {
+                int bytesRead = _socket.EndReceive(result);
+                Logger.Debug($"Receiving {bytesRead} bytes");
+
+                if (bytesRead <= 0)
+                {
+                    Close();
+                    return;
+                }
+
+                int bufferSize = _packetBufferOffset + bytesRead;
+                byte[] packetStream = new byte[bufferSize];
+                Buffer.BlockCopy(_packetBuffer, 0, packetStream, 0, bufferSize);
+                _packetBufferOffset = 0;
+
+                int offset = 0;
+                while (offset < packetStream.Length)
+                {
+                    if (packetStream.Length - offset < 5)
+                        break;
+
+                    uint size = (uint)((packetStream[offset] << 24) | (packetStream[offset + 1] << 16) | (packetStream[offset + 2] << 8) | packetStream[offset + 3]);
+                    uint totalSize = size + 1;
+                    if (packetStream.Length - offset < totalSize)
+                        break;
+
+                    PacketIn packet = new PacketIn(packetStream, offset, (int)totalSize);
+                    ProcessReceivedPacket(packet);
+                    offset += (int)totalSize;
+                }
+
+                if (offset < packetStream.Length)
+                {
+                    _packetBufferOffset = packetStream.Length - offset;
+                    Buffer.BlockCopy(packetStream, offset, _packetBuffer, 0, _packetBufferOffset);
+                }
+
+                BeginReceive();
+            }
+            catch (Exception exception)
+            {
+                Logger.Debug($"Exception : {exception.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Handles the launcher's version check response.
+        /// </summary>
+        /// <param name="packet">The response packet.</param>
+        private static void HandleCheckPacket(PacketIn packet)
+        {
+            byte result = packet.GetUint8();
+            switch ((CheckResult)result)
+            {
+                case CheckResult.LAUNCHER_OK:
+                    Start();
+                    break;
+                case CheckResult.LAUNCHER_VERSION:
+                    string message = packet.GetString();
+                    PrintStatus(message);
+                    Close();
+                    break;
+                case CheckResult.LAUNCHER_FILE:
+                    SaveConfigFile(packet.GetString());
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Handles the launcher server's login response and optionally starts the WAR client.
+        /// </summary>
+        /// <param name="packet">The login response packet.</param>
+        private static void HandleStartPacket(PacketIn packet)
+        {
+            LauncherForm.Instance.ReceiveStart();
+
+            byte response = packet.GetUint8();
+            Logger.Debug($"HandlePacket. Response Code : {response}");
+
+            if (response == 1)
+            {
+                Logger.Warn("Invalid User / Pass");
+                LauncherForm.Instance.UpdateConnectionStatus("Invalid User / Pass");
+                return;
+            }
+
+            if (response == 2)
+            {
+                Logger.Warn("Account is banned");
+                LauncherForm.Instance.UpdateConnectionStatus("Account is banned");
+                return;
+            }
+
+            if (response == 3)
+            {
+                Logger.Warn("Account is not active");
+                LauncherForm.Instance.UpdateConnectionStatus("Account is not active");
+                return;
+            }
+
+            if (response > 3)
+            {
+                Logger.Error("Unknown Response");
+                LauncherForm.Instance.UpdateConnectionStatus("Unknown Response");
+                return;
+            }
+
+            AuthToken = packet.GetString();
+            Logger.Info($"Authentication Token Received : {AuthToken}");
+
+            try
+            {
+                DirectoryInfo warDirectory = Directory.GetParent(Application.StartupPath);
+                LauncherForm.Instance.UpdateConnectionStatus("Patching...");
+                PatchWarExecutable();
+                UpdateWarArchiveData();
+                LauncherForm.Instance.UpdateConnectionStatus("Patched. Starting WAR.exe");
+
+                if (!ValidateClientStartupFiles(warDirectory))
+                    return;
+
+                Logger.Info($"Starting Client {warDirectory.FullName}\\WAR.exe");
+                if (LauncherForm.Instance.AllowWarClientLaunch)
+                {
+                    Process process = new Process
+                    {
+                        StartInfo =
+                        {
+                            WorkingDirectory = warDirectory.FullName,
+                            FileName = "WAR.exe",
+                            Arguments = " --acctname=" + Convert.ToBase64String(Encoding.ASCII.GetBytes(User)) + " --sesstoken=" +
+                                        Convert.ToBase64String(Encoding.ASCII.GetBytes(AuthToken))
+                        }
+                    };
+
+                    Logger.Info($"Starting process WAR.exe (in {warDirectory})");
+                    process.Start();
+                    Directory.SetCurrentDirectory(warDirectory.FullName);
+                }
+                else
+                {
+                    Logger.Info($"Not launching WAR.exe (in {warDirectory})  --acctname={Convert.ToBase64String(Encoding.ASCII.GetBytes(User))} --sesstoken={Convert.ToBase64String(Encoding.ASCII.GetBytes(AuthToken))}");
+                }
+            }
+            catch (Exception exception)
+            {
+                Logger.Info($"Failed to start Client {exception}");
+                LauncherForm.Instance.UpdateConnectionStatus("Failed to start client.");
+            }
+        }
+
+        /// <summary>
+        /// Handles the account creation response from the launcher server.
+        /// </summary>
+        /// <param name="packet">The account creation response packet.</param>
+        private static void HandleCreatePacket(PacketIn packet)
+        {
+            byte response = packet.GetUint8();
+            Logger.Debug($"HandlePacket. Response Code : {response}");
+
+            if (response == 0)
+            {
+                Logger.Warn("Account name busy!");
+                LauncherForm.Instance.UpdateConnectionStatus("Account name busy!");
+                return;
+            }
+
+            if (response == 1)
+            {
+                Logger.Warn("Account created!");
+                LauncherForm.Instance.UpdateConnectionStatus("Account created!");
+                return;
+            }
+
+            if (response == 2)
+            {
+                Logger.Warn("Account is banned!");
+                LauncherForm.Instance.UpdateConnectionStatus("Account is banned!");
+            }
+        }
+
+        /// <summary>
+        /// Persists the configuration file sent by the launcher server.
+        /// </summary>
+        /// <param name="fileContents">The XML contents to write locally.</param>
+        private static void SaveConfigFile(string fileContents)
+        {
+            byte[] bytes = Encoding.ASCII.GetBytes(fileContents);
+            using (FileStream stream = new FileInfo("mythloginserviceconfig.xml").Create())
+                stream.Write(bytes, 0, bytes.Length);
+        }
+
+        /// <summary>
+        /// Validates the local files required to launch WAR.exe.
+        /// </summary>
+        /// <param name="warDirectory">The game root directory.</param>
+        /// <returns><c>true</c> if the required files exist; otherwise, <c>false</c>.</returns>
+        private static bool ValidateClientStartupFiles(DirectoryInfo warDirectory)
+        {
+            Logger.Info("Double checking mythlogin file exists.");
+            string loginConfigPath = Application.StartupPath + "\\mythloginserviceconfig.xml";
+            if (!File.Exists(loginConfigPath))
+            {
+                Logger.Warn($"{loginConfigPath} does not exist.");
+                LauncherForm.Instance.UpdateConnectionStatus("Cannot locate mythloginserviceconfig.xml");
+                return false;
+            }
+
+            string worldArchivePath = warDirectory.FullName + "\\world.myp";
+            if (!File.Exists(worldArchivePath))
+            {
+                Logger.Warn($"{worldArchivePath} does not exist.");
+                LauncherForm.Instance.UpdateConnectionStatus("Is your launcher in the Launcher folder?");
+                return false;
+            }
+
+            return true;
+        }
     }
 }

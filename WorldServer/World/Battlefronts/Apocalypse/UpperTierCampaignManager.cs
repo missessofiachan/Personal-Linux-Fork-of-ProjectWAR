@@ -48,7 +48,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             ImpactMatrixManagerInstance = new ImpactMatrixManager();
             BountyManagerInstance = new BountyManager();
             if (_RVRT4Progressions != null)
-                BuildApocBattleFrontStatusList(BattleFrontProgressions);
+                BuildBattleFrontStatusList(BattleFrontProgressions);
 
             LastAAORallyCall = FrameWork.TCPManager.GetTimeStamp();
 
@@ -115,7 +115,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
         /// Sets up the Battlefront status list with default values.
         /// </summary>
         /// <param name="battleFrontProgressions"></param>
-        private void BuildApocBattleFrontStatusList(List<RVRProgression> battleFrontProgressions)
+        private void BuildBattleFrontStatusList(List<RVRProgression> battleFrontProgressions)
         {
             lock (LockObject)
             {
@@ -387,7 +387,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                     flag.OwningRealm = realm;
                     flag.SetObjectiveLocked();
                 }
-                
+
             }
 
             if (activeRegion.Campaign.Keeps == null)
@@ -501,11 +501,11 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
         public bool IsBattleFrontLocked(int battleFrontId)
         {
-            foreach (var ApocBattleFrontStatus in BattleFrontStatuses)
+            foreach (var battleFrontStatus in BattleFrontStatuses)
             {
-                if (ApocBattleFrontStatus.BattleFrontId == ActiveBattleFront.BattleFrontId)
+                if (battleFrontStatus.BattleFrontId == ActiveBattleFront.BattleFrontId)
                 {
-                    return ApocBattleFrontStatus.Locked;
+                    return battleFrontStatus.Locked;
                 }
             }
             return false;

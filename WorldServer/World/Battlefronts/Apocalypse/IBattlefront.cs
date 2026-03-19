@@ -11,7 +11,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
     /// <remarks>
     /// Both lecacy and RoR battlefonts implement this interface.
     /// </remarks>
-    public interface IApocBattleFront
+    public interface IBattlefront
     {
         /// <summary>
         /// Main Campaign update method, invoked by region manager, short perdiod.

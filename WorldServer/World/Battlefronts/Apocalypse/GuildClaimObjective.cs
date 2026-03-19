@@ -61,7 +61,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
         private readonly ushort _z; // why other attributes ?
         private readonly ushort _o; // why other attributes ?
 
-        public ApocCommunications CommsEngine { get; set; }
+        public BattlefrontCommunications CommsEngine { get; set; }
 
         public Campaign BattleFront { get; set; }
 
@@ -85,7 +85,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
         /// </summary>
         public GuildClaimObjective()
         {
-            CommsEngine = new ApocCommunications();
+            CommsEngine = new BattlefrontCommunications();
         }
 
         /// <summary>
@@ -124,7 +124,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             WorldPosition.Y = (int)_y;
             WorldPosition.Z = _z;
 
-            CommsEngine = new ApocCommunications();
+            CommsEngine = new BattlefrontCommunications();
             _captureProgress = 20000;
             CaptureDuration = 10;
             // TODO : Can add a default buff here.
@@ -162,7 +162,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             return true;
         }
 
-        
+
         public override void SendInteract(Player player, InteractMenu menu)
         {
             if (player.GldInterface == null)
@@ -213,7 +213,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                 return;
             }
 
-           
+
             if (AllowInteract(player) && InteractableFor(player))
             {
                 if (_captureInProgress)  // cross realm fires here
@@ -233,7 +233,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
         public override void NotifyInteractionBroken(NewBuff b)
         {
-            
+
             _captureInProgress = false;
             CapturingPlayer = null;
         }
@@ -483,7 +483,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             // does nothing : base.SendMeTo(plr);
         }
 
-       
+
         /// <summary>
         ///     Update thread.
         /// </summary>
@@ -630,7 +630,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
         //    }
         //}
 
-       
+
         /// <summary>
         ///     Sends objective diagnostic information to player (gm only).
         /// </summary>
@@ -649,7 +649,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
         }
 
 
-     
+
 
         /// <summary>
         /// Get players that are close and members of a given realm.
@@ -659,7 +659,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
         private ISet<Player> GetClosePlayers(Realms capturingRealm)
         {
             var applicablePlayerList = PlayersInRange.Where(x => x.Realm == capturingRealm).ToList();
-            
+
             return GetClosePlayers(applicablePlayerList);
         }
 
@@ -712,6 +712,6 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
         #endregion
 
-        
+
     }
 }

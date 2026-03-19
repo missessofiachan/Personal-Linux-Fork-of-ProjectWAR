@@ -258,7 +258,7 @@ namespace WorldServer.Managers.Commands
                     lockingRealm = Realms.REALMS_REALM_NEUTRAL;
             }
 
-            new ApocCommunications().ResetProgressionCommunications(player, lockingRealm, vpp, forceT4);
+            new BattlefrontCommunications().ResetProgressionCommunications(player, lockingRealm, vpp, forceT4);
 
         }
 
@@ -456,7 +456,7 @@ namespace WorldServer.Managers.Commands
         [CommandAttribute(EGmLevel.Developer, "Resets the World Campaign to default values")]
         public static void ResetAllCampaign(Player plr)
         {
-            
+
 
 
             foreach (var progression in WorldMgr.UpperTierCampaignManager.BattleFrontProgressions)
@@ -499,7 +499,7 @@ namespace WorldServer.Managers.Commands
                         // Reset the population for the battle front status
                         WorldMgr.UpperTierCampaignManager.GetActiveCampaign().InitializePopulationList(status.BattleFrontId);
 
-                        
+
                     }
                 }
             }

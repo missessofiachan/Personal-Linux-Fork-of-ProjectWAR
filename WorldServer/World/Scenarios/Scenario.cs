@@ -177,7 +177,7 @@ namespace WorldServer.World.Scenarios
                 RespawnHeadings[i] = 0;
             }
 
-            Region = new RegionMgr(Info.MapId, ZoneService.GetZoneRegion(Info.RegionId), info.Name, new ApocCommunications()) { Scenario = this };
+            Region = new RegionMgr(Info.MapId, ZoneService.GetZoneRegion(Info.RegionId), info.Name, new BattlefrontCommunications()) { Scenario = this };
 
             /* create groups */
             for (int i = 0; i < 2; ++i)
@@ -443,7 +443,7 @@ namespace WorldServer.World.Scenarios
                 Renown = renown;
             }
         }
-        
+
         private readonly Dictionary<Player, DeferredReward> _deferredReward = new Dictionary<Player, DeferredReward>(); */
 
         public virtual bool DeferKillReward(Player killer, uint xp, uint renown)
@@ -634,7 +634,7 @@ namespace WorldServer.World.Scenarios
                 contributionDefinition = new BountyService().GetDefinition((byte)ContributionDefinitions.PLAY_SCENARIO);
                 plr.BountyManagerInstance.AddCharacterBounty(plr.CharacterId, contributionDefinition.ContributionValue);
 
-                
+
                 _logger.Debug($"Giving PLAY_SCEN contribution to {plr.Name}");
 
 
@@ -680,14 +680,14 @@ namespace WorldServer.World.Scenarios
                 {
                     _logger.Debug($"Scenario {Info.Name} won by Destruction. {Score[1]} to {Score[0]}");
                     _logger.Debug($"Suggest {Score[1] / 10} additional VP to winner,  {Score[0] / 20} to loser.");
-                    new ApocCommunications().Broadcast("Destruction has defeated Order in a critical battle! Their forces come closer to victory.", Tier);
+                    new BattlefrontCommunications().Broadcast("Destruction has defeated Order in a critical battle! Their forces come closer to victory.", Tier);
                     WorldMgr.UpperTierCampaignManager.GetActiveCampaign().VictoryPointProgress.AddScenarioWin(Realms.REALMS_REALM_DESTRUCTION);
                 }
                 if (winningTeam == 0)
                 {
                     _logger.Debug($"Scenario {Info.Name} won by Order. {Score[0]} to {Score[1]}");
                     _logger.Debug($"Suggest {Score[0] / 10} additional VP to winner,  {Score[1] / 20} to loser.");
-                    new ApocCommunications().Broadcast("Order has defeated Destruction in a critical battle! Their forces come closer to victory.", Tier);
+                    new BattlefrontCommunications().Broadcast("Order has defeated Destruction in a critical battle! Their forces come closer to victory.", Tier);
                     WorldMgr.UpperTierCampaignManager.GetActiveCampaign().VictoryPointProgress.AddScenarioWin(Realms.REALMS_REALM_ORDER);
 
                 }
@@ -1079,7 +1079,7 @@ namespace WorldServer.World.Scenarios
                             warCampZoneId = plr.CurrentKeep.PlayerSpawnLocation.Value.DestructionFeedZoneId;
                             wc = BattleFrontService.GetWarcampEntrance((ushort) warCampZoneId, Realms.REALMS_REALM_ORDER);
                         }
-                        
+
                         var target = ZoneService.GetWorldPosition(ZoneService.GetZone_Info((ushort) warCampZoneId),
                             (ushort) wc.X, (ushort) wc.Y, (ushort) wc.Z);
                         warcampRespawn =  new SpawnPoint((ushort)warCampZoneId, target.X, target.Y, target.Z);
@@ -1095,7 +1095,7 @@ namespace WorldServer.World.Scenarios
 
                 if (warcampRespawn == null)
                     _logger.Error($"Null warcampRespawn for {plr.Name}");
-                
+
                 plr.ScnInterface.ScenarioEntryWorldX = warcampRespawn.X;
                 plr.ScnInterface.ScenarioEntryWorldY = warcampRespawn.Y;
                 plr.ScnInterface.ScenarioEntryWorldZ = warcampRespawn.Z;

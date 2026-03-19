@@ -58,7 +58,7 @@ namespace WorldServer.Managers
         private static Thread _groupThread;
         private static bool _running = true;
         public static long StartingPairing;
-        // DEV - Development mode, PRD - Production Mode. 
+        // DEV - Development mode, PRD - Production Mode.
         public static string ServerMode;
 
         public static UpperTierCampaignManager UpperTierCampaignManager;
@@ -83,7 +83,7 @@ namespace WorldServer.Managers
 
             if (Mgr == null && Create)
             {
-                Mgr = new RegionMgr(RegionId, ZoneService.GetZoneRegion(RegionId), name, new ApocCommunications());
+                Mgr = new RegionMgr(RegionId, ZoneService.GetZoneRegion(RegionId), name, new BattlefrontCommunications());
                 RegionsRWLock.EnterWriteLock();
                 _Regions.Add(Mgr);
                 RegionsRWLock.ExitWriteLock();
@@ -128,7 +128,7 @@ namespace WorldServer.Managers
                             return new SpawnPoint(res);
                 }
 
-                // Scenario respawn - random if > 1 
+                // Scenario respawn - random if > 1
                 if (player.ScnInterface.Scenario != null)
                 {
                     List<Zone_Respawn> respawns = ZoneService.GetZoneRespawns(zoneId);
@@ -1464,23 +1464,23 @@ namespace WorldServer.Managers
                 switch (regionMgr.RegionId)
                 {
                     case 1: // t1 dw/gs
-                        regionMgr.Campaign = new Campaign(regionMgr, objectiveList, new HashSet<Player>(), WorldMgr.LowerTierCampaignManager, new ApocCommunications());
+                        regionMgr.Campaign = new Campaign(regionMgr, objectiveList, new HashSet<Player>(), WorldMgr.LowerTierCampaignManager, new BattlefrontCommunications());
                         break;
                     case 3: // t1 he/de
-                        regionMgr.Campaign = new Campaign(regionMgr, objectiveList, new HashSet<Player>(), WorldMgr.LowerTierCampaignManager, new ApocCommunications());
+                        regionMgr.Campaign = new Campaign(regionMgr, objectiveList, new HashSet<Player>(), WorldMgr.LowerTierCampaignManager, new BattlefrontCommunications());
                         break;
                     case 8: // t1 em/ch
-                        regionMgr.Campaign = new Campaign(regionMgr, objectiveList, new HashSet<Player>(), WorldMgr.LowerTierCampaignManager, new ApocCommunications());
+                        regionMgr.Campaign = new Campaign(regionMgr, objectiveList, new HashSet<Player>(), WorldMgr.LowerTierCampaignManager, new BattlefrontCommunications());
                         break;
                     // Tier 4
                     case 11:
-                        regionMgr.Campaign = new Campaign(regionMgr, objectiveList, new HashSet<Player>(), WorldMgr.UpperTierCampaignManager, new ApocCommunications());
+                        regionMgr.Campaign = new Campaign(regionMgr, objectiveList, new HashSet<Player>(), WorldMgr.UpperTierCampaignManager, new BattlefrontCommunications());
                         break;
                     case 2:
-                        regionMgr.Campaign = new Campaign(regionMgr, objectiveList, new HashSet<Player>(), WorldMgr.UpperTierCampaignManager, new ApocCommunications());
+                        regionMgr.Campaign = new Campaign(regionMgr, objectiveList, new HashSet<Player>(), WorldMgr.UpperTierCampaignManager, new BattlefrontCommunications());
                         break;
                     case 4:
-                        regionMgr.Campaign = new Campaign(regionMgr, objectiveList, new HashSet<Player>(), WorldMgr.UpperTierCampaignManager, new ApocCommunications());
+                        regionMgr.Campaign = new Campaign(regionMgr, objectiveList, new HashSet<Player>(), WorldMgr.UpperTierCampaignManager, new BattlefrontCommunications());
                         break;
 
                     default: // Everything else...
@@ -1660,7 +1660,7 @@ namespace WorldServer.Managers
 
             if (items.Count <= Num)
                 return;
-            
+
             ItemResult result = plr.ItmInterface.CreateItem(items[Num].Info, (ushort)1);
             if (result == ItemResult.RESULT_OK)
             {

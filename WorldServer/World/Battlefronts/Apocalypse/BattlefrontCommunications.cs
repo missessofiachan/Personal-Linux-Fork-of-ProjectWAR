@@ -11,7 +11,7 @@ using Opcodes = WorldServer.NetWork.Opcodes;
 
 namespace WorldServer.World.Battlefronts.Apocalypse
 {
-    public class ApocCommunications : IApocCommunications
+    public class BattlefrontCommunications : IBattlefrontCommunications
     {
         private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
@@ -52,7 +52,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             Out.WriteHexStringBytes("0005006700CB00"); // 7
 
             // Dwarfs vs Greenskins T1
-            
+
             Out.WriteByte(0);    // 0 and ignored
             Out.WriteByte(100);  // % Order lock
             Out.WriteByte(0);    // % Dest lock

@@ -518,7 +518,7 @@
     <Compile Include="World\Battlefronts\Bounty\RewardManager.cs" />
     <Compile Include="World\Battlefronts\Bounty\StaticWrapper.cs" />
     <Compile Include="World\Battlefronts\Apocalypse\BattleFrontStatus.cs" />
-    <Compile Include="World\Battlefronts\Apocalypse\IApocCommunications.cs" />
+    <Compile Include="World\Battlefronts\Apocalypse\IBattlefrontCommunications.cs" />
     <Compile Include="World\Battlefronts\Apocalypse\Loot\ILootBagBuilder.cs" />
     <Compile Include="World\Battlefronts\Apocalypse\Loot\ILootDecider.cs" />
     <Compile Include="World\Battlefronts\Apocalypse\Loot\IRandomGenerator.cs" />
@@ -538,8 +538,8 @@
     <Compile Include="World\Battlefronts\Apocalypse\LowerTierCampaignManager.cs" />
     <Compile Include="World\Battlefronts\Apocalypse\RVRRewardManager.cs" />
     <Compile Include="World\Battlefronts\Apocalypse\UpperTierCampaignManager.cs" />
-    <Compile Include="World\Battlefronts\Apocalypse\IApocBattleFront.cs" />
-    <Compile Include="World\Battlefronts\Apocalypse\ApocCommunications.cs" />
+    <Compile Include="World\Battlefronts\Apocalypse\IBattlefront.cs" />
+    <Compile Include="World\Battlefronts\Apocalypse\BattlefrontCommunications.cs" />
     <Compile Include="World\Battlefronts\Apocalypse\VictoryPoint.cs" />
     <Compile Include="World\Battlefronts\Apocalypse\VictoryPointProgress.cs" />
     <Compile Include="World\Battlefronts\Keeps\KeepCommunications.cs" />

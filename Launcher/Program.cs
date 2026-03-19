@@ -1,24 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace Launcher
 {
-    static class Program
+    /// <summary>
+    /// Bootstraps the Windows Forms launcher application.
+    /// </summary>
+    internal static class Program
     {
         /// <summary>
-        /// Main entry point of the application.
-        /// </ summary>
+        /// Starts the launcher UI message loop.
+        /// </summary>
+        /// <param name="args">Command-line arguments supplied to the launcher.</param>
         [STAThread]
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new ApocLauncher());
-
-
+            Application.Run(new LauncherForm());
         }
     }
 }

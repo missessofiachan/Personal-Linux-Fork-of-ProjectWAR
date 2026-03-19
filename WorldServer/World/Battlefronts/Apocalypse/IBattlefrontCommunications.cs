@@ -5,7 +5,7 @@ using WorldServer.World.Objects;
 
 namespace WorldServer.World.Battlefronts.Apocalypse
 {
-    public interface IApocCommunications
+    public interface IBattlefrontCommunications
     {
         void SendFlagLeft(Player plr, int id);
         void BuildCaptureStatus(PacketOut Out, RegionMgr region, Realms realm);

@@ -69,10 +69,10 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
         public uint AccumulatedKills;
 
-        public ApocCommunications CommsEngine { get; set; }
+        public BattlefrontCommunications CommsEngine { get; set; }
 
         public Campaign BattleFront { get; set; }
-        public BattleFrontStatus battleFrontStatus { get; set; }
+        public BattleFrontStatus BattleFrontStatus { get; set; }
 
         public StateFlags State { get; set; }
 
@@ -109,7 +109,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
         /// </summary>
         public BattlefieldObjective()
         {
-            CommsEngine = new ApocCommunications();
+            CommsEngine = new BattlefrontCommunications();
             RewardManager = new RVRRewardManager();
         }
 
@@ -157,7 +157,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             WorldPosition.Y = (int)_y;
             WorldPosition.Z = _z;
 
-            CommsEngine = new ApocCommunications();
+            CommsEngine = new BattlefrontCommunications();
             RewardManager = new RVRRewardManager();
             fsm = new CampaignObjectiveStateMachine(this).fsm;
             fsm.Initialize(CampaignObjectiveStateMachine.ProcessState.Neutral);
@@ -715,13 +715,13 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                 if (plr != null)
                 {
                     plr.SendPacket(Out);
-                    
+
                 }
                 else
                     foreach (var player in Region.Players)
                     {
                         player.SendPacket(Out); // Objective's state
-                        
+
 
                         if (string.IsNullOrEmpty(message) || !player.CbtInterface.IsPvp)
                             continue;
@@ -737,7 +737,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
                 player.SendLocalizeString(finalMessage, ChatLogFilters.CHATLOGFILTERS_RVR, Localized_text.CHAT_TAG_DEFAULT);
                 player.SendLocalizeString(finalMessage, largeFilter, Localized_text.CHAT_TAG_DEFAULT);
-                        
+
                         if (snd != null)
                             player.SendPacket(snd);
                     }
@@ -912,19 +912,19 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                     result = false;
                     break;
                 case StateFlags.Secure:   // CAPTURED (Lockout State)
-                    // The flag has just been captured and is in lockout. 
+                    // The flag has just been captured and is in lockout.
                     // No one can interact with it until it transitions to Secured.
-                    result = false; 
+                    result = false;
                     break;
                 case StateFlags.Contested: // CONTESTED
-                    // The flag is being assaulted. 
+                    // The flag is being assaulted.
                     // Anyone NOT of the assault realm can interact (to defend/reclaim).
-                    result = plr.Realm != AssaultingRealm;  
+                    result = plr.Realm != AssaultingRealm;
                     break;
                 case StateFlags.Locked:    // SECURED (Open for Conflict)
                     // The flag is fully secured but open for taking.
                     // Only enemies of the owning realm can interact.
-                    result = plr.Realm != OwningRealm;      
+                    result = plr.Realm != OwningRealm;
                     break;
                 default:
                     result = false;

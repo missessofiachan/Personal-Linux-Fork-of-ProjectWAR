@@ -44,9 +44,9 @@ namespace WorldServer.World.Battlefronts.Apocalypse
         public VictoryPointProgress VictoryPointProgress { get; set; }
         public RegionMgr Region { get; set; }
         public IBattleFrontManager BattleFrontManager { get; set; }
-        public IApocCommunications CommunicationsEngine { get; }
+        public IBattlefrontCommunications CommunicationsEngine { get; }
         // List of battlefront statuses for this Campaign
-        public List<BattleFrontStatus> ApocBattleFrontStatuses => GetBattleFrontStatuses(Region.RegionId);
+        public List<BattleFrontStatus> BattleFrontStatusesForRegion => GetBattleFrontStatuses(Region.RegionId);
         public BattleFrontStatus ActiveBattleFrontStatus => BattleFrontManager.GetBattleFrontStatus(BattleFrontManager.ActiveBattleFront.BattleFrontId);
         /// <summary>
         /// A list of keeps within this Campaign.
@@ -111,7 +111,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             List<BattlefieldObjective> objectives,
             HashSet<Player> players,
             IBattleFrontManager bfm,
-            IApocCommunications communicationsEngine)
+            IBattlefrontCommunications communicationsEngine)
         {
             Region = regionMgr;
             VictoryPointProgress = new VictoryPointProgress();
@@ -127,7 +127,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             AgainstAllOddsTracker = new AAOTracker();
             _rewardManager = new RVRRewardManager();
             SiegeManager = new SiegeManager();
-            
+
 
             DestructionDominationCounter = Program.Config.DestructionDominationTimerLength;
             OrderDominationCounter = Program.Config.OrderDominationTimerLength;
@@ -394,7 +394,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
             }
 
-            
+
 
             DestructionDominationCounter--;
 
@@ -456,7 +456,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                     OrderDominationCounter = Program.Config.OrderDominationTimerLength;
                     return;
                 }
-                
+
                 if (battleFrontKeep.Fortress)
                     return;
             }
@@ -475,7 +475,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             }
 
         }
-        
+
 
 
         private int SecondsToNearestMinute(int seconds)
@@ -483,7 +483,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             return Convert.ToInt32(Math.Round((double)seconds / 60, MidpointRounding.AwayFromZero));
         }
 
-        
+
 
         private void NotifyPlayersOfDomination(string message, BattleFrontStatus status)
         {
@@ -627,14 +627,14 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
         public BattleFrontStatus GetActiveBattleFrontStatus()
         {
-            if (ApocBattleFrontStatuses.Count == 0)
+            if (BattleFrontStatusesForRegion.Count == 0)
             {
                 BattlefrontLogger.Error("No BattlefrontStatuses have been created!");
                 throw new Exception("No BattlefrontStatuses have been created!");
             }
             try
             {
-                return ApocBattleFrontStatuses.Single(x => x.Locked == false);
+                return BattleFrontStatusesForRegion.Single(x => x.Locked == false);
             }
             catch (Exception e)
             {
@@ -1077,7 +1077,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
         }
 
         /// <summary>
-        /// Generate zone lock rewards. 
+        /// Generate zone lock rewards.
         /// </summary>
         /// <param name="lockingRealm"></param>
         /// <param name="zoneId"></param>
@@ -1088,23 +1088,23 @@ namespace WorldServer.World.Battlefronts.Apocalypse
         private void GenerateZoneLockRewards(Realms lockingRealm, int zoneId)
         {
            try
-            { 
+            {
                 var eligiblitySplits =
                     Region.Campaign.GetActiveBattleFrontStatus().ContributionManagerInstance.DetermineEligiblePlayers(BattlefrontLogger, lockingRealm);
 
                 // Distribute RR, INF, etc to contributing players
                 // Get All players in the zone and if they are not in the eligible list, they receive minor awards
                 // AI-AGENT (Gemini 3.0 Flash): In Tier 1, reward all players in the region (pairing) since the battlefront spans both zones.
-                var allPlayersToReward = Tier == 1 
-                    ? Region.Players.Where(x => x.CbtInterface.IsPvp).ToList() 
+                var allPlayersToReward = Tier == 1
+                    ? Region.Players.Where(x => x.CbtInterface.IsPvp).ToList()
                     : PlayerUtil.GetAllFlaggedPlayersInZone((ushort)zoneId);
 
                 Region.Campaign.GetActiveBattleFrontStatus().RewardManagerInstance.DistributeZoneFlipBaseRewards(
                     eligiblitySplits.Item3,
-                    eligiblitySplits.Item2, 
-                    lockingRealm, 
-                    Region.Campaign.GetActiveBattleFrontStatus().ContributionManagerInstance.GetMaximumContribution(), 
-                    Tier == 1 ? 0.5f : 1f, 
+                    eligiblitySplits.Item2,
+                    lockingRealm,
+                    Region.Campaign.GetActiveBattleFrontStatus().ContributionManagerInstance.GetMaximumContribution(),
+                    Tier == 1 ? 0.5f : 1f,
                     allPlayersToReward);
 
                 var fortZones = new List<int> { 4, 10, 104, 110, 204, 210 };
@@ -1131,7 +1131,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                     }
 
                 }
-               
+
 
             }
             catch (Exception e)
@@ -1277,7 +1277,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
             ///
             /// Check to Lock and Advance the Battlefront
-            /// 
+            ///
             if (VictoryPointProgress.OrderVictoryPoints >= BattleFrontConstants.LOCK_VICTORY_POINTS)
             {
                 var orderWarcampEntrance = BattleFrontService.GetWarcampEntrance(
@@ -1461,7 +1461,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             // Tell the server that the RVR status has changed.
             WorldMgr.UpdateRegionCaptureStatus(WorldMgr.LowerTierCampaignManager, WorldMgr.UpperTierCampaignManager);
             // Logs the status of all battlefronts known to the Battlefront Manager.
-            // BattleFrontManager.AuditBattleFronts(this.Tier);        
+            // BattleFrontManager.AuditBattleFronts(this.Tier);
         }
 
         private void SendCampaignMovementMessage(RVRProgression nextBattleFront)

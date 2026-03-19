@@ -6,17 +6,17 @@ using Launcher.Properties;
 
 namespace Launcher
 {
-    partial class ApocLauncher
+    partial class LauncherForm
     {
         /// <summary>
-        /// Variable needed by the designer.
-        /// </ summary>
+        /// Designer-managed component container.
+        /// </summary>
         private IContainer components = null;
 
         /// <summary>
-        /// Cleaning the resources used.
-        /// </ summary>
-        /// <param name = "disposing"> true if the managed resources should be deleted; otherwise, false. </ param>
+        /// Releases resources used by the form.
+        /// </summary>
+        /// <param name="disposing">True to dispose managed resources; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -26,16 +26,15 @@ namespace Launcher
             base.Dispose(disposing);
         }
 
-        #region Code généré par le Concepteur Windows Form
+        #region Windows Forms Designer generated code
 
         /// <summary>
-        /// Method required to support the designer - do not modify
-        /// the contents of this method with the code editor.
-        /// </ summary>
+        /// Required designer method; do not modify its contents with the code editor.
+        /// </summary>
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ApocLauncher));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LauncherForm));
             this.T_username = new System.Windows.Forms.TextBox();
             this.T_password = new System.Windows.Forms.MaskedTextBox();
             this.RealmName = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -90,7 +89,7 @@ namespace Launcher
             this.T_username.Name = "T_username";
             this.T_username.Size = new System.Drawing.Size(303, 44);
             this.T_username.TabIndex = 0;
-            this.T_username.KeyDown += new System.Windows.Forms.KeyEventHandler(this.T_username_KeyDown);
+            this.T_username.KeyDown += new System.Windows.Forms.KeyEventHandler(this.UsernameTextBox_KeyDown);
             // 
             // T_password
             // 
@@ -105,7 +104,7 @@ namespace Launcher
             this.T_password.Size = new System.Drawing.Size(303, 44);
             this.T_password.TabIndex = 1;
             this.T_password.UseSystemPasswordChar = true;
-            this.T_password.KeyDown += new System.Windows.Forms.KeyEventHandler(this.T_password_KeyDown);
+            this.T_password.KeyDown += new System.Windows.Forms.KeyEventHandler(this.PasswordTextBox_KeyDown);
             // 
             // RealmName
             // 
@@ -151,7 +150,7 @@ namespace Launcher
             this.bnConnectToServer.TabIndex = 12;
             this.bnConnectToServer.Text = "Login";
             this.bnConnectToServer.UseVisualStyleBackColor = false;
-            this.bnConnectToServer.Click += new System.EventHandler(this.bnConnectToServer_Click);
+            this.bnConnectToServer.Click += new System.EventHandler(this.ConnectToServerButton_Click);
             // 
             // edHashCode
             // 
@@ -236,7 +235,7 @@ namespace Launcher
             this.bnClose.TabIndex = 14;
             this.bnClose.Text = "X";
             this.bnClose.UseVisualStyleBackColor = false;
-            this.bnClose.Click += new System.EventHandler(this.bnClose_Click);
+            this.bnClose.Click += new System.EventHandler(this.CloseButton_Click);
             // 
             // panelCreateAccount
             // 
@@ -269,7 +268,7 @@ namespace Launcher
             this.bnCreateLocal.Text = "LOCAL";
             this.bnCreateLocal.UseVisualStyleBackColor = false;
             this.bnCreateLocal.Visible = false;
-            this.bnCreateLocal.Click += new System.EventHandler(this.bnCreateLocal_Click);
+            this.bnCreateLocal.Click += new System.EventHandler(this.CreateLocalAccountButton_Click);
             // 
             // buttonAccountClose
             // 
@@ -286,7 +285,7 @@ namespace Launcher
             this.buttonAccountClose.TabIndex = 22;
             this.buttonAccountClose.Text = "X";
             this.buttonAccountClose.UseVisualStyleBackColor = false;
-            this.buttonAccountClose.Click += new System.EventHandler(this.buttonAccountClose_Click);
+            this.buttonAccountClose.Click += new System.EventHandler(this.CloseCreateAccountPanelButton_Click);
             // 
             // buttonCreate
             // 
@@ -299,7 +298,7 @@ namespace Launcher
             this.buttonCreate.TabIndex = 16;
             this.buttonCreate.Text = "Create";
             this.buttonCreate.UseVisualStyleBackColor = true;
-            this.buttonCreate.Click += new System.EventHandler(this.buttonCreate_Click);
+            this.buttonCreate.Click += new System.EventHandler(this.CreateRemoteAccountButton_Click);
             // 
             // label3
             // 
@@ -382,7 +381,7 @@ namespace Launcher
             this.buttonPanelCreateAccount.TabIndex = 21;
             this.buttonPanelCreateAccount.Text = "CREATE ACCOUNT";
             this.buttonPanelCreateAccount.UseVisualStyleBackColor = false;
-            this.buttonPanelCreateAccount.Click += new System.EventHandler(this.buttonPanelCreateAccount_Click);
+            this.buttonPanelCreateAccount.Click += new System.EventHandler(this.OpenCreateAccountPanelButton_Click);
             // 
             // lblVersion
             // 
@@ -408,13 +407,13 @@ namespace Launcher
             this.bnConnectLocal.Text = "LOCAL";
             this.bnConnectLocal.UseVisualStyleBackColor = false;
             this.bnConnectLocal.Visible = false;
-            this.bnConnectLocal.Click += new System.EventHandler(this.bnConnectToLocal_Click);
+            this.bnConnectLocal.Click += new System.EventHandler(this.ConnectToLocalButton_Click);
             // 
             // timer1
             // 
             this.timer1.Enabled = true;
             this.timer1.Interval = 25;
-            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            this.timer1.Tick += new System.EventHandler(this.PatchStatusTimer_Tick);
             // 
             // lblDownloading
             // 
@@ -481,9 +480,9 @@ namespace Launcher
             this.bnMinimise.TabIndex = 31;
             this.bnMinimise.Text = "_";
             this.bnMinimise.UseVisualStyleBackColor = false;
-            this.bnMinimise.Click += new System.EventHandler(this.bnMinimise_Click);
+            this.bnMinimise.Click += new System.EventHandler(this.MinimizeButton_Click);
             // 
-            // ApocLauncher
+            // LauncherForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -510,12 +509,12 @@ namespace Launcher
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "ApocLauncher";
+            this.Name = "LauncherForm";
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "WAR: APOCALYPSE";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Disconnect);
-            this.Load += new System.EventHandler(this.Form1_Load);
+            this.Load += new System.EventHandler(this.LauncherForm_Load);
             this.panelCreateAccount.ResumeLayout(false);
             this.panelCreateAccount.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();

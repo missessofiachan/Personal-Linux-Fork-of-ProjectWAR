@@ -69,7 +69,7 @@ namespace WorldServer.World.Objects.Instances
             ID = id;
             ZoneID = zoneid;
             Realm = realm;
-            Region = new RegionMgr(zoneid, ZoneService.GetZoneRegion(zoneid),"", new ApocCommunications());
+            Region = new RegionMgr(zoneid, ZoneService.GetZoneRegion(zoneid),"", new BattlefrontCommunications());
             InstanceService._InstanceInfo.TryGetValue(zoneid, out Info);
             LoadBossSpawns();
             LoadSpawns(); // todo get the saved progress from group
@@ -81,7 +81,7 @@ namespace WorldServer.World.Objects.Instances
             InstanceService.SaveLockoutInstanceID(ZoneID + ":" + ID, Lockout);
 
             new Thread(Update).Start();
-			
+
             Log.Success("Opening Instance","Instance ID "+ID+"  Map: "+Info.Name);
             // TOVL
             if (zoneid == 179)
@@ -103,7 +103,7 @@ namespace WorldServer.World.Objects.Instances
                 _evtInterface.AddEvent(UpdatePendulums, 7000, 0);
             }
         }
-        
+
         public void UpdatePendulums()
         {
             updatestate++;
@@ -154,7 +154,7 @@ namespace WorldServer.World.Objects.Instances
         {
             if (Region.Players.Count > 0)
                 closetime = TCPManager.GetTimeStamp() + (int)Info.LockoutTimer * 60;
-			
+
             if (closetime < TCPManager.GetTimeStamp())
             {
                 Log.Success("Closing Instance", "Instance ID " + ID + "  Map: " + Info.Name);
@@ -217,7 +217,7 @@ namespace WorldServer.World.Objects.Instances
 		{
 			return _BossSpawns.Count;
 		}
-		
+
         public void AddPlayer(Player player, Zone_jump jump)
         {
             lock (Players)
@@ -226,7 +226,7 @@ namespace WorldServer.World.Objects.Instances
                 {
                     Players.Add(player);
                 }
-                
+
                 player.InstanceID = ZoneID + ":" + ID;
 
                 if (jump != null)
@@ -321,14 +321,14 @@ namespace WorldServer.World.Objects.Instances
 				pl.SendLockouts();
 			}
 		}
-		
+
 		private void LoadBossSpawns()
         {
             HashSet<uint> deadbossIds = ParseDeadBossIds();
             List<uint> spawnedBossIds = new List<uint>();
-			
+
             InstanceService._InstanceBossSpawns.TryGetValue(Info.Entry, out List<Instance_Boss_Spawn> Obj);
-			
+
             if (Obj == null)
                 return;
 
@@ -661,7 +661,7 @@ namespace WorldServer.World.Objects.Instances
             {
                 if (deadbossIds.Contains(obj.ConnectedbossId))
                     continue;
-				
+
                 if (obj.Realm == 0 || obj.Realm == Realm)
                 {
                     Creature_spawn spawn = new Creature_spawn
@@ -681,7 +681,7 @@ namespace WorldServer.World.Objects.Instances
                     spawn.WorldX = obj.WorldX;
                     spawn.ZoneId = obj.ZoneID;
                     spawn.Enabled = 1;
-					
+
                     InstanceSpawn IS = new InstanceSpawn(spawn, obj.SpawnGroupID, obj.ConnectedbossId, this);
 
                     if (obj.SpawnGroupID > 0)

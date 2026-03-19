@@ -35,7 +35,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             ImpactMatrixManagerInstance = new ImpactMatrixManager();
             BountyManagerInstance = new BountyManager();
             if (_RVRT1Progressions != null)
-                BuildApocBattleFrontStatusList(BattleFrontProgressions);
+                BuildBattleFrontStatusList(BattleFrontProgressions);
         }
 
         public BattleFrontStatus GetActiveBattleFrontStatus(int battleFrontId)
@@ -44,10 +44,10 @@ namespace WorldServer.World.Battlefronts.Apocalypse
         }
 
         /// <summary>
-        /// Sets up the Battlefront status list with default values. 
+        /// Sets up the Battlefront status list with default values.
         /// </summary>
         /// <param name="battleFrontProgressions"></param>
-        private void BuildApocBattleFrontStatusList(List<RVRProgression> battleFrontProgressions)
+        private void BuildBattleFrontStatusList(List<RVRProgression> battleFrontProgressions)
 		{
 			lock (LockObject)
 			{
@@ -103,7 +103,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
         }
 
         /// <summary>
-        /// Log the status of all battlefronts 
+        /// Log the status of all battlefronts
         /// </summary>
         public void AuditBattleFronts(int tier)
         {
@@ -169,11 +169,11 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
         public bool IsBattleFrontLocked(int battleFrontId)
         {
-            foreach (var ApocBattleFrontStatus in BattleFrontStatuses)
+            foreach (var battleFrontStatus in BattleFrontStatuses)
             {
-                if (ApocBattleFrontStatus.BattleFrontId == this.ActiveBattleFront.BattleFrontId)
+                if (battleFrontStatus.BattleFrontId == this.ActiveBattleFront.BattleFrontId)
                 {
-                    return ApocBattleFrontStatus.Locked;
+                    return battleFrontStatus.Locked;
                 }
             }
             return false;
@@ -288,7 +288,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                 ProgressionLogger.Info($"Unlocking objectives {activeRegion.RegionName} BF Id : {this.ActiveBattleFront.BattleFrontId} Zone : {this.ActiveBattleFront.ZoneId} {this.ActiveBattleFrontName}");
                 foreach (var flag in activeRegion.Campaign.Objectives)
                 {
-                    // AI-AGENT (Gemini 3.0 Flash): Changed from SetObjectiveSafe() to OpenBattleFront() 
+                    // AI-AGENT (Gemini 3.0 Flash): Changed from SetObjectiveSafe() to OpenBattleFront()
                     // to ensure the objective Finite State Machine actually starts for T1 zones.
                     flag.OpenBattleFront();
                 }
@@ -401,7 +401,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 	        {
 	            var newBattleFront = GetBattleFrontByBattleFrontId(ActiveBattleFront.OrderWinProgression);
 	            ProgressionLogger.Debug($"Order Win : Advancing Battlefront from {ActiveBattleFrontName} to {newBattleFront.Description}");
-	            
+
 	            return ActiveBattleFront = newBattleFront;
 	        }
 
@@ -409,7 +409,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 	        {
 	            var newBattleFront = GetBattleFrontByBattleFrontId(ActiveBattleFront.DestWinProgression);
 	            ProgressionLogger.Debug($"Destruction Win : Advancing Battlefront from {ActiveBattleFrontName} to {newBattleFront.Description}");
-	            
+
 	            return ActiveBattleFront = newBattleFront;
 	        }
 

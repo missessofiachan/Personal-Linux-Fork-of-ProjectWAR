@@ -4781,7 +4781,7 @@ namespace WorldServer.Managers.Commands
 
             //c.ItmInterface.AddCreatureItem(item);
             //c.OnLoad();
-            //c.WaypointGUID = 
+            //c.WaypointGUID =
             c.PlayersInRange = plr.PlayersInRange;
 
 
@@ -5007,7 +5007,7 @@ namespace WorldServer.Managers.Commands
             Out.WriteStringBytes(plr.Name);
             Out.Fill(0, 24 - plr.Name.Length);
             Out.Fill(0, 2);
-            Out.WriteUInt16R((ushort)contributionList.Single(x => x.CharacterId == plr.CharacterId).RandomBonus);   
+            Out.WriteUInt16R((ushort)contributionList.Single(x => x.CharacterId == plr.CharacterId).RandomBonus);
             Out.WriteUInt16R((ushort)contributionList.Single(x => x.CharacterId == plr.CharacterId).ContributionValue);
             Out.WriteUInt16R(0);//(ushort)contributionList.Single(x => x.CharacterId == plr.CharacterId).BagBonus
             Out.WriteUInt16((ushort)(p.FindIndex(x=>x.CharacterId == plr.CharacterId)+1)); // place (you have the nth highest....)
@@ -5041,7 +5041,7 @@ namespace WorldServer.Managers.Commands
 
 
             /*
-            Out.WritePacketString(@"|d4 c0 01 |...d............|     
+            Out.WritePacketString(@"|d4 c0 01 |...d............|
             |57 61 72 20 43 72 65 73 74 00 00 00 00 00 00 00 |War Crest.......|
             |00 00 00 00 00 00 00 00 00 00 00                |...........     |
             ");
@@ -5081,7 +5081,7 @@ namespace WorldServer.Managers.Commands
         {
             int maxCount = Math.Min(24, p.Count);
 
-          
+
 
             var bagIndex = 0;
             for (int i = 0; i < maxCount; i++)
@@ -5151,7 +5151,7 @@ namespace WorldServer.Managers.Commands
                 return true;
 
             MailService.MailItem(Convert.ToUInt32(characterId), Convert.ToUInt32(itemId), Convert.ToUInt16(count));
-            
+
             plr.SendClientMessage($"MAIL Item {itemId} x{count} to {characterId}");
 
             GMCommandLog log = new GMCommandLog
@@ -5356,7 +5356,7 @@ namespace WorldServer.Managers.Commands
             //| 00 03 01 00 02 03 03 01 01 00 03 03 01 00 02 03 |................|
             //| 02 FE 3C 28 0A 3C 00 00 00 03 84 00 00 00 00 |............... |
 
-            //     new ApocCommunications().SendCampaignStatus(plr, new VictoryPointProgress(50f, 50f), Realms.REALMS_REALM_DESTRUCTION);
+            //     new BattlefrontCommunications().SendCampaignStatus(plr, new VictoryPointProgress(50f, 50f), Realms.REALMS_REALM_DESTRUCTION);
             return true;
         }
         #endregion
