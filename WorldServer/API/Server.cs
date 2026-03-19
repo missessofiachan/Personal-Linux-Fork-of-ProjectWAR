@@ -37,6 +37,7 @@ namespace WorldServer.API
             _address = address;
             _asyncAcceptCallback = new AsyncCallback(BeginAccept);
             _port = port;
+            _bufferSize = bufferSize;
             _endPoint = new IPEndPoint(IPAddress.Parse(address), _port);
             Start();
 
@@ -46,7 +47,7 @@ namespace WorldServer.API
         {
             _online = true;
             CountryBlockPolicy.Warmup();
-            _listener = new TcpListener(_port);
+            _listener = new TcpListener(_endPoint);
             _listener.Server.ReceiveBufferSize = _bufferSize;
             _listener.Server.SendBufferSize = _bufferSize;
             _listener.Server.NoDelay = true;
@@ -111,12 +112,12 @@ namespace WorldServer.API
                     client.Receive();
 
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     DeleteClient(client);
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
             }
             finally

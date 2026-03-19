@@ -137,25 +137,24 @@ namespace WorldServer.World.Scenarios
             //unlock foward flag
             if (flag.Owner == 1)
             {
-
-                for (int i = index + 1; i < Flags.Count; i++)
+                int nextIndex = index + 1;
+                if (nextIndex < Flags.Count)
                 {
-                    Flags[i].Open = true;
-                    CurrentFlag = Flags[i];
-                    Flags[i].HoldOwner = 0;
-                    Flags[i].Owner = 0;
-                    break;
+                    Flags[nextIndex].Open = true;
+                    CurrentFlag = Flags[nextIndex];
+                    Flags[nextIndex].HoldOwner = 0;
+                    Flags[nextIndex].Owner = 0;
                 }
             }
             else if (flag.Owner == 2)
             {
-                for (int i = index - 1; i >= 0; i--)
+                int previousIndex = index - 1;
+                if (previousIndex >= 0)
                 {
-                    Flags[i].Open = true;
-                    CurrentFlag = Flags[i];
-                    Flags[i].HoldOwner = 0;
-                    Flags[i].Owner = 0;
-                    break;
+                    Flags[previousIndex].Open = true;
+                    CurrentFlag = Flags[previousIndex];
+                    Flags[previousIndex].HoldOwner = 0;
+                    Flags[previousIndex].Owner = 0;
                 }
 
             }

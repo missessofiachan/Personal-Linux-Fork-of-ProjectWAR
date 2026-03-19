@@ -28,8 +28,6 @@ namespace WorldServer.World.AI
         public Executions ExecutionManager { get; set; }
 
 
-        private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
-
         public BossBrain(Unit myOwner)
             : base(myOwner)
         {

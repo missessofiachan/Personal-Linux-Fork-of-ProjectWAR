@@ -546,7 +546,6 @@ namespace FrameWork
             ArrayList databaseColumns = new ArrayList();
             List<string> databasePrimaryKeys = new List<string>();
 
-            bool createNewTable = false;
             string key = SchemaName.ToLower() + "." + table.TableName.ToLower();
 
             if (!Schemas.ContainsKey(key))
@@ -593,7 +592,6 @@ namespace FrameWork
             else
             {
                 var schema = Schemas[SchemaName.ToLower() + "." + table.TableName.ToLower()];
-                bool primaryKeysDirty = false;
                 try
                 {
                     var dbCols = schema.Columns.OrderBy(e=>e.Value.ORDINAL_POSITION).Select(e=>e.Value).ToList();

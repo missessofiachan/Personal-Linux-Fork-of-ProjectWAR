@@ -353,25 +353,21 @@ namespace WorldServer.NetWork.Handler
                 cclient.SendPacket(Out);
             }
         }
-
-
-        struct RandomNameInfo
-        {
-            public byte Race, Unk, Slot;
-        }
-
         [PacketHandler(PacketHandlerType.TCP, (int)Opcodes.F_RANDOM_NAME_LIST_INFO, (int)eClientState.CharScreen, "onRandomNameListInfo")]
         public static void F_RANDOM_NAME_LIST_INFO(BaseClient client, PacketIn packet)
         {
             GameClient cclient = client as GameClient;
-            RandomNameInfo Info = BaseClient.ByteToType<RandomNameInfo>(packet);
+            // Preserve the original packet contract: the response's first byte is reserved and sent as 0.
+            packet.GetUint8();
+            byte unk = packet.GetUint8();
+            byte slot = packet.GetUint8();
 
             List<Random_name> Names = CharMgr.GetRandomNames();
 
             PacketOut Out = new PacketOut((byte)Opcodes.F_RANDOM_NAME_LIST_INFO);
             Out.WriteByte(0);
-            Out.WriteByte(Info.Unk);
-            Out.WriteByte(Info.Slot);
+            Out.WriteByte(unk);
+            Out.WriteByte(slot);
             Out.WriteUInt16(0);
             Out.WriteByte((byte)Names.Count);
 

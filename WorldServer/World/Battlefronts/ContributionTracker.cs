@@ -24,7 +24,6 @@ namespace WorldServer.World.Battlefronts
         private readonly int _tier;
         private readonly RegionMgr _region;
 
-        private float WinnerShare = 1f;
         private float LoserShare = 0.1f;
 
         /// <summary>

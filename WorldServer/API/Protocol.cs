@@ -37,7 +37,7 @@ namespace WorldServer.API
                     _handlers[packet.OP](client, packet);
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
             }
         }
@@ -153,9 +153,6 @@ namespace WorldServer.API
                             }";
 
             string result = template.Replace("[@@CODE@@]", script);
-            string errors = "";
-
-            System.CodeDom.Compiler.ICodeCompiler compiler = new Microsoft.CSharp.CSharpCodeProvider().CreateCompiler();
             System.CodeDom.Compiler.CompilerParameters param = new System.CodeDom.Compiler.CompilerParameters();
             param.GenerateExecutable = false;
             param.GenerateInMemory = true;
@@ -172,7 +169,11 @@ namespace WorldServer.API
             param.ReferencedAssemblies.Add("Common.dll");
             param.ReferencedAssemblies.Add("FrameWork.dll");
 
-            System.CodeDom.Compiler.CompilerResults results = compiler.CompileAssemblyFromSource(param, result);
+            System.CodeDom.Compiler.CompilerResults results;
+            using (var compiler = new Microsoft.CSharp.CSharpCodeProvider())
+            {
+                results = compiler.CompileAssemblyFromSource(param, result);
+            }
 
             if (results.Errors.Count != 0)
             {

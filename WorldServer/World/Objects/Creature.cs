@@ -1062,7 +1062,7 @@ namespace WorldServer.World.Objects
             killer.QtsInterface.HandleEvent(Objective_Type.QUEST_KILL_MOB, Spawn.Entry, 1);
         }
 
-        public void CheckDamageCaster(Unit caster, AbilityDamageInfo damageInfo)
+        public override void CheckDamageCaster(Unit caster, AbilityDamageInfo damageInfo)
         {
             int LevelDiff = Spawn.Level - caster.Level;
 
@@ -1267,7 +1267,6 @@ namespace WorldServer.World.Objects
             }
         }
 
-#warning FIXME. Looks like there's support for taking more than one item at a time.
         private void TakeInfluenceItem(Player player, InteractMenu menu)
         {
             ushort slot = menu.Packet.GetUint16();

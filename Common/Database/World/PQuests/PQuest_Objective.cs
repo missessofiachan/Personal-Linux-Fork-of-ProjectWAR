@@ -36,7 +36,7 @@ namespace Common
         public string Description { get; set; }
 
         [DataElement(Varchar = 255, AllowDbNull = false)]
-        public string ObjectId { get; set; }
+        public new string ObjectId { get; set; }
 
         [DataElement(Varchar = 255, AllowDbNull = true)]
         public string ObjectId2 { get; set; }

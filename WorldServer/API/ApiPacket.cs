@@ -4,13 +4,6 @@ namespace WorldServer.API
 {
     public class ApiPacket : Packet
     {
-        private ushort _sequenceID;
-
-        public ushort SequenceID
-        {
-            get { return _sequenceID; }
-        }
-
         public ushort _sessionID;
         public ushort _unk1;
         public byte _unk2;

@@ -840,10 +840,14 @@ if not exist $(TargetDir)\TempFilesDirectory mkdir $(TargetDir)\TempFilesDirecto
   </PropertyGroup>
   <Target Name="AfterBuild">
     <ItemGroup>
+      <LocalDevelopmentConfigs Include="$(ProjectDir)Configs\LocalDevelopment\*.xml" />
       <DepsZonesFiles Include="$(ProjectDir)..\deps\zones\**\*.*" />
       <DepsLosFiles Include="$(ProjectDir)..\deps\los\**\*.*"
                     Condition="'$(ProjectWarGenerateLos)' != '1' And '$(ProjectWarGenerateLos)' != 'true' And '$(ProjectWarGenerateLos)' != 'True'" />
     </ItemGroup>
+    <MakeDir Directories="$(TargetDir)Configs" />
+    <MakeDir Directories="$(TargetDir)zones" />
+    <Copy SourceFiles="@(LocalDevelopmentConfigs)" DestinationFiles="@(LocalDevelopmentConfigs->'$(TargetDir)Configs\%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(DepsZonesFiles)" DestinationFolder="$(TargetDir)zones\%(RecursiveDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(DepsLosFiles)" DestinationFolder="$(TargetDir)los\%(RecursiveDir)" SkipUnchangedFiles="true" />
     <Error Condition="('$(ProjectWarGenerateLos)' == '1' Or '$(ProjectWarGenerateLos)' == 'true' Or '$(ProjectWarGenerateLos)' == 'True') And '$(ProjectWarLosInputRoot)' == ''"

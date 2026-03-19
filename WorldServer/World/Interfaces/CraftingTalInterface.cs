@@ -22,8 +22,6 @@ namespace WorldServer.World.Interfaces
         byte _duration;
         byte _multiplier;
         byte _critChance;
-        byte _basePower;
-
         bool locked;
 
         public override bool Load()
@@ -501,12 +499,6 @@ namespace WorldServer.World.Interfaces
 
         public void SetBasePower()
         {
-            if (_myPlayer._Value.CraftingSkillLevel == 200)
-                _basePower = 3;
-            else if(_myPlayer._Value.CraftingSkillLevel >= 174)
-                _basePower = 2;
-            else if (_myPlayer._Value.CraftingSkillLevel >= 150)
-                _basePower = 1;
         }
 
         public void Crafting()

@@ -1090,7 +1090,6 @@ namespace WorldServer.World.Scenarios
             };
 
             // Free space left in the scenario teams.
-            #warning Is sometimes negative o_O
             int[] teamSpace =
             {
                 Math.Max(0, scenario.Info.MaxPlayers - scenario.GetTotalTeamCount(0)),

@@ -21,7 +21,7 @@
     <Database>war_characters</Database>
     <Username>root</Username>
     <Password>password</Password>
-    <Custom>Treat Tiny As Boolean=False</Custom>
+    <Custom>Treat Tiny As Boolean=False;SslMode=Disabled;AllowPublicKeyRetrieval=True</Custom>
     <Catalog />
     <IPAddress />
     <MultipleActiveResultSets>false</MultipleActiveResultSets>
@@ -33,7 +33,7 @@
     <Database>war_world</Database>
     <Username>root</Username>
     <Password>password</Password>
-    <Custom>Treat Tiny As Boolean=False</Custom>
+    <Custom>Treat Tiny As Boolean=False;SslMode=Disabled;AllowPublicKeyRetrieval=True</Custom>
     <Catalog />
     <IPAddress />
     <MultipleActiveResultSets>false</MultipleActiveResultSets>

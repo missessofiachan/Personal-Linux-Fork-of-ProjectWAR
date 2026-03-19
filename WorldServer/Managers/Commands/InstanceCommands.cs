@@ -171,13 +171,6 @@ namespace WorldServer.Managers.Commands
         {
             //TODO
             return true;
-            if (plr.QtsInterface.PublicQuest != null)
-            {
-                plr.QtsInterface.PublicQuest.Stage.Cleanup();
-                plr.QtsInterface.PublicQuest.Reset();
-            }
-
-            return true;
         }
 
         /// <summary>

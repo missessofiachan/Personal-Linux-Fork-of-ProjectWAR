@@ -17,7 +17,6 @@ namespace WorldServer.World.AI.BT
 {
     public class ChosenBrain : ABrain
     {
-        private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
         public IBehaviour<Creature> BehaviourTree { get; set; }
         public PartyDirective Directive { get; set; }
 

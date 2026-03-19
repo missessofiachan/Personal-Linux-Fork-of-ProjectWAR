@@ -19,12 +19,7 @@ namespace WorldServer.World.Objects
     {
         private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-        public Creature_spawn Spawn;
         public uint ProtoEntryId { get; set; }
-        protected byte Scale { get; set; }
-        public ushort Ranged { get; set; }
-        public ushort Model1 { get; set; }
-        public ushort Model2 { get; set; }
 
         public List<Waypoint> Waypoints { get; set; }
 
@@ -49,12 +44,6 @@ namespace WorldServer.World.Objects
 
             
         }
-        public long GetTimeStampInMilliseconds()
-        {
-            return DateTime.Now.Millisecond;
-        }
-
-
         public override void OnLoad()
         {
             _logger.Trace($"Calling AdvCreature.OnLoad");

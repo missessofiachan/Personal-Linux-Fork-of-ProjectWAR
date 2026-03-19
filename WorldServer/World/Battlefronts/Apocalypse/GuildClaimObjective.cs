@@ -49,15 +49,10 @@ namespace WorldServer.World.Battlefronts.Apocalypse
         public readonly ushort RegionId;
 
         /// <summary>Influence area containing the objective</summary>
-        private Zone_Area _area;
-
-
         /// <summary>Set of all players in close range, not limited</summary>
         // private ISet<Player> _closePlayers = new HashSet<Player>();
 
         /// <summary>Displayed timer in seconds</summary>
-        private int _displayedTimer;
-
         private readonly uint _tokdiscovery; // This is for ToK unlocks
         private readonly uint _tokunlocked; // This is for ToK unlocks
 
@@ -69,8 +64,6 @@ namespace WorldServer.World.Battlefronts.Apocalypse
         public ApocCommunications CommsEngine { get; set; }
 
         public Campaign BattleFront { get; set; }
-
-        public string Name { get; set; }
 
         public StateFlags State { get; set; }
 

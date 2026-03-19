@@ -34,8 +34,6 @@ namespace WorldServer.World.Interfaces
         }
 
         public EMoveState MoveState { get; private set; }
-        private EMoveState _lastState;
-
         private Unit _unit;
 
         public override void SetOwner(Object owner)

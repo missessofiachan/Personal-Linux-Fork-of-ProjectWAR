@@ -15,8 +15,6 @@ namespace Common.Database.World.Battlefront
         private ushort _BattleFrontId;
         private ushort _ZoneId;
         private string _ZoneName;
-        private string _PolygonPlanarCoordinates;
-
         [PrimaryKey]
         public ushort BattleFrontId
         {

@@ -257,7 +257,6 @@ namespace WorldServer.World.Objects
         private static readonly Logger RewardLogger = LogManager.GetLogger("RewardLogger");
         private static readonly Logger DeathLogger = LogManager.GetLogger("DeathLogger");
 
-        private ushort _maxActionPoints;
 
         public Character Info;
         public Character_value _Value;
@@ -1079,7 +1078,6 @@ namespace WorldServer.World.Objects
                 && x.Spawn.Proto.VendorID == 0
                 && x.Spawn.Proto.LairBoss == false
                 && x.Spawn.Proto.Title == 0
-                && !(x is Keep_Creature)
                 && x.Spawn.Proto.FinishingQuests == null
                      && !(x is Pet)
                 && x.Spawn.Proto.StartingQuests == null);
@@ -3236,7 +3234,6 @@ namespace WorldServer.World.Objects
         public Renown_Info CurrentRenown;
 
         private uint _renownPool;
-        private uint _pendingRenown;
 
         public void SetRenownLevel(byte level)
         {
@@ -3372,85 +3369,6 @@ namespace WorldServer.World.Objects
         {
             // removed as not required in bounty system.
             return;
-
-            int aaoMult = 0;
-            Realms aaoRealm = Realms.REALMS_REALM_NEUTRAL;
-            if (Region != null && Region.Campaign != null)
-            {
-
-                if (Region.Campaign != null)
-                {
-                    aaoMult = Math.Abs(Region.Campaign.AgainstAllOddsMult);
-                    if (aaoMult != 0)
-                        aaoRealm = Region.Campaign.AgainstAllOddsMult > 0 ? Realms.REALMS_REALM_DESTRUCTION : Realms.REALMS_REALM_ORDER;
-                }
-                if (aaoMult != 0 && aaoRealm != Realms.REALMS_REALM_NEUTRAL && Realm != aaoRealm)
-                    renown = Math.Max(1, renown);
-            }
-
-            if (Program.Config.RenownRate > 0)
-                renown *= (uint)Program.Config.RenownRate;
-
-            renown = (uint)(renown * GetKillRewardScaler(victim));
-
-            if (Constants.DoomsdaySwitch > 0 && renown < 20)
-            {
-                if (Realm == aaoRealm || aaoRealm == Realms.REALMS_REALM_NEUTRAL)
-                {
-                    renown = 20;
-                }
-            }
-            if (Constants.DoomsdaySwitch > 0 && renown < 1)
-                renown = 1;
-
-            if (renown == 0)
-                return;
-
-            EvtInterface.Notify(EventName.OnAddRenown, this, renown);
-
-            if (renown > 80000)
-            {
-                if (victim != null && killer != null)
-                    Log.Error("AddKillRenown (mult)", "Player received outrageous renown level (" + renown + ") - " + "(" + killer.Name + ") - " + "(" + victim.Name + ") - " + "(" + participants.ToString() + ") - " + Environment.StackTrace);
-                SendClientMessage("You somehow gained an amount of renown larger than the system allows (" + renown + "). This gain has been prevented.");
-                return;
-            }
-
-            _renownPool += (uint)(renown * 0.25f);
-
-
-            // RB   4/17/2016   Lock Renown Rank to double the Career Rank. Cannot gain renown if Renown Rank is higher than 2*Career Rank.
-            if (_Value.RenownRank >= Program.Config.RenownCap || (_Value.Level < 32 && _Value.RenownRank > (2 * _Value.Level)))
-                return;
-
-            RewardType type = this == killer ? RewardType.Kill : RewardType.Assist;
-            string text = this == killer ? victim.Name : killer.Name;
-
-            RewardLogger.Trace($"Type : {type} Text : {text}");
-
-            // If the amount of renown you have + the renown you've gained is more than required to level...
-            if (_Value.Renown + renown > CurrentRenown.Renown)
-            {
-                // If your renown rank is below twice your career rank, add the renown level as normal.
-                if (_Value.RenownRank < (2 * _Value.Level))
-                {
-                    RenownUp(_Value.Renown + renown - CurrentRenown.Renown);
-                    AbtInterface.SendMasteryPointsUpdate();
-                }
-                // Else, if your RR is equal or greater than twice your career rank, do not let the renown advance enough to level.
-                else if (_Value.RenownRank >= (2 * _Value.Level))
-                {
-                    _Value.Renown = CurrentRenown.Renown - 1;
-                    SendRenown(type, text);
-                }
-
-            }
-            else
-            {
-                _Value.Renown += renown;
-                SendRenown(type, text);
-
-            }
         }
 
         public void RenownUp(uint remainder)
@@ -6468,9 +6386,6 @@ namespace WorldServer.World.Objects
                 _fallState = value;
                 if (value > 3)
                     _apexHit = true;
-                // Slow players when they jump.
-                else if (CbtInterface.IsInCombat && value == 2)
-                    _slowOnLand = true;
             }
         }
 
@@ -6478,7 +6393,6 @@ namespace WorldServer.World.Objects
         public Unit PuntedBy { get; set; }
         /// <summary> Number of packets received which indicated that the player was airborne. Set to -1 when the player lands. </summary>
         public sbyte AirCount;
-        private bool _slowOnLand;
 
         public void CalculateFallDamage(bool terminal = false)
         {
@@ -6724,7 +6638,6 @@ namespace WorldServer.World.Objects
             return CurrentKeep?.Info.Name ?? CurrentObjectiveFlag?.Name ?? CurrentArea?.AreaName ?? Zone.Info.Name;
         }
 
-        private bool _pendingRescue;
         /*
         private void CheckZoneValidity()
         {
@@ -6768,8 +6681,10 @@ namespace WorldServer.World.Objects
 
         #region Range
 
+#if DEBUG && POSITION_INDICATE
         private static GameObject _myLocationObject;
         private static GameObject _myAttackerObject;
+#endif
 
         private int _enemiesInRange;
 
@@ -7042,8 +6957,6 @@ namespace WorldServer.World.Objects
         #endregion
 
         #region Group
-
-#warning MOVE TO GROUPINTERFACE
 
         public Group PriorityGroup => ScenarioGroup ?? WorldGroup;
         public Group ScenarioGroup { get; set; }

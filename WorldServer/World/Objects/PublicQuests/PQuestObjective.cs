@@ -148,14 +148,7 @@ namespace WorldServer.World.Objects.PublicQuests
                 }
                 if (spawn.Type == 3)
                 {
-
                     return;
-#warning this sucks cant get gos by spawn id
-
-                    ActiveInteractableGameObjects.Add(spawn.Entry);
-
-
-
                 }
             }
         }

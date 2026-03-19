@@ -177,9 +177,5 @@ namespace WorldServer.World.Abilities.CareerInterfaces
         {
             _drainTimeEnd = TCPManager.GetTimeStampMS() + DRAIN_DURATION_MS;
         }
-
-        private int SWITCH_CD_MS = 15000;
-        private int DPS_SWITCH_CD_MS = 300000;
-
     }
 }

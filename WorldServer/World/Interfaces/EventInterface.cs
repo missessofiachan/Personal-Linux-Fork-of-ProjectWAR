@@ -287,7 +287,7 @@ namespace WorldServer.World.Interfaces
         public void Notify(EventName name, Object sender, object args)
         {
             List<EventNotify> eventNotifies;
-            int i, count;
+            int i;
 
             lock (_notify)
             {

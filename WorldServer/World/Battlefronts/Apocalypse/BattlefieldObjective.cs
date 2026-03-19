@@ -53,8 +53,6 @@ namespace WorldServer.World.Battlefronts.Apocalypse
         public readonly ushort RegionId;
 
         /// <summary>Influence area containing the objective</summary>
-        private Zone_Area _area;
-
         /// <summary>Set of all players in close range, not limited</summary>
         // private ISet<Player> _closePlayers = new HashSet<Player>();
 
@@ -75,8 +73,6 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
         public Campaign BattleFront { get; set; }
         public BattleFrontStatus battleFrontStatus { get; set; }
-
-        public string Name { get; set; }
 
         public StateFlags State { get; set; }
 
@@ -709,7 +705,6 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                         message = string.Concat($"The forces of ", GetRealmString(OwningRealm), " are securing ", Name, "!");
                         break;
                     }
-                    break;
 
                 default:
                     message = string.Empty;

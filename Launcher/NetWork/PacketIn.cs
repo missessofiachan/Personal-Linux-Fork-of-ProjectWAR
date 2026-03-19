@@ -9,8 +9,8 @@ namespace Launcher
     public class PacketIn : MemoryStream
     {
         // Opcode of the packet
-        public ulong Opcode = 0;
-        public ulong Size = 0;
+        public ulong Opcode { get; set; }
+        public ulong Size { get; set; }
 
         public PacketIn(int size)
             : base(size)

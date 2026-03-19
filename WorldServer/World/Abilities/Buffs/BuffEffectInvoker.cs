@@ -1475,7 +1475,6 @@ namespace WorldServer.World.Abilities.Buffs
                         hostBuff.AddBuffParameter(cmd.BuffLine, cmd.PrimaryValue); break;
                 case BUFF_TICK:
                     goto case 4;
-#warning Intended to cancel self-buffs, non-channeling, which are consuming action points on tick. This needs to be split to another command.
                 case BUFF_END:
                     if (plrTarget.ModifyActionPoints((short)cmd.PrimaryValue) == 0 && cmd.PrimaryValue < 0 && hostBuff.Caster == hostBuff.Target)
                         hostBuff.RemoveStack();
@@ -4688,10 +4687,6 @@ namespace WorldServer.World.Abilities.Buffs
         private static bool AllowDismount(NewBuff hostBuff, AbilityDamageInfo damageInfo, uint value, Unit eventInstigator)
         {
             return true;
-
-            Player player = (Player)hostBuff.Caster;
-
-            return player.CurrentSiege == null;
         }
 
         // Not thread safe - should we ever change to a different threading model, will need to change this.

@@ -15,8 +15,6 @@ namespace WorldServer.World.Battlefronts.Objectives
     { 
         private const string NAME_START = "Portal to gatehouse ";
 
-        /// <summary>Portal targets depending on realm</summary>
-        private PortalBase targetPortal;
         private Point3D targetPosition;
 
         private long _nextAvailableTimestamp;
@@ -27,9 +25,6 @@ namespace WorldServer.World.Battlefronts.Objectives
             Name = NAME_START + name;
             Spawn.Proto.Name = Name; // For debug purpose only
 
-            //var target = new PortalBase(zoneId, x2, y2, z2, o2);
-
-            //targetPortal = target;
             targetPosition = new Point3D(x2, y2,z2);
         }
 
@@ -45,7 +40,7 @@ namespace WorldServer.World.Battlefronts.Objectives
 
             _nextAvailableTimestamp = now + BattleFrontConstants.PORTAL_DELAY;
 
-            Teleport(player, (int) targetPortal.ZoneId, targetPosition);
+            Teleport(player, (int)ZoneId, targetPosition);
         }
     }
 }
