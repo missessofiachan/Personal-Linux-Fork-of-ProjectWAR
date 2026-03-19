@@ -207,6 +207,7 @@
     <PackageReference Include="nlog">
       <Version>4.6.3</Version>
     </PackageReference>
+    <PackageReference Include="System.Resources.Extensions" Version="4.6.0" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
