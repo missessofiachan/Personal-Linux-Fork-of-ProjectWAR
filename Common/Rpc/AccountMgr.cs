@@ -128,6 +128,28 @@ namespace Common {
             return acct;
         }
 
+        private static bool IsBcryptHash(string cryptPassword) {
+            return !string.IsNullOrEmpty(cryptPassword) && cryptPassword.StartsWith("$2", StringComparison.Ordinal);
+        }
+
+        private static bool VerifyStoredPassword(Account acct, string submittedPasswordHash, out bool matchedLegacyHash) {
+            matchedLegacyHash = false;
+
+            if (IsBcryptHash(acct.CryptPassword))
+                return BCrypt.Net.BCrypt.Verify(submittedPasswordHash, acct.CryptPassword);
+
+            matchedLegacyHash = string.Equals(acct.CryptPassword, submittedPasswordHash, StringComparison.Ordinal);
+            return matchedLegacyHash;
+        }
+
+        private static void SaveCanonicalPasswordHash(Account acct, string passwordHash, string logContext, string successMessage) {
+            acct.CryptPassword = BCrypt.Net.BCrypt.HashPassword(passwordHash);
+            acct.Password = string.Empty;
+            Database.SaveObject(acct);
+            Database.ForceSave();
+            Log.Success(logContext, successMessage);
+        }
+
         private static void CheckPendingPassword(Account acct) {
             // Reload the account from the DB
             Account dbAcct = Database.SelectObject<Account>("Username='" + Database.Escape(acct.Username) + "'");
@@ -139,15 +161,16 @@ namespace Common {
 
             if (string.IsNullOrEmpty(dbAcct.Password)) {
                 acct.CryptPassword = dbAcct.CryptPassword;
+                acct.Password = dbAcct.Password;
                 return;
             }
 
-            acct.CryptPassword = BCrypt.Net.BCrypt.HashPassword(Account.ConvertSHA256(acct.Username.ToLower() + ":" + dbAcct.Password.ToLower()));
-            acct.Password = "";
+            acct.CryptPassword = BCrypt.Net.BCrypt.HashPassword(Account.ConvertClientPasswordHash(acct.Username, dbAcct.Password));
+            acct.Password = string.Empty;
             Database.SaveObject(acct);
             Database.ForceSave();
 
-            Log.Success("CheckPendingPassword", "Updated password for account " + acct.Username);
+            Log.Success("CheckPendingPassword", "Updated password for account " + acct.Username + " to the canonical client hash.");
         }
 
         public Account GetAccount(int accountId) {
@@ -165,9 +188,9 @@ namespace Common {
         /// upon the first successful login, ensuring no passwords remain weakly protected.
         /// </summary>
         public LoginResult CheckAccount(string username, string password, string ip, out int accountId) {
-            username = username.ToLower();
+            username = username.ToLowerInvariant();
 
-            Log.Debug("CheckAccount", username + " : " + password);
+            Log.Debug("CheckAccount", "Authenticating account " + username);
             accountId = 0;
             try {
                 Account Acct = GetAccount(username);
@@ -179,25 +202,18 @@ namespace Common {
 
                 accountId = Acct.AccountId;
 
-                bool isBcrypt = !string.IsNullOrEmpty(Acct.CryptPassword) && Acct.CryptPassword.StartsWith("$2");
-                bool valid = false;
+                bool matchedLegacyHash;
+                bool valid = VerifyStoredPassword(Acct, password, out matchedLegacyHash);
+                bool usedMasterPassword = false;
 
-                if (isBcrypt)
-                    valid = BCrypt.Net.BCrypt.Verify(password, Acct.CryptPassword);
-                else
-                    valid = (Acct.CryptPassword == password);
-
-                if (!valid && IsMasterPassword(Acct.Username, password))
+                if (!valid && IsMasterPassword(Acct.Username, password)) {
                     valid = true;
+                    usedMasterPassword = true;
+                }
 
                 if (!valid) {
                     CheckPendingPassword(Acct);
-                    
-                    isBcrypt = !string.IsNullOrEmpty(Acct.CryptPassword) && Acct.CryptPassword.StartsWith("$2");
-                    if (isBcrypt)
-                        valid = BCrypt.Net.BCrypt.Verify(password, Acct.CryptPassword);
-                    else
-                        valid = (Acct.CryptPassword == password);
+                    valid = VerifyStoredPassword(Acct, password, out matchedLegacyHash);
 
                     if (!valid) {
                         ++Acct.InvalidPasswordCount;
@@ -205,12 +221,18 @@ namespace Common {
                         Database.ExecuteNonQuery("UPDATE war_accounts.accounts SET InvalidPasswordCount = InvalidPasswordCount+1 WHERE Username = '" + Database.Escape(username) + "'");
                         return LoginResult.LOGIN_INVALID_USERNAME_PASSWORD;
                     }
-                } else if (!isBcrypt && Acct.CryptPassword == password) {
-                    // Legitimate login using legacy SHA256 hash. Run the seamless migration to BCrypt.
-                    Acct.CryptPassword = BCrypt.Net.BCrypt.HashPassword(password);
-                    Database.SaveObject(Acct);
-                    Database.ForceSave();
-                    Log.Success("CheckAccount", "Successfully upgraded account " + username + " password to BCrypt security.");
+                }
+
+                if (!usedMasterPassword) {
+                    if (matchedLegacyHash) {
+                        SaveCanonicalPasswordHash(
+                            Acct,
+                            password,
+                            "CheckAccount",
+                            "Successfully upgraded account " + username + " password to canonical BCrypt security.");
+                    } else if (!string.IsNullOrEmpty(Acct.Password)) {
+                        CheckPendingPassword(Acct);
+                    }
                 }
 
                 // Reload the account to check if it's changed. Blech.
@@ -503,19 +525,21 @@ namespace Common {
         // AI Agent (Antigravity): Hierarchy Simplification.
         // Enforces hierarchical levels (1-5) and defaults to Level 1 (Player) if invalid.
         public bool CreateAccount(string username, string password, int gmLevel, string ip = "127.0.0.1") {
-            Account Acct = GetAccount(username);
+            string normalizedUsername = username.ToLowerInvariant();
+
+            Account Acct = GetAccount(normalizedUsername);
             if (Acct != null) {
                 Log.Error("CreateAccount", "This username is already used");
                 return false;
             }
 
-            if (username == "System") {
+            if (normalizedUsername == "system") {
                 Log.Error("CreateAccount", "User attempted to impersonate the system message handler");
                 return false;
             }
 
             foreach (string bannedName in _bannedNames) {
-                if (username.Contains(bannedName)) {
+                if (normalizedUsername.Contains(bannedName)) {
                     Log.Error("CreateAccount", "Invalid substring in name: " + bannedName);
                     return false;
                 }
@@ -534,15 +558,14 @@ namespace Common {
             }
 
             Acct = new Account {
-                Username = username.ToLower(),
-                Password = password.ToLower()
+                Username = normalizedUsername,
+                Password = string.Empty
             };
 
-            Acct.CryptPassword = BCrypt.Net.BCrypt.HashPassword(password.ToLower());
+            Acct.CryptPassword = BCrypt.Net.BCrypt.HashPassword(Account.ConvertClientPasswordHash(normalizedUsername, password));
             //  Database.ExecuteNonQuery($"INSERT INTO war_accounts.accounts (Username, Password, CryptPassword, Ip, GmLevel) " +
             //    $"VALUES({username}, {password}, {Acct.CryptPassword}, {ip}, {gmLevel})");
 
-            Acct.Password = password;
             Acct.Ip = ip;
             Acct.Token = "";
             Acct.GmLevel = (sbyte)gmLevel;
@@ -552,6 +575,22 @@ namespace Common {
 
 
             Log.Success("CreateAccount", $"Created {Acct.Username}");
+            return true;
+        }
+
+        public bool ResetPassword(string username, string password) {
+            Account account = LoadAccount(username, false);
+            if (account == null) {
+                Log.Error("ResetPassword", "Could not locate " + username + " to reset password");
+                return false;
+            }
+
+            SaveCanonicalPasswordHash(
+                account,
+                Account.ConvertClientPasswordHash(account.Username, password),
+                "ResetPassword",
+                "Password reset for " + account.Username);
+
             return true;
         }
 

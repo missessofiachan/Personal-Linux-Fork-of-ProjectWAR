@@ -1,25 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Collections;
 using System.Threading;
 using System.Reflection;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Security.Cryptography;
-using System.Net.Security;
-using System.Security.Authentication;
 
 namespace FrameWork
 {
     public class TCPManager
     {
         private const string TlsEnableEnvironmentVariable = "PROJECTWAR_ENABLE_TLS";
-        private const string TlsCertificatePath = "cert.pfx";
-        private const string TlsCertificatePasswordEnvironmentVariable = "PROJECTWAR_TLS_CERT_PASSWORD";
+        private static bool _tlsRetirementWarningLogged;
 
         #region Manager
 
@@ -47,8 +41,8 @@ namespace FrameWork
                 if (_Tcps.ContainsKey(Name))
                     return false;
 
+                WarnIfTlsRequested();
                 TCPManager Tcp = ConvertTcp<T>();
-                Tcp.SslCertificate = LoadServerCertificate();
 
                 if (Tcp == null || !Tcp.Start(port))
                 {
@@ -77,6 +71,7 @@ namespace FrameWork
             if (_Tcps.ContainsKey(Name))
                 return false;
 
+            WarnIfTlsRequested();
             TCPManager Tcp = ConvertTcp<T>();
             if (Tcp == null || !Tcp.Start(IP, port))
             {
@@ -96,38 +91,16 @@ namespace FrameWork
             return (T)Convert.ChangeType(null, typeof(T));
         }
 
-        private static X509Certificate2 LoadServerCertificate()
+        private static void WarnIfTlsRequested()
         {
-            if (!IsTlsEnabled())
-                return null;
+            if (_tlsRetirementWarningLogged || !IsTlsRequested())
+                return;
 
-            if (!File.Exists(TlsCertificatePath))
-            {
-                Log.Error("TCPManager", $"TLS was requested but {TlsCertificatePath} was not found.");
-                return null;
-            }
-
-            string password = Environment.GetEnvironmentVariable(TlsCertificatePasswordEnvironmentVariable);
-            try
-            {
-                return new X509Certificate2(TlsCertificatePath, password ?? string.Empty);
-            }
-            catch (CryptographicException ex)
-            {
-                if (string.IsNullOrWhiteSpace(password))
-                    Log.Error("TCPManager", $"Failed to load {TlsCertificatePath}: set {TlsCertificatePasswordEnvironmentVariable} before starting TLS. {ex.Message}");
-                else
-                    Log.Error("TCPManager", $"Failed to load {TlsCertificatePath}: {ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                Log.Error("TCPManager", $"Failed to load {TlsCertificatePath}: {ex.Message}");
-            }
-
-            return null;
+            _tlsRetirementWarningLogged = true;
+            Log.Error("TCPManager", TlsEnableEnvironmentVariable + " is no longer supported. Legacy clients require raw TCP; continuing without TLS.");
         }
 
-        private static bool IsTlsEnabled()
+        private static bool IsTlsRequested()
         {
             string value = Environment.GetEnvironmentVariable(TlsEnableEnvironmentVariable);
             if (string.IsNullOrWhiteSpace(value))
@@ -152,13 +125,6 @@ namespace FrameWork
         private readonly byte[] stateRequirement = new byte[0xFF];
 
         public readonly Dictionary<string,ICryptHandler> m_cryptHandlers = new Dictionary<string,ICryptHandler>();
-        
-        /// <summary>
-        /// The X509 digital certificate utilized for authenticating the server and encrypting 
-        /// communication tunnels via TLS (Transport Layer Security). 
-        /// If this is populated, the server will require connecting clients to establish an encrypted SslStream.
-        /// </summary>
-        public X509Certificate2 SslCertificate { get; set; }
 
         private static readonly DateTime EpochDateTime = new DateTime(1970, 1, 1);
         #region Clients
@@ -577,20 +543,8 @@ namespace FrameWork
 
                     baseClient = GetNewClient();
                     baseClient.Socket = sock;
-
-                    // If a valid digital certificate was provided to the TCPManager on boot,
-                    // we instruct the baseClient to wrap the raw socket in an authenticated SslStream.
-                    // This creates a secure tunnel where all packet payloads are seamlessly encrypted.
-                    if (SslCertificate != null)
-                    {
-                        baseClient.SslStream = new SslStream(new NetworkStream(sock, false), false);
-                        baseClient.SslStream.BeginAuthenticateAsServer(SslCertificate, false, SslProtocols.Tls12, false, OnSslAuthenticateAsync, baseClient);
-                    }
-                    else
-                    {
-                        baseClient.OnConnect();
-                        baseClient.BeginReceive();
-                    }
+                    baseClient.OnConnect();
+                    baseClient.BeginReceive();
                 }
                 catch (SocketException e)
                 {
@@ -633,22 +587,6 @@ namespace FrameWork
                     {
                     }
                 }
-            }
-        }
-
-        private void OnSslAuthenticateAsync(IAsyncResult ar)
-        {
-            BaseClient baseClient = (BaseClient)ar.AsyncState;
-            try
-            {
-                baseClient.SslStream.EndAuthenticateAsServer(ar);
-                baseClient.OnConnect();
-                baseClient.BeginReceive();
-            }
-            catch (Exception e)
-            {
-                Log.Error("TCPManager", "SSL EndAuthenticate error: " + e.Message);
-                Disconnect(baseClient, "SSL Auth Error");
             }
         }
 

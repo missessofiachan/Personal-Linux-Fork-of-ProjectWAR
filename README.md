@@ -116,11 +116,17 @@ Checkpoint: all three databases exist and contain tables.
 
 ### 3. Build the solution
 
-1. Open `WarEmulator.sln` in Visual Studio.
+1. Open `ProjectWAR.sln` in Visual Studio.
 2. Set build configuration to `Release` and platform to `x64`.
 3. Build the solution.
 
 Checkpoint: build output is in `bin/Release/`.
+
+Command-line example:
+
+```powershell
+& 'C:\Program Files\Microsoft Visual Studio\18\Enterprise\MSBuild\Current\Bin\amd64\MSBuild.exe' ProjectWAR.sln /p:Configuration=Release /p:Platform=x64 /v:minimal
+```
 
 ### 4. Verify local config files
 
@@ -138,6 +144,11 @@ Default local values:
 - DB port `3306`
 - DB user `root`
 - DB password `password`
+
+Networking note:
+
+- ProjectWAR currently expects legacy launcher/client traffic over raw TCP.
+- `PROJECTWAR_ENABLE_TLS` is retired and should not be set.
 
 If your DB password is different, update:
 
@@ -182,9 +193,12 @@ Get-Process | Where-Object { $_.Name -match 'AccountCacher|LauncherServer|LobbyS
 - Client cannot connect:
   - verify all services are running via `ServerLauncher`.
   - verify config files still point to localhost values.
+  - verify `PROJECTWAR_ENABLE_TLS` is not set in your shell or system environment.
 - Missing terrain/zone data:
   - verify `deps/zones/` extraction.
   - rebuild so assets are copied into `bin/Release/zones/`.
+- Need a clean rebuild:
+  - delete generated directories such as `.vs/`, `bin/`, `*/obj/`, and `packages/`, then restore/build again.
 
 ## Developer Documentation
 

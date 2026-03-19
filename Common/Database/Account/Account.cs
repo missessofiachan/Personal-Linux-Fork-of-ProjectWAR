@@ -203,6 +203,13 @@ namespace Common
             return sb.ToString();
         }
 
+        public static string ConvertClientPasswordHash(string username, string password)
+        {
+            string normalizedUsername = (username ?? string.Empty).ToLowerInvariant();
+            string normalizedPassword = (password ?? string.Empty).ToLowerInvariant();
+            return ConvertSHA256(normalizedUsername + ":" + normalizedPassword);
+        }
+
         [DataElement(AllowDbNull = false)]
         public sbyte noSurname
         {

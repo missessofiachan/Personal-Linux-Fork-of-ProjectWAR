@@ -25,8 +25,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Collections;
 using System.Threading;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
 
 namespace FrameWork
 {
@@ -60,13 +58,6 @@ namespace FrameWork
             get { return _socket; }
             set { _socket = value; }
         }
-
-        /// <summary>
-        /// An optional encrypted tunnel (TLS) wrapper around the raw Socket.
-        /// When present, all incoming and outgoing packets pass through this stream to ensure 
-        /// communication is heavily encrypted and protected from packet sniffing and injection.
-        /// </summary>
-        public SslStream SslStream { get; set; }
 
         #endregion
 
@@ -227,10 +218,7 @@ namespace FrameWork
                 }
                 else
                 {
-                    if (SslStream != null)
-                        SslStream.BeginRead(_pBuf, _pBufOffset, bufSize - _pBufOffset, ReceiveCallback, this);
-                    else
-                        _socket.BeginReceive(_pBuf, _pBufOffset, bufSize - _pBufOffset, SocketFlags.None, ReceiveCallback, this);
+                    _socket.BeginReceive(_pBuf, _pBufOffset, bufSize - _pBufOffset, SocketFlags.None, ReceiveCallback, this);
                 }
             }
         }
@@ -245,7 +233,7 @@ namespace FrameWork
             try
             {
                 baseClient = (BaseClient)ar.AsyncState;
-                int numBytes = baseClient.SslStream != null ? baseClient.SslStream.EndRead(ar) : baseClient.Socket.EndReceive(ar);
+                int numBytes = baseClient.Socket.EndReceive(ar);
 
                 if (numBytes > 0 || (numBytes <=0 && DisconnectOnNullByte == false))
                 {
@@ -294,13 +282,6 @@ namespace FrameWork
 
         public void CloseConnections()
         {
-            if (SslStream != null)
-            {
-                try { SslStream.Close(); } catch { }
-                try { SslStream.Dispose(); } catch { }
-                SslStream = null;
-            }
-
             Socket socket = _socket;
             _socket = null;
             if (socket != null)
@@ -425,12 +406,6 @@ namespace FrameWork
             if (bufferLength == 0)
                 return false;
 
-            if (SslStream != null)
-            {
-                try { SslStream.Write(TLSendBuffer.Value, 0, bufferLength); return true; }
-                catch (Exception e) { Disconnect("SslStream Write failed: " + e.Message); return false; }
-            }
-
             // Send the buffer
             SocketError errorCode;
 
@@ -459,12 +434,6 @@ namespace FrameWork
         {
             if (!Socket.Connected)
                 return false;
-
-            if (SslStream != null)
-            {
-                try { SslStream.Write(buffer, 0, buffer.Length); return true; }
-                catch (Exception e) { Disconnect("SslStream Write failed: " + e.Message); return false; }
-            }
 
             SocketError errorCode;
             Socket.Send(buffer, 0, buffer.Length, SocketFlags.None, out errorCode);
@@ -506,11 +475,7 @@ namespace FrameWork
                 Buffer.BlockCopy(buf, 0, m_tcpSendBuffer, 0, buf.Length);
 
                 int start = Environment.TickCount;
-
-                if (SslStream != null)
-                    SslStream.BeginWrite(m_tcpSendBuffer, 0, buf.Length, m_asyncTcpCallback, this);
-                else
-                    Socket.BeginSend(m_tcpSendBuffer, 0, buf.Length, SocketFlags.None, m_asyncTcpCallback, this);
+                Socket.BeginSend(m_tcpSendBuffer, 0, buf.Length, SocketFlags.None, m_asyncTcpCallback, this);
 
                 int took = Environment.TickCount - start;
                 if (took > 100)
@@ -551,11 +516,7 @@ namespace FrameWork
                // Buffer.BlockCopy(buf, 0, m_tcpSendBuffer, 0, buf.Length);
 
                 int start = Environment.TickCount;
-
-                if (SslStream != null)
-                    SslStream.BeginWrite(buf, 0, buf.Length, m_asyncTcpCallback, this);
-                else
-                    Socket.BeginSend(buf, 0, buf.Length, SocketFlags.None, m_asyncTcpCallback, this);
+                Socket.BeginSend(buf, 0, buf.Length, SocketFlags.None, m_asyncTcpCallback, this);
 
                 //int took = Environment.TickCount - start;
                 //if (took > 100)
@@ -585,8 +546,7 @@ namespace FrameWork
 			{
                 Queue<byte[]> q = client.m_tcpQueue;
 
-				int sent = client.SslStream != null ? 0 : client.Socket.EndSend(ar);
-                if (client.SslStream != null) client.SslStream.EndWrite(ar);
+				int sent = client.Socket.EndSend(ar);
 
 				int count = 0;
                 byte[] data = client.m_tcpSendBuffer;
@@ -617,10 +577,7 @@ namespace FrameWork
                 else
                     Log.Tcp("CryptedAs", data, 0, count);
 
-                if (client.SslStream != null)
-                    client.SslStream.BeginWrite(data, 0, count, m_asyncTcpCallback, client);
-                else
-				    client.Socket.BeginSend(data, 0, count, SocketFlags.None, m_asyncTcpCallback, client);
+				client.Socket.BeginSend(data, 0, count, SocketFlags.None, m_asyncTcpCallback, client);
 
 				int took = Environment.TickCount - start;
 

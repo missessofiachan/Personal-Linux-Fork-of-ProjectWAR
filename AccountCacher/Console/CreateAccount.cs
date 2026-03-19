@@ -59,24 +59,7 @@ namespace AccountCacher {
         {
             string userName = args[0];
             string password = args[1];
-
-            var account = Program.AcctMgr.LoadAccount(userName);
-            if (account == null)
-            {
-                Log.Error("ResetPassword", $"Could not locate {userName} to reset password");
-                return false;
-            }
-            else
-            {
-                account.Password = password;
-                account.CryptPassword = Account.ConvertSHA256(userName + ":" + password);
-                AccountMgr.Database.SaveObject(account);
-                AccountMgr.Database.ForceSave();
-                Log.Success("ResetPassword", $"Password reset for {userName} to {password}");
-            }
-           
-
-            return true;
+            return Program.AcctMgr.ResetPassword(userName, password);
 
         }
     }

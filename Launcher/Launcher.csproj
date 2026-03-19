@@ -121,7 +121,6 @@
   <ItemGroup>
     <Compile Include="HttpUtil.cs" />
     <Compile Include="NetWork\Client.cs" />
-    <Compile Include="NetWork\TlsProxy.cs" />
     <Compile Include="ApocLauncher.cs">
       <SubType>Form</SubType>
     </Compile>

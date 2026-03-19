@@ -188,6 +188,7 @@ namespace WorldServer.World.Abilities
                     buffCommands,
                     out graphReport))
                 {
+                    PopulateGraphOverrideDiagnostics(graphReport, abDmgHeals, abMods);
                     Log.Info("AbilityMgr", graphReport.ToLogLine());
                 }
                 else if (graphReport != null && !string.IsNullOrWhiteSpace(graphReport.Note))
@@ -550,6 +551,46 @@ namespace WorldServer.World.Abilities
             Log.Success("AbilityMgr", "Finished loading " + NewAbilityVolatiles.Count + " abilities and " + BuffInfos.Count + " buffs!");
 
             LoadCreatureAbilities();
+        }
+
+        private static void PopulateGraphOverrideDiagnostics(
+            MythicAbilityGraphTranslationReport report,
+            List<AbilityDamageInfo> abilityDamageInfos,
+            IList<AbilityModifierEffect> abilityModifiers)
+        {
+            if (report == null || report.OverriddenAbilityEntrySet.Count == 0 || abilityDamageInfos == null)
+                return;
+
+            HashSet<ushort> retainedExtraDamageEntries = new HashSet<ushort>(
+                abilityDamageInfos
+                    .Where(info => info.Index == 2 && report.OverriddenAbilityEntrySet.Contains(info.Entry))
+                    .Select(info => info.Entry));
+
+            if (retainedExtraDamageEntries.Count == 0)
+                return;
+
+            report.OverriddenEntriesWithLegacyExtraDamage = retainedExtraDamageEntries.Count;
+            report.RetainedLegacyExtraDamageRows = abilityDamageInfos.Count(
+                info => info.Index == 2 && report.OverriddenAbilityEntrySet.Contains(info.Entry));
+
+            if (abilityModifiers != null)
+            {
+                report.ModifierReferencedLegacyExtraDamageEntries = abilityModifiers
+                    .Where(mod =>
+                        retainedExtraDamageEntries.Contains(mod.Affecting)
+                        && (mod.ModifierCommandName == "ResourceSwitchDamage"
+                            || mod.ModifierCommandName == "ResourceBuffSwitchDamage"))
+                    .Select(mod => mod.Affecting)
+                    .Distinct()
+                    .Count();
+            }
+
+            report.LegacyExtraDamageEntrySample = string.Join(
+                ",",
+                retainedExtraDamageEntries
+                    .OrderBy(entry => entry)
+                    .Take(10)
+                    .Select(entry => entry.ToString(CultureInfo.InvariantCulture)));
         }
 
         private static void ApplyPerAbilityLevelScalars(

@@ -6,8 +6,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Windows.Forms;
 
@@ -27,9 +25,6 @@ namespace Launcher
 
         // TCP
         public static Socket _Socket;
-        public static SslStream _sslStream;
-        public static TlsProxy _lobbyProxy;
-        public static TlsProxy _worldProxy;
 
         private static Logger _logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -85,7 +80,6 @@ namespace Launcher
         {
             try
             {
-                if (_sslStream != null) { _sslStream.Close(); _sslStream = null; }
                 if (_Socket != null)
                     _Socket.Close();
 
@@ -94,11 +88,6 @@ namespace Launcher
             {
 
             }
-        }
-
-        public static bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-        {
-            return true; // We use a self-signed cert, so unconditionally accept
         }
 
         public static void UpdateLanguage()
@@ -211,7 +200,7 @@ namespace Launcher
                 return;
 
             //Check if client is connected
-            if (_Socket.Connected)
+            if (_Socket != null && _Socket.Connected)
             {
 
                 try
@@ -229,10 +218,7 @@ namespace Launcher
 
                     Buffer.BlockCopy(buf, 0, m_tcpSendBuffer, 0, buf.Length);
 
-                    if (_sslStream != null)
-                        _sslStream.BeginWrite(m_tcpSendBuffer, 0, buf.Length, m_asyncTcpCallback, null);
-                    else
-                        _Socket.BeginSend(m_tcpSendBuffer, 0, buf.Length, SocketFlags.None, m_asyncTcpCallback, null);
+                    _Socket.BeginSend(m_tcpSendBuffer, 0, buf.Length, SocketFlags.None, m_asyncTcpCallback, null);
                 }
                 catch (Exception e)
                 {
@@ -250,8 +236,7 @@ namespace Launcher
             {
                 Queue<byte[]> q = m_tcpQueue;
 
-                int sent = _sslStream != null ? 0 : _Socket.EndSend(ar);
-                if (_sslStream != null) _sslStream.EndWrite(ar);
+                int sent = _Socket.EndSend(ar);
 
                 int count = 0;
                 byte[] data = m_tcpSendBuffer;
@@ -274,10 +259,7 @@ namespace Launcher
                     }
                 }
 
-                if (_sslStream != null)
-                    _sslStream.BeginWrite(data, 0, count, m_asyncTcpCallback, null);
-                else
-                    _Socket.BeginSend(data, 0, count, SocketFlags.None, m_asyncTcpCallback, null);
+                _Socket.BeginSend(data, 0, count, SocketFlags.None, m_asyncTcpCallback, null);
 
             }
             catch (Exception)
@@ -328,7 +310,7 @@ namespace Launcher
         {
             try
             {
-                int numBytes = _sslStream != null ? _sslStream.EndRead(ar) : _Socket.EndReceive(ar);
+                int numBytes = _Socket.EndReceive(ar);
                 _logger.Debug($"Recieving {numBytes} bytes");
 
                 if (numBytes > 0)
@@ -389,10 +371,7 @@ namespace Launcher
                 }
                 else
                 {
-                    if (_sslStream != null)
-                        _sslStream.BeginRead(_pBuf, _pBufOffset, bufSize - _pBufOffset, ReceiveCallback, null);
-                    else
-                        _Socket.BeginReceive(_pBuf, _pBufOffset, bufSize - _pBufOffset, SocketFlags.None, ReceiveCallback, null);
+                    _Socket.BeginReceive(_pBuf, _pBufOffset, bufSize - _pBufOffset, SocketFlags.None, ReceiveCallback, null);
                 }
             }
         }

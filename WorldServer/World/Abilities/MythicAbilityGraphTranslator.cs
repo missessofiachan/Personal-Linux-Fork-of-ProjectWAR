@@ -39,20 +39,61 @@ namespace WorldServer.World.Abilities
         public int SkippedUnknownAbilityEntries;
         public int SkippedEmptyComponentRows;
 
+        public int ConflictingBuffEntries;
+        public int OverriddenAbilityEntries;
+        public int OverriddenEntriesWithLegacyExtraDamage;
+        public int RetainedLegacyExtraDamageRows;
+        public int ModifierReferencedLegacyExtraDamageEntries;
+        public string LegacyExtraDamageEntrySample;
+
+        internal readonly HashSet<ushort> OverriddenAbilityEntrySet = new HashSet<ushort>();
+        internal readonly HashSet<ushort> ConflictingBuffEntrySet = new HashSet<ushort>();
+
         public string ToLogLine()
         {
+            string extraDamageSample = string.IsNullOrWhiteSpace(LegacyExtraDamageEntrySample)
+                ? string.Empty
+                : ", extra_damage_sample=" + LegacyExtraDamageEntrySample;
+
             return
                 $"Mythic graph source={DataSource}, ability_rows={AbilityRows}, abilitybin_rows={AbilityBinRows}, " +
                 $"componentbin_rows={ComponentBinRows}, component_links={ComponentLinkRows}, expressions={ExpressionRows}, requirements={RequirementRows}, " +
                 $"upgrades={UpgradeBinRows}/{UpgradeEntryRows}, itemability_rows={ItemAbilityRows}, parsed_abilities={ParsedAbilityRows}, parsed_components={ParsedComponents}, " +
                 $"added_commands={AddedAbilityCommands}, added_damage={AddedAbilityDamageRows}, added_buffinfos={AddedBuffInfos}, added_buffcmds={AddedBuffCommands}, " +
                 $"added_buffdamage={AddedBuffDamageRows}, unsupported_components={UnsupportedComponents}, failed_component_payloads={FailedComponentPayloads}, " +
-                $"skipped_existing_entries={SkippedExistingAbilityEntries}, skipped_unknown_entries={SkippedUnknownAbilityEntries}, skipped_empty_rows={SkippedEmptyComponentRows}.";
+                $"skipped_existing_entries={SkippedExistingAbilityEntries}, skipped_unknown_entries={SkippedUnknownAbilityEntries}, skipped_empty_rows={SkippedEmptyComponentRows}, " +
+                $"conflicting_buff_entries={ConflictingBuffEntries}, overridden_entries={OverriddenAbilityEntries}, " +
+                $"retained_extra_damage_entries={OverriddenEntriesWithLegacyExtraDamage}, retained_extra_damage_rows={RetainedLegacyExtraDamageRows}, " +
+                $"modifier_referenced_extra_damage_entries={ModifierReferencedLegacyExtraDamageEntries}{extraDamageSample}.";
         }
     }
 
     internal sealed class MythicAbilityGraphTranslator
     {
+        private enum BuffPreparationResult
+        {
+            Ready,
+            SkippedExisting
+        }
+
+        private sealed class AbilityEntryTranslationContext
+        {
+            public AbilityEntryTranslationContext(ushort entry, int nextAbilityCommandId, int nextBuffCommandId, bool hasExistingBuffCommands)
+            {
+                Entry = entry;
+                NextAbilityCommandId = nextAbilityCommandId;
+                NextBuffCommandId = nextBuffCommandId;
+                HasExistingBuffCommands = hasExistingBuffCommands;
+            }
+
+            public ushort Entry { get; private set; }
+            public int NextAbilityCommandId { get; set; }
+            public int NextBuffCommandId { get; set; }
+            public bool HasExistingBuffCommands { get; private set; }
+            public bool BuffOverrideApplied { get; set; }
+            public bool InvokeBuffCommandAdded { get; set; }
+        }
+
         private readonly IObjectDatabase _db;
         private readonly bool _allowOverride;
 
@@ -126,7 +167,7 @@ namespace WorldServer.World.Abilities
             }
 
             HashSet<ushort> existingAbilityCommandEntries = new HashSet<ushort>(abilityCommands.Select(x => x.Entry));
-            HashSet<ushort> existingBuffCommandEntries = new HashSet<ushort>(buffCommands.Select(x => x.Entry));
+            HashSet<ushort> preexistingBuffCommandEntries = new HashSet<ushort>(buffCommands.Select(x => x.Entry));
             Dictionary<ushort, BuffInfo> buffInfoMap = BuildBuffInfoMap(buffInfos);
 
             foreach (MythicBinAbilityRow abilityRow in abilityRows.OrderBy(x => x.ID))
@@ -152,6 +193,8 @@ namespace WorldServer.World.Abilities
                 {
                     RemoveAbilityEntryRows(entry, abilityCommands, abilityDamageInfos);
                     existingAbilityCommandEntries.Remove(entry);
+                    report.OverriddenAbilityEntrySet.Add(entry);
+                    report.OverriddenAbilityEntries = report.OverriddenAbilityEntrySet.Count;
                 }
 
                 int parseFailures = 0;
@@ -166,8 +209,11 @@ namespace WorldServer.World.Abilities
 
                 report.ParsedAbilityRows++;
 
-                int nextAbilityCommandId = 0;
-                int nextBuffCommandId = 0;
+                AbilityEntryTranslationContext context = new AbilityEntryTranslationContext(
+                    entry,
+                    GetNextAbilityCommandId(entry, abilityCommands),
+                    GetNextBuffCommandId(entry, buffCommands),
+                    preexistingBuffCommandEntries.Contains(entry));
 
                 foreach (MythicGraphComponent component in components)
                 {
@@ -176,14 +222,13 @@ namespace WorldServer.World.Abilities
                     if (TryTranslateComponent(
                         abilityRow,
                         component,
-                        ref nextAbilityCommandId,
-                        ref nextBuffCommandId,
+                        context,
                         abilityCommands,
                         abilityDamageInfos,
                         buffInfos,
                         buffCommands,
                         buffInfoMap,
-                        existingBuffCommandEntries,
+                        preexistingBuffCommandEntries,
                         report))
                     {
                         existingAbilityCommandEntries.Add(entry);
@@ -195,6 +240,7 @@ namespace WorldServer.World.Abilities
                 }
             }
 
+            report.OverriddenAbilityEntries = report.OverriddenAbilityEntrySet.Count;
             return true;
         }
 
@@ -274,14 +320,13 @@ namespace WorldServer.World.Abilities
         private bool TryTranslateComponent(
             MythicBinAbilityRow abilityRow,
             MythicGraphComponent component,
-            ref int nextAbilityCommandId,
-            ref int nextBuffCommandId,
+            AbilityEntryTranslationContext context,
             List<AbilityCommandInfo> abilityCommands,
             List<AbilityDamageInfo> abilityDamageInfos,
             List<BuffInfo> buffInfos,
             List<BuffCommandInfo> buffCommands,
             Dictionary<ushort, BuffInfo> buffInfoMap,
-            HashSet<ushort> existingBuffCommandEntries,
+            HashSet<ushort> preexistingBuffCommandEntries,
             MythicAbilityGraphTranslationReport report)
         {
             switch (component.Type)
@@ -291,49 +336,46 @@ namespace WorldServer.World.Abilities
                     return TranslateDamageLikeComponent(
                         abilityRow,
                         component,
-                        ref nextAbilityCommandId,
-                        ref nextBuffCommandId,
+                        context,
                         abilityCommands,
                         abilityDamageInfos,
                         buffInfos,
                         buffCommands,
                         buffInfoMap,
-                        existingBuffCommandEntries,
+                        preexistingBuffCommandEntries,
                         report);
 
                 case 8:
                     return TranslateModifySpeedComponent(
                         abilityRow,
                         component,
-                        ref nextAbilityCommandId,
-                        ref nextBuffCommandId,
+                        context,
                         abilityCommands,
                         buffInfos,
                         buffCommands,
                         buffInfoMap,
                         abilityDamageInfos,
-                        existingBuffCommandEntries,
+                        preexistingBuffCommandEntries,
                         report);
 
                 case 22:
                     return TranslateStatOrShieldComponent(
                         abilityRow,
                         component,
-                        ref nextAbilityCommandId,
-                        ref nextBuffCommandId,
+                        context,
                         abilityCommands,
                         buffInfos,
                         buffCommands,
                         buffInfoMap,
                         abilityDamageInfos,
-                        existingBuffCommandEntries,
+                        preexistingBuffCommandEntries,
                         report);
 
                 case 23:
                     return TranslateInvokeBuffComponent(
                         abilityRow,
                         component,
-                        ref nextAbilityCommandId,
+                        context,
                         abilityCommands,
                         report);
 
@@ -345,17 +387,15 @@ namespace WorldServer.World.Abilities
         private bool TranslateDamageLikeComponent(
             MythicBinAbilityRow abilityRow,
             MythicGraphComponent component,
-            ref int nextAbilityCommandId,
-            ref int nextBuffCommandId,
+            AbilityEntryTranslationContext context,
             List<AbilityCommandInfo> abilityCommands,
             List<AbilityDamageInfo> abilityDamageInfos,
             List<BuffInfo> buffInfos,
             List<BuffCommandInfo> buffCommands,
             Dictionary<ushort, BuffInfo> buffInfoMap,
-            HashSet<ushort> existingBuffCommandEntries,
+            HashSet<ushort> preexistingBuffCommandEntries,
             MythicAbilityGraphTranslationReport report)
         {
-            ushort entry = (ushort)abilityRow.ID;
             bool periodic = component.DurationMs > 0 && component.IntervalMs > 0;
 
             if (periodic)
@@ -363,29 +403,18 @@ namespace WorldServer.World.Abilities
                 if (!TryCreateOrReusePeriodicDamageBuff(
                     abilityRow,
                     component,
-                    ref nextBuffCommandId,
+                    context,
                     buffInfos,
                     buffCommands,
                     abilityDamageInfos,
                     buffInfoMap,
-                    existingBuffCommandEntries,
+                    preexistingBuffCommandEntries,
                     report))
                 {
                     return false;
                 }
 
-                AbilityCommandInfo invokeBuff = BuildAbilityCommand(
-                    entry,
-                    abilityRow.Name,
-                    nextAbilityCommandId++,
-                    "InvokeBuff",
-                    entry,
-                    0,
-                    component,
-                    ResolveCommandTargetType(abilityRow, component, false));
-
-                abilityCommands.Add(invokeBuff);
-                report.AddedAbilityCommands++;
+                EnsureInvokeBuffCommand(abilityRow, component, context, abilityCommands, report);
                 return true;
             }
 
@@ -397,9 +426,9 @@ namespace WorldServer.World.Abilities
             bool noLevelScaling = component.NoLevelScaling;
 
             AbilityCommandInfo direct = BuildAbilityCommand(
-                entry,
+                context.Entry,
                 abilityRow.Name,
-                nextAbilityCommandId++,
+                context.NextAbilityCommandId++,
                 "DealDamage",
                 0,
                 0,
@@ -408,8 +437,8 @@ namespace WorldServer.World.Abilities
 
             AbilityDamageInfo damageInfo = new AbilityDamageInfo
             {
-                Entry = entry,
-                DisplayEntry = entry,
+                Entry = context.Entry,
+                DisplayEntry = context.Entry,
                 Index = 0,
                 ParentCommandID = direct.CommandID,
                 ParentCommandSequence = direct.CommandSequence,
@@ -443,38 +472,47 @@ namespace WorldServer.World.Abilities
         private bool TryCreateOrReusePeriodicDamageBuff(
             MythicBinAbilityRow abilityRow,
             MythicGraphComponent component,
-            ref int nextBuffCommandId,
+            AbilityEntryTranslationContext context,
             List<BuffInfo> buffInfos,
             List<BuffCommandInfo> buffCommands,
             List<AbilityDamageInfo> abilityDamageInfos,
             Dictionary<ushort, BuffInfo> buffInfoMap,
-            HashSet<ushort> existingBuffCommandEntries,
+            HashSet<ushort> preexistingBuffCommandEntries,
             MythicAbilityGraphTranslationReport report)
         {
-            ushort entry = (ushort)abilityRow.ID;
-            bool isDebuff = IsTrue(abilityRow.IsDebuff);
+            BuffPreparationResult preparation = PrepareBuffTranslation(
+                context,
+                buffInfos,
+                buffInfoMap,
+                buffCommands,
+                abilityDamageInfos,
+                preexistingBuffCommandEntries);
 
-            if (_allowOverride && existingBuffCommandEntries.Contains(entry))
-            {
-                RemoveBuffEntryRows(entry, buffInfos, buffInfoMap, buffCommands, abilityDamageInfos);
-                existingBuffCommandEntries.Remove(entry);
-                nextBuffCommandId = 0;
-            }
-            else if (existingBuffCommandEntries.Contains(entry))
-            {
+            if (preparation == BuffPreparationResult.SkippedExisting)
                 return true;
-            }
 
-            BuffInfo buff = EnsureBuffInfo(entry, abilityRow.Name, component, isDebuff, buffInfos, buffInfoMap, report);
+            BuffInfo buff;
+            if (!TryEnsureCompatibleBuffInfo(
+                context.Entry,
+                abilityRow.Name,
+                component,
+                IsTrue(abilityRow.IsDebuff),
+                buffInfos,
+                buffInfoMap,
+                report,
+                out buff))
+            {
+                return false;
+            }
 
             int scaledBaseValue = ResolveScaledValue(component, 0);
             if (scaledBaseValue <= 0)
                 return false;
 
             BuffCommandInfo buffCommand = BuildBuffCommand(
-                entry,
+                context.Entry,
                 buff.Name,
-                nextBuffCommandId++,
+                context.NextBuffCommandId++,
                 "DamageOverTime",
                 0,
                 0,
@@ -486,8 +524,8 @@ namespace WorldServer.World.Abilities
 
             AbilityDamageInfo damageInfo = new AbilityDamageInfo
             {
-                Entry = entry,
-                DisplayEntry = entry,
+                Entry = context.Entry,
+                DisplayEntry = context.Entry,
                 Index = 1,
                 ParentCommandID = buffCommand.CommandID,
                 ParentCommandSequence = buffCommand.CommandSequence,
@@ -513,7 +551,6 @@ namespace WorldServer.World.Abilities
 
             buffCommands.Add(buffCommand);
             abilityDamageInfos.Add(damageInfo);
-            existingBuffCommandEntries.Add(entry);
             report.AddedBuffCommands++;
             report.AddedBuffDamageRows++;
             return true;
@@ -522,28 +559,25 @@ namespace WorldServer.World.Abilities
         private bool TranslateModifySpeedComponent(
             MythicBinAbilityRow abilityRow,
             MythicGraphComponent component,
-            ref int nextAbilityCommandId,
-            ref int nextBuffCommandId,
+            AbilityEntryTranslationContext context,
             List<AbilityCommandInfo> abilityCommands,
             List<BuffInfo> buffInfos,
             List<BuffCommandInfo> buffCommands,
             Dictionary<ushort, BuffInfo> buffInfoMap,
             List<AbilityDamageInfo> abilityDamageInfos,
-            HashSet<ushort> existingBuffCommandEntries,
+            HashSet<ushort> preexistingBuffCommandEntries,
             MythicAbilityGraphTranslationReport report)
         {
-            ushort entry = (ushort)abilityRow.ID;
+            BuffPreparationResult preparation = PrepareBuffTranslation(
+                context,
+                buffInfos,
+                buffInfoMap,
+                buffCommands,
+                abilityDamageInfos,
+                preexistingBuffCommandEntries);
 
-            if (_allowOverride && existingBuffCommandEntries.Contains(entry))
-            {
-                RemoveBuffEntryRows(entry, buffInfos, buffInfoMap, buffCommands, abilityDamageInfos);
-                existingBuffCommandEntries.Remove(entry);
-                nextBuffCommandId = 0;
-            }
-            else if (existingBuffCommandEntries.Contains(entry))
-            {
+            if (preparation == BuffPreparationResult.SkippedExisting)
                 return true;
-            }
 
             int speedPrimary = ResolveScaledValue(component, 0);
             int speedSecondary = ResolveScaledValue(component, 1);
@@ -554,19 +588,24 @@ namespace WorldServer.World.Abilities
             if (speedSecondary == 0 && component.Values.Length > 1)
                 speedSecondary = component.Values[1];
 
-            BuffInfo buff = EnsureBuffInfo(
-                entry,
+            BuffInfo buff;
+            if (!TryEnsureCompatibleBuffInfo(
+                context.Entry,
                 abilityRow.Name,
                 component,
                 IsTrue(abilityRow.IsDebuff),
                 buffInfos,
                 buffInfoMap,
-                report);
+                report,
+                out buff))
+            {
+                return false;
+            }
 
             BuffCommandInfo buffCommand = BuildBuffCommand(
-                entry,
+                context.Entry,
                 buff.Name,
-                nextBuffCommandId++,
+                context.NextBuffCommandId++,
                 "ModifySpeed",
                 speedPrimary,
                 speedSecondary,
@@ -574,49 +613,33 @@ namespace WorldServer.World.Abilities
                 5);
 
             buffCommands.Add(buffCommand);
-            existingBuffCommandEntries.Add(entry);
             report.AddedBuffCommands++;
-
-            AbilityCommandInfo invokeBuff = BuildAbilityCommand(
-                entry,
-                abilityRow.Name,
-                nextAbilityCommandId++,
-                "InvokeBuff",
-                entry,
-                0,
-                component,
-                ResolveCommandTargetType(abilityRow, component, false));
-
-            abilityCommands.Add(invokeBuff);
-            report.AddedAbilityCommands++;
+            EnsureInvokeBuffCommand(abilityRow, component, context, abilityCommands, report);
             return true;
         }
 
         private bool TranslateStatOrShieldComponent(
             MythicBinAbilityRow abilityRow,
             MythicGraphComponent component,
-            ref int nextAbilityCommandId,
-            ref int nextBuffCommandId,
+            AbilityEntryTranslationContext context,
             List<AbilityCommandInfo> abilityCommands,
             List<BuffInfo> buffInfos,
             List<BuffCommandInfo> buffCommands,
             Dictionary<ushort, BuffInfo> buffInfoMap,
             List<AbilityDamageInfo> abilityDamageInfos,
-            HashSet<ushort> existingBuffCommandEntries,
+            HashSet<ushort> preexistingBuffCommandEntries,
             MythicAbilityGraphTranslationReport report)
         {
-            ushort entry = (ushort)abilityRow.ID;
+            BuffPreparationResult preparation = PrepareBuffTranslation(
+                context,
+                buffInfos,
+                buffInfoMap,
+                buffCommands,
+                abilityDamageInfos,
+                preexistingBuffCommandEntries);
 
-            if (_allowOverride && existingBuffCommandEntries.Contains(entry))
-            {
-                RemoveBuffEntryRows(entry, buffInfos, buffInfoMap, buffCommands, abilityDamageInfos);
-                existingBuffCommandEntries.Remove(entry);
-                nextBuffCommandId = 0;
-            }
-            else if (existingBuffCommandEntries.Contains(entry))
-            {
+            if (preparation == BuffPreparationResult.SkippedExisting)
                 return true;
-            }
 
             if (component.Values.Length == 0)
                 return false;
@@ -654,19 +677,24 @@ namespace WorldServer.World.Abilities
                     secondary = component.Values[1];
             }
 
-            BuffInfo buff = EnsureBuffInfo(
-                entry,
+            BuffInfo buff;
+            if (!TryEnsureCompatibleBuffInfo(
+                context.Entry,
                 abilityRow.Name,
                 component,
                 IsTrue(abilityRow.IsDebuff),
                 buffInfos,
                 buffInfoMap,
-                report);
+                report,
+                out buff))
+            {
+                return false;
+            }
 
             BuffCommandInfo buffCommand = BuildBuffCommand(
-                entry,
+                context.Entry,
                 buff.Name,
-                nextBuffCommandId++,
+                context.NextBuffCommandId++,
                 commandName,
                 primary,
                 secondary,
@@ -674,28 +702,15 @@ namespace WorldServer.World.Abilities
                 5);
 
             buffCommands.Add(buffCommand);
-            existingBuffCommandEntries.Add(entry);
             report.AddedBuffCommands++;
-
-            AbilityCommandInfo invokeBuff = BuildAbilityCommand(
-                entry,
-                abilityRow.Name,
-                nextAbilityCommandId++,
-                "InvokeBuff",
-                entry,
-                0,
-                component,
-                ResolveCommandTargetType(abilityRow, component, false));
-
-            abilityCommands.Add(invokeBuff);
-            report.AddedAbilityCommands++;
+            EnsureInvokeBuffCommand(abilityRow, component, context, abilityCommands, report);
             return true;
         }
 
         private bool TranslateInvokeBuffComponent(
             MythicBinAbilityRow abilityRow,
             MythicGraphComponent component,
-            ref int nextAbilityCommandId,
+            AbilityEntryTranslationContext context,
             List<AbilityCommandInfo> abilityCommands,
             MythicAbilityGraphTranslationReport report)
         {
@@ -710,7 +725,7 @@ namespace WorldServer.World.Abilities
             AbilityCommandInfo command = BuildAbilityCommand(
                 entry,
                 abilityRow.Name,
-                nextAbilityCommandId++,
+                context.NextAbilityCommandId++,
                 "InvokeBuff",
                 linkedBuffEntry,
                 0,
@@ -718,6 +733,8 @@ namespace WorldServer.World.Abilities
                 ResolveCommandTargetType(abilityRow, component, false));
 
             abilityCommands.Add(command);
+            if (linkedBuffEntry == context.Entry)
+                context.InvokeBuffCommandAdded = true;
             report.AddedAbilityCommands++;
             return true;
         }
@@ -790,18 +807,103 @@ namespace WorldServer.World.Abilities
             };
         }
 
-        private static BuffInfo EnsureBuffInfo(
+        private BuffPreparationResult PrepareBuffTranslation(
+            AbilityEntryTranslationContext context,
+            List<BuffInfo> buffInfos,
+            Dictionary<ushort, BuffInfo> buffInfoMap,
+            List<BuffCommandInfo> buffCommands,
+            List<AbilityDamageInfo> abilityDamageInfos,
+            HashSet<ushort> preexistingBuffCommandEntries)
+        {
+            if (!_allowOverride && context.HasExistingBuffCommands)
+                return BuffPreparationResult.SkippedExisting;
+
+            if (_allowOverride && context.HasExistingBuffCommands && !context.BuffOverrideApplied)
+            {
+                RemoveBuffEntryRows(context.Entry, buffInfos, buffInfoMap, buffCommands, abilityDamageInfos);
+                preexistingBuffCommandEntries.Remove(context.Entry);
+                context.NextBuffCommandId = 0;
+                context.BuffOverrideApplied = true;
+            }
+
+            return BuffPreparationResult.Ready;
+        }
+
+        private static int GetNextAbilityCommandId(ushort entry, List<AbilityCommandInfo> abilityCommands)
+        {
+            if (abilityCommands == null || abilityCommands.Count == 0)
+                return 0;
+
+            return abilityCommands
+                .Where(x => x.Entry == entry)
+                .Select(x => (int)x.CommandID)
+                .DefaultIfEmpty(-1)
+                .Max() + 1;
+        }
+
+        private static int GetNextBuffCommandId(ushort entry, List<BuffCommandInfo> buffCommands)
+        {
+            if (buffCommands == null || buffCommands.Count == 0)
+                return 0;
+
+            return buffCommands
+                .Where(x => x.Entry == entry)
+                .Select(x => (int)x.CommandID)
+                .DefaultIfEmpty(-1)
+                .Max() + 1;
+        }
+
+        private static void EnsureInvokeBuffCommand(
+            MythicBinAbilityRow abilityRow,
+            MythicGraphComponent component,
+            AbilityEntryTranslationContext context,
+            List<AbilityCommandInfo> abilityCommands,
+            MythicAbilityGraphTranslationReport report)
+        {
+            if (context.InvokeBuffCommandAdded)
+                return;
+
+            AbilityCommandInfo invokeBuff = BuildAbilityCommand(
+                context.Entry,
+                abilityRow.Name,
+                context.NextAbilityCommandId++,
+                "InvokeBuff",
+                context.Entry,
+                0,
+                component,
+                ResolveCommandTargetType(abilityRow, component, false));
+
+            abilityCommands.Add(invokeBuff);
+            context.InvokeBuffCommandAdded = true;
+            report.AddedAbilityCommands++;
+        }
+
+        private bool TryEnsureCompatibleBuffInfo(
             ushort entry,
             string name,
             MythicGraphComponent component,
             bool isDebuff,
             List<BuffInfo> buffInfos,
             Dictionary<ushort, BuffInfo> buffInfoMap,
-            MythicAbilityGraphTranslationReport report)
+            MythicAbilityGraphTranslationReport report,
+            out BuffInfo buff)
         {
             BuffInfo existing;
             if (buffInfoMap.TryGetValue(entry, out existing))
-                return existing;
+            {
+                if (!HasCompatibleBuffInfo(existing, component, isDebuff))
+                {
+                    if (report.ConflictingBuffEntrySet.Add(entry))
+                        report.ConflictingBuffEntries++;
+
+                    Log.Error("MythicAbilityGraph", "Conflicting buff timings for entry " + entry + "; skipping graph component type " + component.Type + ".");
+                    buff = null;
+                    return false;
+                }
+
+                buff = existing;
+                return true;
+            }
 
             uint durationSeconds = 0;
             if (component.DurationMs > 0)
@@ -811,7 +913,7 @@ namespace WorldServer.World.Abilities
             if (component.IntervalMs > 0)
                 intervalMs = (ushort)Math.Min(ushort.MaxValue, component.IntervalMs);
 
-            BuffInfo buff = new BuffInfo
+            buff = new BuffInfo
             {
                 Entry = entry,
                 Name = string.IsNullOrWhiteSpace(name) ? ("Ability " + entry) : name,
@@ -836,15 +938,37 @@ namespace WorldServer.World.Abilities
                 CommandInfo = new List<BuffCommandInfo>()
             };
 
-            if (intervalMs > 0 && durationSeconds > 0)
-                buff.BuffIntervals = (byte)Math.Max(1, Math.Min(byte.MaxValue, (durationSeconds * 1000) / intervalMs));
-            else
-                buff.BuffIntervals = 0;
+            buff.BuffIntervals = ComputeBuffIntervals(durationSeconds, intervalMs);
 
             buffInfos.Add(buff);
             buffInfoMap[entry] = buff;
             report.AddedBuffInfos++;
-            return buff;
+            return true;
+        }
+
+        private static bool HasCompatibleBuffInfo(BuffInfo existing, MythicGraphComponent component, bool isDebuff)
+        {
+            uint durationSeconds = 0;
+            if (component.DurationMs > 0)
+                durationSeconds = (uint)Math.Max(1, (component.DurationMs + 999) / 1000);
+
+            ushort intervalMs = 0;
+            if (component.IntervalMs > 0)
+                intervalMs = (ushort)Math.Min(ushort.MaxValue, component.IntervalMs);
+
+            return existing.Type == (isDebuff ? BuffTypes.Hex : BuffTypes.None)
+                && existing.Duration == durationSeconds
+                && existing.LeadInDelay == component.ActivationDelayMs
+                && existing.Interval == intervalMs
+                && existing.BuffIntervals == ComputeBuffIntervals(durationSeconds, intervalMs);
+        }
+
+        private static byte ComputeBuffIntervals(uint durationSeconds, ushort intervalMs)
+        {
+            if (intervalMs > 0 && durationSeconds > 0)
+                return (byte)Math.Max(1, Math.Min(byte.MaxValue, (durationSeconds * 1000) / intervalMs));
+
+            return 0;
         }
 
         private static void RemoveAbilityEntryRows(ushort entry, List<AbilityCommandInfo> abilityCommands, List<AbilityDamageInfo> abilityDamageInfos)
