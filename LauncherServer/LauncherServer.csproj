@@ -10,6 +10,8 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>LauncherServer</RootNamespace>
     <AssemblyName>LauncherServer</AssemblyName>
+    <RuntimeIdentifiers>win;win-x64</RuntimeIdentifiers>
+    <ResolveNuGetPackages>false</ResolveNuGetPackages>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>

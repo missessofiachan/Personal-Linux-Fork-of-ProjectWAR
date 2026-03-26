@@ -110,9 +110,14 @@ namespace WorldServer.Managers
 
         public static SpawnPoint GetZoneRespawn(ushort zoneId, byte realm, Player player)
         {
+            SpawnPoint zoneFallback = ResolveSafeZoneFallback(zoneId, realm);
+
             if (player == null)
             {
-                return new SpawnPoint(ZoneService.GetZoneRespawn(zoneId, realm));
+                if (zoneFallback != null)
+                    return zoneFallback;
+
+                return GetRealmSafeFallback(realm, $"zone {zoneId}");
             }
 
             if (player.CurrentArea != null)
@@ -121,11 +126,14 @@ namespace WorldServer.Managers
                 if (player.QtsInterface.PublicQuest != null)
                 {
                     var pqRespawns = ZoneService.GetZoneRespawns(zoneId);
-                    foreach (var res in pqRespawns)
-                        if (res.Realm == 0 &&
-                            res.ZoneID == zoneId &&
-                            res.RespawnID == player.QtsInterface.PublicQuest.Info.RespawnID)
-                            return new SpawnPoint(res);
+                    if (pqRespawns != null)
+                    {
+                        foreach (var res in pqRespawns)
+                            if (res.Realm == 0 &&
+                                res.ZoneID == zoneId &&
+                                res.RespawnID == player.QtsInterface.PublicQuest.Info.RespawnID)
+                                return new SpawnPoint(res);
+                    }
                 }
 
                 // Scenario respawn - random if > 1
@@ -133,22 +141,28 @@ namespace WorldServer.Managers
                 {
                     List<Zone_Respawn> respawns = ZoneService.GetZoneRespawns(zoneId);
                     List<Zone_Respawn> options = new List<Zone_Respawn>();
-                    foreach (Zone_Respawn res in respawns)
+                    if (respawns != null)
                     {
-                        if (res.Realm != realm)
-                            continue;
+                        foreach (Zone_Respawn res in respawns)
+                        {
+                            if (res.Realm != realm)
+                                continue;
 
-                        options.Add(res);
+                            options.Add(res);
+                        }
                     }
 
-                    return new SpawnPoint(options.Count == 1 ? options[0] : options[StaticRandom.Instance.Next(options.Count)]);
+                    if (options.Count > 0)
+                        return new SpawnPoint(options.Count == 1 ? options[0] : options[StaticRandom.Instance.Next(options.Count)]);
                 }
 
                 // Keep respawn.
                 if (player.CurrentKeep != null)
                 {
                     _logger.Debug($"Player {player.Name} is attached to keep {player.CurrentKeep.Name} - using Keep respawn");
-                    return player.CurrentKeep.GetSpawnPoint(player);
+                    SpawnPoint keepRespawn = player.CurrentKeep.GetSpawnPoint(player);
+                    if (keepRespawn != null)
+                        return keepRespawn;
                 }
 
                 ushort respawnId = realm == 1
@@ -158,46 +172,399 @@ namespace WorldServer.Managers
                 if (respawnId > 0)
                 {
                     // PVE respawn
-                    _logger.Debug($"Player {player.Name} Area:{player.CurrentArea.AreaId} PVE respawn {respawnId}");
-                    return new SpawnPoint(ZoneService.GetZoneRespawn(respawnId));
+                    Zone_Respawn areaRespawn = ZoneService.GetZoneRespawn(respawnId);
+                    if (areaRespawn != null)
+                    {
+                        _logger.Debug($"Player {player.Name} Area:{player.CurrentArea.AreaId} PVE respawn {respawnId}");
+                        return new SpawnPoint(areaRespawn);
+                    }
+
+                    _logger.Warn($"Respawning player {player.Name} from missing respawnId={respawnId} area {player.CurrentArea.AreaId}");
                 }
                 else
                 {
-
-                    // Crude patch - if no currentarea, respawn into current zoneid
-                    _logger.Warn(
-                        $"Respawning player {player.Name} from respawnId=0 area {player.CurrentArea.AreaId}");
-                    return new SpawnPoint(ZoneService.GetZoneRespawn(zoneId, realm));
+                    _logger.Warn($"Respawning player {player.Name} from respawnId=0 area {player.CurrentArea.AreaId}");
                 }
-
             }
             else
             {
                 // World Spawns
                 List<Zone_Respawn> respawns = ZoneService.GetZoneRespawns(zoneId);
                 float lastDistance = float.MaxValue;
+                SpawnPoint nearestRespawn = null;
 
-                foreach (Zone_Respawn res in respawns)
+                if (respawns != null)
                 {
-                    if (res.Realm != realm)
-                        continue;
-
-                    var pos = new Point3D(res.PinX, res.PinY, res.PinZ);
-                    float distance = pos.GetDistance(player);
-
-                    if (distance < lastDistance)
+                    foreach (Zone_Respawn res in respawns)
                     {
-                        lastDistance = distance;
-                        _logger.Debug($"Player {player.Name} Zone {zoneId} World respawn");
-                        return new SpawnPoint(res);
+                        if (res.Realm != realm)
+                            continue;
+
+                        var pos = new Point3D(res.PinX, res.PinY, res.PinZ);
+                        float distance = pos.GetDistance(player);
+
+                        if (distance < lastDistance)
+                        {
+                            lastDistance = distance;
+                            nearestRespawn = new SpawnPoint(res);
+                        }
                     }
                 }
 
-                // Crude patch - if no currentarea, respawn into current zoneid
+                if (nearestRespawn != null)
+                {
+                    _logger.Debug($"Player {player.Name} Zone {zoneId} World respawn");
+                    return nearestRespawn;
+                }
+
                 _logger.Warn($"Respawning player {player.Name} from NULL area");
-                return new SpawnPoint(ZoneService.GetZoneRespawn(zoneId, realm));
             }
 
+            if (zoneFallback != null)
+            {
+                _logger.Warn($"Respawning player {player.Name} via safe fallback {zoneFallback}");
+                return zoneFallback;
+            }
+
+            return GetRealmSafeFallback(realm, $"zone {zoneId}");
+        }
+
+        public static bool NormalizePlayerWorldPosition(Player player, out string reason)
+        {
+            if (player?.Info?.Value == null)
+            {
+                reason = null;
+                return false;
+            }
+
+            return NormalizeCharacterWorldPosition(player.Info.Value, (byte)player.Realm, player.Name, out reason);
+        }
+
+        public static bool NormalizeCharacterWorldPosition(Character_value value, byte realm, string subjectName, out string reason)
+        {
+            reason = null;
+            if (value == null)
+                return false;
+
+            string label = string.IsNullOrWhiteSpace(subjectName)
+                ? $"character {value.CharacterId}"
+                : subjectName;
+
+            Zone_Info zone = ZoneService.GetZone_Info(value.ZoneId);
+            if (zone == null)
+            {
+                reason = $"unknown zone {value.ZoneId}";
+                return ApplySafeLocation(value, realm, label, ResolveSafeZoneFallback(0, realm), reason);
+            }
+
+            if (value.RegionId != zone.Region)
+            {
+                value.RegionId = zone.Region;
+                reason = $"corrected region to {zone.Region}";
+            }
+
+            if (zone.Type != 0)
+                return reason != null;
+
+            if (!IsWorldPositionInsideZone(zone, value.WorldX, value.WorldY))
+            {
+                string localPinReason;
+                if (TryConvertLocalPinCoordinatesToWorld(value, zone, out localPinReason))
+                {
+                    reason = CombineReasons(reason, localPinReason);
+                    return true;
+                }
+
+                reason = CombineReasons(reason, $"invalid coordinates {value.WorldX},{value.WorldY} for zone {zone.ZoneId}");
+                return ApplySafeLocation(value, realm, label, ResolveSafeZoneFallback(zone.ZoneId, realm), reason);
+            }
+
+            ushort pinX;
+            ushort pinY;
+            if (!TryGetPinFromWorld(zone, value.WorldX, value.WorldY, out pinX, out pinY))
+            {
+                reason = CombineReasons(reason, $"unable to derive pins from {value.WorldX},{value.WorldY} in zone {zone.ZoneId}");
+                return ApplySafeLocation(value, realm, label, ResolveSafeZoneFallback(zone.ZoneId, realm), reason);
+            }
+
+            int terrainZ = ClientFileMgr.GetHeight(zone.ZoneId, pinX, pinY);
+            if (terrainZ >= 0 && (value.WorldZ <= 0 || Math.Abs(value.WorldZ - terrainZ) > 12000))
+            {
+                value.WorldZ = terrainZ;
+                reason = CombineReasons(reason, $"snapped Z to terrain {terrainZ}");
+
+                return true;
+            }
+
+            return reason != null;
+        }
+
+        private static bool ApplySafeLocation(Character_value value, byte realm, string subjectName, SpawnPoint fallback, string reason)
+        {
+            SpawnPoint safeFallback = fallback ?? GetRealmSafeFallback(realm, reason);
+            Zone_Info zone = ZoneService.GetZone_Info(safeFallback.ZoneId);
+
+            value.WorldX = safeFallback.X;
+            value.WorldY = safeFallback.Y;
+            value.WorldZ = safeFallback.Z;
+            value.WorldO = 0;
+            value.ZoneId = safeFallback.ZoneId;
+            if (zone != null)
+                value.RegionId = zone.Region;
+
+            _logger.Warn($"Recovered {subjectName} to {safeFallback} because {reason}");
+            return true;
+        }
+
+        private static bool TryConvertLocalPinCoordinatesToWorld(Character_value value, Zone_Info zone, out string reason)
+        {
+            reason = null;
+
+            if (zone == null || value.WorldX < 0 || value.WorldX > UInt16.MaxValue || value.WorldY < 0 || value.WorldY > UInt16.MaxValue)
+                return false;
+
+            ushort pinX = (ushort)value.WorldX;
+            ushort pinY = (ushort)value.WorldY;
+            ushort pinZ = value.WorldZ <= 0
+                ? (ushort)0
+                : (ushort)Math.Min(value.WorldZ, UInt16.MaxValue);
+
+            Point3D world = ZoneService.GetWorldPosition(zone, pinX, pinY, pinZ);
+            if (!IsWorldPositionInsideZone(zone, world.X, world.Y))
+                return false;
+
+            value.WorldX = world.X;
+            value.WorldY = world.Y;
+
+            int terrainZ = ClientFileMgr.GetHeight(zone.ZoneId, pinX, pinY);
+            if (terrainZ >= 0 && (value.WorldZ <= 0 || Math.Abs(value.WorldZ - terrainZ) > 12000))
+                value.WorldZ = terrainZ;
+
+            reason = $"converted local pins {pinX},{pinY} to world {world.X},{world.Y}";
+            if (terrainZ >= 0 && value.WorldZ == terrainZ)
+                reason += $" z={terrainZ}";
+
+            return true;
+        }
+
+        private static string CombineReasons(string existingReason, string nextReason)
+        {
+            if (string.IsNullOrWhiteSpace(existingReason))
+                return nextReason;
+
+            if (string.IsNullOrWhiteSpace(nextReason))
+                return existingReason;
+
+            return existingReason + "; " + nextReason;
+        }
+
+        private static SpawnPoint ResolveSafeZoneFallback(ushort zoneId, byte realm)
+        {
+            SpawnPoint fallback = TryGetZoneRespawnFallback(zoneId, realm);
+            if (fallback != null)
+                return fallback;
+
+            fallback = TryGetZoneTaxiFallback(zoneId, realm);
+            if (fallback != null)
+                return fallback;
+
+            fallback = TryGetRallyPointFallback(zoneId);
+            if (fallback != null)
+                return fallback;
+
+            fallback = TryGetChapterFallback(zoneId);
+            if (fallback != null)
+                return fallback;
+
+            fallback = TryGetZoneJumpFallback(zoneId);
+            if (fallback != null)
+                return fallback;
+
+            fallback = TryGetZoneCenterFallback(zoneId);
+            if (fallback != null)
+                return fallback;
+
+            return zoneId == 0 ? null : GetRealmSafeFallback(realm, $"zone {zoneId}");
+        }
+
+        private static SpawnPoint TryGetZoneRespawnFallback(ushort zoneId, byte realm)
+        {
+            if (zoneId == 0)
+                return null;
+
+            Zone_Respawn respawn = ZoneService.GetZoneRespawn(zoneId, realm);
+            return respawn != null ? new SpawnPoint(respawn) : null;
+        }
+
+        private static SpawnPoint TryGetZoneTaxiFallback(ushort zoneId, byte realm)
+        {
+            if (zoneId == 0)
+                return null;
+
+            Zone_Taxi taxi = ZoneService.GetZoneTaxi(zoneId, realm);
+            if (IsValidTaxi(taxi))
+                return new SpawnPoint(zoneId, (int)taxi.WorldX, (int)taxi.WorldY, taxi.WorldZ);
+
+            for (byte candidateRealm = (byte)Realms.REALMS_REALM_ORDER; candidateRealm <= (byte)Realms.REALMS_REALM_DESTRUCTION; ++candidateRealm)
+            {
+                taxi = ZoneService.GetZoneTaxi(zoneId, candidateRealm);
+                if (IsValidTaxi(taxi))
+                    return new SpawnPoint(zoneId, (int)taxi.WorldX, (int)taxi.WorldY, taxi.WorldZ);
+            }
+
+            return null;
+        }
+
+        private static bool IsValidTaxi(Zone_Taxi taxi)
+        {
+            return taxi != null && taxi.Enable && taxi.WorldX > 0 && taxi.WorldY > 0;
+        }
+
+        private static SpawnPoint TryGetRallyPointFallback(ushort zoneId)
+        {
+            if (zoneId == 0 || RallyPointService.RallyPoints == null)
+                return null;
+
+            foreach (RallyPoint rallyPoint in RallyPointService.RallyPoints)
+            {
+                if (rallyPoint.ZoneID != zoneId || rallyPoint.WorldX == 0 || rallyPoint.WorldY == 0)
+                    continue;
+
+                return new SpawnPoint(zoneId, (int)rallyPoint.WorldX, (int)rallyPoint.WorldY, rallyPoint.WorldZ);
+            }
+
+            return null;
+        }
+
+        private static SpawnPoint TryGetChapterFallback(ushort zoneId)
+        {
+            if (zoneId == 0)
+                return null;
+
+            Zone_Info zone = ZoneService.GetZone_Info(zoneId);
+            if (zone == null)
+                return null;
+
+            List<Chapter_Info> chapters = ChapterService.GetChapters(zoneId);
+            if (chapters == null)
+                return null;
+
+            foreach (Chapter_Info chapter in chapters)
+            {
+                int height = ClientFileMgr.GetHeight(zone.ZoneId, chapter.PinX, chapter.PinY);
+                if (height < 0)
+                    continue;
+
+                Point3D world = ZoneService.GetWorldPosition(zone, chapter.PinX, chapter.PinY, (ushort)height);
+                if (world.X <= 0 || world.Y <= 0 || world.Z < 0)
+                    continue;
+
+                return new SpawnPoint(zoneId, world.X, world.Y, world.Z);
+            }
+
+            return null;
+        }
+
+        private static SpawnPoint TryGetZoneJumpFallback(ushort zoneId)
+        {
+            if (zoneId == 0 || ZoneService.Zone_Jumps == null)
+                return null;
+
+            SpawnPoint internalFallback = null;
+            foreach (Zone_jump jump in ZoneService.Zone_Jumps.Values)
+            {
+                if (jump.ZoneID != zoneId || !jump.Enabled || jump.WorldX == 0 || jump.WorldY == 0)
+                    continue;
+
+                GameObject_spawn sourceSpawn = null;
+                bool hasSourceSpawn = GameObjectService.GameObjectSpawns != null && GameObjectService.GameObjectSpawns.TryGetValue(jump.Entry, out sourceSpawn);
+                if (hasSourceSpawn && sourceSpawn.ZoneId != zoneId)
+                    return new SpawnPoint(zoneId, (int)jump.WorldX, (int)jump.WorldY, jump.WorldZ);
+
+                if (internalFallback == null)
+                    internalFallback = new SpawnPoint(zoneId, (int)jump.WorldX, (int)jump.WorldY, jump.WorldZ);
+            }
+
+            return internalFallback;
+        }
+
+        private static SpawnPoint TryGetZoneCenterFallback(ushort zoneId)
+        {
+            if (zoneId == 0)
+                return null;
+
+            Zone_Info zone = ZoneService.GetZone_Info(zoneId);
+            if (zone == null)
+                return null;
+
+            ushort[,] pins =
+            {
+                { 32768, 32768 },
+                { 28672, 32768 },
+                { 36864, 32768 },
+                { 32768, 28672 },
+                { 32768, 36864 },
+                { 28672, 28672 },
+                { 36864, 28672 },
+                { 28672, 36864 },
+                { 36864, 36864 }
+            };
+
+            for (int index = 0; index < pins.GetLength(0); ++index)
+            {
+                ushort pinX = pins[index, 0];
+                ushort pinY = pins[index, 1];
+                int height = ClientFileMgr.GetHeight(zone.ZoneId, pinX, pinY);
+                if (height < 0)
+                    continue;
+
+                Point3D world = ZoneService.GetWorldPosition(zone, pinX, pinY, (ushort)height);
+                if (world.X <= 0 || world.Y <= 0 || world.Z < 0)
+                    continue;
+
+                return new SpawnPoint(zoneId, world.X, world.Y, world.Z);
+            }
+
+            return null;
+        }
+
+        private static SpawnPoint GetRealmSafeFallback(byte realm, string reason)
+        {
+            SpawnPoint fallback = realm == (byte)Realms.REALMS_REALM_DESTRUCTION
+                ? new SpawnPoint(161, 439815, 134493, 16865)
+                : new SpawnPoint(162, 124084, 130213, 12572);
+
+            _logger.Warn($"Using realm fallback {fallback} because {reason}");
+            return fallback;
+        }
+
+        private static bool IsWorldPositionInsideZone(Zone_Info zone, int worldX, int worldY)
+        {
+            if (zone == null || worldX <= 0 || worldY <= 0)
+                return false;
+
+            int offX = worldX >> 12;
+            int offY = worldY >> 12;
+            return offX >= zone.OffX && offX < zone.OffX + RegionMgr.MaxCells &&
+                   offY >= zone.OffY && offY < zone.OffY + RegionMgr.MaxCells;
+        }
+
+        private static bool TryGetPinFromWorld(Zone_Info zone, int worldX, int worldY, out ushort pinX, out ushort pinY)
+        {
+            pinX = 0;
+            pinY = 0;
+
+            if (zone == null || !IsWorldPositionInsideZone(zone, worldX, worldY))
+                return false;
+
+            int localX = worldX - (zone.OffX << 12);
+            int localY = worldY - (zone.OffY << 12);
+            if (localX < 0 || localX > UInt16.MaxValue || localY < 0 || localY > UInt16.MaxValue)
+                return false;
+
+            pinX = (ushort)localX;
+            pinY = (ushort)localY;
+            return true;
         }
 
         public static List<Zone_Taxi> GetTaxis(Player Plr)

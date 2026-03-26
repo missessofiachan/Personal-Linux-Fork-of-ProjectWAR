@@ -176,6 +176,11 @@ namespace WorldServer.NetWork.Handler
                             ZoneId = CharInfo.ZoneId
                         };
 
+                        if (WorldMgr.NormalizeCharacterWorldPosition(CInfo, Char.Realm, Char.Name, out string spawnReason))
+                        {
+                            Log.Info("CreateCharacter", "Normalized starting position for " + Char.Name + ": " + spawnReason);
+                        }
+
                         CharMgr.Database.AddObject(CInfo);
                         Program.AcctMgr.UpdateRealmCharacters(Program.Rm.RealmId, (uint)CharMgr.Database.GetObjectCount<Character>(" Realm=1"), (uint)CharMgr.Database.GetObjectCount<Character>(" Realm=2"));
 
@@ -357,22 +362,23 @@ namespace WorldServer.NetWork.Handler
         public static void F_RANDOM_NAME_LIST_INFO(BaseClient client, PacketIn packet)
         {
             GameClient cclient = client as GameClient;
+            const int randomNameSuggestionCount = 8;
             // Preserve the original packet contract: the response's first byte is reserved and sent as 0.
             packet.GetUint8();
             byte unk = packet.GetUint8();
             byte slot = packet.GetUint8();
 
-            List<Random_name> Names = CharMgr.GetRandomNames();
+            List<string> names = CharMgr.GetRandomNameSuggestions(randomNameSuggestionCount);
 
             PacketOut Out = new PacketOut((byte)Opcodes.F_RANDOM_NAME_LIST_INFO);
             Out.WriteByte(0);
             Out.WriteByte(unk);
             Out.WriteByte(slot);
             Out.WriteUInt16(0);
-            Out.WriteByte((byte)Names.Count);
+            Out.WriteByte((byte)names.Count);
 
-            for (int i = Names.Count - 1; i >= 0; --i)
-                Out.FillString(Names[i].Name, Names[i].Name.Length + 1);
+            for (int i = names.Count - 1; i >= 0; --i)
+                Out.FillString(names[i], names[i].Length + 1);
 
             cclient.SendPacket(Out);
         }

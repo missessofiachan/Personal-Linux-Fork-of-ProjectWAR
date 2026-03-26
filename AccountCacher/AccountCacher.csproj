@@ -10,6 +10,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>AccountCacher</RootNamespace>
     <AssemblyName>AccountCacher</AssemblyName>
+    <RuntimeIdentifiers>win;win-x64</RuntimeIdentifiers>
+    <RestoreProjectStyle>PackagesConfig</RestoreProjectStyle>
+    <ResolveNuGetPackages>false</ResolveNuGetPackages>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>

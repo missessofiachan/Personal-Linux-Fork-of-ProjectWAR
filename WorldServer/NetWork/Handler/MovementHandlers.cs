@@ -744,6 +744,12 @@ namespace WorldServer.NetWork.Handler
 
             if (!Plr.IsInWorld()) // If the player is not on a map, then we add it to the map
             {
+                if (WorldMgr.NormalizePlayerWorldPosition(Plr, out string recoveryReason))
+                {
+                    CharMgr.Database.SaveObject(Plr.Info.Value);
+                    Log.Notice("F_INIT_PLAYER", $"Recovered {Plr.Name} login position: {recoveryReason}");
+                }
+
                 ushort zoneId = Plr.Info.Value.ZoneId;
                 ushort regionId = (ushort)Plr.Info.Value.RegionId;
 

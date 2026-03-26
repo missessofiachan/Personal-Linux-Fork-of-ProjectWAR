@@ -1,14 +1,13 @@
-﻿
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Xml.Linq;
 
 namespace ServerLauncher
 {
@@ -19,81 +18,418 @@ namespace ServerLauncher
         public Process LobbyServer;
         public Process WorldServer;
 
+        private CancellationTokenSource _startupCancellation;
+
+        private static readonly TimeSpan DependencyReadyTimeout = TimeSpan.FromSeconds(10);
+        private static readonly TimeSpan ServiceReadyTimeout = TimeSpan.FromSeconds(30);
+        private static readonly TimeSpan WorldServerStableTimeout = TimeSpan.FromSeconds(15);
+        private static readonly TimeSpan AccountCacherWarmupWindow = TimeSpan.FromSeconds(5);
+        private static readonly TimeSpan StabilityWindow = TimeSpan.FromSeconds(2);
+        private static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(250);
+
         public Form1()
         {
             InitializeComponent();
         }
 
-        private void B_start_Click(object sender, EventArgs e)
+        private async void B_start_Click(object sender, EventArgs e)
         {
-            B_start.Enabled = false;
+            if (_startupCancellation != null)
+                return;
 
-            if (StartAccountCheckBox.Checked)
+            _startupCancellation = new CancellationTokenSource();
+            SetControlsEnabled(false);
+            UpdateStatus("Starting selected services...");
+
+            try
             {
-                AccountCacher = new Process();
-                AccountCacher.StartInfo.FileName = "AccountCacher.exe";
-                AccountCacher.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
-                AccountCacher.Start();
-
-                Thread.Sleep(500);
+                await StartSelectedServersAsync(_startupCancellation.Token);
+                UpdateStatus("Startup sequence completed.");
             }
-
-            if (StartLauncherCheckBox.Checked)
+            catch (OperationCanceledException)
             {
-                LauncherServer = new Process();
-                LauncherServer.StartInfo.FileName = "LauncherServer.exe";
-                LauncherServer.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
-                LauncherServer.Start();
-
-                Thread.Sleep(500);
+                UpdateStatus("Startup canceled.");
             }
-
-            if (StartLobbyCheckBox.Checked)
+            catch (Exception ex)
             {
-                LobbyServer = new Process();
-                LobbyServer.StartInfo.FileName = "LobbyServer.exe";
-                LobbyServer.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
-                LobbyServer.Start();
-
-                Thread.Sleep(500);
+                UpdateStatus(ex.Message);
             }
-
-            if (StartWorldCheckBox.Checked)
+            finally
             {
-                WorldServer = new Process();
-                WorldServer.StartInfo.FileName = "WorldServer.exe";
-                WorldServer.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
-                WorldServer.Start();
+                _startupCancellation.Dispose();
+                _startupCancellation = null;
+                SetControlsEnabled(true);
             }
-
-            B_start.Enabled = true;
         }
 
         private void B_stop_Click(object sender, EventArgs e)
         {
+            if (_startupCancellation != null)
+                _startupCancellation.Cancel();
+
+            StopTrackedProcess(WorldServer);
+            StopTrackedProcess(LobbyServer);
+            StopTrackedProcess(LauncherServer);
+            StopTrackedProcess(AccountCacher);
+
+            UpdateStatus("All tracked services stopped.");
+        }
+
+        private async Task StartSelectedServersAsync(CancellationToken cancellationToken)
+        {
+            List<string> failures = new List<string>();
+            bool anyDependentSelected = StartLauncherCheckBox.Checked || StartLobbyCheckBox.Checked || StartWorldCheckBox.Checked;
+            bool accountReady = true;
+
+            if (StartAccountCheckBox.Checked)
+                accountReady = await EnsureAccountCacherReadyAsync(true, cancellationToken);
+            else if (anyDependentSelected)
+                accountReady = await EnsureAccountCacherReadyAsync(false, cancellationToken);
+
+            if (!accountReady)
+                throw new InvalidOperationException("AccountCacher RPC is not ready. Dependent services were not started.");
+
+            if (StartLauncherCheckBox.Checked)
+            {
+                string launcherFailure = await TryStartLauncherServerAsync(cancellationToken);
+                if (!string.IsNullOrEmpty(launcherFailure))
+                    failures.Add(launcherFailure);
+            }
+
+            if (StartLobbyCheckBox.Checked)
+            {
+                string lobbyFailure = await TryStartLobbyServerAsync(cancellationToken);
+                if (!string.IsNullOrEmpty(lobbyFailure))
+                    failures.Add(lobbyFailure);
+            }
+
+            if (StartWorldCheckBox.Checked)
+            {
+                string worldFailure = await TryStartWorldServerAsync(cancellationToken);
+                if (!string.IsNullOrEmpty(worldFailure))
+                    failures.Add(worldFailure);
+            }
+
+            if (failures.Count > 0)
+                throw new InvalidOperationException(string.Join(" ", failures));
+        }
+
+        private async Task<bool> EnsureAccountCacherReadyAsync(bool shouldStart, CancellationToken cancellationToken)
+        {
+            string accountConfigPath = GetConfigPath("Account.xml");
+            string host = NormalizeHost(GetConfigValue(accountConfigPath, "RpcInfo", "RpcIp"));
+            int port = GetConfigIntValue(accountConfigPath, "RpcInfo", "RpcPort");
+
+            if (!shouldStart)
+            {
+                UpdateStatus($"Waiting for existing AccountCacher RPC on {host}:{port}...");
+                return await WaitForPortReadyAsync(host, port, null, DependencyReadyTimeout, cancellationToken);
+            }
+
+            return await StartServiceAndWaitForPortAsync(
+                "AccountCacher",
+                "AccountCacher.exe",
+                host,
+                port,
+                process => AccountCacher = process,
+                () => AccountCacher,
+                ServiceReadyTimeout,
+                AccountCacherWarmupWindow,
+                cancellationToken);
+        }
+
+        private async Task<string> TryStartLauncherServerAsync(CancellationToken cancellationToken)
+        {
             try
             {
-                if( WorldServer != null ) WorldServer.Kill();
+                string configPath = GetConfigPath("Launcher.xml");
+                string host = NormalizeHost(GetConfigValue(configPath, "RpcInfo", "RpcServerIp"));
+                int dependencyPort = GetConfigIntValue(configPath, "RpcInfo", "RpcServerPort");
+                int launcherPort = GetConfigIntValue(configPath, "LauncherServerPort");
+
+                UpdateStatus($"Waiting for AccountCacher RPC on {host}:{dependencyPort} before LauncherServer...");
+                if (!await WaitForPortReadyAsync(host, dependencyPort, AccountCacher, DependencyReadyTimeout, cancellationToken))
+                    return $"LauncherServer skipped because AccountCacher RPC {host}:{dependencyPort} is unavailable.";
+
+                bool ready = await StartServiceAndWaitForPortAsync(
+                    "LauncherServer",
+                    "LauncherServer.exe",
+                    "127.0.0.1",
+                    launcherPort,
+                    process => LauncherServer = process,
+                    () => LauncherServer,
+                    ServiceReadyTimeout,
+                    StabilityWindow,
+                    cancellationToken);
+
+                return ready ? null : $"LauncherServer failed to become ready on 127.0.0.1:{launcherPort}.";
             }
-            catch (Exception) { }
-            
+            catch (Exception ex) when (!(ex is OperationCanceledException))
+            {
+                return "LauncherServer failed: " + ex.Message;
+            }
+        }
+
+        private async Task<string> TryStartLobbyServerAsync(CancellationToken cancellationToken)
+        {
             try
             {
-                if (LobbyServer != null) LobbyServer.Kill();
+                string configPath = GetConfigPath("Lobby.xml");
+                string host = NormalizeHost(GetConfigValue(configPath, "RpcInfo", "RpcServerIp"));
+                int dependencyPort = GetConfigIntValue(configPath, "RpcInfo", "RpcServerPort");
+                int lobbyPort = GetConfigIntValue(configPath, "ClientPort");
+
+                UpdateStatus($"Waiting for AccountCacher RPC on {host}:{dependencyPort} before LobbyServer...");
+                if (!await WaitForPortReadyAsync(host, dependencyPort, AccountCacher, DependencyReadyTimeout, cancellationToken))
+                    return $"LobbyServer skipped because AccountCacher RPC {host}:{dependencyPort} is unavailable.";
+
+                bool ready = await StartServiceAndWaitForPortAsync(
+                    "LobbyServer",
+                    "LobbyServer.exe",
+                    "127.0.0.1",
+                    lobbyPort,
+                    process => LobbyServer = process,
+                    () => LobbyServer,
+                    ServiceReadyTimeout,
+                    StabilityWindow,
+                    cancellationToken);
+
+                return ready ? null : $"LobbyServer failed to become ready on 127.0.0.1:{lobbyPort}.";
             }
-            catch (Exception) { }
-            
+            catch (Exception ex) when (!(ex is OperationCanceledException))
+            {
+                return "LobbyServer failed: " + ex.Message;
+            }
+        }
+
+        private async Task<string> TryStartWorldServerAsync(CancellationToken cancellationToken)
+        {
             try
             {
-                if (LauncherServer != null) LauncherServer.Kill();
+                string configPath = GetConfigPath("World.xml");
+                string host = NormalizeHost(GetConfigValue(configPath, "AccountCacherInfo", "RpcServerIp"));
+                int dependencyPort = GetConfigIntValue(configPath, "AccountCacherInfo", "RpcServerPort");
+
+                UpdateStatus($"Waiting for AccountCacher RPC on {host}:{dependencyPort} before WorldServer...");
+                if (!await WaitForPortReadyAsync(host, dependencyPort, AccountCacher, DependencyReadyTimeout, cancellationToken))
+                    return $"WorldServer skipped because AccountCacher RPC {host}:{dependencyPort} is unavailable.";
+
+                Process worldProcess = EnsureTrackedProcess("WorldServer", "WorldServer.exe", () => WorldServer, process => WorldServer = process);
+
+                UpdateStatus($"Waiting for WorldServer to stabilize ({WorldServerStableTimeout.TotalSeconds:0}s)...");
+                bool stable = await WaitForProcessStabilityAsync(worldProcess, WorldServerStableTimeout, cancellationToken);
+                if (stable)
+                    UpdateStatus("WorldServer is running.");
+
+                return stable ? null : "WorldServer exited before completing its startup stabilization window.";
             }
-            catch (Exception) { }
-            
+            catch (Exception ex) when (!(ex is OperationCanceledException))
+            {
+                return "WorldServer failed: " + ex.Message;
+            }
+        }
+
+        private async Task<bool> StartServiceAndWaitForPortAsync(string serviceName, string executableName, string host, int port, Action<Process> processSetter, Func<Process> processGetter, TimeSpan timeout, TimeSpan stabilityWindow, CancellationToken cancellationToken)
+        {
+            EnsureTrackedProcess(serviceName, executableName, processGetter, processSetter);
+
+            UpdateStatus($"Waiting for {serviceName} on {host}:{port}...");
+            bool ready = await WaitForPortReadyAsync(host, port, processGetter(), timeout, cancellationToken);
+            if (!ready)
+                return false;
+
+            bool stable = await WaitForProcessStabilityAsync(processGetter(), stabilityWindow, cancellationToken);
+            if (!stable)
+                return false;
+
+            UpdateStatus($"{serviceName} is ready on {host}:{port}.");
+            return true;
+        }
+
+        private Process EnsureTrackedProcess(string serviceName, string executableName, Func<Process> processGetter, Action<Process> processSetter)
+        {
+            Process trackedProcess = processGetter();
+            if (IsProcessRunning(trackedProcess))
+                return trackedProcess;
+
+            Process existingProcess = FindExistingProcess(executableName);
+            if (existingProcess != null)
+            {
+                processSetter(existingProcess);
+                UpdateStatus($"{serviceName} is already running.");
+                return existingProcess;
+            }
+
+            string executablePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, executableName);
+            if (!File.Exists(executablePath))
+                throw new FileNotFoundException("Missing executable: " + executablePath);
+
+            Process process = new Process();
+            process.StartInfo.FileName = executablePath;
+            process.StartInfo.WorkingDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            process.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
+            process.Start();
+
+            processSetter(process);
+            UpdateStatus($"{serviceName} started.");
+            return process;
+        }
+
+        private async Task<bool> WaitForPortReadyAsync(string host, int port, Process process, TimeSpan timeout, CancellationToken cancellationToken)
+        {
+            DateTime deadline = DateTime.UtcNow.Add(timeout);
+            while (DateTime.UtcNow < deadline)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (process != null && !IsProcessRunning(process))
+                    return false;
+
+                if (await CanConnectAsync(host, port, cancellationToken))
+                    return true;
+
+                await Task.Delay(PollInterval, cancellationToken);
+            }
+
+            return false;
+        }
+
+        private async Task<bool> WaitForProcessStabilityAsync(Process process, TimeSpan duration, CancellationToken cancellationToken)
+        {
+            if (process == null)
+                return false;
+
+            DateTime deadline = DateTime.UtcNow.Add(duration);
+            while (DateTime.UtcNow < deadline)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (!IsProcessRunning(process))
+                    return false;
+
+                await Task.Delay(PollInterval, cancellationToken);
+            }
+
+            return true;
+        }
+
+        private static async Task<bool> CanConnectAsync(string host, int port, CancellationToken cancellationToken)
+        {
+            using (TcpClient client = new TcpClient())
+            {
+                Task connectTask = client.ConnectAsync(host, port);
+                Task timeoutTask = Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                Task completedTask = await Task.WhenAny(connectTask, timeoutTask);
+
+                if (completedTask != connectTask)
+                    return false;
+
+                try
+                {
+                    await connectTask;
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+
+        private static Process FindExistingProcess(string executableName)
+        {
+            string processName = Path.GetFileNameWithoutExtension(executableName);
+            return Process.GetProcessesByName(processName).FirstOrDefault();
+        }
+
+        private static bool IsProcessRunning(Process process)
+        {
+            if (process == null)
+                return false;
+
             try
             {
-                if (AccountCacher != null) AccountCacher.Kill();
+                return !process.HasExited;
             }
-            catch (Exception) { }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static void StopTrackedProcess(Process process)
+        {
+            try
+            {
+                if (process != null && !process.HasExited)
+                    process.Kill();
+            }
+            catch
+            {
+            }
+        }
+
+        private void SetControlsEnabled(bool enabled)
+        {
+            B_start.Enabled = enabled;
+            StartAccountCheckBox.Enabled = enabled;
+            StartLauncherCheckBox.Enabled = enabled;
+            StartLobbyCheckBox.Enabled = enabled;
+            StartWorldCheckBox.Enabled = enabled;
+        }
+
+        private void UpdateStatus(string message)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action<string>(UpdateStatus), message);
+                return;
+            }
+
+            StatusLabel.Text = message;
+        }
+
+        private static string GetConfigPath(string fileName)
+        {
+            string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Configs", fileName);
+            if (!File.Exists(configPath))
+                throw new FileNotFoundException("Config file missing: " + configPath);
+
+            return configPath;
+        }
+
+        private static string GetConfigValue(string configPath, params string[] elementPath)
+        {
+            XElement current = XDocument.Load(configPath).Root;
+            foreach (string elementName in elementPath)
+            {
+                if (current == null)
+                    break;
+
+                current = current.Element(elementName);
+            }
+
+            if (current == null || string.IsNullOrWhiteSpace(current.Value))
+                throw new InvalidOperationException("Missing config value " + string.Join("/", elementPath) + " in " + Path.GetFileName(configPath));
+
+            return current.Value.Trim();
+        }
+
+        private static int GetConfigIntValue(string configPath, params string[] elementPath)
+        {
+            int parsedValue;
+            if (!int.TryParse(GetConfigValue(configPath, elementPath), out parsedValue))
+                throw new InvalidOperationException("Invalid numeric config value " + string.Join("/", elementPath) + " in " + Path.GetFileName(configPath));
+
+            return parsedValue;
+        }
+
+        private static string NormalizeHost(string host)
+        {
+            if (string.IsNullOrWhiteSpace(host) || host == "0.0.0.0" || host == "*" || host == "+")
+                return "127.0.0.1";
+
+            return host.Trim();
         }
     }
 }

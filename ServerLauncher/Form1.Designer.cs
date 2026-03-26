@@ -35,12 +35,13 @@
             this.StartLauncherCheckBox = new System.Windows.Forms.CheckBox();
             this.StartLobbyCheckBox = new System.Windows.Forms.CheckBox();
             this.StartWorldCheckBox = new System.Windows.Forms.CheckBox();
+            this.StatusLabel = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // B_start
             // 
             this.B_start.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.B_start.Location = new System.Drawing.Point(61, 119);
+            this.B_start.Location = new System.Drawing.Point(61, 149);
             this.B_start.Name = "B_start";
             this.B_start.Size = new System.Drawing.Size(91, 23);
             this.B_start.TabIndex = 1;
@@ -51,7 +52,7 @@
             // B_stop
             // 
             this.B_stop.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.B_stop.Location = new System.Drawing.Point(158, 119);
+            this.B_stop.Location = new System.Drawing.Point(158, 149);
             this.B_stop.Name = "B_stop";
             this.B_stop.Size = new System.Drawing.Size(91, 23);
             this.B_stop.TabIndex = 2;
@@ -107,12 +108,23 @@
             this.StartWorldCheckBox.Text = "Start WorldServer";
             this.StartWorldCheckBox.UseVisualStyleBackColor = true;
             // 
+            // StatusLabel
+            // 
+            this.StatusLabel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.StatusLabel.Location = new System.Drawing.Point(13, 111);
+            this.StatusLabel.Name = "StatusLabel";
+            this.StatusLabel.Size = new System.Drawing.Size(236, 32);
+            this.StatusLabel.TabIndex = 7;
+            this.StatusLabel.Text = "Ready";
+            this.StatusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ActiveBorder;
-            this.ClientSize = new System.Drawing.Size(261, 154);
+            this.ClientSize = new System.Drawing.Size(261, 188);
+            this.Controls.Add(this.StatusLabel);
             this.Controls.Add(this.StartWorldCheckBox);
             this.Controls.Add(this.StartLobbyCheckBox);
             this.Controls.Add(this.StartLauncherCheckBox);
@@ -137,6 +149,7 @@
         private System.Windows.Forms.CheckBox StartLauncherCheckBox;
         private System.Windows.Forms.CheckBox StartLobbyCheckBox;
         private System.Windows.Forms.CheckBox StartWorldCheckBox;
+        private System.Windows.Forms.Label StatusLabel;
     }
 }
 

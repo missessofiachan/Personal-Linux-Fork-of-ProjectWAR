@@ -10,6 +10,8 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ClientDataMatrix</RootNamespace>
     <AssemblyName>ClientDataMatrix</AssemblyName>
+    <RuntimeIdentifiers>win;win-x64</RuntimeIdentifiers>
+    <ResolveNuGetPackages>false</ResolveNuGetPackages>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <OldToolsVersion>3.5</OldToolsVersion>

@@ -270,7 +270,10 @@ namespace WorldServer.Managers.Commands
         {
             new GmCommandHandler("map", TeleportMap, null, EGmLevel.GM, 4,
                 "Teleports you to the specified world coordinates in a given zone (byte ZoneID , uint WorldX, uint WorldY, uint WorldZ)"),
-            new GmCommandHandler("center", TeleportCenter, null, EGmLevel.GM, 1, "Teleport to the centre of the given map."),
+            new GmCommandHandler("center", TeleportCenter, null, EGmLevel.GM, 1, "Teleport to a derived safe point in the given map. Usage: <zone> [order|destruction|neutral]."),
+            new GmCommandHandler("entry", TeleportEntry, null, EGmLevel.GM, 1, "Teleport to the derived portal-arrival point for the given map. Usage: <zone> [order|destruction|neutral]."),
+            new GmCommandHandler("zonejump", TeleportEntry, null, EGmLevel.GM, 1, "Alias of .teleport entry."),
+            new GmCommandHandler("info", TeleportInfo, null, EGmLevel.GM, 1, "Display the derived safe center and portal-arrival points for the given map. Usage: <zone> [order|destruction|neutral]."),
             new GmCommandHandler("appear", TeleportAppear, null, EGmLevel.GM, 1, "Teleports you to a player's location (string playerName)"),
             new GmCommandHandler("summon", TeleportSummon, null, EGmLevel.GM, 1, "Summons a player/group to your location (string playerName optional GROUP)"),
             new GmCommandHandler("set", TeleportSet, null, EGmLevel.GM, 5,

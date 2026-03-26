@@ -197,6 +197,22 @@ Get-Process | Where-Object { $_.Name -match 'AccountCacher|LauncherServer|LobbyS
 - Missing terrain/zone data:
   - verify `deps/zones/` extraction.
   - rebuild so assets are copied into `bin/Release/zones/`.
+- Server startup races or cascading dependency failures:
+  - use `ServerLauncher.exe` and let it bring services up in sequence.
+  - do not manually start `AccountCacher`, `LauncherServer`, `LobbyServer`, and `WorldServer` in parallel.
+- Characters stuck after a failed teleport or zone move:
+  - update to the current `WorldServer` build.
+  - apply the latest incremental database scripts, including `Database/update_003_portal_zone_jump_fixes.sql` and `Database/update_004_greenskin_start_position_fix.sql`.
+  - the server now repairs invalid saved login positions and falls back to safe realm locations instead of leaving the character in a load loop.
+- GM `.teleport center` or `.teleport entry` lands in a bad spot:
+  - the command now prefers respawns, taxis, rally points, chapter pins, and validated portal arrivals before using `zone_infos`-derived fallbacks.
+  - if a zone still has no reliable anchors, curate its respawn/taxi/rally/chapter data rather than relying on geometric center points.
+- Greenskin starters appear in the wrong Mt Bloodhorn position:
+  - apply `Database/update_004_greenskin_start_position_fix.sql`.
+  - this fixes the four Greenskin `characterinfo` templates that were stored as local pins instead of world coordinates.
+- Random name suggestions repeat, are sequential, or offer taken names:
+  - update to the current `WorldServer` build.
+  - random suggestions still draw from `war_world.random_names`, but they are now shuffled per request, checked against existing character names, and replaced with generated valid names only if the curated pool is exhausted.
 - Need a clean rebuild:
   - delete generated directories such as `.vs/`, `bin/`, `*/obj/`, and `packages/`, then restore/build again.
 

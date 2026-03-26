@@ -10,6 +10,8 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>LobbyServer</RootNamespace>
     <AssemblyName>LobbyServer</AssemblyName>
+    <RuntimeIdentifiers>win;win-x64</RuntimeIdentifiers>
+    <ResolveNuGetPackages>false</ResolveNuGetPackages>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>

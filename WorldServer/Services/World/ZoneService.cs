@@ -208,10 +208,21 @@ namespace WorldServer.Services.World
         /// <returns>Zone respawn of default one (wut ?)</returns>
         public static Zone_Respawn GetZoneRespawn(int zoneId, byte realm)
         {
+            Zone_Respawn zoneFallback = null;
+
             foreach (Zone_Respawn res in _zoneRespawns)
-                if (res.Realm == realm && res.ZoneID == zoneId)
+            {
+                if (res.ZoneID != zoneId)
+                    continue;
+
+                if (zoneFallback == null)
+                    zoneFallback = res;
+
+                if (res.Realm == realm)
                     return res;
-            return _zoneRespawns[0]; // weird...
+            }
+
+            return zoneFallback;
         }
 
         /// <summary>

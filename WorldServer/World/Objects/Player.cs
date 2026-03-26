@@ -4440,7 +4440,8 @@ namespace WorldServer.World.Objects
                 BuffInterface.QueueBuff(new BuffQueueInfo(this, Level, buffInfo));
             }
 
-            var spawnPoint = WorldMgr.GetZoneRespawn(Zone.ZoneId, (byte)Realm, this);
+            ushort respawnZoneId = Zone?.ZoneId ?? _Value.ZoneId;
+            var spawnPoint = WorldMgr.GetZoneRespawn(respawnZoneId, (byte)Realm, this);
             _logger.Debug($"Respawning player {Name} in Zone {spawnPoint.ToString()}");
             // SendClientMessage($"DEBUG ONLY : Respawning player {this.Name} in Zone {spawnPoint.ToString()}");
             if (spawnPoint != null)

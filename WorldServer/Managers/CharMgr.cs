@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Text.RegularExpressions;
 using SystemData;
 using Common;
 using FrameWork;
@@ -100,6 +101,11 @@ namespace WorldServer.Managers
         public static Dictionary<byte, List<PetStatOverride>> PetOverrideStats = new Dictionary<byte, List<PetStatOverride>>();
         public static Dictionary<byte, List<PetMasteryModifiers>> PetMasteryMods = new Dictionary<byte, List<PetMasteryModifiers>>();
         public static List<Random_name> RandomNameList = new List<Random_name>();
+        private const int RandomNameMinLength = 3;
+        private const int RandomNameMaxLength = 10;
+        private static readonly string[] RandomNamePrefixes = { "Br", "Dr", "Gr", "Kr", "M", "N", "R", "S", "T", "Th", "Tr", "V", "Z" };
+        private static readonly string[] RandomNameMiddles = { "a", "e", "i", "o", "u", "ag", "ak", "ar", "eg", "ig", "ok", "or", "ug", "ur" };
+        private static readonly string[] RandomNameSuffixes = { "a", "ak", "an", "ar", "ek", "en", "ik", "ok", "or", "uk", "um", "un", "z" };
 
         [LoadingFunction(true)]
         public static void LoadCharacterInfos()
@@ -331,9 +337,137 @@ namespace WorldServer.Managers
             return items;
         }
 
-        public static List<Random_name> GetRandomNames()
+        public static List<string> GetRandomNameSuggestions(int maxSuggestions)
         {
-            return RandomNameList;
+            int suggestionTarget = Math.Max(1, maxSuggestions);
+            List<string> suggestions = new List<string>(suggestionTarget);
+            HashSet<string> suggestionLookup = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> rejected = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            List<string> curatedNames = GetShuffledCuratedNames();
+            foreach (string candidate in curatedNames)
+            {
+                if (!TryAddRandomNameSuggestion(candidate, suggestions, suggestionLookup, rejected))
+                    continue;
+
+                if (suggestions.Count >= suggestionTarget)
+                    return suggestions;
+            }
+
+            int generationAttempts = suggestionTarget * 64;
+            for (int attempt = 0; attempt < generationAttempts && suggestions.Count < suggestionTarget; ++attempt)
+            {
+                string generatedName = GenerateRandomFallbackName();
+                TryAddRandomNameSuggestion(generatedName, suggestions, suggestionLookup, rejected);
+            }
+
+            return suggestions;
+        }
+
+        private static List<string> GetShuffledCuratedNames()
+        {
+            List<string> curatedNames = new List<string>();
+            if (RandomNameList == null || RandomNameList.Count == 0)
+                return curatedNames;
+
+            foreach (Random_name randomName in RandomNameList)
+            {
+                if (randomName == null || string.IsNullOrWhiteSpace(randomName.Name))
+                    continue;
+
+                curatedNames.Add(randomName.Name);
+            }
+
+            for (int index = curatedNames.Count - 1; index > 0; --index)
+            {
+                int swapIndex = StaticRandom.Instance.Next(index + 1);
+                string temp = curatedNames[index];
+                curatedNames[index] = curatedNames[swapIndex];
+                curatedNames[swapIndex] = temp;
+            }
+
+            return curatedNames;
+        }
+
+        private static bool TryAddRandomNameSuggestion(string candidate, List<string> suggestions, HashSet<string> suggestionLookup, HashSet<string> rejected)
+        {
+            string normalizedName = NormalizeSuggestedName(candidate);
+            if (string.IsNullOrEmpty(normalizedName) || suggestionLookup.Contains(normalizedName) || rejected.Contains(normalizedName))
+                return false;
+
+            if (!IsRandomNameSuggestionAvailable(normalizedName))
+            {
+                rejected.Add(normalizedName);
+                return false;
+            }
+
+            suggestions.Add(normalizedName);
+            suggestionLookup.Add(normalizedName);
+            return true;
+        }
+
+        private static string NormalizeSuggestedName(string candidate)
+        {
+            if (string.IsNullOrWhiteSpace(candidate))
+                return null;
+
+            string trimmed = candidate.Trim();
+            if (trimmed.Length == 0)
+                return null;
+
+            if (trimmed.Length == 1)
+                return trimmed.ToUpperInvariant();
+
+            return char.ToUpperInvariant(trimmed[0]) + trimmed.Substring(1).ToLowerInvariant();
+        }
+
+        private static bool IsRandomNameSuggestionAvailable(string candidate)
+        {
+            if (candidate.Length < RandomNameMinLength || candidate.Length > RandomNameMaxLength)
+                return false;
+
+            if (!Regex.IsMatch(candidate, @"^[a-zA-Z]+$"))
+                return false;
+
+            if (!AllowName(candidate) || NameIsDeleted(candidate) || HasTooManyRepeatingLetters(candidate))
+                return false;
+
+            return !NameIsUsed(candidate);
+        }
+
+        private static bool HasTooManyRepeatingLetters(string candidate)
+        {
+            int repeatedRun = 0;
+            for (int index = 1; index < candidate.Length; ++index)
+            {
+                if (char.ToUpperInvariant(candidate[index]) == char.ToUpperInvariant(candidate[index - 1]))
+                {
+                    ++repeatedRun;
+                    if (repeatedRun >= 3)
+                        return true;
+                }
+                else
+                    repeatedRun = 0;
+            }
+
+            return false;
+        }
+
+        private static string GenerateRandomFallbackName()
+        {
+            for (int attempt = 0; attempt < 32; ++attempt)
+            {
+                string candidate = RandomNamePrefixes[StaticRandom.Instance.Next(RandomNamePrefixes.Length)]
+                    + RandomNameMiddles[StaticRandom.Instance.Next(RandomNameMiddles.Length)]
+                    + (StaticRandom.Instance.Next(100) < 55 ? RandomNameMiddles[StaticRandom.Instance.Next(RandomNameMiddles.Length)] : string.Empty)
+                    + RandomNameSuffixes[StaticRandom.Instance.Next(RandomNameSuffixes.Length)];
+
+                candidate = NormalizeSuggestedName(candidate);
+                if (!string.IsNullOrEmpty(candidate) && candidate.Length >= RandomNameMinLength && candidate.Length <= RandomNameMaxLength)
+                    return candidate;
+            }
+
+            return "Ragor";
         }
 
         #endregion

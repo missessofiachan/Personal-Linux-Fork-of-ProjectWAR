@@ -2,6 +2,7 @@
 using FrameWork;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using SystemData;
 using WorldServer.Services.World;
 using WorldServer.World.Objects;
@@ -66,7 +67,7 @@ namespace WorldServer.Managers.Commands
         /// <returns>Existing zone ID or -1 if not found (an error has been sent)</returns>
         public static int GetZoneId(Player player, ref List<string> values)
         {
-            string zoneName = GetString(ref values);
+            string zoneName = TrimMatchingQuotes(GetString(ref values));
             int zoneID;
             if (int.TryParse(zoneName, out zoneID))
             {
@@ -77,28 +78,45 @@ namespace WorldServer.Managers.Commands
                 return -1;
             }
 
-            List<Zone_Info> results = new List<Zone_Info>();
+            List<Zone_Info> exactResults = new List<Zone_Info>();
+            List<Zone_Info> partialResults = new List<Zone_Info>();
             foreach (Zone_Info zone in ZoneService._Zone_Info)
             {
-                if (zone.Name.ToLower().Contains(zoneName.ToLower()))
-                    results.Add(zone);
+                if (zone == null || string.IsNullOrWhiteSpace(zone.Name))
+                    continue;
+
+                if (string.Equals(zone.Name, zoneName, StringComparison.OrdinalIgnoreCase))
+                    exactResults.Add(zone);
+                else if (zone.Name.IndexOf(zoneName, StringComparison.OrdinalIgnoreCase) >= 0)
+                    partialResults.Add(zone);
             }
+
+            List<Zone_Info> results = exactResults.Count > 0 ? exactResults : partialResults;
             if (results.Count == 0)
             {
                 player.SendMessage("Could not find zone for name " + zoneName, ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
             }
             else if (results.Count > 1)
             {
-                string[] names = new string[results.Count];
-                for (int i = 0; i < results.Count; i++)
-                    names[i] = results[i].Name;
-                player.SendMessage($"Several zones match '{zoneName}' : {string.Join(",", names)}" + zoneID, ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
+                string[] names = results.Select(zone => zone.Name).OrderBy(name => name).ToArray();
+                player.SendMessage($"Several zones match '{zoneName}' : {string.Join(",", names)}", ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
             }
             else
             {
                 return results[0].ZoneId;
             }
             return -1;
+        }
+
+        public static string TrimMatchingQuotes(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return value;
+
+            if (value.Length >= 2 && value[0] == '"' && value[value.Length - 1] == '"')
+                return value.Substring(1, value.Length - 2);
+
+            return value;
         }
         public static string GetString(ref List<string> values)
         {
