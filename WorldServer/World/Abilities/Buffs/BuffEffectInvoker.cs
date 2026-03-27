@@ -3210,7 +3210,7 @@ namespace WorldServer.World.Abilities.Buffs
                 cmd.CommandResult = 5;
 
             // Check out of PvE area.
-            else if (player.CurrentArea == null || !player.CurrentArea.IsRvR)
+            else if (!player.IsInRvRLake)
             {
                 --cmd.CommandResult;
 

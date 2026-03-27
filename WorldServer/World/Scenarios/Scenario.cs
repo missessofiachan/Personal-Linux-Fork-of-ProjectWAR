@@ -1042,7 +1042,7 @@ namespace WorldServer.World.Scenarios
             plr.ScnInterface.ClearPendingScenario();
 
             // Reset to nearest spawn point if taking SC in ORvR area while in presence of BattlefieldObjective or keep
-            if (plr.CurrentArea != null && plr.CurrentArea.IsRvR && plr.Zone != null && (plr.CurrentKeep != null || plr.CurrentObjectiveFlag != null))
+            if (plr.IsInRvRLake && plr.Zone != null && (plr.CurrentKeep != null || plr.CurrentObjectiveFlag != null))
             {
                 SpawnPoint warcampRespawn = null;
 

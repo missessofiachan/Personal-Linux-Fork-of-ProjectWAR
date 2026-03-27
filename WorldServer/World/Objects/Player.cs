@@ -767,6 +767,7 @@ namespace WorldServer.World.Objects
                 // Block 2
                 QtsInterface.SendQuests();
                 LiveEventInterface.SendLiveEvents();
+                LotdService.SendResourceTracker(this);
 
                 SendXpTable();
                 if (GldInterface.IsInGuild())
@@ -909,6 +910,7 @@ namespace WorldServer.World.Objects
         {
             PendingDumpStatic = false;
             CrrInterface.NotifyClientLoaded();
+            LotdService.SendResourceTracker(this);
         }
 
         private long _lastLevelResourceAdd;
@@ -1222,7 +1224,7 @@ namespace WorldServer.World.Objects
             // Reset to nearest spawn point if logging while dead or too close to BattlefieldObjective/Keep
             if (CurrentArea != null && Zone != null && ScnInterface.Scenario == null)
             {
-                if (CurrentArea.IsRvR)
+                if (IsInRvRLake)
                 {
 
                     // NEWDAWN
@@ -1236,7 +1238,7 @@ namespace WorldServer.World.Objects
                     }
                 }
 
-                if (IsDead || !ValidInTier(Zone.Info.Tier, true) || CurrentArea.IsRvR && (CurrentObjectiveFlag != null || CurrentKeep != null))
+                if (IsDead || !ValidInTier(Zone.Info.Tier, true) || IsInRvRLake && (CurrentObjectiveFlag != null || CurrentKeep != null))
                 {
                     var closestRespawn = WorldMgr.GetZoneRespawn(Zone.ZoneId, (byte)Realm, this);
 
@@ -2059,6 +2061,8 @@ namespace WorldServer.World.Objects
 
         public void SendRvrTracker()
         {
+            SendObjectiveTrackerActivation();
+
             PacketOut Out = new PacketOut((byte)Opcodes.F_UPDATE_STATE, 13);
             Out.WriteByte(0);
             Out.WriteByte(1);
@@ -2066,6 +2070,44 @@ namespace WorldServer.World.Objects
             Out.WriteByte(2);
             Out.WriteByte(1);
             Out.Fill(0, 5);
+            SendPacket(Out);
+        }
+
+        public void SendObjectiveTrackerActivation(ushort zoneId = 0, ushort areaId = 0)
+        {
+            ushort resolvedZoneId = zoneId != 0 ? zoneId : Zone?.ZoneId ?? (ushort)0;
+            ushort resolvedAreaId = areaId != 0 ? areaId : CurrentArea?.AreaId ?? _currentAreaId;
+
+            if (resolvedZoneId != 0)
+                SendObjectiveTrackerZoneState(resolvedZoneId);
+
+            if (resolvedAreaId != 0)
+                SendObjectiveTrackerDisplayState(resolvedAreaId);
+        }
+
+        private void SendObjectiveTrackerZoneState(ushort zoneId)
+        {
+            PacketOut Out = new PacketOut((byte)Opcodes.F_UPDATE_STATE, 10);
+            Out.WriteUInt16(zoneId);
+            Out.WriteByte(0x11);
+            Out.WriteByte(1);
+            Out.WriteByte(1);
+            Out.WriteByte(0);
+            Out.WriteByte(0);
+            Out.WriteByte(0);
+            Out.Fill(0, 2);
+            SendPacket(Out);
+        }
+
+        private void SendObjectiveTrackerDisplayState(ushort areaId)
+        {
+            PacketOut Out = new PacketOut((byte)Opcodes.F_UPDATE_STATE, 10);
+            Out.WriteUInt16(areaId);
+            Out.WriteByte(0x11);
+            Out.WriteByte(2);
+            Out.WriteByte(1);
+            Out.WriteByte(0);
+            Out.Fill(0, 4);
             SendPacket(Out);
         }
 
@@ -2183,7 +2225,7 @@ namespace WorldServer.World.Objects
 #endif
 
             PacketOut Out;
-            if (CurrentArea.IsRvR)
+            if (IsInRvRLake)
             {
                 //notify entering lakes, required to show rvr tracker. TODO move it to switch_region
                 Out = new PacketOut((byte)Opcodes.F_UPDATE_STATE, 10);
@@ -4220,7 +4262,7 @@ namespace WorldServer.World.Objects
 
         private ushort GetKillerInfluenceId(Player killer)
         {
-            if (killer.CurrentArea != null && killer.CurrentArea.IsRvR)
+            if (killer.IsInRvRLake)
             {
                 return (killer.Realm == Realms.REALMS_REALM_DESTRUCTION) ? (ushort)killer.CurrentArea.DestroInfluenceId : (ushort)killer.CurrentArea.OrderInfluenceId;
             }
@@ -4259,7 +4301,7 @@ namespace WorldServer.World.Objects
             ushort influenceId = 0;
             uint totalInfluence = 0;
 
-            if (killer.CurrentArea != null && killer.CurrentArea.IsRvR)
+            if (killer.IsInRvRLake)
             {
                 influenceId = (killer.Realm == Realms.REALMS_REALM_DESTRUCTION) ? (ushort)killer.CurrentArea.DestroInfluenceId : (ushort)killer.CurrentArea.OrderInfluenceId;
                 totalInfluence = (uint)(100 * bonusMod * (1f + killer.AAOBonus) * deathRewardScaler);
@@ -4434,7 +4476,7 @@ namespace WorldServer.World.Objects
             {
                 BuffInfo buffInfo = AbilityMgr.GetBuffInfo((ushort)GameBuffs.BattleFatigue);
 
-                if (CurrentArea != null && CurrentArea.IsRvR)
+                if (IsInRvRLake)
                     buffInfo.Duration = 180;
 
                 BuffInterface.QueueBuff(new BuffQueueInfo(this, Level, buffInfo));
@@ -5371,7 +5413,7 @@ namespace WorldServer.World.Objects
             if (tier == 0 || tier > 4)
                 return false;
 
-            if (newArea == null || newArea != null && !newArea.IsRvR)
+            if (!isScenario && !IsRvRLakeArea(newArea))
                 return false;
 
             /*if (isScenario)
@@ -5671,7 +5713,7 @@ namespace WorldServer.World.Objects
                 return;
             }
 
-            if (CurrentArea != null && CurrentArea.IsRvR)
+            if (IsInRvRLake)
             {
                 SendLocalizeString("", ChatLogFilters.CHATLOGFILTERS_USER_ERROR, Localized_text.TEXT_DUEL_ERROR_RVR_ZONE);
                 return;
@@ -5691,7 +5733,7 @@ namespace WorldServer.World.Objects
                 return;
             }
 
-            if (Defender.CurrentArea != null && Defender.CurrentArea.IsRvR)
+            if (Defender.IsInRvRLake)
             {
                 SendLocalizeString("", ChatLogFilters.CHATLOGFILTERS_USER_ERROR, Localized_text.TEXT_DUEL_ERROR_TARGET_IN_RVR_ZONE);
                 return;
@@ -5720,12 +5762,12 @@ namespace WorldServer.World.Objects
             }
             else
             {
-                if (CurrentArea != null && CurrentArea.IsRvR)
+                if (IsInRvRLake)
                 {
                     SendLocalizeString("", ChatLogFilters.CHATLOGFILTERS_SAY, Localized_text.TEXT_DUEL_ERROR_RVR_ZONE);
                     return;
                 }
-                if (Aggressor.CurrentArea != null && Aggressor.CurrentArea.IsRvR)
+                if (Aggressor.IsInRvRLake)
                 {
                     SendLocalizeString("", ChatLogFilters.CHATLOGFILTERS_SAY, Localized_text.TEXT_DUEL_ERROR_TARGET_IN_RVR_ZONE);
                     return;
@@ -5793,8 +5835,33 @@ namespace WorldServer.World.Objects
 
         #region RvR Flagging
 
+        private static readonly int WarcampRvRSuppressionRangeFeet = Math.Max((int)BattleFrontConstants.WARCAMP_FARM_RANGE, 350);
         private bool _isRvRCountdown;
+        private bool _isInRvRLake;
         public NewBuff ChickenDebuff { get; set; }
+        public bool IsInRvRLake => IsRvRLakeArea(CurrentArea);
+
+        private bool IsRvRLakeArea(Zone_Area area)
+        {
+            if (Program.Config.OpenRvR)
+                return true;
+
+            if (area == null || !area.IsRvR)
+                return false;
+
+            return !IsInsideWarcampBuffer(area.ZoneId);
+        }
+
+        private bool IsInsideWarcampBuffer(ushort zoneId)
+        {
+            return IsInsideWarcampBuffer(BattleFrontService.GetWarcampEntrance(zoneId, Realms.REALMS_REALM_ORDER)) ||
+                   IsInsideWarcampBuffer(BattleFrontService.GetWarcampEntrance(zoneId, Realms.REALMS_REALM_DESTRUCTION));
+        }
+
+        private bool IsInsideWarcampBuffer(Point3D warcampEntrance)
+        {
+            return warcampEntrance != null && GetDistanceTo(warcampEntrance) <= WarcampRvRSuppressionRangeFeet;
+        }
 
         public void SetRvRCountdown(bool toggle)
         {
@@ -6337,7 +6404,7 @@ namespace WorldServer.World.Objects
                 ((CombatInterface_Player)CbtInterface).DisablePvp(0, true);
             }
 
-            if (CurrentArea != null && CurrentArea.IsRvR)
+            if (_isInRvRLake)
             {
                 // NEWDAWN
                 if (Region.Campaign != null)
@@ -6348,6 +6415,8 @@ namespace WorldServer.World.Objects
                 {
                     oldRegion?.Campaign?.NotifyLeftLake(this);
                 }
+
+                _isInRvRLake = false;
             }
 
 
@@ -6561,75 +6630,62 @@ namespace WorldServer.World.Objects
                 CurrentPQArea = pqarea;
             }
 
+            Zone_Area previousArea = CurrentArea;
             Zone_Area newArea = Zone.ClientInfo.GetZoneAreaFor((ushort)X, (ushort)Y, Zone.ZoneId, (ushort)Z);
-            //if ((newArea == null && CurrentArea == null) || newArea != CurrentArea)
-            if (newArea != CurrentArea)
+            bool wasInRvRLake = _isInRvRLake;
+            bool isInRvRLake = IsRvRLakeArea(newArea);
+
+            if (newArea != previousArea)
             {
                 if (newArea != null)
                 {
-                    if (CurrentArea == null || CurrentArea.AreaName != newArea.AreaName)
+                    if (previousArea == null || previousArea.AreaName != newArea.AreaName)
                     {
                         SendLocalizeString(newArea.AreaName ?? "an unknown area of the world.", ChatLogFilters.CHATLOGFILTERS_ZONE_AREA, Localized_text.TEXT_YOU_HAVE_ENTERED_AREA_X);
                         SendLocalizeString(newArea.AreaName ?? "Unknown Area", ChatLogFilters.CHATLOGFILTERS_C_WHITE, Localized_text.TEXT_ZONE_X);
                     }
 
                     TokInterface.AddTok(newArea.TokExploreEntry);
-
-                    if (Program.Config.OpenRvR || newArea.IsRvR)
-                    {
-                        if (!CbtInterface.IsPvp && !_isRvRCountdown)
-                            SetRvRCountdown(true);
-
-                        // Entering the RvR zone while in duel state cancels duel
-                        if (Faction == 64)
-                        {
-                            SurrenderDuel();
-                            return;
-                        }
-                        if (StsInterface.BolsterLevel == 0)
-                            TryBolster(0, newArea);
-
-                        if (ScnInterface.Scenario == null)
-                        {
-                            if (CurrentArea == null || !CurrentArea.IsRvR || CurrentArea.ZoneId != newArea.ZoneId)
-                            {
-                                // NEWDAWN
-                                if (Region.Campaign != null)
-                                    Region.Campaign.NotifyEnteredLake(this);
-
-                            }
-                        }
-                    }
-
-                    else
-                    {
-                        if (StsInterface.BolsterLevel > 0 && (Zone?.Info == null || !ShouldDebolster(Zone.Info.Tier)))
-                            RemoveBolster();
-
-                        if (!CbtInterface.IsPvp && _isRvRCountdown)
-                            SetRvRCountdown(false);
-
-                        if (CurrentArea != null && CurrentArea.IsRvR)
-                        {
-                            Region.Campaign?.NotifyLeftLake(this);
-                        }
-                    }
                 }
 
                 else
                 {
-                    if (CurrentArea != null && CurrentArea.IsRvR)
-                    {
-                        Region.Campaign?.NotifyLeftLake(this);
-                    }
-
-                    if (CurrentArea != null)
-                        SendLocalizeString(CurrentArea.AreaName, ChatLogFilters.CHATLOGFILTERS_ZONE_AREA, Localized_text.TEXT_YOU_HAVE_LEFT_AREA_X);
+                    if (previousArea != null)
+                        SendLocalizeString(previousArea.AreaName, ChatLogFilters.CHATLOGFILTERS_ZONE_AREA, Localized_text.TEXT_YOU_HAVE_LEFT_AREA_X);
                 }
 
                 CurrentArea = newArea;
                 SendChapterBar();
             }
+
+            if (isInRvRLake)
+            {
+                if (!CbtInterface.IsPvp && !_isRvRCountdown)
+                    SetRvRCountdown(true);
+
+                // Entering the RvR lake while in duel state cancels duel
+                if (Faction == 64)
+                    SurrenderDuel();
+
+                if (StsInterface.BolsterLevel == 0)
+                    TryBolster(0, newArea);
+
+                if (ScnInterface.Scenario == null && (!wasInRvRLake || previousArea?.ZoneId != newArea?.ZoneId))
+                    Region.Campaign?.NotifyEnteredLake(this);
+            }
+            else
+            {
+                if (StsInterface.BolsterLevel > 0 && (Zone?.Info == null || !ShouldDebolster(Zone.Info.Tier)))
+                    RemoveBolster();
+
+                if (!CbtInterface.IsPvp && _isRvRCountdown)
+                    SetRvRCountdown(false);
+
+                if (wasInRvRLake)
+                    Region.Campaign?.NotifyLeftLake(this);
+            }
+
+            _isInRvRLake = isInRvRLake;
             //     else 
             //SendClientMessage("Same Area");
         }

@@ -41,6 +41,27 @@ namespace WorldServer
             RVRProgressionService.SaveRVRProgression(WorldMgr.LowerTierCampaignManager.BattleFrontProgressions);
         }
 
+        public static void SaveRuntimeState()
+        {
+            if (WorldMgr.UpperTierCampaignManager?.BattleFrontProgressions != null)
+                RVRProgressionService.SaveRVRProgression(WorldMgr.UpperTierCampaignManager.BattleFrontProgressions);
+
+            if (WorldMgr.LowerTierCampaignManager?.BattleFrontProgressions != null)
+                RVRProgressionService.SaveRVRProgression(WorldMgr.LowerTierCampaignManager.BattleFrontProgressions);
+
+            CharMgr.Database?.ForceSave();
+            WorldMgr.Database?.ForceSave();
+        }
+
+        public static void UpdateRealmPopulationSnapshot()
+        {
+            if (Rm == null || AcctMgr == null)
+                return;
+
+            Rm.OnlinePlayers = (uint)Player.GetPlayerCount();
+            AcctMgr.UpdateRealm(Rm.RealmId, Rm.OnlinePlayers, Player.OrderCount, Player.DestruCount);
+        }
+
         private static void ResetBattlefrontProgressions(IBattleFrontManager manager)
         {
             foreach (var progression in manager.BattleFrontProgressions)
@@ -219,6 +240,7 @@ namespace WorldServer
         {
             Log.Info("Closing", "Closing the server");
 
+            SaveRuntimeState();
             WorldMgr.Stop();
             Player.Stop();
         }

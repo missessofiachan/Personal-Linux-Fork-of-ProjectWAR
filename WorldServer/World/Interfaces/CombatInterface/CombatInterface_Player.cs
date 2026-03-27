@@ -266,7 +266,7 @@ namespace WorldServer.World.Interfaces
             if (!IsPvp) 
                 return;
 
-            if (!force && (NextAllowedDisable >= tick || NextAllowedDisable == 0 || _player.CurrentArea == null || _player.CurrentArea.IsRvR))
+            if (!force && (NextAllowedDisable >= tick || NextAllowedDisable == 0 || _player.IsInRvRLake))
                 return;
 
             NextAllowedDisable = 0;

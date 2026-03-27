@@ -161,6 +161,7 @@
     <Compile Include="Database\World\Battlefront\Battlefront_Objective.cs" />
     <Compile Include="Database\World\Battlefront\ContributionDefinition.cs" />
     <Compile Include="Database\World\Battlefront\KeepSiegeSpawnPoints.cs" />
+    <Compile Include="Database\World\Battlefront\LotdResourceTracker.cs" />
     <Compile Include="Database\World\Battlefront\PlayerKeepSpawn.cs" />
     <Compile Include="Database\World\Battlefront\PlayerKillRewardHistory.cs" />
     <Compile Include="Database\World\Battlefront\RVRMetrics.cs" />

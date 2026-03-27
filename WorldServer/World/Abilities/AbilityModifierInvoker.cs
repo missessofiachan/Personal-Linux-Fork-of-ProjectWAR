@@ -441,7 +441,7 @@ namespace WorldServer.World.Abilities
         {
             Player plr = (Player)caster;
 
-            return plr.ScnInterface.Scenario == null && (plr.CurrentArea == null || !plr.CurrentArea.IsRvR);
+            return plr.ScnInterface.Scenario == null && !plr.IsInRvRLake;
         }
 
         private static bool HasDefended(Unit caster, Unit target, AbilityInfo abInfo, AbilityModifierCheck myCheck)

@@ -564,7 +564,7 @@ namespace WorldServer.World.Objects
             ushort influenceId = 0;
             uint totalInfluence = 0;
 
-            if (killer.CurrentArea != null && killer.CurrentArea.IsRvR)
+            if (killer.IsInRvRLake)
             {
                 influenceId = (killer.Realm == Realms.REALMS_REALM_DESTRUCTION) ? (ushort)killer.CurrentArea.DestroInfluenceId : (ushort)killer.CurrentArea.OrderInfluenceId;
                 totalInfluence = (uint)(100 * (1f + killer.AAOBonus));

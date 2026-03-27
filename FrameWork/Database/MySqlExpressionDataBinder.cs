@@ -36,6 +36,97 @@ namespace FrameWork.Database
             {
                 dataType = ((FieldInfo) propInfo).FieldType;
             }
+
+            Type nullableType = System.Nullable.GetUnderlyingType(dataType);
+            if (nullableType != null)
+            {
+                if (nullableType == typeof(byte))
+                {
+                    NullableStructExpressionDataBinder<T, byte> binder = new NullableStructExpressionDataBinder<T, byte>();
+                    binder.Initialize(propInfo, (r, i) => r.GetByte(i));
+                    return binder;
+                }
+
+                if (nullableType == typeof(sbyte))
+                {
+                    NullableStructExpressionDataBinder<T, sbyte> binder = new NullableStructExpressionDataBinder<T, sbyte>();
+                    binder.Initialize(propInfo, (r, i) => r.GetSByte(i));
+                    return binder;
+                }
+
+                if (nullableType == typeof(ushort))
+                {
+                    NullableStructExpressionDataBinder<T, ushort> binder = new NullableStructExpressionDataBinder<T, ushort>();
+                    binder.Initialize(propInfo, (r, i) => r.GetUInt16(i));
+                    return binder;
+                }
+
+                if (nullableType == typeof(short))
+                {
+                    NullableStructExpressionDataBinder<T, short> binder = new NullableStructExpressionDataBinder<T, short>();
+                    binder.Initialize(propInfo, (r, i) => r.GetInt16(i));
+                    return binder;
+                }
+
+                if (nullableType == typeof(uint))
+                {
+                    NullableStructExpressionDataBinder<T, uint> binder = new NullableStructExpressionDataBinder<T, uint>();
+                    binder.Initialize(propInfo, (r, i) => r.GetUInt32(i));
+                    return binder;
+                }
+
+                if (nullableType == typeof(int))
+                {
+                    NullableStructExpressionDataBinder<T, int> binder = new NullableStructExpressionDataBinder<T, int>();
+                    binder.Initialize(propInfo, (r, i) => r.GetInt32(i));
+                    return binder;
+                }
+
+                if (nullableType == typeof(ulong))
+                {
+                    NullableStructExpressionDataBinder<T, ulong> binder = new NullableStructExpressionDataBinder<T, ulong>();
+                    binder.Initialize(propInfo, (r, i) => r.GetUInt64(i));
+                    return binder;
+                }
+
+                if (nullableType == typeof(long))
+                {
+                    NullableStructExpressionDataBinder<T, long> binder = new NullableStructExpressionDataBinder<T, long>();
+                    binder.Initialize(propInfo, (r, i) => r.GetInt64(i));
+                    return binder;
+                }
+
+                if (nullableType == typeof(float))
+                {
+                    NullableStructExpressionDataBinder<T, float> binder = new NullableStructExpressionDataBinder<T, float>();
+                    binder.Initialize(propInfo, (r, i) => r.GetFloat(i));
+                    return binder;
+                }
+
+                if (nullableType == typeof(double))
+                {
+                    NullableStructExpressionDataBinder<T, double> binder = new NullableStructExpressionDataBinder<T, double>();
+                    binder.Initialize(propInfo, (r, i) => r.GetDouble(i));
+                    return binder;
+                }
+
+                if (nullableType == typeof(bool))
+                {
+                    NullableStructExpressionDataBinder<T, bool> binder = new NullableStructExpressionDataBinder<T, bool>();
+                    binder.Initialize(propInfo, (r, i) => r.GetBoolean(i));
+                    return binder;
+                }
+
+                if (nullableType == typeof(DateTime))
+                {
+                    NullableStructExpressionDataBinder<T, DateTime> binder = new NullableStructExpressionDataBinder<T, DateTime>();
+                    binder.Initialize(propInfo, (r, i) => r.GetDateTime(i));
+                    return binder;
+                }
+
+                throw new ArgumentException("StructExpressionBinder", "Failed to match nullable type " + nullableType.FullName);
+            }
+
             if (dataType.IsValueType && !dataType.IsEnum)
             {
                 if (dataType == typeof(byte))
@@ -129,6 +220,30 @@ namespace FrameWork.Database
             MySqlExpressionDataBinder classBinder = (MySqlExpressionDataBinder)Activator.CreateInstance(typeof(ClassExpressionDataBinder<,>).MakeGenericType(typeof(T), dataType));
             classBinder.Initialize(propInfo);
             return classBinder;
+        }
+    }
+
+    public class NullableStructExpressionDataBinder<TDataObject, TValue> : MySqlExpressionDataBinder
+        where TDataObject : DataObject where TValue : struct
+    {
+        private Action<TDataObject, TValue?> _assigner;
+        private Func<MySqlDataReader, int, TValue> _valueConverter;
+
+        public void Initialize(MemberInfo bindProperty, Func<MySqlDataReader, int, TValue> valueConverter)
+        {
+            ParameterExpression dataObjectParam = Expression.Parameter(typeof(TDataObject));
+            ParameterExpression valueParam = Expression.Parameter(typeof(TValue?));
+            BinaryExpression assign = Expression.Assign(Expression.MakeMemberAccess(dataObjectParam, bindProperty), valueParam);
+
+            var expression = Expression.Lambda<Action<TDataObject, TValue?>>(assign, dataObjectParam, valueParam);
+            _assigner = expression.Compile();
+
+            _valueConverter = valueConverter;
+        }
+
+        public override void Assign(object dataObject, MySqlDataReader reader, int ordinal)
+        {
+            _assigner((TDataObject)dataObject, _valueConverter(reader, ordinal));
         }
     }
 

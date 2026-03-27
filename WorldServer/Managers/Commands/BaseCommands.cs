@@ -1008,36 +1008,77 @@ namespace WorldServer.Managers.Commands
             foreach (Player player in snapshot)
                 player.SendClientMessage("SERVER SHUTDOWN: All character data is being saved. You will be disconnected momentarily.");
 
-            // Step 2: Force-save every player to the database before anything is torn down.
-            foreach (Player player in snapshot)
-                player.ForceSave();
-
-            Log.Info("Shutdown", "All player data saved. Blocking new connections.");
-
-            // Step 3: Stop the TCP listener so no new clients can connect.
+            // Step 2: Stop the TCP listener so no new clients can connect during the drain.
             WorldServer.Program.Server?.Stop();
+
+            // Step 3: Force-save every player and world progression before anything is torn down.
+            foreach (Player player in snapshot)
+            {
+                try
+                {
+                    player.ForceSave();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("Shutdown", $"ForceSave failed for {player?.Name ?? "<null>"}: {ex}");
+                }
+            }
+
+            WorldServer.Program.SaveRuntimeState();
+
+            Log.Info("Shutdown", "All player and world state saved. Disconnecting players.");
 
             // Step 4: Send the disconnect packet to every connected client.
             foreach (Player player in snapshot)
             {
-                PacketOut Out = new PacketOut((byte)Opcodes.F_PLAYER_QUIT, 4);
-                Out.WriteHexStringBytes("01000000");
-                player.SendPacket(Out);
+                try
+                {
+                    PacketOut Out = new PacketOut((byte)Opcodes.F_PLAYER_QUIT, 4);
+                    Out.WriteHexStringBytes("01000000");
+                    player.SendPacket(Out);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("Shutdown", $"Failed to send quit packet to {player?.Name ?? "<null>"}: {ex}");
+                }
             }
 
             // Step 5: Brief pause to allow the disconnect packets to be transmitted before
-            //         the underlying connections are closed.
-            System.Threading.Thread.Sleep(2000);
+            //         the underlying connections are closed and objects are removed from the world.
+            System.Threading.Thread.Sleep(500);
+
+            foreach (Player player in snapshot)
+            {
+                if (player == null)
+                    continue;
+
+                WorldServer.NetWork.GameClient client = player.Client;
+
+                try
+                {
+                    player.DisconnectType = Player.EDisconnectType.Clean;
+                    player.CloseClient = true;
+
+                    if (!player.IsDisposed)
+                        player.Dispose();
+
+                    client?.Disconnect("Server shutdown");
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("Shutdown", $"Failed to drain player {player?.Name ?? "<null>"} during shutdown: {ex}");
+                }
+            }
+
+            Player.OrderCount = 0;
+            Player.DestruCount = 0;
+            WorldServer.Program.UpdateRealmPopulationSnapshot();
 
             // Step 6: Stop region and scenario managers.
             WorldMgr.Stop();
 
+            WorldServer.Program.SaveRuntimeState();
             Log.Info("Shutdown", "Server has shut down cleanly.");
-
-            // AI-AGENT (Gemini 3.0 Flash): Force a synchronous save of character and world data before process exit.
-            // Environment.Exit(0) is immediate and prevents background worker threads from finishing.
-            CharMgr.Database.ForceSave();
-            WorldMgr.Database.ForceSave();
             Environment.Exit(0);
             return true;
         }

@@ -932,6 +932,13 @@ namespace WorldServer.World.Objects
             CapturingPlayer = interactor;
 
             BuffInfo buffInfo = AbilityMgr.GetBuffInfo((ushort)GameBuffs.Interaction);
+            if (buffInfo == null)
+            {
+                Log.Error("Object", $"Unable to begin interaction on {Name}: interaction buff {(ushort)GameBuffs.Interaction} is unavailable.");
+                NotifyInteractionBroken(null);
+                return;
+            }
+
             buffInfo.Duration = CaptureDuration;
             CapturingPlayer.BuffInterface.QueueBuff(new BuffQueueInfo(CapturingPlayer, CapturingPlayer.Level, buffInfo, InteractionBuff.GetNew, LinkToCaptureBuff));
 
@@ -952,7 +959,7 @@ namespace WorldServer.World.Objects
 
         public virtual void NotifyInteractionBroken(NewBuff b)
         {
-            if (CapturingPlayer == b.Target)
+            if (b == null || CapturingPlayer == b.Target)
                 CapturingPlayer = null;
         }
 

@@ -571,25 +571,29 @@ namespace WorldServer.Managers
         {
             List<Zone_Taxi> L = new List<Zone_Taxi>();
 
-            Zone_Taxi[] Taxis;
             foreach (KeyValuePair<ushort, Zone_Taxi[]> Kp in ZoneService._Zone_Taxi)
             {
-                Taxis = Kp.Value;
-                if (Taxis[(byte)Plr.Realm] == null || Taxis[(byte)Plr.Realm].WorldX == 0)
+                Zone_Taxi[] taxis = Kp.Value;
+                Zone_Taxi taxi = taxis[(byte)Plr.Realm];
+
+                if (taxi == null || taxi.WorldX == 0)
                     continue;
 
-                if (Taxis[(byte)Plr.Realm].Info == null)
-                    Taxis[(byte)Plr.Realm].Info = ZoneService.GetZone_Info(Taxis[(byte)Plr.Realm].ZoneID);
+                if (taxi.Info == null)
+                    taxi.Info = ZoneService.GetZone_Info(taxi.ZoneID);
 
-                if (Taxis[(byte)Plr.Realm].Info == null)
+                if (taxi.Info == null)
                     continue;
 
-                if (Taxis[(byte)Plr.Realm].Enable == false)
+                if (!taxi.Enable)
                     continue;
 
-                if (Taxis[(byte)Plr.Realm].Tier > 0)
+                if (!LotdService.ShouldExposeTaxi(Plr, taxi))
+                    continue;
+
+                if (taxi.Tier > 0)
                 {
-                    switch (Taxis[(byte)Plr.Realm].Tier)
+                    switch (taxi.Tier)
                     {
                         case 2:
                             if (!(Plr.TokInterface.HasTok(11) || Plr.TokInterface.HasTok(44) || Plr.TokInterface.HasTok(75) || Plr.TokInterface.HasTok(140) || Plr.TokInterface.HasTok(171) || Plr.TokInterface.HasTok(107)))
@@ -605,7 +609,8 @@ namespace WorldServer.Managers
                             break;
                     }
                 }
-                L.Add(Taxis[(byte)Plr.Realm]);
+
+                L.Add(taxi);
             }
 
             return L;
@@ -1683,6 +1688,7 @@ namespace WorldServer.Managers
             {
                 if (ZoneService._Zone_Info != null)
                 {
+                    LotdService.Update();
                     SendZoneFightLevel();
 
                     foreach (var region in WorldMgr._Regions.Where(e => e.Campaign != null).ToList())

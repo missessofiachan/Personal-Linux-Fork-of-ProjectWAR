@@ -22,8 +22,11 @@ namespace FrameWork.Database
         public static DataBinder GetFor(object target, Type type, MethodInfo method)
         {
             DataBinder binder;
+            Type nullableType = Nullable.GetUnderlyingType(type);
 
-            if (type.IsValueType && !type.IsEnum)
+            if (nullableType != null && !nullableType.IsEnum)
+                binder = (DataBinder)Activator.CreateInstance(typeof(NullableStructDataBinder<>).MakeGenericType(nullableType));
+            else if (type.IsValueType && !type.IsEnum)
                 binder = (DataBinder)Activator.CreateInstance(typeof (StructDataBinder<>).MakeGenericType(type));
             else
                 binder = (DataBinder)Activator.CreateInstance(typeof(ClassDataBinder<>).MakeGenericType(type));
@@ -31,6 +34,36 @@ namespace FrameWork.Database
             binder.Initialize(target, method);
 
             return binder;
+        }
+    }
+
+    public class NullableStructDataBinder<T> : DataBinder where T : struct
+    {
+        private Action<T?> _assignmentAction;
+
+        public override void Initialize(object target, MethodInfo desiredMethod)
+        {
+            _assignmentAction = (Action<T?>)Delegate.CreateDelegate(typeof(Action<T?>), target, desiredMethod);
+        }
+
+        public override void Assign(object o)
+        {
+            try
+            {
+                if (o == null || o is DBNull)
+                    _assignmentAction(null);
+                else
+                {
+                    T conversion = (T)Convert.ChangeType(o, typeof(T));
+                    _assignmentAction(conversion);
+                }
+            }
+            catch (InvalidCastException)
+            {
+                Log.Error("NullableStructDataBinder<" + typeof(T).FullName + ">",
+                    "Could not convert value " + o + " of type " + o.GetType().FullName);
+                throw;
+            }
         }
     }
 

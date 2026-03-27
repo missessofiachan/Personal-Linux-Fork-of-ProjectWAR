@@ -358,6 +358,7 @@
     <Compile Include="Services\World\GuildService.cs" />
     <Compile Include="Services\World\MailService.cs" />
     <Compile Include="Services\World\ItemService.cs" />
+    <Compile Include="Services\World\LotdService.cs" />
     <Compile Include="Services\World\BattlefrontService.cs" />
     <Compile Include="Services\World\InstanceService.cs" />
     <Compile Include="Services\World\LiveEventService.cs" />

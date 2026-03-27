@@ -928,7 +928,10 @@ namespace WorldServer.NetWork.Handler
                 List<Zone_Taxi> destinations = WorldMgr.GetTaxis(cclient.Plr);
 
                 if (destinations.Count <= destId - 1)
+                {
+                    cclient.Plr.SendLocalizeString(ChatLogFilters.CHATLOGFILTERS_USER_ERROR, Localized_text.TEXT_FLIGHT_INVALID_FLIGHT);
                     return;
+                }
 
                 Zone_Taxi destination = destinations[destId - 1];
 

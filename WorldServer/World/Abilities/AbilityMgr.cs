@@ -56,6 +56,7 @@ namespace WorldServer.World.Abilities
         private const ushort RenownSilentBonusRankTwoEntry = 27875;
         private const ushort RenownSilentActionPointBonus = 25;
         private const ushort ImDaBiggestBuffEntry = 734;
+        private const ushort InteractionBuffEntry = 60000;
 
         /// <summary>
         /// The 4 slottable renown tactics (3 granted at RR90, 1 at RR100).
@@ -909,6 +910,7 @@ namespace WorldServer.World.Abilities
             EnsureMasteryBonusTacticBuff(RenownInfiniteMasteryEntry, "Infinite Mastery", Stats.Mastery3Bonus);
             EnsureAugmentVigorBuff();
             EnsureRenownSilentBonusBuffs();
+            EnsureInteractionBuff();
         }
 
         private static void EnsureRenownSilentBonusBuffs()
@@ -1057,6 +1059,41 @@ namespace WorldServer.World.Abilities
             shell.EffectType = 0;
             shell.CommandInfo = new List<BuffCommandInfo>();
             return shell;
+        }
+
+        private static void EnsureInteractionBuff()
+        {
+            if (BuffInfos.ContainsKey(InteractionBuffEntry))
+                return;
+
+            BuffInfo shell = new BuffInfo
+            {
+                Entry = InteractionBuffEntry,
+                Name = "Interaction",
+                BuffClass = BuffClass.Standard,
+                Type = BuffTypes.None,
+                Group = 0,
+                AuraPropagation = string.Empty,
+                MaxCopies = 1,
+                InitialStacks = 1,
+                MaxStack = 1,
+                StackLine = 0,
+                StacksFromCaster = false,
+                Duration = 0,
+                LeadInDelay = 0,
+                Interval = 0,
+                BuffIntervals = 0,
+                PersistsOnDeath = 0,
+                CanRefresh = false,
+                MasteryTree = 0,
+                FriendlyEffectID = 0,
+                EnemyEffectID = 0,
+                EffectType = 0,
+                CommandInfo = new List<BuffCommandInfo>()
+            };
+
+            BuffInfos[InteractionBuffEntry] = shell;
+            Log.Info("AbilityMgr", $"Installed fallback interaction buff {InteractionBuffEntry} for BO and world-object capture flows.");
         }
 
         private static void LoadCanonicalEntryResolvers()

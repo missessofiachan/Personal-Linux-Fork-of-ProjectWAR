@@ -316,14 +316,46 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
         public override void NotifyInteractionBroken(NewBuff b)
         {
-            fsm.Fire(CampaignObjectiveStateMachine.Command.OnPlayerInteractionBroken);
+            var interactingPlayer = CapturingPlayer ?? b?.Caster as Player;
+            BattlefrontLogger.Debug($"[BO:{Name}] Interaction broken for {interactingPlayer?.Name ?? "<unknown>"} State={State}");
+
+            try
+            {
+                fsm.Fire(CampaignObjectiveStateMachine.Command.OnPlayerInteractionBroken);
+            }
+            catch (Exception e)
+            {
+                BattlefrontLogger.Warn($"{Name} : Interaction broken transition failed: {e.Message}");
+            }
+
             _captureInProgress = false;
             CapturingPlayer = null;
         }
 
         public override void NotifyInteractionComplete(NewBuff b)
         {
-            fsm.Fire(CampaignObjectiveStateMachine.Command.OnPlayerInteractionComplete, CapturingPlayer);
+            var interactingPlayer = CapturingPlayer ?? b?.Caster as Player;
+            BattlefrontLogger.Debug($"[BO:{Name}] Interaction complete for {interactingPlayer?.Name ?? "<unknown>"} State={State}");
+
+            if (interactingPlayer == null)
+            {
+                BattlefrontLogger.Warn($"{Name} : Interaction completed with no capturing player.");
+                _captureInProgress = false;
+                CapturingPlayer = null;
+                return;
+            }
+
+            CapturingPlayer = interactingPlayer;
+
+            try
+            {
+                fsm.Fire(CampaignObjectiveStateMachine.Command.OnPlayerInteractionComplete, interactingPlayer);
+            }
+            catch (Exception e)
+            {
+                BattlefrontLogger.Warn($"{Name} : Interaction complete transition failed: {e.Message}");
+            }
+
             _captureInProgress = false;
             CapturingPlayer = null;
         }
@@ -331,7 +363,44 @@ namespace WorldServer.World.Battlefronts.Apocalypse
         public void OpenBattleFront()
         {
             BattlefrontLogger.Debug($"Opening BattlefieldObjective {Name}...");
-            fsm.Fire(CampaignObjectiveStateMachine.Command.OnOpenBattleFront);
+            if (fsm != null)
+            {
+                try
+                {
+                    fsm.Fire(CampaignObjectiveStateMachine.Command.OnOpenBattleFront);
+                }
+                catch (Exception e)
+                {
+                    BattlefrontLogger.Warn($"{Name} : OpenBattleFront FSM transition failed: {e.Message}");
+                }
+            }
+
+            if (State != StateFlags.Unsecure || OwningRealm != Realms.REALMS_REALM_NEUTRAL || BuffId != 0 || CaptureTimer != 0 || GuardedTimer != 0)
+            {
+                BattlefrontLogger.Warn($"{Name} : OpenBattleFront fallback reset applied. State={State} Owner={OwningRealm} CaptureTimer={CaptureTimer} GuardedTimer={GuardedTimer}");
+                SetObjectiveSafe();
+            }
+        }
+
+        public void LockBattleFront()
+        {
+            if (fsm != null)
+            {
+                try
+                {
+                    fsm.Fire(CampaignObjectiveStateMachine.Command.OnLockZone);
+                }
+                catch (Exception e)
+                {
+                    BattlefrontLogger.Warn($"{Name} : LockBattleFront FSM transition failed: {e.Message}");
+                }
+            }
+
+            if (State != StateFlags.ZoneLocked)
+            {
+                BattlefrontLogger.Warn($"{Name} : LockBattleFront fallback applied. State={State}");
+                SetObjectiveLocked();
+            }
         }
 
         /// <summary>

@@ -1000,7 +1000,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                 if ((flag.ZoneId != zoneId) && (flag.RegionId == Region.RegionId))
                 {
                     flag.OwningRealm = realm;
-                    flag.SetObjectiveLocked();
+                    flag.LockBattleFront();
                 }
             }
         }
@@ -1014,7 +1014,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                 if (flag.Id == objectiveToLock)
                 {
                     flag.OwningRealm = realm;
-                    flag.SetObjectiveLocked();
+                    flag.LockBattleFront();
                 }
             }
         }
@@ -1399,6 +1399,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             // Must be called before locking the battlefront
             GenerateZoneLockRewards(lockingRealm, oldBattleFront.ZoneId);
             BattleFrontManager.LockActiveBattleFront(lockingRealm, forceNumberBags);
+            LotdService.TryAwardBattlefrontLock(oldBattleFront, lockingRealm);
             // Remove eligible players.
             ClearDictionaries();
 

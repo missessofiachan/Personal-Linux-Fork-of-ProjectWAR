@@ -2,6 +2,7 @@
 using FrameWork;
 using WorldServer.World.Abilities.Components;
 using WorldServer.World.Objects;
+using WorldServer.World.Positions;
 using Object = WorldServer.World.Objects.Object;
 using Opcodes = WorldServer.NetWork.Opcodes;
 
@@ -9,7 +10,11 @@ namespace WorldServer.World.Abilities.Buffs.SpecialBuffs
 {
     class InteractionBuff: NewBuff
     {
+        private const int MaxInteractionDriftFeet = 8;
+        private const int MaxInteractionTargetRangeFeet = 20;
+
         private Object _target;
+        private Point3D _startPosition;
 
         public override void StartBuff()
         {
@@ -25,6 +30,7 @@ namespace WorldServer.World.Abilities.Buffs.SpecialBuffs
         public void SetObject(Object target)
         {
             _target = target;
+            _startPosition = new Point3D(Caster.WorldPosition);
 
             PacketOut Out = new PacketOut((byte)Opcodes.F_SET_ABILITY_TIMER, 12);
                 Out.WriteByte(0);
@@ -46,7 +52,7 @@ namespace WorldServer.World.Abilities.Buffs.SpecialBuffs
             if (BuffState != (byte) EBuffState.Running)
                 return;
 
-            if (_target == null || Caster.IsMoving)
+            if (!CanContinueInteraction())
             {
                 BuffEnded(true, false);
                 return;
@@ -56,6 +62,20 @@ namespace WorldServer.World.Abilities.Buffs.SpecialBuffs
 
             if (EndTime > 0 && curTime >= EndTime)
                 BuffEnded(false, false);
+        }
+
+        private bool CanContinueInteraction()
+        {
+            if (_target == null || !(Caster is Player player))
+                return false;
+
+            if (player.IsDead || player.PendingDisposal || player.Region != _target.Region)
+                return false;
+
+            if (_startPosition != null && !player.PointWithinRadiusFeet(_startPosition, MaxInteractionDriftFeet))
+                return false;
+
+            return _target.GetDistanceToObject(player, true) <= MaxInteractionTargetRangeFeet;
         }
 
         protected override void BuffEnded(bool wasRemoved, bool wasManual)

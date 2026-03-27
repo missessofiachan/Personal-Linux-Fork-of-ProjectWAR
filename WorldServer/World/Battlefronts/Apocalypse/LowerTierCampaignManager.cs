@@ -154,7 +154,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                         else
                             objective.OwningRealm = (Realms)regionMgr.Campaign.BattleFrontManager.ActiveBattleFront.LastOwningRealm;
 
-                        objective.SetObjectiveLocked();
+                        objective.LockBattleFront();
 				        ProgressionLogger.Debug($" Locking BattlefieldObjective to {objective.OwningRealm} {objective.Name} {objective.State} {objective.State}");
 					}
 
@@ -216,7 +216,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             foreach (var flag in activeRegion.Campaign.Objectives)
             {
                 flag.OwningRealm = realm;
-                flag.SetObjectiveLocked();
+                flag.LockBattleFront();
             }
 
             if (activeRegion.Campaign.Keeps == null)

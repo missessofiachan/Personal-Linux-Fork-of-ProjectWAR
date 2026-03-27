@@ -207,12 +207,33 @@ Get-Process | Where-Object { $_.Name -match 'AccountCacher|LauncherServer|LobbyS
 - GM `.teleport center` or `.teleport entry` lands in a bad spot:
   - the command now prefers respawns, taxis, rally points, chapter pins, and validated portal arrivals before using `zone_infos`-derived fallbacks.
   - if a zone still has no reliable anchors, curate its respawn/taxi/rally/chapter data rather than relying on geometric center points.
+- Land of the Dead expedition flights never appear or never unlock:
+  - apply `Database/update_005_lotd_resource_tracker.sql`.
+  - the LOTD tracker uses T4 battlefront locks to award realm points, unlocks expedition access for one realm at a time, then resets after the configured ownership window.
+  - RoR refers to the visible LOTD bar as the `expedition tracker`, but current client evidence still points at the Tomb Kings `F_RRQ` / RRQ tracker container for that UI.
+  - if the `lotd_resource_tracker` table is missing, the server now keeps the LOTD flights hidden instead of exposing them to both realms.
+  - if `WorldServer` logs show `lotd_resource_tracker ... Type mismatch (INT UNSIGNED in DB - INT in emulator)`, also apply `Database/update_006_lotd_resource_tracker_schema_fix.sql`.
+  - if `WorldServer` logs show `LotdService ... StructExpressionBinder`, update to the current build as well; the runtime binder now supports nullable tracker timestamps.
+  - if the expedition tracker is still invisible, confirm the server log reaches `Loaded Land of the Dead resource tracker` on the current build before debugging packet display behavior; older failed boots in `bin/Release/logs` do not prove the current binaries loaded the tracker.
+- The active T4 battlefront opens, but its objectives still behave as `ZoneLocked` or Praag immediately aborts domination checks:
+  - update to the current `WorldServer` build.
+  - battlefront objective lock/open calls now drive the FSM consistently and force a neutral-safe reset if an objective stays stuck in `ZoneLocked`.
+- Battlefield objectives can be clicked, but flags never capture:
+  - apply `Database/update_007_interaction_buff_fix.sql`.
+  - this repairs missing `buff_infos.Entry = 60000` (`Interaction`) data in `war_world`, which otherwise causes BO and world-object interactions to stall after click.
+  - the current server build also installs a runtime fallback for buff `60000`, so BO capture no longer depends entirely on the DB row being present.
+- Entering a warcamp incorrectly RvR-flags the player or counts as being in the lake:
+  - update to the current `WorldServer` build.
+  - lake state is now computed separately from raw `zone_areas` so warcamp entrances suppress RvR-lake behavior until the player actually leaves the warcamp buffer.
 - Greenskin starters appear in the wrong Mt Bloodhorn position:
   - apply `Database/update_004_greenskin_start_position_fix.sql`.
   - this fixes the four Greenskin `characterinfo` templates that were stored as local pins instead of world coordinates.
 - Random name suggestions repeat, are sequential, or offer taken names:
   - update to the current `WorldServer` build.
   - random suggestions still draw from `war_world.random_names`, but they are now shuffled per request, checked against existing character names, and replaced with generated valid names only if the curated pool is exhausted.
+- `.boot` does not preserve the live campaign or leaves the server in a bad shutdown state:
+  - update to the current `WorldServer` build.
+  - `.boot` now saves player state and active RvR progression, blocks new connections, disconnects players cleanly, updates realm population to zero, then exits.
 - Need a clean rebuild:
   - delete generated directories such as `.vs/`, `bin/`, `*/obj/`, and `packages/`, then restore/build again.
 

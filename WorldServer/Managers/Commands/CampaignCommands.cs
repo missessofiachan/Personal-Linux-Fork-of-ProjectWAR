@@ -293,7 +293,7 @@ namespace WorldServer.Managers.Commands
                 foreach (var flag in WorldMgr.GetRegion(plr.Region.RegionId, false).Campaign.Objectives)
                 {
                     flag.OwningRealm = realm;
-                    flag.SetObjectiveLocked();
+                    flag.LockBattleFront();
                 }
             }
             else

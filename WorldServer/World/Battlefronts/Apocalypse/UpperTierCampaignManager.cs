@@ -239,7 +239,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                             objective.OwningRealm = (Realms)regionMgr.Campaign.BattleFrontManager.ActiveBattleFront.LastOwningRealm;
                         }
                         //objective.fsm.Fire(CampaignObjectiveStateMachine.Command.OnLockZone);
-                        objective.SetObjectiveLocked();
+                        objective.LockBattleFront();
                         ProgressionLogger.Debug($" Locking BattlefieldObjective to {(Realms)regionMgr.Campaign.BattleFrontManager.ActiveBattleFront.LastOwningRealm} {objective.Name} {objective.State} {objective.State}");
                     }
 
@@ -385,7 +385,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                 if (ActiveBattleFront.ZoneId == flag.ZoneId)
                 {
                     flag.OwningRealm = realm;
-                    flag.SetObjectiveLocked();
+                    flag.LockBattleFront();
                 }
 
             }
