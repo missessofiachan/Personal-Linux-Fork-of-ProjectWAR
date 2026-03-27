@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -28,6 +28,7 @@ namespace WorldServer
         public static TCPServer Server;
         public static Realm Rm;
         private static Timer _timer;
+        private static Timer _botTimer;
 
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         private static extern bool SetDllDirectory(string lpPathName);
@@ -194,6 +195,15 @@ namespace WorldServer
             Log.Info("Battlefront Manager", "Creating Lower Tier Campaign Manager", ConsoleColor.Cyan);
             WorldMgr.LowerTierCampaignManager = new LowerTierCampaignManager(RVRProgressionService._RVRProgressions.Where(x => x.Tier == 1).ToList(), WorldMgr._Regions);
 
+            // Bot Initialization
+            Log.Info("Bot Manager", "Initializing Bot Management Services", ConsoleColor.Cyan);
+            BotManager.Instance.Initialize();
+            DynamicBotManager.Instance.Start();
+            _botTimer = new Timer(DynamicBotManager.Instance.Update, null, 10000, 60000);
+
+            // Start the bot manager on server up
+            DynamicBotManager.Instance.Start();
+
             if (Config.ResetBattlefrontsOnStartup)
             {
                 Log.Info("Battlefront Manager", "ResetBattlefrontsOnStartup enabled - resetting battlefront progression", ConsoleColor.Cyan);
@@ -246,3 +256,10 @@ namespace WorldServer
         }
     }
 }
+
+
+
+
+
+
+

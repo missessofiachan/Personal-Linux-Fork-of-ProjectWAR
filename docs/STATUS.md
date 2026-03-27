@@ -70,6 +70,10 @@ Tool usage: `docs/client-data-matrix-usage.md`.
 | `C:\temp\zone_fill` | Zone fill working area |
 | `C:\Users\Admin\source\repos\Shmerrick\WAR-RE-Toolkit` | RE toolkit: decompiled client code, BIN export parsers, ability enums |
 
+## Bot System
+
+A fully integrated, player-like Bot System is now implemented to populate the world with autonomous entities. They participate in RvR and Scenarios, running with zero network overhead. See `BOT_SYSTEM.md` for detailed information on architecture, logic, and GM commands.
+
 ## Open Bugs
 
 ### T1 RvR non-functional

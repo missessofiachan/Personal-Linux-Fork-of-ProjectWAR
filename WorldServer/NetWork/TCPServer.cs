@@ -1,4 +1,4 @@
-﻿using FrameWork;
+using FrameWork;
 
 namespace WorldServer.NetWork
 {
@@ -28,7 +28,7 @@ namespace WorldServer.NetWork
                     if (Clients[i] != null && Clients[i] != Me)
                     {
                         GameClient client = Clients[i] as GameClient;
-                        if (client.HasAccount() && client._Account.AccountId == AccountId)
+                        if (AccountId != 9999 && client.HasAccount() && client._Account.AccountId == AccountId)
                             return client;
                     }
 
@@ -52,3 +52,4 @@ namespace WorldServer.NetWork
         */
     }
 }
+

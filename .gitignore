@@ -232,3 +232,6 @@ deps/zones/
 /.vs/WarEmulator/v15/Solution.VC.db-wal
 /.vs/WarEmulator/v15/Solution.VC.db-shm
 /WorldServer/Configs/LocalDevelopment
+
+# Temporary database dumps
+Database/_tmp_worlddump/

@@ -413,6 +413,7 @@
     <Compile Include="Managers\Commands\BaseCommands.cs" />
     <Compile Include="Managers\LootsMgr.cs" />
 
+    <Compile Include="NetWork\Handler\AckHandlers.cs" />
     <Compile Include="NetWork\Handler\AuctionHandlers.cs" />
     <Compile Include="NetWork\Handler\AuthentificationHandlers.cs" />
     <Compile Include="NetWork\Handler\CharacterHandlers.cs" />

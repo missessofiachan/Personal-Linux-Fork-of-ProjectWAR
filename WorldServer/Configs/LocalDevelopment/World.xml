@@ -56,7 +56,7 @@
   <CreateBothRealms>true</CreateBothRealms>
   <CleanSpawns>true</CleanSpawns>
   <DiscoverAll>false</DiscoverAll>
-  <OpenRvR>true</OpenRvR>
+  <OpenRvR>false</OpenRvR>
   <PreloadAllCharacters>true</PreloadAllCharacters>
   <Motd>Welcome WAR</Motd>
   <RegionOcclusionFolder>los/</RegionOcclusionFolder>

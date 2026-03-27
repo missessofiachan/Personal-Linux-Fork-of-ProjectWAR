@@ -11,8 +11,5 @@
           SkipUnchangedFiles="true"
           Condition="'@(FilesToRelocate)' != ''"
           ContinueOnError="WarnAndContinue" />
-    <Delete Files="@(FilesToRelocate)"
-            Condition="'@(FilesToRelocate)' != ''"
-            ContinueOnError="WarnAndContinue" />
   </Target>
 </Project>

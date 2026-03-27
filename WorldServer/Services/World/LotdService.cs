@@ -87,7 +87,7 @@ namespace WorldServer.Services.World
             if (_tracker == null || player == null || player.Client == null)
                 return;
 
-            player.SendObjectiveTrackerActivation(player.Zone?.ZoneId ?? LotdZoneId, player.CurrentArea?.AreaId ?? 0);
+            player.SendObjectiveTrackerActivation(LotdZoneId, 0);
             player.SendRvrTracker();
             player.SendPacket(BuildTrackerPacket(player));
         }

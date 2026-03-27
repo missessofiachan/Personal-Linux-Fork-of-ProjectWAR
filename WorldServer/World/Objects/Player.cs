@@ -1,4 +1,4 @@
-﻿using Common;
+using Common;
 using Common.Database.World.BattleFront;
 using FrameWork;
 using GameData;
@@ -265,6 +265,8 @@ namespace WorldServer.World.Objects
         public bool SoREnabled = false;
 
         public bool DebugMode;
+        public bool IsBot { get; set; }
+        public BotRole Role { get; set; }
 
         public GameClient Client { get; set; }
         public string GenderedName { get; }
@@ -579,6 +581,11 @@ namespace WorldServer.World.Objects
 
             Client.State = (int)eClientState.WorldEnter;
 
+            if (IsBot)
+            {
+                AiInterface.SetBrain(new World.AI.BotBrain(this));
+            }
+
             // Handle temporary Exile (warned while offline)
             if (Client._Account?.Banned == 2)
             {
@@ -750,6 +757,11 @@ namespace WorldServer.World.Objects
             {
                 RemovePlayer(this);
                 Client.State = (int)eClientState.WorldEnter;
+
+            if (IsBot)
+            {
+                AiInterface.SetBrain(new World.AI.BotBrain(this));
+            }
 
                 _isCriticallyWounded = false;
                 // Block 1
@@ -1528,6 +1540,7 @@ namespace WorldServer.World.Objects
         }
         public void SendPacket(PacketOut Out)
         {
+            if (IsBot) return;
             if (Client == null)
                 return;
 
@@ -2434,7 +2447,7 @@ namespace WorldServer.World.Objects
 
             PacketOut Out = new PacketOut((byte)Opcodes.F_PLAYER_QUIT, 2);
             Out.WriteByte(0);
-            Out.WriteByte((byte)(CloseClient ? 0 : 1)); // 1 = Page de sélection des perso, 0 = Exit
+            Out.WriteByte((byte)(CloseClient ? 0 : 1)); // 1 = Page de s�lection des perso, 0 = Exit
             SendPacket(Out);
         }
 
@@ -6682,7 +6695,12 @@ namespace WorldServer.World.Objects
                     SetRvRCountdown(false);
 
                 if (wasInRvRLake)
+                {
                     Region.Campaign?.NotifyLeftLake(this);
+                    // Start 10-minute countdown to unflag PvP
+                    ((CombatInterface_Player)CbtInterface).NextAllowedDisable = TCPManager.GetTimeStampMS() + 10 * 60 * 1000;
+                    SendLocalizeString("", ChatLogFilters.CHATLOGFILTERS_RVR, Localized_text.TEXT_RVR_UNFLAG);
+                }
             }
 
             _isInRvRLake = isInRvRLake;
@@ -7158,4 +7176,7 @@ namespace WorldServer.World.Objects
         }
     }
 }
+
+
+
 

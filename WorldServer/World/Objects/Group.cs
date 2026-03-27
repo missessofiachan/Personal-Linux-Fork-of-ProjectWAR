@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -294,6 +294,7 @@ namespace WorldServer.World.Objects
         private Player _leader;
         private Player _masterLooter;
         private Player _mainAssist;
+        public Player MainAssist => _mainAssist;
         public bool PartyOpen { get; set; }
 
         public Realms Realm { get; private set; }
@@ -2040,3 +2041,4 @@ namespace WorldServer.World.Objects
         }
     }
 }
+

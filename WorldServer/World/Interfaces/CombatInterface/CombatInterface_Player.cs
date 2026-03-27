@@ -257,8 +257,8 @@ namespace WorldServer.World.Interfaces
 
             NextAllowedDisable = 0;
             IsPvp = true;
-            _Owner.GetPlayer().SetPVPFlag(true);
-            _Owner.GetPlayer().SendLocalizeString("", ChatLogFilters.CHATLOGFILTERS_RVR, Localized_text.TEXT_RVR_FLAG);
+            _player.SetPVPFlag(true);
+            _player.SendLocalizeString("", ChatLogFilters.CHATLOGFILTERS_RVR, Localized_text.TEXT_RVR_FLAG);
         }
 
         public void DisablePvp(long tick, bool force)

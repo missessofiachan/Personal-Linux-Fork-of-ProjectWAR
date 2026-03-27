@@ -161,6 +161,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             RewardManager = new RVRRewardManager();
             fsm = new CampaignObjectiveStateMachine(this).fsm;
             fsm.Initialize(CampaignObjectiveStateMachine.ProcessState.Neutral);
+            fsm.Start();
             if (objective.Guards != null)
             {
                 foreach (BattleFront_Guard Guard in objective.Guards)
@@ -887,7 +888,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                     }
                     break;
 
-                case StateFlags.Secure: // big tick
+                case StateFlags.Locked: // big tick (Captured-Lockout)
                     VP = RewardManager.RewardCaptureTick(closePlayers, capturingRealm, Tier, Name, 1f, BORewardType.CAPTURED);
 
                     WorldMgr.UpperTierCampaignManager.GetActiveCampaign().VictoryPointProgress.UpdateStatus(WorldMgr.UpperTierCampaignManager.GetActiveCampaign());
@@ -906,7 +907,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                         }
                     }
                     break;
-                case StateFlags.Locked: // unlock tick
+                case StateFlags.Secure: // unlock tick (Guarded-Open Conflict)
                     VP = RewardManager.RewardCaptureTick(closePlayers, capturingRealm, Tier, Name, 1f, BORewardType.GUARDED);
                     lock (closePlayers)
                     {
@@ -980,20 +981,20 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                 case StateFlags.ZoneLocked: // Campaign Lock
                     result = false;
                     break;
-                case StateFlags.Secure:   // CAPTURED (Lockout State)
-                    // The flag has just been captured and is in lockout.
-                    // No one can interact with it until it transitions to Secured.
-                    result = false;
+                case StateFlags.Secure:   // SECURED (Open for Conflict)
+                    // The flag is fully secured but open for taking.
+                    // Only enemies of the owning realm can interact.
+                    result = plr.Realm != OwningRealm;
                     break;
-                case StateFlags.Contested: // CONTESTED
+                case StateFlags.Contested: // CONTESTED (Claimed/Reclaimable)
                     // The flag is being assaulted.
                     // Anyone NOT of the assault realm can interact (to defend/reclaim).
                     result = plr.Realm != AssaultingRealm;
                     break;
-                case StateFlags.Locked:    // SECURED (Open for Conflict)
-                    // The flag is fully secured but open for taking.
-                    // Only enemies of the owning realm can interact.
-                    result = plr.Realm != OwningRealm;
+                case StateFlags.Locked:    // CAPTURED (Lockout State)
+                    // The flag has just been captured and is in lockout.
+                    // No one can interact with it until it transitions to Secured.
+                    result = false;
                     break;
                 default:
                     result = false;
@@ -1019,6 +1020,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             // state change and send state
             State = StateFlags.Unsecure;
             OwningRealm = Realms.REALMS_REALM_NEUTRAL;
+            AssaultingRealm = Realms.REALMS_REALM_NEUTRAL;
             // Make sure we remove the Buff Id.
             BuffId = 0;
             BroadcastFlagInfo(true);
@@ -1038,6 +1040,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
             // state change and send state
             State = StateFlags.ZoneLocked;
+            AssaultingRealm = Realms.REALMS_REALM_NEUTRAL;
 
             BroadcastFlagInfo(true);
             SendState(GetPlayer(), false, true);
@@ -1120,6 +1123,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             BattlefrontLogger.Debug($"{Name} : Captured (Captured-Lockout) : {OwningRealm} => {AssaultingRealm} ");
 
             OwningRealm = AssaultingRealm;
+            AssaultingRealm = Realms.REALMS_REALM_NEUTRAL;
 
             // Add buffs to Assaulting Realm
             var campaignObjectiveBuff = RVRProgressionService._CampaignObjectiveBuffs.SingleOrDefault(x => x.ObjectiveId == Id);
@@ -1152,6 +1156,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
         public void SetObjectiveGuarded()
         {
             BattlefrontLogger.Debug($"{Name} : Secured (Guarded-Open Conflict) : {OwningRealm}");
+            AssaultingRealm = Realms.REALMS_REALM_NEUTRAL;
             DisplayedTimer = 0;
             // AI-AGENT (Gemini 3.0 Flash): Mapping 'Secured' (Open Conflict) to StateFlags.Secure to show it as assaultable (no lock icon).
             State = StateFlags.Secure;

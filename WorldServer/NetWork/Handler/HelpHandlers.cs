@@ -10,7 +10,7 @@ namespace WorldServer.NetWork.Handler
 {
     public class HelpHandlers : IPacketHandler
     {
-        [PacketHandler(PacketHandlerType.TCP, (int)Opcodes.F_HELP_DATA, (int)eClientState.WorldEnter, "onHelpData")]
+        [PacketHandler(PacketHandlerType.TCP, (int)Opcodes.F_HELP_DATA, 0, "onHelpData")]
         public static void F_HELP_DATA(BaseClient client, PacketIn packet)
         {
             GameClient cclient = client as GameClient;

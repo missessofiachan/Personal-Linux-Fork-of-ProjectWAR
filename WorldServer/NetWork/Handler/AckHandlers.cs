@@ -13,7 +13,7 @@ namespace WorldServer.NetWork.Handler
         /// 0x0E - F_CURRENT_EVENTS: client requests current world events info.
         /// Silently acknowledged; the server does not currently implement current events.
         /// </summary>
-        [PacketHandler(PacketHandlerType.TCP, (int)Opcodes.F_CURRENT_EVENTS, (int)eClientState.WorldEnter, "onCurrentEvents")]
+        [PacketHandler(PacketHandlerType.TCP, (int)Opcodes.F_CURRENT_EVENTS, 0, "onCurrentEvents")]
         public static void F_CURRENT_EVENTS(BaseClient client, PacketIn packet)
         {
         }
@@ -22,7 +22,7 @@ namespace WorldServer.NetWork.Handler
         /// 0x83 - S_WORLD_SENT: client sends an acknowledgement after receiving world data.
         /// This is a client-to-server ack; no action required.
         /// </summary>
-        [PacketHandler(PacketHandlerType.TCP, (int)Opcodes.S_WORLD_SENT, (int)eClientState.WorldEnter, "onWorldSentAck")]
+        [PacketHandler(PacketHandlerType.TCP, (int)Opcodes.S_WORLD_SENT, 0, "onWorldSentAck")]
         public static void S_WORLD_SENT(BaseClient client, PacketIn packet)
         {
         }

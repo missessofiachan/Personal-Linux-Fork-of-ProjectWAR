@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -1550,6 +1550,7 @@ namespace WorldServer.World.Scenarios
         #region Scenario Objects
 
         protected List<HoldObject> MapTrackedObjects = new List<HoldObject>();
+        public List<HoldObject> GetHoldObjects() => MapTrackedObjects;
 
         protected void LoadScenarioObject(Scenario_Object obj)
         {
@@ -1695,3 +1696,4 @@ namespace WorldServer.World.Scenarios
         }
     }
 }
+

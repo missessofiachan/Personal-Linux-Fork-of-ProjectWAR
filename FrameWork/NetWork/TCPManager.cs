@@ -777,7 +777,7 @@ namespace FrameWork
             else if (!Errors.Contains(packet.Opcode))
             {
                 Errors.Add(packet.Opcode);
-                Log.Error("TCPManager", $"Can not Handle opcode :{packet.Opcode} ({packet.Opcode.ToString("X8")})");
+                Log.Error("TCPManager", $"Can not Handle opcode :{packet.Opcode} ({packet.Opcode.ToString("X8")}), Length: {packet.Length}");
             }
         }
     }

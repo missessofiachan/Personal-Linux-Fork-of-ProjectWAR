@@ -1,4 +1,4 @@
-﻿using FrameWork;
+using FrameWork;
 using System.Collections.Generic;
 using static WorldServer.Managers.Commands.BaseCommands;
 using static WorldServer.Managers.Commands.RespawnCommands;
@@ -24,6 +24,7 @@ using static WorldServer.Managers.Commands.PqCommands;
 using static WorldServer.Managers.Commands.InstanceCommands;
 using static WorldServer.Managers.Commands.EventCommands;
 using static WorldServer.Managers.Commands.SettingCommands;
+using static WorldServer.Managers.Commands.BotCommands;
 
 namespace WorldServer.Managers.Commands
 {
@@ -76,6 +77,13 @@ namespace WorldServer.Managers.Commands
 
 
 
+
+
+        /// <summary>Bot commands under .bot</summary>
+        public static List<GmCommandHandler> BotCommands = new List<GmCommandHandler>
+        {
+            new GmCommandHandler(\"spawn\", BotSpawn, null, EGmLevel.GM, 4, \"Spawns a group of bots.\")
+        };
         /// <summary>RvR campaign commmands under .campaign</summary>
         public static List<GmCommandHandler> CampaignCommands = CommandsBuilder.BuildCommands(typeof(CampaignCommands));
 
@@ -311,6 +319,7 @@ namespace WorldServer.Managers.Commands
 
             new GmCommandHandler("ability", null, AbilityCommands, 0, 0, "Ability commands."),
             new GmCommandHandler("add", null, AddCommands, EGmLevel.GM, 0, "Addition commands."),
+            new GmCommandHandler("bot", null, BotCommands, EGmLevel.GM, 0, "Bot commands."),
             new GmCommandHandler("campaign", null, CampaignCommands, EGmLevel.GM, 0, "RvR campaign commmands."),
             new GmCommandHandler("chapter", null, ChapterCommands, EGmLevel.Developer, 0, "Chapter modification commands."),
             new GmCommandHandler("check", null, CheckCommands, EGmLevel.GM, 0, "Debugging commands."),
@@ -499,3 +508,5 @@ namespace WorldServer.Managers.Commands
         #endregion
     };
 }
+
+
