@@ -74,12 +74,12 @@ Tool usage: `docs/client-data-matrix-usage.md`.
 
 A fully integrated, player-like Bot System is now implemented to populate the world with autonomous entities. They participate in RvR and Scenarios, running with zero network overhead. See `BOT_SYSTEM.md` for detailed information on architecture, logic, and GM commands.
 
-## Open Bugs
+## Recently Resolved Issues
 
-### T1 RvR non-functional
+### T1 RvR Functionality Restored
 
-`LowerTierCampaignManager.OpenActiveBattlefront()` calls `flag.SetObjectiveSafe()` instead of `flag.OpenBattleFront()`. The FSM never starts, so flag captures do not register. Fix: replace `SetObjectiveSafe()` with `OpenBattleFront()` at the call site (~line 258).
+`LowerTierCampaignManager.OpenActiveBattlefront()` now correctly calls `flag.OpenBattleFront()`. The FSM correctly starts, and flag captures now register as expected.
 
-### Career vendor ability purchase — wrong ability purchased
+### Career Vendor Ability Purchase Fixed
 
-The client sends the selection by index. The server list order may not match the client display order. The trainer packet handler needs investigation for list-order mismatch.
+The trainer packet handler has been updated to correctly map the 1-based index from the client to the list of unpurchased career abilities sorted by rank and name. Players now purchase the correct ability from vendors.
