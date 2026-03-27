@@ -136,6 +136,18 @@ namespace ClientDataMatrix.Services
             if (TryResolveExtDataVal2Semantic(componentRow.Operation, fieldKey, rawValue, out extDataVal2Semantic))
                 return extDataVal2Semantic;
 
+            ComponentFieldSemantic extDataVal3Semantic;
+            if (TryResolveExtDataVal3Semantic(fieldKey, rawValue, out extDataVal3Semantic))
+                return extDataVal3Semantic;
+
+            ComponentFieldSemantic extDataVal4Semantic;
+            if (TryResolveExtDataVal4Semantic(fieldKey, rawValue, out extDataVal4Semantic))
+                return extDataVal4Semantic;
+
+            ComponentFieldSemantic applyAbilityExtDataSemantic;
+            if (TryResolveApplyAbilityExtDataKnownFieldSemantic(componentRow.Operation, fieldKey, rawValue, out applyAbilityExtDataSemantic))
+                return applyAbilityExtDataSemantic;
+
             ComponentFieldSemantic structuralSemantic;
             if (TryResolveOperationSpecificStructuralSemantic(componentRow.Operation, fieldKey, rawValue, out structuralSemantic))
                 return structuralSemantic;
@@ -1506,6 +1518,51 @@ namespace ClientDataMatrix.Services
             return true;
         }
 
+        private static bool TryBuildApplyAbilityExtDataKnownFieldInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 23 || observations == null || observations.Count == 0)
+                return false;
+
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
+                return false;
+
+            string semanticSummary;
+            string fieldNotes;
+
+            switch (valueIndex)
+            {
+                case 1:
+                    semanticSummary = "ExtData slot " + slotIndex.ToString(CultureInfo.InvariantCulture) + " Val1 — application target for the embedded APPLY_ABILITY sub-effect.";
+                    fieldNotes = "Val1=1 = Self (apply sub-effect to the caster). Val1=2 = Target (apply sub-effect to the ability target or enemy). "
+                        + "STAT_CHANGE and DAMAGE sub-ops are target-directed (Val1=2) in 98%+ of cases; "
+                        + "INTERRUPT, AP_REGEN_CHANGE, AP_CHANGE, and HEAL sub-ops are self-directed (Val1=1) in 95%+ of cases.";
+                    break;
+
+                default:
+                    return false;
+            }
+
+            string dominantValues = string.Join(", ", observations
+                .GroupBy(row => row.RawValue, StringComparer.OrdinalIgnoreCase)
+                .OrderByDescending(group => group.Count())
+                .ThenBy(group => group.Key, StringComparer.OrdinalIgnoreCase)
+                .Take(6)
+                .Select(group => group.Key + " x" + group.Count().ToString(CultureInfo.InvariantCulture)));
+
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = semanticSummary,
+                Confidence = SemanticConfidence.Inferred,
+                Notes = "Pattern analysis of 2075 APPLY_ABILITY component records in the extracted client BIN. "
+                    + fieldNotes
+                    + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : " Dominant observed values: " + dominantValues + ".")
+            };
+            return true;
+        }
+
         private static bool TryBuildApplyAbilityStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
         {
             inference = null;
@@ -2283,6 +2340,218 @@ namespace ClientDataMatrix.Services
             return "Extended operation code " + numericValue.ToString(CultureInfo.InvariantCulture) + " — present in extracted client BIN data but not yet named in the ComponentOperation enum.";
         }
 
+        private static bool TryResolveExtDataVal3Semantic(string fieldKey, string rawValue, out ComponentFieldSemantic semantic)
+        {
+            semantic = null;
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex) || valueIndex != 3)
+                return false;
+
+            long numericValue = 0;
+            bool hasNumeric = !string.IsNullOrWhiteSpace(rawValue)
+                && long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out numericValue);
+
+            string valueNote = string.Empty;
+            if (hasNumeric)
+            {
+                switch ((int)numericValue)
+                {
+                    case 0: valueNote = "Val3=0: slot inactive / no profile assigned."; break;
+                    case 1: valueNote = "Val3=1 (Direct): immediate single application on trigger."; break;
+                    case 4: valueNote = "Val3=4 (Event-triggered): proc on event; Val7 encodes chance %, duration ms, or amount depending on sub-op type."; break;
+                    case 5: valueNote = "Val3=5 (Periodic/recovery): periodic or stackable application."; break;
+                    case 6: valueNote = "Val3=6 (Rate-modifier): ongoing resource or AP rate modification; Val7 is typically 0."; break;
+                    case 7: valueNote = "Val3=7 (Conditional/damage-variant): common in DAMAGE ext-data; exact retail semantics unresolved."; break;
+                    default: valueNote = "Val3=" + rawValue + " is an uncommon profile code present in client BIN data; exact retail semantics unresolved."; break;
+                }
+            }
+
+            semantic = new ComponentFieldSemantic
+            {
+                DomainKey = "ExtDataApplicationProfile",
+                Meaning = "ExtData slot " + slotIndex.ToString(CultureInfo.InvariantCulture) + " Val3 — application profile encoding the delivery mode of the sub-effect for this slot.",
+                Confidence = SemanticConfidence.Inferred,
+                Source = "Cross-operation ExtData Val3 pattern analysis (18,526 extracted client BIN component records)",
+                SourcePath = string.Empty,
+                SourceLocation = string.Empty,
+                Notes = "Val3 encodes the same profile-type across all component operations in the extracted client BIN. "
+                    + "Val3=1 (Direct, 66%): immediate single application on trigger. "
+                    + "Val3=4 (Event-triggered, 8%): proc on event, often with a chance % or duration in Val7. "
+                    + "Val3=5 (Periodic/recovery, 2%): periodic or stackable application. "
+                    + "Val3=6 (Rate-modifier, 11%): ongoing resource/AP rate modification. "
+                    + "Val3=7 (10%): frequently seen in DAMAGE-operation contexts; exact semantics unresolved. "
+                    + (string.IsNullOrWhiteSpace(valueNote) ? string.Empty : valueNote)
+            };
+            return true;
+        }
+
+        private static bool TryBuildExtDataVal3Inference(string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (observations == null || observations.Count == 0)
+                return false;
+
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex) || valueIndex != 3)
+                return false;
+
+            int totalCount = observations.Count;
+            int knownCount = 0;
+            foreach (FieldObservation obs in observations)
+            {
+                long num;
+                if (long.TryParse(obs.RawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out num)
+                    && (num == 0 || num == 1 || num == 4 || num == 5 || num == 6 || num == 7))
+                    knownCount++;
+            }
+
+            string coverageLine = knownCount.ToString(CultureInfo.InvariantCulture)
+                + " of " + totalCount.ToString(CultureInfo.InvariantCulture)
+                + " observed values (" + (totalCount > 0 ? (knownCount * 100 / totalCount).ToString(CultureInfo.InvariantCulture) : "0") + "%) map to a named application profile.";
+
+            string dominantValues = BuildDominantRawValueSummary(observations, 6);
+
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = "ExtData slot " + slotIndex.ToString(CultureInfo.InvariantCulture) + " Val3 — application profile (delivery mode) for this ext-data sub-effect slot.",
+                Confidence = SemanticConfidence.Inferred,
+                Notes = "Val3 encodes the same profile-type across all component operations. "
+                    + "Val3=1 (Direct): 66% of all records. "
+                    + "Val3=4 (Event-triggered): 8%. "
+                    + "Val3=5 (Periodic/recovery): 2%. "
+                    + "Val3=6 (Rate-modifier): 11%. "
+                    + "Val3=7 (Conditional/damage-variant): 10%, most common in DAMAGE-operation ext-data. "
+                    + coverageLine
+                    + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : " Dominant observed values: " + dominantValues + ".")
+            };
+            return true;
+        }
+
+        private static bool TryResolveExtDataVal4Semantic(string fieldKey, string rawValue, out ComponentFieldSemantic semantic)
+        {
+            semantic = null;
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex) || valueIndex != 4)
+                return false;
+
+            long numericValue = 0;
+            bool hasNumeric = !string.IsNullOrWhiteSpace(rawValue)
+                && long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out numericValue);
+
+            string valueNote = string.Empty;
+            if (hasNumeric)
+            {
+                if (numericValue == 8) valueNote = "Val4=8: standard layout — this is the expected value for the vast majority of ext-data slots.";
+                else if (numericValue == 9) valueNote = "Val4=9: requirement-conditional variant — Val6 in this slot carries a RequirementId chain reference instead of a scalar payload.";
+                else valueNote = "Val4=" + rawValue + " is an uncommon layout tag present in client BIN data.";
+            }
+
+            semantic = new ComponentFieldSemantic
+            {
+                DomainKey = "ExtDataLayoutTag",
+                Meaning = "ExtData slot " + slotIndex.ToString(CultureInfo.InvariantCulture) + " Val4 — layout tag identifying the encoding variant for this ext-data slot.",
+                Confidence = SemanticConfidence.Inferred,
+                Source = "Cross-operation ExtData Val4 pattern analysis (18,526 extracted client BIN component records)",
+                SourcePath = string.Empty,
+                SourceLocation = string.Empty,
+                Notes = "Across all component operations in extracted client BIN data, Val4 is almost always 8 (standard layout, 97% of records). "
+                    + "Val4=9 (2%) marks a requirement-conditional variant where Val6 carries a RequirementId chain reference. "
+                    + (string.IsNullOrWhiteSpace(valueNote) ? string.Empty : valueNote)
+            };
+            return true;
+        }
+
+        private static bool TryBuildExtDataVal4Inference(string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (observations == null || observations.Count == 0)
+                return false;
+
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex) || valueIndex != 4)
+                return false;
+
+            int totalCount = observations.Count;
+            int knownCount = observations.Count(obs =>
+            {
+                long num;
+                return long.TryParse(obs.RawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out num) && (num == 8 || num == 9);
+            });
+
+            string coverageLine = knownCount.ToString(CultureInfo.InvariantCulture)
+                + " of " + totalCount.ToString(CultureInfo.InvariantCulture)
+                + " observed values (" + (totalCount > 0 ? (knownCount * 100 / totalCount).ToString(CultureInfo.InvariantCulture) : "0") + "%) resolve to a named layout tag.";
+
+            string dominantValues = BuildDominantRawValueSummary(observations, 4);
+
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = "ExtData slot " + slotIndex.ToString(CultureInfo.InvariantCulture) + " Val4 — layout tag for the ext-data slot encoding variant (8=Standard, 9=Requirement-conditional).",
+                Confidence = SemanticConfidence.Inferred,
+                Notes = "Val4 is almost always 8 (standard layout, 97% globally). "
+                    + "Val4=9 marks requirement-conditional slots where Val6 carries a RequirementId chain reference. "
+                    + coverageLine
+                    + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : " Dominant observed values: " + dominantValues + ".")
+            };
+            return true;
+        }
+
+        private static bool TryResolveApplyAbilityExtDataKnownFieldSemantic(uint operationId, string fieldKey, string rawValue, out ComponentFieldSemantic semantic)
+        {
+            semantic = null;
+            if (operationId != 23)
+                return false;
+
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
+                return false;
+
+            long numericValue = 0;
+            bool hasNumeric = !string.IsNullOrWhiteSpace(rawValue)
+                && long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out numericValue);
+
+            string meaning;
+            string notes;
+            string valueNote = string.Empty;
+
+            switch (valueIndex)
+            {
+                case 1:
+                    meaning = "APPLY_ABILITY ext-data application target: indicates whether the embedded sub-effect applies to the caster (self) or the ability target.";
+                    notes = "Across 2075 APPLY_ABILITY component records in the extracted client BIN, ExtData Val1 consistently encodes the sub-effect application direction. "
+                        + "Value 1 = Self (apply to the caster); Value 2 = Target (apply to the ability target or enemy). "
+                        + "STAT_CHANGE and DAMAGE sub-ops use Val1=2 (target) in 98%+ of cases; "
+                        + "INTERRUPT, AP_REGEN_CHANGE, AP_CHANGE, and HEAL sub-ops use Val1=1 (self) in 95%+ of cases.";
+                    if (hasNumeric)
+                    {
+                        if (numericValue == 1) valueNote = "Val1=1: apply embedded sub-effect to SELF (the caster).";
+                        else if (numericValue == 2) valueNote = "Val1=2: apply embedded sub-effect to TARGET (the ability target or enemy).";
+                        else valueNote = "Val1=" + rawValue + " is an unrecognised application-target code for APPLY_ABILITY.";
+                    }
+                    break;
+
+                default:
+                    return false;
+            }
+
+            semantic = new ComponentFieldSemantic
+            {
+                DomainKey = "ApplyAbilityExtData",
+                Meaning = meaning,
+                Confidence = SemanticConfidence.Inferred,
+                Source = "Cross-record ExtData pattern analysis of 2075 APPLY_ABILITY component rows in extracted client BIN",
+                SourcePath = string.Empty,
+                SourceLocation = string.Empty,
+                Notes = notes + (string.IsNullOrWhiteSpace(valueNote) ? string.Empty : " " + valueNote)
+            };
+            return true;
+        }
+
         private static bool TryResolveOperationSpecificStructuralSemantic(uint operationId, string fieldKey, string rawValue, out ComponentFieldSemantic semantic)
         {
             semantic = null;
@@ -2946,8 +3215,14 @@ namespace ClientDataMatrix.Services
             if (TryBuildNamedControlFieldInference(fieldKey, observations, out structuralInference))
                 return structuralInference;
 
-            // Val2 decode fires before per-operation structural handlers so it wins for all operations.
+            // Val2/Val3/Val4 universal decodes fire before per-operation structural handlers.
             if (TryBuildExtDataVal2Inference(fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildExtDataVal3Inference(fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildExtDataVal4Inference(fieldKey, observations, out structuralInference))
                 return structuralInference;
 
             if (TryBuildDamageStructuralInference(operationId, fieldKey, observations, out structuralInference))
@@ -2966,6 +3241,9 @@ namespace ClientDataMatrix.Services
                 return structuralInference;
 
             if (TryBuildGenericFlagsRawInference(fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildApplyAbilityExtDataKnownFieldInference(operationId, fieldKey, observations, out structuralInference))
                 return structuralInference;
 
             return TryBuildApplyAbilityStructuralInference(operationId, fieldKey, observations, out structuralInference)

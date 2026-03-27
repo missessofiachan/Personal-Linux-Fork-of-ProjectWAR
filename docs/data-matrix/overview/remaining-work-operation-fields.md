@@ -1,6 +1,6 @@
 ﻿# Remaining Work Operation Field Packets
 
-Generated UTC: `2026-03-27T21:39:08.3537633Z`
+Generated UTC: `2026-03-27T22:44:18.7470809Z`
 
 Extracted root: `C:\Users\Admin\Downloads\myps`
 
@@ -13,17 +13,17 @@ Packets: 12
 | Global | AreaRank | Operation | Field | Priority | Score | Title | ExampleAbilityId | SampleValues |
 | --- | --- | --- | --- | --- | --- | --- | ---: | --- |
 | 1 | 1 | APPLY_ABILITY (23) | ExtData[0].Val7 | Critical | 229 | APPLY_ABILITY :: ExtData[0].Val7 | 3 | 1, 10, 100, 11, 12, 120, 1200, 1800, 2, 20, 2000, 25 |
-| 2 | 2 | APPLY_ABILITY (23) | ExtData[0].Val3 | Critical | 213 | APPLY_ABILITY :: ExtData[0].Val3 | 3 | 1, 3, 4, 5, 6, 7 |
-| 3 | 3 | APPLY_ABILITY (23) | ExtData[1].Val7 | Critical | 207 | APPLY_ABILITY :: ExtData[1].Val7 | 3 | 1, 10, 100, 15, 1800, 2, 20, 2000, 22, 249, 25, 29 |
-| 4 | 4 | APPLY_ABILITY (23) | ExtData[0].Val1 | Critical | 205 | APPLY_ABILITY :: ExtData[0].Val1 | 3 | 1, 2 |
-| 5 | 5 | APPLY_ABILITY (23) | ExtData[0].Val4 | Critical | 205 | APPLY_ABILITY :: ExtData[0].Val4 | 3 | 8, 9 |
-| 6 | 6 | CC (12) | FlagsRaw | Critical | 199 | CC :: FlagsRaw | 3 | 1, 1023, 1024, 12, 124, 126, 127, 128, 129, 137, 14, 16 |
-| 10 | 7 | APPLY_ABILITY (23) | ExtData[1].Val3 | Critical | 185 | APPLY_ABILITY :: ExtData[1].Val3 | 3 | 1, 4, 5, 6, 7 |
-| 11 | 8 | APPLY_ABILITY (23) | ExtData[1].Val1 | Critical | 181 | APPLY_ABILITY :: ExtData[1].Val1 | 3 | 1, 2, 6 |
-| 12 | 9 | CC (12) | ExtData[1].Val7 | Critical | 181 | CC :: ExtData[1].Val7 | 3 | 1, 100, 168, 20, 200, 201, 2101, 24, 25, 3, 30, 33 |
-| 14 | 10 | APPLY_ABILITY (23) | ExtData[1].Val4 | Critical | 179 | APPLY_ABILITY :: ExtData[1].Val4 | 3 | 8, 9 |
-| 15 | 11 | APPLY_ABILITY (23) | FlagsRaw | Critical | 177 | APPLY_ABILITY :: FlagsRaw | 3 | 1, 12, 16, 18, 2, 24, 28, 3, 4, 5, 7, 8 |
-| 22 | 12 | CC (12) | ExtData[0].Val7 | Critical | 174 | CC :: ExtData[0].Val7 | 3 | 1, 101, 14741, 15, 167, 2, 20, 201, 25, 26540, 50 |
+| 2 | 2 | APPLY_ABILITY (23) | ExtData[1].Val7 | Critical | 207 | APPLY_ABILITY :: ExtData[1].Val7 | 3 | 1, 10, 100, 15, 1800, 2, 20, 2000, 22, 249, 25, 29 |
+| 3 | 3 | CC (12) | FlagsRaw | Critical | 199 | CC :: FlagsRaw | 3 | 1, 1023, 1024, 12, 124, 126, 127, 128, 129, 137, 14, 16 |
+| 7 | 4 | CC (12) | ExtData[1].Val7 | Critical | 181 | CC :: ExtData[1].Val7 | 3 | 1, 100, 168, 20, 200, 201, 2101, 24, 25, 3, 30, 33 |
+| 9 | 5 | APPLY_ABILITY (23) | FlagsRaw | Critical | 177 | APPLY_ABILITY :: FlagsRaw | 3 | 1, 12, 16, 18, 2, 24, 28, 3, 4, 5, 7, 8 |
+| 16 | 6 | CC (12) | ExtData[0].Val7 | Critical | 174 | CC :: ExtData[0].Val7 | 3 | 1, 101, 14741, 15, 167, 2, 20, 201, 25, 26540, 50 |
+| 19 | 7 | APPLY_ABILITY (23) | ExtData[5].Val6 | High | 168 | APPLY_ABILITY :: ExtData[5].Val6 | 3 | 25424, 25425, 25426, 25427, 25428, 25429, 25430, 25431, 25433, 4, 5 |
+| 25 | 8 | APPLY_ABILITY (23) | ExtData[2].Val7 | High | 164 | APPLY_ABILITY :: ExtData[2].Val7 | 3 | 1, 100, 1800, 25, 3000, 4, 50 |
+| 26 | 9 | CC (12) | ExtData[0].Val1 | High | 162 | CC :: ExtData[0].Val1 | 3 | 1, 2 |
+| 27 | 10 | CC (12) | ExtData[2].Val7 | High | 162 | CC :: ExtData[2].Val7 | 3 | 1, 10, 100, 20, 25, 29, 350, 40, 49, 59, 74, 89 |
+| 28 | 11 | APPLY_ABILITY (23) | ExtData[0].Val5 | High | 161 | APPLY_ABILITY :: ExtData[0].Val5 | 3 | 3, 5, 6, 8, 9 |
+| 29 | 12 | IMMUNITY (38) | Value[0] | High | 161 | IMMUNITY :: Value[0] | 158 | 1, 1001, 1002, 1004, 1012, 1014, 1015, 1016, 1018, 1019, 1020, 1023 |
 
 ## APPLY_ABILITY :: ExtData[0].Val7
 
@@ -72,58 +72,11 @@ Recommended action: Turn this structural role into named per-value semantics usi
 | 250 | 8240 | Bludgeon | 8779 | 1 | 3 -> OnPreviousComponentApplied | Damage | A powerful attack which deals {COM_0_VAL0_DAMAGE} to your enemy. |
 | 250 | 8240 | Bludgeon | 9601 | 2 | 1 -> OnApply | Damage | A powerful attack which deals {COM_0_VAL0_DAMAGE} to your enemy. |
 
-## APPLY_ABILITY :: ExtData[0].Val3
-
-- Operation: `APPLY_ABILITY` (`23`)
-- Field: `ExtData[0].Val3`
-- Ranks: global `2`, area `2`
-- Priority: `Critical` `213`
-- Example ability: `3`
-
-Summary: APPLY_ABILITY ext-data profile selector for the slot-local embedded payload.
-
-Evidence: Confidence: Structural. Non-zero rows: 1124. Distinct values: 6. Tags: Damage, Disarm, Heal, Immunity, Knockback, Knockdown, Root, Silence, Snare, Stagger, Stun. Samples: 1, 3, 4, 5, 6, 7.
-
-Recommended action: Turn this structural role into named per-value semantics using the value-evidence and companion-field clusters.
-
-## Top Values
-
-| RawValue | Obs | Components | Abilities | SampleAbilityIds | Triggers | Context | Companions |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | 812 | 812 | 23 | 10, 183, 230, 232, 233, 260, 264, 278, 3, 31, 311, 320 | 3 -> OnPreviousComponentApplied x797, 6 -> OnEventTriggered x339, 1 -> OnApply x221, 7 -> OnPreviousComponentTick x25, 5 -> OnBuffEnded x22, 8 -> OnPreviousComponentBuffTick x17 | Damage x455, Heal x122, Silence x31, Disarm x14, Snare x8, Stagger x8, Knockdown x6, Immunity x5 | ExtData[0].Val4=8 (809/812, 99%); ExtData[0].Val7=1 (661/812, 81%); ExtData[0].Val1=2 (627/812, 77%) |
-| 4 | 172 | 172 | 14 | 1590, 1828, 1856, 3395, 3651, 3652, 3653, 3738, 7089, 758, 776, 779 | 6 -> OnEventTriggered x96, 1 -> OnApply x43, 3 -> OnPreviousComponentApplied x37, 7 -> OnPreviousComponentTick x22, 8 -> OnPreviousComponentBuffTick x3, 10 -> OnBuffEndedRemoved x1 | Damage x74, Heal x39, Snare x3, Silence x2 | ExtData[0].Val4=8 (172/172, 100%); ExtData[0].Val1=1 (139/172, 80%) |
-| 6 | 99 | 99 | 19 | 1010, 1011, 1051, 1062, 1365, 1370, 1418, 1432, 1435, 1438, 1439, 1443 | 3 -> OnPreviousComponentApplied x224, 1 -> OnApply x41, 10 -> OnBuffEndedRemoved x9, 6 -> OnEventTriggered x8, 7 -> OnPreviousComponentTick x7, 5 -> OnBuffEnded x5 | Damage x114, Root x15, Snare x8, Heal x4, Knockback x2, Silence x1, Stagger x1 | ExtData[0].Val4=8 (96/99, 96%) |
-| 5 | 36 | 36 | 20 | 1366, 14701, 14704, 14707, 14710, 14713, 14716, 14719, 15972, 15975, 24552, 24553 | 1 -> OnApply x26, 3 -> OnPreviousComponentApplied x3, 8 -> OnPreviousComponentBuffTick x2, 6 -> OnEventTriggered x1 | Damage x8 | ExtData[0].Val4=8 (36/36, 100%) |
-| 7 | 4 | 4 | 1 | 10320 | 1 -> OnApply x1 | No sampled context tags are available for this value yet. | ExtData[0].Val1=1 (4/4, 100%); ExtData[0].Val4=8 (4/4, 100%) |
-
-## Sample Abilities
-
-| RawValue | AbilityId | AbilityName | ComponentId | Slot | Trigger | Context | TextExcerpt |
-| --- | ---: | --- | ---: | --- | --- | --- | --- |
-| 1 | 3 | Bounce | 329 | 2 | 3 -> OnPreviousComponentApplied | Damage | You cause your Battle Squig to bounce, dealing {COM_0_VAL0_DAMAGE} and knocking your target down for {COM_1_DURA_SECONDS}. |
-| 1 | 5 | KABOOM! | 142 | 2 | 3 -> OnPreviousComponentApplied | Damage | Your Battle Squig explodes, causing you to be launched upward out of your Squiggy armor. All enemies within {COM_1_RADI_FEET} take {COM_3_VAL0_DAMAGE} and are knocked back. |
-| 1 | 6 | ;/end | 329 | 1 | 3 -> OnPreviousComponentApplied | Damage | Your Squig bounces on it's target dealing {COM_2_VAL0_DAMAGE}, and knocking them down for {COM_0_DURA_SECONDS}. |
-| 1 | 9 | Poisoned Spine | 1699 | 1 | 3 -> OnPreviousComponentApplied | Damage | Your Squig gores its target, dealing {COM_0_VAL0_DAMAGE} and an additional {ABIL_3881_COM_0_VAL0_TOD_DAMAGE} over {ABIL_3881_COM_0_DURA_SECONDS}. |
-| 1 | 10 | Gore | 142 | 2 | 3 -> OnPreviousComponentApplied | Damage | Your Squig slams it's head in to it's target, dealing {COM_0_VAL0_DAMAGE} and knocking them back. |
-| 1 | 31 | Detonation | 3447 | 1 | 3 -> OnPreviousComponentApplied |  |  |
-| 4 | 758 | Rune Of Immolation | 3053 | 1 | 6 -> OnEventTriggered |  | Any time you are hit, there is a 25% chance that your movement speed will be increased by {COM_1_VAL0_COM_0_VAL0}% for {COM_1_VAL0_COM_0_DURA_SECONDS}. |
-| 4 | 776 | Spellbinding Rune | 3056 | 1 | 6 -> OnEventTriggered | Heal | Any time that you are healed by a direct heal, there is a 25% chance that you will regain an additional {COM_1_VAL0_COM_0_VAL0} hit points as well. |
-| 4 | 779 | ;Rune Priest Spec Abilities | 1192 | 1 | 6 -> OnEventTriggered | Damage | Any time you are attacked, there is a 25% chance that you will become protected by a magical barrier for up to {COM_1_VAL0_COM_0_DURA_SECONDS}, which will absorb up to {COM_1_VAL0_COM_0_VAL1_DAMAGE}.<BR>This effect will not trigger more than once every 3 seconds. |
-| 4 | 1590 | Fan The Flames | 1790 | 1 | 7 -> OnPreviousComponentTick | Heal | Heals for {COM_0_VAL0_TOD} life over {COM_0_DURA_SECONDS} |
-| 4 | 1828 | Crushing Blows | 720 | 0 | 1 -> OnApply | Damage | You cause your pet to explode, dealing {ABIL_15_COM_0_VAL0_DAMAGE} to enemies within {ABIL_15_COM_0_RADI_FEET}.  For the next {COM_2_DURA_SECONDS}, the next different squig other than the one that just exploded will be summoned instantly. |
-| 4 | 1856 | Strength In Numbas | 3059 | 2 | 6 -> OnEventTriggered |  | Any time one of your groupmates within 100 feet of you hits an enemy, there is a 25% chance that you will regain {COM_2_VAL0_COM_0_VAL0_TOD} points of Morale over {COM_2_VAL0_COM_0_DURA_SECONDS}.<BR>This effect will not trigger more than once every 3 seconds. |
-| 6 | 5 | KABOOM! | 343 | 6 | 3 -> OnPreviousComponentApplied | Damage | Your Battle Squig explodes, causing you to be launched upward out of your Squiggy armor. All enemies within {COM_1_RADI_FEET} take {COM_3_VAL0_DAMAGE} and are knocked back. |
-| 6 | 608 | Pulverizing Strike | 343 | 3 | 3 -> OnPreviousComponentApplied |  | Both you and your target are held tightly in place for {COM_1_DURA_SECONDS}, and neither one of you can move.<BR>This effect can not be dispelled or broken. |
-| 6 | 648 | Hastened Punishment | 343 | 3 | 3 -> OnPreviousComponentApplied | Damage | A mid-range attack that deals {COM_0_VAL0_DAMAGE} and knocks targeted player away. Monsters will be knocked down. |
-| 6 | 670 | Grievous Harm | 343 | 3 | 3 -> OnPreviousComponentApplied | Damage | A focused blast that deals {COM_0_VAL0_DAMAGE} and knocks the targeted player away. Monsters will be knocked down. |
-| 6 | 672 | Unleash the Winds | 343 | 4 | 3 -> OnPreviousComponentApplied | Damage | Deals {COM_0_VAL0_DAMAGE} to all enemies within {COM_0_RADI_FEET}, and knocks them away from you. |
-| 6 | 1010 | Arrow Attack - Strong | 14217 | 0 | 1 -> OnApply |  | Your pet doesn't have enough Morale |
-
 ## APPLY_ABILITY :: ExtData[1].Val7
 
 - Operation: `APPLY_ABILITY` (`23`)
 - Field: `ExtData[1].Val7`
-- Ranks: global `3`, area `3`
+- Ranks: global `2`, area `2`
 - Priority: `Critical` `207`
 - Example ability: `3`
 
@@ -166,87 +119,11 @@ Recommended action: Turn this structural role into named per-value semantics usi
 | 10 | 10148 | Dissolve IV | 10345 | 1 | 6 -> OnEventTriggered |  | Dissolve IV - On Hit: 10% chance to reduce target's armor by {ABIL_10572_COM_0_VAL0} for {ABIL_10572_COM_0_DURA_SECONDS}. |
 | 10 | 10149 | Dissolve V | 10346 | 1 | 6 -> OnEventTriggered |  | Dissolve V - On Hit: 10% chance to reduce target's armor by {ABIL_10573_COM_0_VAL0} for {ABIL_10573_COM_0_DURA_SECONDS}. |
 
-## APPLY_ABILITY :: ExtData[0].Val1
-
-- Operation: `APPLY_ABILITY` (`23`)
-- Field: `ExtData[0].Val1`
-- Ranks: global `4`, area `4`
-- Priority: `Critical` `205`
-- Example ability: `3`
-
-Summary: APPLY_ABILITY ext-data branch selector for the slot-local embedded payload.
-
-Evidence: Confidence: Structural. Non-zero rows: 1124. Distinct values: 2. Tags: Damage, Disarm, Heal, Immunity, Knockback, Knockdown, Root, Silence, Snare, Stagger, Stun. Samples: 1, 2.
-
-Recommended action: Turn this structural role into named per-value semantics using the value-evidence and companion-field clusters.
-
-## Top Values
-
-| RawValue | Obs | Components | Abilities | SampleAbilityIds | Triggers | Context | Companions |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 2 | 716 | 716 | 19 | 10, 183, 230, 232, 233, 3, 379, 383, 410, 5, 526, 550 | 3 -> OnPreviousComponentApplied x930, 6 -> OnEventTriggered x299, 1 -> OnApply x124, 7 -> OnPreviousComponentTick x32, 5 -> OnBuffEnded x25, 8 -> OnPreviousComponentBuffTick x17 | Damage x416, Heal x109, Silence x31, Root x18, Disarm x13, Snare x9, Stagger x7, Knockback x6 | ExtData[0].Val4=8 (715/716, 99%); ExtData[0].Val3=1 (627/716, 87%); ExtData[0].Val7=1 (602/716, 84%) |
-| 1 | 408 | 408 | 18 | 1010, 1011, 1364, 1366, 1397, 1432, 260, 264, 266, 278, 31, 311 | 1 -> OnApply x208, 6 -> OnEventTriggered x146, 3 -> OnPreviousComponentApplied x131, 7 -> OnPreviousComponentTick x22, 10 -> OnBuffEndedRemoved x12, 8 -> OnPreviousComponentBuffTick x7 | Damage x235, Heal x56, Snare x10, Silence x3, Stagger x2, Disarm x1 | ExtData[0].Val4=8 (403/408, 98%) |
-
-## Sample Abilities
-
-| RawValue | AbilityId | AbilityName | ComponentId | Slot | Trigger | Context | TextExcerpt |
-| --- | ---: | --- | ---: | --- | --- | --- | --- |
-| 2 | 3 | Bounce | 329 | 2 | 3 -> OnPreviousComponentApplied | Damage | You cause your Battle Squig to bounce, dealing {COM_0_VAL0_DAMAGE} and knocking your target down for {COM_1_DURA_SECONDS}. |
-| 2 | 5 | KABOOM! | 142 | 2 | 3 -> OnPreviousComponentApplied | Damage | Your Battle Squig explodes, causing you to be launched upward out of your Squiggy armor. All enemies within {COM_1_RADI_FEET} take {COM_3_VAL0_DAMAGE} and are knocked back. |
-| 2 | 5 | KABOOM! | 343 | 6 | 3 -> OnPreviousComponentApplied | Damage | Your Battle Squig explodes, causing you to be launched upward out of your Squiggy armor. All enemies within {COM_1_RADI_FEET} take {COM_3_VAL0_DAMAGE} and are knocked back. |
-| 2 | 6 | ;/end | 329 | 1 | 3 -> OnPreviousComponentApplied | Damage | Your Squig bounces on it's target dealing {COM_2_VAL0_DAMAGE}, and knocking them down for {COM_0_DURA_SECONDS}. |
-| 2 | 9 | Poisoned Spine | 1699 | 1 | 3 -> OnPreviousComponentApplied | Damage | Your Squig gores its target, dealing {COM_0_VAL0_DAMAGE} and an additional {ABIL_3881_COM_0_VAL0_TOD_DAMAGE} over {ABIL_3881_COM_0_DURA_SECONDS}. |
-| 2 | 10 | Gore | 142 | 2 | 3 -> OnPreviousComponentApplied | Damage | Your Squig slams it's head in to it's target, dealing {COM_0_VAL0_DAMAGE} and knocking them back. |
-| 1 | 31 | Detonation | 3447 | 1 | 3 -> OnPreviousComponentApplied |  |  |
-| 1 | 34 | Bite | 3113 | 2 | 8 -> OnPreviousComponentBuffTick |  |  |
-| 1 | 260 | Scathe | 3108 | 4 | 5 -> OnBuffEnded |  | You are building a combo! |
-| 1 | 264 | Cunning Rumination  | 1914 | 1 | 1 -> OnApply |  |  |
-| 1 | 264 | Cunning Rumination  | 1915 | 2 | 1 -> OnApply |  |  |
-| 1 | 266 | Quell Suffering | 1916 | 1 | 1 -> OnApply |  |  |
-
-## APPLY_ABILITY :: ExtData[0].Val4
-
-- Operation: `APPLY_ABILITY` (`23`)
-- Field: `ExtData[0].Val4`
-- Ranks: global `5`, area `5`
-- Priority: `Critical` `205`
-- Example ability: `3`
-
-Summary: APPLY_ABILITY ext-data family marker for the slot-local embedded payload.
-
-Evidence: Confidence: Structural. Non-zero rows: 1124. Distinct values: 2. Tags: Damage, Disarm, Heal, Immunity, Knockback, Knockdown, Root, Silence, Snare, Stagger, Stun. Samples: 8, 9.
-
-Recommended action: Turn this structural role into named per-value semantics using the value-evidence and companion-field clusters.
-
-## Top Values
-
-| RawValue | Obs | Components | Abilities | SampleAbilityIds | Triggers | Context | Companions |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 8 | 1118 | 1118 | 22 | 10, 183, 230, 232, 233, 260, 264, 266, 278, 3, 31, 311 | 3 -> OnPreviousComponentApplied x900, 6 -> OnEventTriggered x445, 1 -> OnApply x290, 7 -> OnPreviousComponentTick x54, 5 -> OnBuffEnded x25, 8 -> OnPreviousComponentBuffTick x24 | Damage x565, Heal x164, Silence x32, Snare x14, Disarm x13, Stagger x9, Knockdown x6, Immunity x5 | No strong non-zero companion fields were isolated for this value yet. |
-| 9 | 6 | 6 | 23 | 1365, 1370, 1418, 1519, 1520, 1531, 1540, 1542, 1605, 1680, 1681, 1682 | 3 -> OnPreviousComponentApplied x161, 1 -> OnApply x42, 5 -> OnBuffEnded x2 | Damage x86, Root x15, Snare x5, Knockback x2, Silence x2, Disarm x1, Heal x1 | ExtData[0].Val1=1 (5/6, 83%); ExtData[1].Val1=1 (5/6, 83%) |
-
-## Sample Abilities
-
-| RawValue | AbilityId | AbilityName | ComponentId | Slot | Trigger | Context | TextExcerpt |
-| --- | ---: | --- | ---: | --- | --- | --- | --- |
-| 8 | 3 | Bounce | 329 | 2 | 3 -> OnPreviousComponentApplied | Damage | You cause your Battle Squig to bounce, dealing {COM_0_VAL0_DAMAGE} and knocking your target down for {COM_1_DURA_SECONDS}. |
-| 8 | 5 | KABOOM! | 142 | 2 | 3 -> OnPreviousComponentApplied | Damage | Your Battle Squig explodes, causing you to be launched upward out of your Squiggy armor. All enemies within {COM_1_RADI_FEET} take {COM_3_VAL0_DAMAGE} and are knocked back. |
-| 8 | 6 | ;/end | 329 | 1 | 3 -> OnPreviousComponentApplied | Damage | Your Squig bounces on it's target dealing {COM_2_VAL0_DAMAGE}, and knocking them down for {COM_0_DURA_SECONDS}. |
-| 8 | 9 | Poisoned Spine | 1699 | 1 | 3 -> OnPreviousComponentApplied | Damage | Your Squig gores its target, dealing {COM_0_VAL0_DAMAGE} and an additional {ABIL_3881_COM_0_VAL0_TOD_DAMAGE} over {ABIL_3881_COM_0_DURA_SECONDS}. |
-| 8 | 10 | Gore | 142 | 2 | 3 -> OnPreviousComponentApplied | Damage | Your Squig slams it's head in to it's target, dealing {COM_0_VAL0_DAMAGE} and knocking them back. |
-| 8 | 31 | Detonation | 3447 | 1 | 3 -> OnPreviousComponentApplied |  |  |
-| 9 | 5 | KABOOM! | 343 | 6 | 3 -> OnPreviousComponentApplied | Damage | Your Battle Squig explodes, causing you to be launched upward out of your Squiggy armor. All enemies within {COM_1_RADI_FEET} take {COM_3_VAL0_DAMAGE} and are knocked back. |
-| 9 | 608 | Pulverizing Strike | 343 | 3 | 3 -> OnPreviousComponentApplied |  | Both you and your target are held tightly in place for {COM_1_DURA_SECONDS}, and neither one of you can move.<BR>This effect can not be dispelled or broken. |
-| 9 | 648 | Hastened Punishment | 343 | 3 | 3 -> OnPreviousComponentApplied | Damage | A mid-range attack that deals {COM_0_VAL0_DAMAGE} and knocks targeted player away. Monsters will be knocked down. |
-| 9 | 670 | Grievous Harm | 343 | 3 | 3 -> OnPreviousComponentApplied | Damage | A focused blast that deals {COM_0_VAL0_DAMAGE} and knocks the targeted player away. Monsters will be knocked down. |
-| 9 | 672 | Unleash the Winds | 343 | 4 | 3 -> OnPreviousComponentApplied | Damage | Deals {COM_0_VAL0_DAMAGE} to all enemies within {COM_0_RADI_FEET}, and knocks them away from you. |
-| 9 | 1365 | Ain't Done Yet! | 343 | 4 | 3 -> OnPreviousComponentApplied | Damage | A dismissive strike that deals {COM_0_VAL0_DAMAGE} and knocks the enemy away. |
-
 ## CC :: FlagsRaw
 
 - Operation: `CC` (`12`)
 - Field: `FlagsRaw`
-- Ranks: global `6`, area `6`
+- Ranks: global `3`, area `3`
 - Priority: `Critical` `199`
 - Example ability: `3`
 
@@ -289,97 +166,11 @@ Recommended action: Turn this structural role into named per-value semantics usi
 | 8 | 1722 | Suppression | 1556 | 1 | 3 -> OnPreviousComponentApplied | Silence, Damage | All targets within {COM_0_RADI_FEET} of you take {COM_0_VAL0_DAMAGE} and are Silenced, unable to use Magic for {COM_1_DURA_SECONDS}. |
 | 8 | 1839 | Choking Arrer | 1817 | 1 | 1 -> OnApply | Silence, Damage | A Crippling shot that deals {COM_0_VAL0_DAMAGE} and silences your target for {COM_1_DURA_SECONDS}, making them unable to use magic. |
 
-## APPLY_ABILITY :: ExtData[1].Val3
-
-- Operation: `APPLY_ABILITY` (`23`)
-- Field: `ExtData[1].Val3`
-- Ranks: global `10`, area `7`
-- Priority: `Critical` `185`
-- Example ability: `3`
-
-Summary: APPLY_ABILITY ext-data profile selector for the slot-local embedded payload.
-
-Evidence: Confidence: Structural. Non-zero rows: 612. Distinct values: 5. Tags: Damage, Disarm, Heal, Immunity, Knockback, Knockdown, Root, Silence, Snare, Stagger, Stun. Samples: 1, 4, 5, 6, 7.
-
-Recommended action: Turn this structural role into named per-value semantics using the value-evidence and companion-field clusters.
-
-## Top Values
-
-| RawValue | Obs | Components | Abilities | SampleAbilityIds | Triggers | Context | Companions |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 4 | 298 | 298 | 19 | 1363, 1432, 1438, 1439, 1443, 1447, 1449, 1459, 1461, 183, 264, 266 | 6 -> OnEventTriggered x244, 3 -> OnPreviousComponentApplied x46, 1 -> OnApply x19, 8 -> OnPreviousComponentBuffTick x8, 10 -> OnBuffEndedRemoved x6, 7 -> OnPreviousComponentTick x2 | Damage x216, Heal x9, Snare x4 | ExtData[1].Val4=8 (298/298, 100%); ExtData[1].Val1=1 (289/298, 96%); ExtData[1].Val2=9 (272/298, 91%); ExtData[1].Val6=100 (260/298, 87%); ExtData[0].Val4=8 (256/298, 85%) |
-| 1 | 269 | 269 | 19 | 10, 1010, 1051, 1062, 1365, 1370, 1418, 1435, 264, 334, 5, 608 | 3 -> OnPreviousComponentApplied x247, 1 -> OnApply x164, 6 -> OnEventTriggered x85, 7 -> OnPreviousComponentTick x11, 5 -> OnBuffEnded x8, 8 -> OnPreviousComponentBuffTick x5 | Damage x169, Heal x42, Root x17, Snare x8, Knockback x5, Silence x5, Disarm x2, Immunity x2 | ExtData[1].Val4=8 (267/269, 99%); ExtData[0].Val4=8 (263/269, 97%) |
-| 6 | 25 | 25 | 21 | 1602, 1906, 3007, 5513, 8081, 8083, 8085, 8091, 8096, 8097, 8098, 8100 | 1 -> OnApply x29, 3 -> OnPreviousComponentApplied x7, 7 -> OnPreviousComponentTick x2 | Damage x30, Heal x5, Silence x1, Snare x1 | ExtData[1].Val1=1 (24/25, 96%); ExtData[0].Val4=8 (23/25, 92%); ExtData[1].Val4=8 (23/25, 92%) |
-| 7 | 12 | 12 | 13 | 1010, 1011, 14024, 14506, 14509, 15996, 8113, 8116, 9404, 9410, 9422, 9425 | 1 -> OnApply x17 | Damage x7, Heal x1 | ExtData[1].Val1=1 (12/12, 100%); ExtData[1].Val4=8 (12/12, 100%); ExtData[0].Val4=8 (10/12, 83%); Value[1]=1 (9/12, 75%) |
-| 5 | 8 | 8 | 5 | 24660, 24795, 24798, 9328, 9580 | 8 -> OnPreviousComponentBuffTick x3, 3 -> OnPreviousComponentApplied x2 | Damage x2, Knockback x1 | ExtData[0].Val1=2 (8/8, 100%); ExtData[0].Val4=8 (8/8, 100%); ExtData[1].Val4=8 (8/8, 100%); ExtData[1].Val1=1 (7/8, 87%); ExtData[1].Val7=1 (6/8, 75%) |
-
-## Sample Abilities
-
-| RawValue | AbilityId | AbilityName | ComponentId | Slot | Trigger | Context | TextExcerpt |
-| --- | ---: | --- | ---: | --- | --- | --- | --- |
-| 4 | 183 | Pierce | 493 | 0 | 1 -> OnApply |  |  |
-| 4 | 264 | Cunning Rumination  | 1914 | 1 | 1 -> OnApply |  |  |
-| 4 | 266 | Quell Suffering | 1916 | 1 | 1 -> OnApply |  |  |
-| 4 | 311 | Unwavering Faith | 8849 | 1 | 7 -> OnPreviousComponentTick |  |  |
-| 4 | 320 | Soul Reaping Passive Build | 11758 | 1 | 7 -> OnPreviousComponentTick |  |  |
-| 4 | 334 | Barrier Of Dementia | 12084 | 1 | 1 -> OnApply |  |  |
-| 1 | 5 | KABOOM! | 142 | 2 | 3 -> OnPreviousComponentApplied | Damage | Your Battle Squig explodes, causing you to be launched upward out of your Squiggy armor. All enemies within {COM_1_RADI_FEET} take {COM_3_VAL0_DAMAGE} and are knocked back. |
-| 1 | 5 | KABOOM! | 343 | 6 | 3 -> OnPreviousComponentApplied | Damage | Your Battle Squig explodes, causing you to be launched upward out of your Squiggy armor. All enemies within {COM_1_RADI_FEET} take {COM_3_VAL0_DAMAGE} and are knocked back. |
-| 1 | 10 | Gore | 142 | 2 | 3 -> OnPreviousComponentApplied | Damage | Your Squig slams it's head in to it's target, dealing {COM_0_VAL0_DAMAGE} and knocking them back. |
-| 1 | 264 | Cunning Rumination  | 1915 | 2 | 1 -> OnApply |  |  |
-| 1 | 334 | Barrier Of Dementia | 12085 | 2 | 1 -> OnApply |  |  |
-| 1 | 608 | Pulverizing Strike | 343 | 3 | 3 -> OnPreviousComponentApplied |  | Both you and your target are held tightly in place for {COM_1_DURA_SECONDS}, and neither one of you can move.<BR>This effect can not be dispelled or broken. |
-| 6 | 1602 | Explosive Force | 3074 | 2 | 3 -> OnPreviousComponentApplied |  | Your rune cleanses an ally, removing one Curse or Ailment. |
-| 6 | 1602 | Explosive Force | 3280 | 3 | 3 -> OnPreviousComponentApplied |  | Your rune cleanses an ally, removing one Curse or Ailment. |
-| 6 | 1906 | Bomb Explode Monster Ability | 3205 | 1 | 3 -> OnPreviousComponentApplied | Damage | You cleanse an ally, removing one Curse or Ailment.  If an effect is removed, your ally will absorb up to {COM_4_VAL1_DAMAGE} over {COM_4_DURA_SECONDS}. |
-| 6 | 1906 | Bomb Explode Monster Ability | 3279 | 3 | 3 -> OnPreviousComponentApplied | Damage | You cleanse an ally, removing one Curse or Ailment.  If an effect is removed, your ally will absorb up to {COM_4_VAL1_DAMAGE} over {COM_4_DURA_SECONDS}. |
-| 6 | 3007 | Heartstopping Snort | 9889 | 0 | 1 -> OnApply |  |  |
-| 6 | 5513 | Fate's Whirlwind | 5561 | 1 | 7 -> OnPreviousComponentTick |  |  |
-
-## APPLY_ABILITY :: ExtData[1].Val1
-
-- Operation: `APPLY_ABILITY` (`23`)
-- Field: `ExtData[1].Val1`
-- Ranks: global `11`, area `8`
-- Priority: `Critical` `181`
-- Example ability: `3`
-
-Summary: APPLY_ABILITY ext-data branch selector for the slot-local embedded payload.
-
-Evidence: Confidence: Structural. Non-zero rows: 612. Distinct values: 3. Tags: Damage, Disarm, Heal, Immunity, Knockback, Knockdown, Root, Silence, Snare, Stagger, Stun. Samples: 1, 2, 6.
-
-Recommended action: Turn this structural role into named per-value semantics using the value-evidence and companion-field clusters.
-
-## Top Values
-
-| RawValue | Obs | Components | Abilities | SampleAbilityIds | Triggers | Context | Companions |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | 503 | 503 | 21 | 10, 1010, 1011, 1051, 1062, 183, 264, 266, 311, 320, 334, 335 | 6 -> OnEventTriggered x296, 1 -> OnApply x179, 3 -> OnPreviousComponentApplied x132, 8 -> OnPreviousComponentBuffTick x15, 7 -> OnPreviousComponentTick x7, 10 -> OnBuffEndedRemoved x4 | Damage x354, Heal x34, Snare x8, Knockback x4, Silence x4, Root x2, Disarm x1, Immunity x1 | ExtData[1].Val4=8 (499/503, 99%); ExtData[0].Val4=8 (452/503, 89%) |
-| 2 | 108 | 108 | 22 | 1365, 1370, 1418, 1435, 1519, 1520, 1531, 1539, 1540, 1542, 1544, 1601 | 3 -> OnPreviousComponentApplied x170, 1 -> OnApply x50, 6 -> OnEventTriggered x33, 5 -> OnBuffEnded x8, 7 -> OnPreviousComponentTick x8, 10 -> OnBuffEndedRemoved x4 | Damage x70, Heal x23, Root x15, Snare x5, Knockback x2, Silence x2, Stagger x2, Disarm x1 | ExtData[1].Val4=8 (108/108, 100%); ExtData[0].Val4=8 (107/108, 99%); ExtData[1].Val3=1 (98/108, 90%); ExtData[0].Val1=2 (81/108, 75%) |
-| 6 | 1 | 1 | 0 |  | No sampled trigger evidence is available for this value yet. | No sampled context tags are available for this value yet. | Value[0]=3398 (1/1, 100%); ExtData[0].Val1=2 (1/1, 100%); ExtData[0].Val2=2 (1/1, 100%); ExtData[0].Val3=1 (1/1, 100%); ExtData[0].Val4=8 (1/1, 100%) |
-
-## Sample Abilities
-
-| RawValue | AbilityId | AbilityName | ComponentId | Slot | Trigger | Context | TextExcerpt |
-| --- | ---: | --- | ---: | --- | --- | --- | --- |
-| 1 | 5 | KABOOM! | 142 | 2 | 3 -> OnPreviousComponentApplied | Damage | Your Battle Squig explodes, causing you to be launched upward out of your Squiggy armor. All enemies within {COM_1_RADI_FEET} take {COM_3_VAL0_DAMAGE} and are knocked back. |
-| 1 | 10 | Gore | 142 | 2 | 3 -> OnPreviousComponentApplied | Damage | Your Squig slams it's head in to it's target, dealing {COM_0_VAL0_DAMAGE} and knocking them back. |
-| 1 | 183 | Pierce | 493 | 0 | 1 -> OnApply |  |  |
-| 1 | 264 | Cunning Rumination  | 1914 | 1 | 1 -> OnApply |  |  |
-| 1 | 264 | Cunning Rumination  | 1915 | 2 | 1 -> OnApply |  |  |
-| 1 | 266 | Quell Suffering | 1916 | 1 | 1 -> OnApply |  |  |
-| 2 | 5 | KABOOM! | 343 | 6 | 3 -> OnPreviousComponentApplied | Damage | Your Battle Squig explodes, causing you to be launched upward out of your Squiggy armor. All enemies within {COM_1_RADI_FEET} take {COM_3_VAL0_DAMAGE} and are knocked back. |
-| 2 | 608 | Pulverizing Strike | 343 | 3 | 3 -> OnPreviousComponentApplied |  | Both you and your target are held tightly in place for {COM_1_DURA_SECONDS}, and neither one of you can move.<BR>This effect can not be dispelled or broken. |
-| 2 | 648 | Hastened Punishment | 343 | 3 | 3 -> OnPreviousComponentApplied | Damage | A mid-range attack that deals {COM_0_VAL0_DAMAGE} and knocks targeted player away. Monsters will be knocked down. |
-| 2 | 670 | Grievous Harm | 343 | 3 | 3 -> OnPreviousComponentApplied | Damage | A focused blast that deals {COM_0_VAL0_DAMAGE} and knocks the targeted player away. Monsters will be knocked down. |
-| 2 | 672 | Unleash the Winds | 343 | 4 | 3 -> OnPreviousComponentApplied | Damage | Deals {COM_0_VAL0_DAMAGE} to all enemies within {COM_0_RADI_FEET}, and knocks them away from you. |
-| 2 | 779 | ;Rune Priest Spec Abilities | 1192 | 1 | 6 -> OnEventTriggered | Damage | Any time you are attacked, there is a 25% chance that you will become protected by a magical barrier for up to {COM_1_VAL0_COM_0_DURA_SECONDS}, which will absorb up to {COM_1_VAL0_COM_0_VAL1_DAMAGE}.<BR>This effect will not trigger more than once every 3 seconds. |
-
 ## CC :: ExtData[1].Val7
 
 - Operation: `CC` (`12`)
 - Field: `ExtData[1].Val7`
-- Ranks: global `12`, area `9`
+- Ranks: global `7`, area `4`
 - Priority: `Critical` `181`
 - Example ability: `3`
 
@@ -420,49 +211,11 @@ Recommended action: Turn this structural role into named per-value semantics usi
 | 200 | 24578 | Divine Wrath | 26335 | 0 | 1 -> OnApply |  |  |
 | 50 | 5707 | Raven's Wing | 5901 | 2 | 3 -> OnPreviousComponentApplied |  |  |
 
-## APPLY_ABILITY :: ExtData[1].Val4
-
-- Operation: `APPLY_ABILITY` (`23`)
-- Field: `ExtData[1].Val4`
-- Ranks: global `14`, area `10`
-- Priority: `Critical` `179`
-- Example ability: `3`
-
-Summary: APPLY_ABILITY ext-data family marker for the slot-local embedded payload.
-
-Evidence: Confidence: Structural. Non-zero rows: 612. Distinct values: 2. Tags: Damage, Disarm, Heal, Immunity, Knockback, Knockdown, Root, Silence, Snare, Stagger, Stun. Samples: 8, 9.
-
-Recommended action: Turn this structural role into named per-value semantics using the value-evidence and companion-field clusters.
-
-## Top Values
-
-| RawValue | Obs | Components | Abilities | SampleAbilityIds | Triggers | Context | Companions |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 8 | 608 | 608 | 18 | 10, 183, 264, 266, 311, 320, 334, 335, 5, 608, 648, 670 | 6 -> OnEventTriggered x329, 3 -> OnPreviousComponentApplied x302, 1 -> OnApply x187, 8 -> OnPreviousComponentBuffTick x16, 7 -> OnPreviousComponentTick x15, 10 -> OnBuffEndedRemoved x8 | Damage x382, Heal x56, Root x17, Snare x12, Knockback x6, Silence x5, Immunity x2, Knockdown x2 | ExtData[0].Val4=8 (560/608, 92%); ExtData[1].Val1=1 (499/608, 82%) |
-| 9 | 4 | 4 | 24 | 8158, 8159, 8160, 8163, 8165, 8166, 8169, 8170, 8171, 8173, 8174, 8176 | 1 -> OnApply x42 | Damage x42, Disarm x1, Heal x1, Silence x1, Snare x1 | ExtData[0].Val1=1 (4/4, 100%); ExtData[0].Val4=9 (4/4, 100%); ExtData[1].Val1=1 (4/4, 100%); ExtData[2].Val1=1 (4/4, 100%); ExtData[2].Val4=9 (4/4, 100%) |
-
-## Sample Abilities
-
-| RawValue | AbilityId | AbilityName | ComponentId | Slot | Trigger | Context | TextExcerpt |
-| --- | ---: | --- | ---: | --- | --- | --- | --- |
-| 8 | 5 | KABOOM! | 142 | 2 | 3 -> OnPreviousComponentApplied | Damage | Your Battle Squig explodes, causing you to be launched upward out of your Squiggy armor. All enemies within {COM_1_RADI_FEET} take {COM_3_VAL0_DAMAGE} and are knocked back. |
-| 8 | 5 | KABOOM! | 343 | 6 | 3 -> OnPreviousComponentApplied | Damage | Your Battle Squig explodes, causing you to be launched upward out of your Squiggy armor. All enemies within {COM_1_RADI_FEET} take {COM_3_VAL0_DAMAGE} and are knocked back. |
-| 8 | 10 | Gore | 142 | 2 | 3 -> OnPreviousComponentApplied | Damage | Your Squig slams it's head in to it's target, dealing {COM_0_VAL0_DAMAGE} and knocking them back. |
-| 8 | 183 | Pierce | 493 | 0 | 1 -> OnApply |  |  |
-| 8 | 264 | Cunning Rumination  | 1914 | 1 | 1 -> OnApply |  |  |
-| 8 | 264 | Cunning Rumination  | 1915 | 2 | 1 -> OnApply |  |  |
-| 9 | 8158 | Ignite | 8588 | 0 | 1 -> OnApply | Damage | A Hex which causes your target to burst into flames, dealing {COM_2_VAL0_TOD_ELEMENTALDAMAGE} to them over {COM_2_DURA_SECONDS}. |
-| 9 | 8159 | Fireball | 8588 | 0 | 1 -> OnApply | Damage | You conjure up a fiery missile which slams into your target, dealing {COM_2_VAL0_ELEMENTALDAMAGE}. |
-| 9 | 8160 | Sear | 8588 | 0 | 1 -> OnApply | Damage | Causes a pillar of scalding gas to erupt from the ground, dealing {COM_2_VAL0_ELEMENTALDAMAGE} to your target. |
-| 9 | 8163 | Scorched Earth | 8588 | 0 | 1 -> OnApply | Damage | You send a blast of heat into the ground around you, dealing {COM_2_VAL0_CORPOREALDAMAGE} to all enemies within {COM_2_RADI_FEET}. |
-| 9 | 8165 | Boiling Blood | 8588 | 0 | 1 -> OnApply | Damage | Reduces your target's Willpower by {COM_2_VAL0} for {COM_2_DURA_SECONDS}.  When the effect ends, the victim will suffer {COM_3_VAL0_CORPOREALDAMAGE}. |
-| 9 | 8166 | Fiery Blast | 8588 | 0 | 1 -> OnApply | Damage | You fling a massive ball of fire, dealing {COM_4_VAL0_ELEMENTALDAMAGE} to your target and all other enemies within {COM_4_RADI_FEET} of them. |
-
 ## APPLY_ABILITY :: FlagsRaw
 
 - Operation: `APPLY_ABILITY` (`23`)
 - Field: `FlagsRaw`
-- Ranks: global `15`, area `11`
+- Ranks: global `9`, area `5`
 - Priority: `Critical` `177`
 - Example ability: `3`
 
@@ -509,7 +262,7 @@ Recommended action: Turn this structural role into named per-value semantics usi
 
 - Operation: `CC` (`12`)
 - Field: `ExtData[0].Val7`
-- Ranks: global `22`, area `12`
+- Ranks: global `16`, area `6`
 - Priority: `Critical` `174`
 - Example ability: `3`
 
@@ -551,4 +304,269 @@ Recommended action: Turn this structural role into named per-value semantics usi
 | 20 | 14384 | Rock Lobba | 14124 | 2 | 3 -> OnPreviousComponentApplied |  |  |
 | 20 | 14387 | Hellblaster | 14124 | 2 | 3 -> OnPreviousComponentApplied |  |  |
 | 20 | 14388 | Catapult | 14124 | 2 | 3 -> OnPreviousComponentApplied |  |  |
+
+## APPLY_ABILITY :: ExtData[5].Val6
+
+- Operation: `APPLY_ABILITY` (`23`)
+- Field: `ExtData[5].Val6`
+- Ranks: global `19`, area `7`
+- Priority: `High` `168`
+- Example ability: `3`
+
+Summary: APPLY_ABILITY ext-data reference/link field for the slot-local embedded payload.
+
+Evidence: Confidence: Structural. Non-zero rows: 35. Distinct values: 11. Tags: Damage, Disarm, Heal, Immunity, Knockback, Knockdown, Root, Silence, Snare, Stagger, Stun. Samples: 25424, 25425, 25426, 25427, 25428, 25429, 25430, 25431, 25433, 4, 5.
+
+Recommended action: Turn this structural role into named per-value semantics using the value-evidence and companion-field clusters.
+
+## Top Values
+
+| RawValue | Obs | Components | Abilities | SampleAbilityIds | Triggers | Context | Companions |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 5 | 10 | 10 | 9 | 24552, 24553, 24554, 24555, 24556, 24557, 24558, 24559, 9250 | 1 -> OnApply x9 | Damage x1 | ExtData[1].Val1=1 (10/10, 100%); ExtData[1].Val2=17 (10/10, 100%); ExtData[2].Val1=1 (10/10, 100%); ExtData[2].Val2=17 (10/10, 100%); ExtData[2].Val6=2 (10/10, 100%) |
+| 25433 | 8 | 8 | 8 | 24552, 24553, 24554, 24555, 24556, 24557, 24558, 24559 | 1 -> OnApply x8 | No sampled context tags are available for this value yet. | Radius=2000 (8/8, 100%); MaxTargets=1 (8/8, 100%); FlagsRaw=16 (8/8, 100%); Value[0]=24543 (8/8, 100%); ExtData[0].Val1=1 (8/8, 100%) |
+| 25424 | 2 | 2 | 1 | 24552 | 1 -> OnApply x2 | No sampled context tags are available for this value yet. | Radius=2000 (2/2, 100%); MaxTargets=1 (2/2, 100%); FlagsRaw=16 (2/2, 100%); Value[0]=24543 (2/2, 100%); ExtData[0].Val1=1 (2/2, 100%) |
+| 25425 | 2 | 2 | 1 | 24553 | 1 -> OnApply x2 | No sampled context tags are available for this value yet. | Radius=2000 (2/2, 100%); MaxTargets=1 (2/2, 100%); FlagsRaw=16 (2/2, 100%); Value[0]=24543 (2/2, 100%); ExtData[0].Val1=1 (2/2, 100%) |
+| 25426 | 2 | 2 | 1 | 24554 | 1 -> OnApply x2 | No sampled context tags are available for this value yet. | Radius=2000 (2/2, 100%); MaxTargets=1 (2/2, 100%); FlagsRaw=16 (2/2, 100%); Value[0]=24543 (2/2, 100%); ExtData[0].Val1=1 (2/2, 100%) |
+
+## Sample Abilities
+
+| RawValue | AbilityId | AbilityName | ComponentId | Slot | Trigger | Context | TextExcerpt |
+| --- | ---: | --- | ---: | --- | --- | --- | --- |
+| 5 | 9250 | Searing Touch | 12078 | 6 | 1 -> OnApply | Damage | You concentrate on your target for up to {COM_0_DURA_SECONDS}, repeatedly dealing  {COM_0_VAL0_SPIRITDAMAGE} to them as long as you maintain your concentration. |
+| 5 | 24552 | Champion Check Order Healer | 26263 | 6 | 1 -> OnApply |  |  |
+| 5 | 24553 | Champion Check Order Tank | 26270 | 6 | 1 -> OnApply |  |  |
+| 5 | 24554 | Champion Check Order DPS.M | 26277 | 6 | 1 -> OnApply |  |  |
+| 5 | 24555 | Champion Check Order DPS.R | 26284 | 6 | 1 -> OnApply |  |  |
+| 5 | 24556 | Champion Check Destro Healer | 26291 | 6 | 1 -> OnApply |  |  |
+| 25433 | 24552 | Champion Check Order Healer | 26262 | 5 | 1 -> OnApply |  |  |
+| 25433 | 24553 | Champion Check Order Tank | 26269 | 5 | 1 -> OnApply |  |  |
+| 25433 | 24554 | Champion Check Order DPS.M | 26276 | 5 | 1 -> OnApply |  |  |
+| 25433 | 24555 | Champion Check Order DPS.R | 26283 | 5 | 1 -> OnApply |  |  |
+| 25433 | 24556 | Champion Check Destro Healer | 26290 | 5 | 1 -> OnApply |  |  |
+| 25433 | 24557 | Champion Check Destro Tank | 26297 | 5 | 1 -> OnApply |  |  |
+| 25424 | 24552 | Champion Check Order Healer | 26260 | 3 | 1 -> OnApply |  |  |
+| 25424 | 24552 | Champion Check Order Healer | 26261 | 4 | 1 -> OnApply |  |  |
+| 25425 | 24553 | Champion Check Order Tank | 26267 | 3 | 1 -> OnApply |  |  |
+| 25425 | 24553 | Champion Check Order Tank | 26268 | 4 | 1 -> OnApply |  |  |
+| 25426 | 24554 | Champion Check Order DPS.M | 26274 | 3 | 1 -> OnApply |  |  |
+| 25426 | 24554 | Champion Check Order DPS.M | 26275 | 4 | 1 -> OnApply |  |  |
+
+## APPLY_ABILITY :: ExtData[2].Val7
+
+- Operation: `APPLY_ABILITY` (`23`)
+- Field: `ExtData[2].Val7`
+- Ranks: global `25`, area `8`
+- Priority: `High` `164`
+- Example ability: `3`
+
+Summary: APPLY_ABILITY ext-data payload-B field for the slot-local embedded payload.
+
+Evidence: Confidence: Structural. Non-zero rows: 107. Distinct values: 7. Tags: Damage, Disarm, Heal, Immunity, Knockback, Knockdown, Root, Silence, Snare, Stagger, Stun. Samples: 1, 100, 1800, 25, 3000, 4, 50.
+
+Recommended action: Turn this structural role into named per-value semantics using the value-evidence and companion-field clusters.
+
+## Top Values
+
+| RawValue | Obs | Components | Abilities | SampleAbilityIds | Triggers | Context | Companions |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 49 | 49 | 19 | 10, 1010, 1365, 1520, 1531, 1540, 1544, 1599, 1601, 1605, 1680, 1682 | 3 -> OnPreviousComponentApplied x76, 1 -> OnApply x54, 8 -> OnPreviousComponentBuffTick x4, 7 -> OnPreviousComponentTick x3 | Damage x80, Heal x16, Knockback x3, Silence x2, Snare x2, Disarm x1, Immunity x1, Knockdown x1 | ExtData[2].Val4=8 (47/49, 95%); ExtData[2].Val3=1 (46/49, 93%); ExtData[0].Val4=8 (46/49, 93%); ExtData[0].Val3=1 (44/49, 89%); ExtData[1].Val4=8 (39/49, 79%) |
+| 3000 | 45 | 45 | 24 | 10188, 10189, 10190, 10191, 10192, 10193, 10194, 10195, 10196, 10197, 10198, 10200 | 6 -> OnEventTriggered x45 | Damage x45 | ExtData[0].Val1=2 (45/45, 100%); ExtData[0].Val2=2 (45/45, 100%); ExtData[0].Val3=1 (45/45, 100%); ExtData[0].Val4=8 (45/45, 100%); ExtData[0].Val7=1 (45/45, 100%) |
+| 25 | 5 | 5 | 10 | 1589, 8163, 8166, 8169, 8171, 8174, 8177, 8187, 8188, 8189 | 3 -> OnPreviousComponentApplied x11, 8 -> OnPreviousComponentBuffTick x2 | Damage x13, Silence x1 | ExtData[0].Val1=2 (5/5, 100%); ExtData[0].Val3=1 (5/5, 100%); ExtData[0].Val4=8 (5/5, 100%); ExtData[0].Val7=1 (5/5, 100%); ExtData[1].Val1=1 (5/5, 100%) |
+| 50 | 3 | 3 | 12 | 3997, 8081, 8083, 8085, 8091, 8096, 8097, 8098, 8100, 8109, 8112, 8115 | 1 -> OnApply x11, 10 -> OnBuffEndedRemoved x1 | Damage x11, Heal x1, Silence x1 | ExtData[0].Val4=8 (3/3, 100%); ExtData[1].Val1=1 (3/3, 100%); ExtData[1].Val4=8 (3/3, 100%); ExtData[2].Val1=1 (3/3, 100%); ExtData[2].Val3=4 (3/3, 100%) |
+| 1800 | 2 | 2 | 3 | 1691, 3007, 3541 | 3 -> OnPreviousComponentApplied x2, 1 -> OnApply x1 | Damage x1, Disarm x1, Immunity x1, Knockdown x1, Silence x1, Stagger x1 | ExtData[0].Val1=2 (2/2, 100%); ExtData[0].Val3=1 (2/2, 100%); ExtData[0].Val4=8 (2/2, 100%); ExtData[0].Val9=1 (2/2, 100%); ExtData[1].Val4=8 (2/2, 100%) |
+
+## Sample Abilities
+
+| RawValue | AbilityId | AbilityName | ComponentId | Slot | Trigger | Context | TextExcerpt |
+| --- | ---: | --- | ---: | --- | --- | --- | --- |
+| 1 | 5 | KABOOM! | 142 | 2 | 3 -> OnPreviousComponentApplied | Damage | Your Battle Squig explodes, causing you to be launched upward out of your Squiggy armor. All enemies within {COM_1_RADI_FEET} take {COM_3_VAL0_DAMAGE} and are knocked back. |
+| 1 | 10 | Gore | 142 | 2 | 3 -> OnPreviousComponentApplied | Damage | Your Squig slams it's head in to it's target, dealing {COM_0_VAL0_DAMAGE} and knocking them back. |
+| 1 | 648 | Hastened Punishment | 2080 | 2 | 3 -> OnPreviousComponentApplied | Damage | A mid-range attack that deals {COM_0_VAL0_DAMAGE} and knocks targeted player away. Monsters will be knocked down. |
+| 1 | 670 | Grievous Harm | 2080 | 2 | 3 -> OnPreviousComponentApplied | Damage | A focused blast that deals {COM_0_VAL0_DAMAGE} and knocks the targeted player away. Monsters will be knocked down. |
+| 1 | 672 | Unleash the Winds | 142 | 2 | 3 -> OnPreviousComponentApplied | Damage | Deals {COM_0_VAL0_DAMAGE} to all enemies within {COM_0_RADI_FEET}, and knocks them away from you. |
+| 1 | 882 | You Got Nuffin' | 142 | 2 | 3 -> OnPreviousComponentApplied | Damage | A close-range magical attack that deals heavy damage and knocks your target away. |
+| 3000 | 10188 | Blades I | 10381 | 1 | 6 -> OnEventTriggered | Damage | Blades I - On Being Hit: 2% chance attacker is cut and suffers {ABIL_10608_COM_0_VAL0_TOD_DAMAGE} over {ABIL_10608_COM_0_DURA_SECONDS}. |
+| 3000 | 10189 | Blades II | 10382 | 1 | 6 -> OnEventTriggered | Damage | Blades II - On Being Hit: 2% chance attacker is cut and suffers {ABIL_10609_COM_0_VAL0_TOD_DAMAGE} over {ABIL_10609_COM_0_DURA_SECONDS}. |
+| 3000 | 10190 | Blades III | 10383 | 1 | 6 -> OnEventTriggered | Damage | Blades III - On Being Hit: 2% chance attacker is cut and suffers {ABIL_10610_COM_0_VAL0_TOD_DAMAGE} over {ABIL_10610_COM_0_DURA_SECONDS}. |
+| 3000 | 10191 | Blades IV | 10384 | 1 | 6 -> OnEventTriggered | Damage | Blades IV - On Being Hit: 2% chance attacker is cut and suffers {ABIL_10611_COM_0_VAL0_TOD_DAMAGE} over {ABIL_10611_COM_0_DURA_SECONDS}. |
+| 3000 | 10192 | Blades V | 10385 | 1 | 6 -> OnEventTriggered | Damage | Blades V - On Being Hit: 2% chance attacker is cut and suffers {ABIL_10612_COM_0_VAL0_TOD_DAMAGE} over {ABIL_10612_COM_0_DURA_SECONDS}. |
+| 3000 | 10193 | Blades VI | 10386 | 1 | 6 -> OnEventTriggered | Damage | Blades VI - On Being Hit: 2% chance attacker is cut and suffers {ABIL_10613_COM_0_VAL0_TOD_DAMAGE} over {ABIL_10613_COM_0_DURA_SECONDS}. |
+| 25 | 1589 | Crown Of Fire | 3081 | 1 | 8 -> OnPreviousComponentBuffTick | Damage | Deals {COM_0_VAL0_TOD_ELEMENTALDAMAGE} over {COM_0_DURA_SECONDS}. |
+| 25 | 1589 | Crown Of Fire | 3081 | 3 | 8 -> OnPreviousComponentBuffTick | Damage | Deals {COM_0_VAL0_TOD_ELEMENTALDAMAGE} over {COM_0_DURA_SECONDS}. |
+| 25 | 8163 | Scorched Earth | 8667 | 3 | 3 -> OnPreviousComponentApplied | Damage | You send a blast of heat into the ground around you, dealing {COM_2_VAL0_CORPOREALDAMAGE} to all enemies within {COM_2_RADI_FEET}. |
+| 25 | 8163 | Scorched Earth | 9872 | 4 | 3 -> OnPreviousComponentApplied | Damage | You send a blast of heat into the ground around you, dealing {COM_2_VAL0_CORPOREALDAMAGE} to all enemies within {COM_2_RADI_FEET}. |
+| 25 | 8166 | Fiery Blast | 8667 | 3 | 3 -> OnPreviousComponentApplied | Damage | You fling a massive ball of fire, dealing {COM_4_VAL0_ELEMENTALDAMAGE} to your target and all other enemies within {COM_4_RADI_FEET} of them. |
+| 25 | 8169 | Pyroclastic Surge | 9872 | 4 | 3 -> OnPreviousComponentApplied | Damage | A fountain of molten lava envelops your target, dealing {COM_2_VAL0_CORPOREALDAMAGE}.  If they are Hexed, then they will also be inflicted with a disorienting Hex for {COM_3_DURA_SECONDS}, causing all of their actions to take an additional {COM_3_VAL0}% longer to build up. |
+
+## CC :: ExtData[0].Val1
+
+- Operation: `CC` (`12`)
+- Field: `ExtData[0].Val1`
+- Ranks: global `26`, area `9`
+- Priority: `High` `162`
+- Example ability: `3`
+
+Summary: CC ext-data branch selector for the slot-local control payload.
+
+Evidence: Confidence: Structural. Non-zero rows: 460. Distinct values: 2. Tags: Damage, Disarm, Heal, Immunity, Knockdown, Root, Silence, Snare, Stun. Samples: 1, 2.
+
+Recommended action: Turn this structural role into named per-value semantics using the value-evidence and companion-field clusters.
+
+## Top Values
+
+| RawValue | Obs | Components | Abilities | SampleAbilityIds | Triggers | Context | Companions |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 2 | 420 | 420 | 24 | 122, 124, 1369, 1370, 1384, 1418, 144, 1443, 1494, 1519, 1525, 1536 | 1 -> OnApply x306, 3 -> OnPreviousComponentApplied x108, 5 -> OnBuffEnded x31, 6 -> OnEventTriggered x5, 7 -> OnPreviousComponentTick x2, 10 -> OnBuffEndedRemoved x1 | Damage x64, Silence x25, Root x19, Disarm x11, Stun x5, Knockdown x2, Heal x1, Immunity x1 | ExtData[0].Val4=8 (419/420, 99%); ExtData[0].Val3=1 (338/420, 80%); ExtData[0].Val7=1 (328/420, 78%) |
+| 1 | 40 | 40 | 14 | 12007, 12008, 12017, 12024, 12028, 12037, 12066, 12075, 1908, 3636, 4094, 5011 | 3 -> OnPreviousComponentApplied x399, 1 -> OnApply x82, 2 -> OnPreviousComponentEndCast x2, 7 -> OnPreviousComponentTick x1 | Heal x2 | ExtData[0].Val3=1 (31/40, 77%); ExtData[1].Val4=8 (30/40, 75%) |
+
+## Sample Abilities
+
+| RawValue | AbilityId | AbilityName | ComponentId | Slot | Trigger | Context | TextExcerpt |
+| --- | ---: | --- | ---: | --- | --- | --- | --- |
+| 2 | 3 | Bounce | 3310 | 1 | 3 -> OnPreviousComponentApplied | Damage | You cause your Battle Squig to bounce, dealing {COM_0_VAL0_DAMAGE} and knocking your target down for {COM_1_DURA_SECONDS}. |
+| 2 | 6 | ;/end | 3446 | 0 | 1 -> OnApply | Damage | Your Squig bounces on it's target dealing {COM_2_VAL0_DAMAGE}, and knocking them down for {COM_0_DURA_SECONDS}. |
+| 2 | 122 | Claw Sweep | 1194 | 0 | 1 -> OnApply | Root | AE Root |
+| 2 | 124 | Lion's Roar | 1196 | 0 | 1 -> OnApply | Silence, Disarm | Silence and Disarm |
+| 2 | 144 | Poisoned Spine | 1348 | 0 | 1 -> OnApply |  | You've been knocked down |
+| 2 | 379 | Warding - Empire | 1696 | 2 | 3 -> OnPreviousComponentApplied |  |  |
+| 1 | 1908 | AE Knockdown - Explosion | 952 | 5 | 2 -> OnPreviousComponentEndCast | Heal | Resurrects your target with 20% health. |
+| 1 | 3636 | Oil Grenade | 609 | 0 | 1 -> OnApply |  | You've slipped! |
+| 1 | 4094 | RvRD - Audette - Inspection Scattershot | 4068 | 0 | 1 -> OnApply |  |  |
+| 1 | 5011 | Slimy Vomit | 5019 | 1 | 7 -> OnPreviousComponentTick |  |  |
+| 1 | 5043 | Kneeling | 5061 | 0 | 1 -> OnApply |  |  |
+| 1 | 9246 | Gift of Life | 952 | 5 | 2 -> OnPreviousComponentEndCast | Heal | Resurrects your target with 20% health. |
+
+## CC :: ExtData[2].Val7
+
+- Operation: `CC` (`12`)
+- Field: `ExtData[2].Val7`
+- Ranks: global `27`, area `10`
+- Priority: `High` `162`
+- Example ability: `3`
+
+Summary: CC ext-data payload-B field for the slot-local control payload.
+
+Evidence: Confidence: Structural. Non-zero rows: 39. Distinct values: 13. Tags: Damage, Disarm, Heal, Immunity, Knockdown, Root, Silence, Snare, Stun. Samples: 1, 10, 100, 20, 25, 29, 350, 40, 49, 59, 74, 89.
+
+Recommended action: Turn this structural role into named per-value semantics using the value-evidence and companion-field clusters.
+
+## Top Values
+
+| RawValue | Obs | Components | Abilities | SampleAbilityIds | Triggers | Context | Companions |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 25 | 25 | 11 | 12007, 12008, 12017, 12024, 12028, 12037, 12066, 12075, 12077, 12086, 5715 | 3 -> OnPreviousComponentApplied x373, 1 -> OnApply x73 | No sampled context tags are available for this value yet. | ExtData[1].Val3=1 (25/25, 100%); ExtData[1].Val4=8 (25/25, 100%); ExtData[2].Val4=8 (25/25, 100%); ExtData[0].Val3=1 (24/25, 96%); ExtData[2].Val3=1 (24/25, 96%) |
+| 74 | 2 | 2 | 0 |  | No sampled trigger evidence is available for this value yet. | No sampled context tags are available for this value yet. | FlagsRaw=2175 (2/2, 100%); Value15=4 (2/2, 100%); ExtData[0].Val1=2 (2/2, 100%); ExtData[0].Val2=2 (2/2, 100%); ExtData[0].Val3=1 (2/2, 100%) |
+| 99 | 2 | 2 | 0 |  | No sampled trigger evidence is available for this value yet. | No sampled context tags are available for this value yet. | FlagsRaw=2175 (2/2, 100%); Value15=4 (2/2, 100%); ExtData[0].Val1=2 (2/2, 100%); ExtData[0].Val2=2 (2/2, 100%); ExtData[0].Val3=1 (2/2, 100%) |
+| 350 | 1 | 1 | 3 | 5125, 5136, 5186 | 1 -> OnApply x3 | No sampled context tags are available for this value yet. | Duration=1000 (1/1, 100%); Radius=5000 (1/1, 100%); FlagsRaw=8 (1/1, 100%); Value15=4 (1/1, 100%); ExtData[0].Val1=2 (1/1, 100%) |
+| 100 | 1 | 1 | 1 | 3482 | 1 -> OnApply x1 | No sampled context tags are available for this value yet. | Duration=5000 (1/1, 100%); FlagsRaw=2175 (1/1, 100%); Value15=4 (1/1, 100%); ExtData[0].Val1=2 (1/1, 100%); ExtData[0].Val2=2 (1/1, 100%) |
+
+## Sample Abilities
+
+| RawValue | AbilityId | AbilityName | ComponentId | Slot | Trigger | Context | TextExcerpt |
+| --- | ---: | --- | ---: | --- | --- | --- | --- |
+| 1 | 5715 | Judgement | 5911 | 1 | 1 -> OnApply |  |  |
+| 1 | 12007 | Gasp of the Unliving | 21007 | 1 | 3 -> OnPreviousComponentApplied |  |  |
+| 1 | 12007 | Gasp of the Unliving | 21008 | 2 | 3 -> OnPreviousComponentApplied |  |  |
+| 1 | 12008 | Tormenting Wail | 21001 | 0 | 1 -> OnApply |  |  |
+| 1 | 12008 | Tormenting Wail | 21002 | 1 | 1 -> OnApply |  |  |
+| 1 | 12017 | Bat Screech | 21007 | 3 | 3 -> OnPreviousComponentApplied |  |  |
+| 350 | 5125 | Earthkeeper’s Howl | 5172 | 1 | 1 -> OnApply |  |  |
+| 350 | 5136 | Hardy Concession | 5172 | 1 | 1 -> OnApply |  |  |
+| 350 | 5186 | Chilling Breath | 5172 | 1 | 1 -> OnApply |  |  |
+| 100 | 3482 | Squig Commanda | 12345 | 3 | 1 -> OnApply |  |  |
+
+## APPLY_ABILITY :: ExtData[0].Val5
+
+- Operation: `APPLY_ABILITY` (`23`)
+- Field: `ExtData[0].Val5`
+- Ranks: global `28`, area `11`
+- Priority: `High` `161`
+- Example ability: `3`
+
+Summary: APPLY_ABILITY ext-data auxiliary selector for minority slot-local payload branches.
+
+Evidence: Confidence: Structural. Non-zero rows: 126. Distinct values: 5. Tags: Damage, Disarm, Heal, Immunity, Knockback, Knockdown, Root, Silence, Snare, Stagger, Stun. Samples: 3, 5, 6, 8, 9.
+
+Recommended action: Turn this structural role into named per-value semantics using the value-evidence and companion-field clusters.
+
+## Top Values
+
+| RawValue | Obs | Components | Abilities | SampleAbilityIds | Triggers | Context | Companions |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 3 | 109 | 109 | 15 | 1051, 1062, 1364, 1432, 1435, 1438, 1439, 1443, 1447, 1449, 1459, 1461 | 3 -> OnPreviousComponentApplied x95, 1 -> OnApply x38, 6 -> OnEventTriggered x18, 10 -> OnBuffEndedRemoved x6, 7 -> OnPreviousComponentTick x3, 8 -> OnPreviousComponentBuffTick x2 | Damage x110, Heal x17, Snare x4, Silence x1, Stagger x1 | ExtData[0].Val4=8 (109/109, 100%) |
+| 5 | 7 | 7 | 7 | 14518, 14519, 14520, 14521, 14522, 14523, 15127 | 1 -> OnApply x7 | No sampled context tags are available for this value yet. | FlagsRaw=4 (7/7, 100%); ExtData[0].Val4=8 (7/7, 100%); ExtData[0].Val1=1 (6/7, 85%); ExtData[0].Val2=70 (6/7, 85%); ExtData[0].Val3=6 (6/7, 85%) |
+| 6 | 6 | 6 | 6 | 14115, 14116, 14117, 14146, 14147, 14148 | 6 -> OnEventTriggered x6 | No sampled context tags are available for this value yet. | ExtData[0].Val1=1 (6/6, 100%); ExtData[0].Val3=1 (6/6, 100%); ExtData[0].Val4=8 (6/6, 100%); ExtData[1].Val1=1 (6/6, 100%); ExtData[1].Val2=9 (6/6, 100%) |
+| 8 | 3 | 3 | 3 | 1069, 1071, 31 | 7 -> OnPreviousComponentTick x2, 3 -> OnPreviousComponentApplied x1 | Damage x2 | ExtData[0].Val3=1 (3/3, 100%); ExtData[0].Val4=8 (3/3, 100%); ExtData[0].Val7=1 (3/3, 100%) |
+| 9 | 1 | 1 | 0 |  | No sampled trigger evidence is available for this value yet. | No sampled context tags are available for this value yet. | FlagsRaw=4 (1/1, 100%); Value[0]=3943 (1/1, 100%); ExtData[0].Val1=1 (1/1, 100%); ExtData[0].Val2=4 (1/1, 100%); ExtData[0].Val3=4 (1/1, 100%) |
+
+## Sample Abilities
+
+| RawValue | AbilityId | AbilityName | ComponentId | Slot | Trigger | Context | TextExcerpt |
+| --- | ---: | --- | ---: | --- | --- | --- | --- |
+| 3 | 797 | Thick-Skulled | 2016 | 1 | 6 -> OnEventTriggered | Damage | Any time you are attacked, there is a 25% chance that you will absorb up to {ABIL_3996_COM_0_VAL1} damage.<BR>This effect will not trigger more than once every 3 seconds. |
+| 3 | 1051 | Panic | 3481 | 1 | 8 -> OnPreviousComponentBuffTick |  |  |
+| 3 | 1062 | Blood Curse | 3687 | 1 | 8 -> OnPreviousComponentBuffTick |  |  |
+| 3 | 1364 | Burst O' Waaagh! | 18321 | 2 | 3 -> OnPreviousComponentApplied | Damage | A brutal attack that deals {COM_0_VAL0_DAMAGE} to your target and inspires you to push the attack, increasing your Strength by {COM_1_VAL0_COM_0_VAL0} for {COM_1_VAL0_COM_0_DURA_SECONDS}. Will also affect your Oath Friend if they are within {COM_1_VAL0_COM_3_RADI_FEET}. <BR><BR>   At 25 Grudges:  Also increases Willpower by {COM_1_VAL0_COM_1_VAL0}.<BR>   At 50 Grudges: Also increases Willpower by {COM_1_VAL0_COM_2_VAL0}.<BR>   At 75 Grudges: Also increases Willpower by {COM_1_VAL0_COM_3_VAL0}.<BR>   At 100 Grudges:  Also increases Willpower by {COM_1_VAL0_COM_4_VAL0}.<BR> |
+| 3 | 1432 | To Victory! | 3845 | 2 | 3 -> OnPreviousComponentApplied | Damage | You deal {COM_0_VAL0_DAMAGE} and reduce the movement speed of your enemy by {COM_1_VAL0_COM_0_VAL0}% for {COM_1_VAL0_COM_0_DURA_SECONDS}. |
+| 3 | 1435 | Now's Our Chance! | 3731 | 0 | 1 -> OnApply | Damage | You wildly swing in front of you,  dealing between {COM_0_VAL0_COM_2_VAL0_DAMAGE} and {COM_0_VAL0_COM_0_VAL0_DAMAGE} to up to three enemies within {COM_0_RADI_FEET}. |
+| 5 | 14518 | Recover Standard | 14294 | 1 | 1 -> OnApply |  |  |
+| 5 | 14519 | Recover Standard | 14295 | 1 | 1 -> OnApply |  |  |
+| 5 | 14520 | Recover Standard | 14296 | 1 | 1 -> OnApply |  |  |
+| 5 | 14521 | Recover Standard | 14297 | 1 | 1 -> OnApply |  |  |
+| 5 | 14522 | Recover Standard | 14298 | 1 | 1 -> OnApply |  |  |
+| 5 | 14523 | Recover Standard | 14299 | 1 | 1 -> OnApply |  |  |
+| 6 | 14115 | Invigorating Victory - Orc | 14186 | 1 | 6 -> OnEventTriggered |  | Killing Greenskins will double your AP regen rate 10% of the time. |
+| 6 | 14116 | Invigorating Victory - Chaos | 14190 | 1 | 6 -> OnEventTriggered |  | Killing Chaos will double your AP regen rate 10% of the time. |
+| 6 | 14117 | Invigorating Victory - Dark Elf | 14188 | 1 | 6 -> OnEventTriggered |  | Killing Dark Elves will double your AP regen rate 10% of the time. |
+| 6 | 14146 | Invigorating Victory - Dwarf | 14185 | 1 | 6 -> OnEventTriggered |  | Killing Dwarfs will double your AP regen rate 10% of the time. |
+| 6 | 14147 | Invigorating Victory - Empire | 14189 | 1 | 6 -> OnEventTriggered |  | Killing Empire will double your AP regen rate 10% of the time. |
+| 6 | 14148 | Invigorating Victory - High Elf | 14187 | 1 | 6 -> OnEventTriggered |  | Killing High Elves will double your AP regen rate 10% of the time. |
+
+## IMMUNITY :: Value[0]
+
+- Operation: `IMMUNITY` (`38`)
+- Field: `Value[0]`
+- Ranks: global `29`, area `12`
+- Priority: `High` `161`
+- Example ability: `158`
+
+Summary: No extracted-client semantic mapping is known yet for this field.
+
+Evidence: Confidence: Unknown. Non-zero rows: 169. Distinct values: 31. Tags: CrowdControl, Damage, Immunity, Knockback, Knockdown, Root, Snare, Stagger, Stun. Samples: 1, 1001, 1002, 1004, 1012, 1014, 1015, 1016, 1018, 1019, 1020, 1023.
+
+Recommended action: This is a priority operation hotspot. Use value evidence, trigger mix, and sample abilities to move it out of the unknown bucket.
+
+## Top Values
+
+| RawValue | Obs | Components | Abilities | SampleAbilityIds | Triggers | Context | Companions |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 12 | 70 | 70 | 21 | 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169 | 1 -> OnApply x109, 3 -> OnPreviousComponentApplied x6 | CrowdControl x8, Root x6, Immunity x4, Knockback x3, Knockdown x3, Snare x3, Stagger x3 | Value[1]=100 (61/70, 87%) |
+| 1 | 26 | 26 | 24 | 10777, 10781, 10782, 13055, 13162, 13163, 13164, 13165, 13191, 13736, 13767, 18809 | 1 -> OnApply x27, 3 -> OnPreviousComponentApplied x5 | Damage x2, Immunity x2 | Value[1]=100 (24/26, 92%) |
+| 7 | 14 | 14 | 15 | 13028, 13031, 13037, 13039, 13062, 13170, 20072, 21641, 23816, 23819, 24876, 24889 | 1 -> OnApply x14, 0 -> OnEnd x1, 3 -> OnPreviousComponentApplied x1 | No sampled context tags are available for this value yet. | Value[1]=100 (13/14, 92%) |
+| 24 | 8 | 8 | 9 | 10784, 14271, 186, 27832, 28300, 3180, 398, 408, 608 | 1 -> OnApply x9, 3 -> OnPreviousComponentApplied x2 | CrowdControl x4, Immunity x1, Knockback x1, Knockdown x1, Root x1, Stagger x1 | Value[1]=100 (8/8, 100%) |
+| 8 | 6 | 6 | 6 | 14271, 23894, 27832, 5976, 9173, 9194 | 1 -> OnApply x7 | Root x3, Snare x3, CrowdControl x2, Damage x1, Immunity x1, Stun x1 | Value[1]=100 (6/6, 100%); ExtData[0].Val1=7 (5/6, 83%); ExtData[0].Val2=8 (5/6, 83%); ExtData[0].Val3=6 (5/6, 83%); Duration=10000 (5/6, 83%) |
+
+## Sample Abilities
+
+| RawValue | AbilityId | AbilityName | ComponentId | Slot | Trigger | Context | TextExcerpt |
+| --- | ---: | --- | ---: | --- | --- | --- | --- |
+| 12 | 158 | Pierce | 468 | 0 | 1 -> OnApply |  |  |
+| 12 | 159 | Rupture Organ | 469 | 0 | 1 -> OnApply |  |  |
+| 12 | 160 | Shatter Will | 470 | 0 | 1 -> OnApply |  |  |
+| 12 | 161 | Implacable Resolve | 471 | 0 | 1 -> OnApply |  |  |
+| 12 | 162 | Iron Body | 472 | 0 | 1 -> OnApply |  |  |
+| 12 | 163 | Pierce | 473 | 0 | 1 -> OnApply |  |  |
+| 1 | 4499 | Spl_T | 4499 | 8 | 1 -> OnApply |  |  |
+| 1 | 5197 | Aura of Disruption | 4499 | 8 | 1 -> OnApply |  |  |
+| 1 | 5262 | Squig Commanda | 4499 | 1 | 1 -> OnApply |  |  |
+| 1 | 5853 | Divine Shield | 5862 | 0 | 1 -> OnApply |  |  |
+| 1 | 10777 | Oil Immunity | 10643 | 0 | 1 -> OnApply |  | You will be shielded from the effects of Oil for the next {COM_0_DURA_SECONDS}. |
+| 1 | 10781 | Oil Immunity | 10654 | 0 | 1 -> OnApply |  | You will be shielded from the effects of Oil for the next {COM_0_DURA_SECONDS}. |
+| 7 | 4388 | Shout | 4439 | 0 | 1 -> OnApply |  |  |
+| 7 | 5234 | Reapa Rush | 24630 | 1 | 1 -> OnApply |  |  |
+| 7 | 5975 | Immune to Taunt | 5975 | 0 | 1 -> OnApply |  |  |
+| 7 | 13028 | Cruncha's Rage | 13041 | 0 | 1 -> OnApply |  |  |
+| 7 | 13031 | Bum Rush | 13052 | 1 | 1 -> OnApply |  |  |
+| 7 | 13037 | Rally the Charge | 13071 | 1 | 1 -> OnApply |  |  |
 
