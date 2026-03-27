@@ -15,6 +15,7 @@ namespace ClientDataMatrix.Configuration
                 candidates.Add(explicitPath);
 
             candidates.Add(DefaultExtractedRoot);
+            candidates.Add(@"C:\Users\Admin\Downloads\myps");
             candidates.Add(Path.Combine("data", "WAR_extracted"));
             candidates.Add(Path.Combine("..", "WAR_extracted"));
 

@@ -132,6 +132,10 @@ namespace ClientDataMatrix.Services
             if (TryResolveRequirementFieldSemantic(fieldKey, rawValue, out requirementSemantic))
                 return requirementSemantic;
 
+            ComponentFieldSemantic extDataVal2Semantic;
+            if (TryResolveExtDataVal2Semantic(componentRow.Operation, fieldKey, rawValue, out extDataVal2Semantic))
+                return extDataVal2Semantic;
+
             ComponentFieldSemantic structuralSemantic;
             if (TryResolveOperationSpecificStructuralSemantic(componentRow.Operation, fieldKey, rawValue, out structuralSemantic))
                 return structuralSemantic;
@@ -1086,8 +1090,8 @@ namespace ClientDataMatrix.Services
                     roleNotes = "This low-cardinality field splits the dominant APPLY_ABILITY payload branches, but the exact retail meaning of each raw value is still unresolved.";
                     return true;
                 case 2:
-                    semanticSummary = "APPLY_ABILITY ext-data payload-A field for the slot-local embedded payload.";
-                    roleNotes = "This field mixes compact selector-like values with scalar-looking payloads, so it needs to be read together with the neighboring Val1, Val3, and Val7 fields.";
+                    semanticSummary = "APPLY_ABILITY ext-data operation-type code for the slot-local embedded payload.";
+                    roleNotes = "This field consistently holds a ComponentOperation-family type code across extracted client BIN data. Values in the known range map to ComponentOperation names; values above the known range are undocumented operation types.";
                     return true;
                 case 3:
                     semanticSummary = "APPLY_ABILITY ext-data profile selector for the slot-local embedded payload.";
@@ -1134,8 +1138,8 @@ namespace ClientDataMatrix.Services
                     roleNotes = "This low-cardinality field splits the dominant CC payload branches and tracks closely with the neighboring Val2, Val3, and Val7 fields.";
                     return true;
                 case 2:
-                    semanticSummary = "CC ext-data payload-A field for the slot-local control payload.";
-                    roleNotes = "This field mixes compact selector-like values with scalar-looking payloads, so it needs to be read together with the neighboring Val1, Val3, and Val7 fields.";
+                    semanticSummary = "CC ext-data operation-type code for the slot-local control payload.";
+                    roleNotes = "This field consistently holds a ComponentOperation-family type code across extracted client BIN data. Values in the known range map to ComponentOperation names; values above the known range are undocumented operation types.";
                     return true;
                 case 3:
                     semanticSummary = "CC ext-data profile selector for the slot-local control payload.";
@@ -1235,7 +1239,7 @@ namespace ClientDataMatrix.Services
                     return true;
                 case 3:
                     semanticSummary = "IMMUNITY ext-data profile selector for the slot-local immunity payload.";
-                    roleNotes = "This compact enum-like field behaves like the main profile selector inside the recurring IMMUNITY ext-data block.";
+                    roleNotes = "This compact enum-like field behaves like the main profile selector inside the recurring IMMUNITY ext-data block and drives the dominant IMMUNITY layout family.";
                     return true;
                 case 4:
                     semanticSummary = "IMMUNITY ext-data family marker for the slot-local immunity payload.";
@@ -1423,6 +1427,81 @@ namespace ClientDataMatrix.Services
                     + roleNotes
                     + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : " Dominant raw values: " + dominantValues + ".")
                     + " Exact per-value retail semantics are still unresolved; use the value-profile evidence to inspect raw-value clusters."
+            };
+            return true;
+        }
+
+        private static bool TryBuildExtDataVal2Inference(string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (observations == null || observations.Count == 0)
+                return false;
+
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex) || valueIndex != 2)
+                return false;
+
+            // Tally how many observed values map to a known ComponentOperation name.
+            int totalCount = observations.Count;
+            int knownCount = 0;
+            int zeroCount = 0;
+            Dictionary<string, int> valueCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            foreach (FieldObservation obs in observations)
+            {
+                string rv = obs.RawValue ?? string.Empty;
+                if (!valueCounts.ContainsKey(rv))
+                    valueCounts[rv] = 0;
+                valueCounts[rv]++;
+
+                long num;
+                if (long.TryParse(rv, NumberStyles.Integer, CultureInfo.InvariantCulture, out num) && num >= 0)
+                {
+                    if (num == 0)
+                    {
+                        zeroCount++;
+                        knownCount++; // 0 = NONE / inactive — known sentinel
+                    }
+                    else
+                    {
+                        string opName = DefinitionCatalog.DescribeComponentOperationValue((uint)num);
+                        if (!string.IsNullOrWhiteSpace(opName) && !opName.StartsWith("Unknown", StringComparison.OrdinalIgnoreCase))
+                            knownCount++;
+                    }
+                }
+            }
+
+            string coverageLine = knownCount.ToString(CultureInfo.InvariantCulture)
+                + " of " + totalCount.ToString(CultureInfo.InvariantCulture)
+                + " observed values (" + (totalCount > 0 ? (knownCount * 100 / totalCount).ToString(CultureInfo.InvariantCulture) : "0") + "%) resolve to a named ComponentOperation.";
+
+            string dominantValues = string.Join(", ", valueCounts
+                .OrderByDescending(kvp => kvp.Value)
+                .ThenBy(kvp => kvp.Key, StringComparer.OrdinalIgnoreCase)
+                .Take(8)
+                .Select(kvp =>
+                {
+                    long num;
+                    string label = kvp.Key;
+                    if (long.TryParse(kvp.Key, NumberStyles.Integer, CultureInfo.InvariantCulture, out num) && num > 0)
+                    {
+                        string opName = DefinitionCatalog.DescribeComponentOperationValue((uint)num);
+                        if (!string.IsNullOrWhiteSpace(opName) && !opName.StartsWith("Unknown", StringComparison.OrdinalIgnoreCase))
+                            label = kvp.Key + "=" + opName;
+                    }
+                    return label + " x" + kvp.Value.ToString(CultureInfo.InvariantCulture);
+                }));
+
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = "ExtData slot " + slotIndex.ToString(CultureInfo.InvariantCulture) + " Val2 — ComponentOperation type code for this ext-data expression slot.",
+                Confidence = SemanticConfidence.Inferred,
+                Notes = "Across all component operations in the extracted client BIN, ExtData Val2 consistently encodes a ComponentOperation-family type code "
+                    + "identifying what kind of effect the slot describes (DAMAGE, STAT_CHANGE, HEAL, AP_CHANGE, etc.). "
+                    + coverageLine
+                    + (zeroCount > 0 ? " Value 0 (" + zeroCount.ToString(CultureInfo.InvariantCulture) + " occurrences) = NONE / inactive slot." : string.Empty)
+                    + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : " Dominant observed values: " + dominantValues + ".")
+                    + " Values not yet present in the ComponentOperation enum represent undocumented operation type codes observed in client data."
             };
             return true;
         }
@@ -2062,13 +2141,13 @@ namespace ClientDataMatrix.Services
             if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
             {
                 if (string.Equals(rawValue, "2175", StringComparison.OrdinalIgnoreCase))
-                    return "This dominant packed branch commonly appears with Value15=4 and the leading ExtData profile Val1=2, Val3=1, Val4=8, and Val7=1.";
+                    return "Dominant packed CC FlagsRaw branch; commonly pairs with Value15=4 and ExtData Val1=2, Val3=1, Val4=8, Val7=1.";
                 if (string.Equals(rawValue, "2303", StringComparison.OrdinalIgnoreCase))
-                    return "This common packed branch stays in the same dominant CC layout family and still pairs with the usual Value15=4 marker.";
+                    return "Common packed CC FlagsRaw branch; stays in the dominant CC layout family and pairs with Value15=4.";
                 if (string.Equals(rawValue, "8", StringComparison.OrdinalIgnoreCase))
-                    return "This compact low-bit branch appears in shorter CC layouts that still reuse the same ext-data selector pattern.";
+                    return "Compact low-bit CC FlagsRaw branch appearing in shorter CC layouts.";
                 if (string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase))
-                    return "This minimal branch behaves like a single-flag variant inside the broader CC bitfield family.";
+                    return "Minimal single-flag CC FlagsRaw variant inside the broader bitfield family.";
                 return string.Empty;
             }
 
@@ -2157,6 +2236,51 @@ namespace ClientDataMatrix.Services
             }
 
             return string.Empty;
+        }
+
+        private static bool TryResolveExtDataVal2Semantic(uint operationId, string fieldKey, string rawValue, out ComponentFieldSemantic semantic)
+        {
+            semantic = null;
+
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex) || valueIndex != 2)
+                return false;
+
+            string valueNote = BuildExtDataVal2ValueNote(operationId, rawValue);
+            semantic = new ComponentFieldSemantic
+            {
+                DomainKey = "ComponentOperation",
+                Meaning = "Operation-type code identifying what kind of effect this ext-data expression slot describes.",
+                Confidence = SemanticConfidence.Inferred,
+                Source = "Cross-operation ExtData Val2 pattern analysis (extracted client BIN)",
+                SourcePath = string.Empty,
+                SourceLocation = string.Empty,
+                Notes = "Across all component operations in extracted client BIN data, ExtData Val2 consistently holds a ComponentOperation-family type code. "
+                    + "Values in the known range map directly to ComponentOperation names. "
+                    + "Values above the known range represent operation type codes not yet named in the current enum. "
+                    + (string.IsNullOrWhiteSpace(valueNote) ? string.Empty : valueNote)
+            };
+            return true;
+        }
+
+        private static string BuildExtDataVal2ValueNote(uint operationId, string rawValue)
+        {
+            if (string.IsNullOrWhiteSpace(rawValue))
+                return string.Empty;
+
+            long numericValue;
+            if (!long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out numericValue) || numericValue < 0)
+                return string.Empty;
+
+            if (numericValue == 0)
+                return "Value 0 = NONE / inactive slot.";
+
+            string opName = DefinitionCatalog.DescribeComponentOperationValue((uint)numericValue);
+            if (!string.IsNullOrWhiteSpace(opName) && !opName.StartsWith("Unknown", StringComparison.OrdinalIgnoreCase))
+                return "ComponentOperation: " + opName + " (op=" + numericValue.ToString(CultureInfo.InvariantCulture) + ").";
+
+            return "Extended operation code " + numericValue.ToString(CultureInfo.InvariantCulture) + " — present in extracted client BIN data but not yet named in the ComponentOperation enum.";
         }
 
         private static bool TryResolveOperationSpecificStructuralSemantic(uint operationId, string fieldKey, string rawValue, out ComponentFieldSemantic semantic)
@@ -2820,6 +2944,10 @@ namespace ClientDataMatrix.Services
 
             FieldObservationInference structuralInference;
             if (TryBuildNamedControlFieldInference(fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            // Val2 decode fires before per-operation structural handlers so it wins for all operations.
+            if (TryBuildExtDataVal2Inference(fieldKey, observations, out structuralInference))
                 return structuralInference;
 
             if (TryBuildDamageStructuralInference(operationId, fieldKey, observations, out structuralInference))
