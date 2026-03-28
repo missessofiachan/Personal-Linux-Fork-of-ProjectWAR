@@ -55,7 +55,7 @@ Reports are generated at runtime to a local output directory. They are not commi
 
 Tool usage: `docs/client-data-matrix-usage.md`.
 
-### Component Field Decode Status (as of commit 6fb7cfa3, 2026-03-28)
+### Component Field Decode Status (as of commit b673271f, 2026-03-28)
 
 All 18,526 component records across all operation types have been fully decoded. **Unknown = 0, Structural = 0.**
 
@@ -95,7 +95,7 @@ All 558 requirement rows decoded (Val1=AbilitySourceType, Val2=AbilityOperation,
 
 - **Coverage gaps (12,664)**: inherent data gaps — Partial abilities have broken effect chains or missing CSV rows; StringsOnly have names but no client BIN evidence
 - **SERVER_COMMAND field mapping**: field that holds the command code needs reconciliation — BIN analysis says FlagsRaw (8 distinct), Londos DB (`War_AbilityComponentBin.sql`) shows Values[0] (72+ distinct), Flags=0 always; likely a Londos remapping; 72+ command codes with per-code argument patterns now documented
-- **Unknown op names**: ops 29, 30, 32, 40, 41, 43, 47, 51 — all absent from client-side `ComponentOP` enum (MYPLib) confirming they are server-side only. Full row counts and field patterns documented in `docs/data-matrix/overview/path-forward.md`. Op=43 confirmed MOVEMENT_AUTOATTACK (Londos desc="Can autoattack while moving."; live DB `MoveAndShoot` buff cmd; `BuffEffectInvoker.MoveAndShoot()` line 3145). Op=40: 2 rows, binary state toggle in standard-bearing chain. Op=41: 4 rows, Values=[14,187701–187706] same IDs as op=42 RECOVER_STANDARD. Op=47: 8 rows (4 pairs), Bite of the Skaven event context. Op=51: 38 rows, ability-reference + ordinal, includes "You are a coward!" debuff (ordinals 13/14) and battlefront/fortress ordinals 39–91. Op=29: 12 rows, Witch Hunter Accusations chain (IDs 66001–66300). Ops 30 (1 row, HEAD of Crack Shot) and 32 (15 rows, HEAD of Eye of Sheerian) still unresolved. No further naming possible without decompiled WarServer.dll (`WarServer.Game.Ability.Ext.Components` namespace).
+- **Unknown op names**: ops 29, 30, 32, 40, 41, 47, 51 remain unnamed — all server-side only (absent from client `ComponentOP` enum). Op=43 **resolved as MOVEMENT_AUTOATTACK** (commit b673271f; added to `DefinitionCatalog.ComponentOperations`). Full row counts and patterns documented in `docs/data-matrix/overview/path-forward.md`. No further naming possible without decompiled WarServer.dll.
 
 See `docs/data-matrix/overview/path-forward.md` for full roadmap and source-search notes.
 
@@ -123,6 +123,18 @@ A fully integrated, player-like Bot System is now implemented to populate the wo
 A new automated guild system provides "Forces of Order" and "Forces of Destruction" as starter guilds for all new players. These guilds are automatically maintained at level 40. Players who leave are tracked to prevent re-entry via regular invites. See `docs/SYSTEM_GUILDS.md` for full details.
 
 ## Recently Resolved Issues
+
+### LOTD Flight Node and Taxi Coordinates Fixed
+
+Zone 191 (Land of the Dead) had two data defects that prevented the flight-master from working:
+
+1. **Unclickable flight node** (`update_012_lotd_zone_pairing_fix.sql`): `zone_infos.Pairing` was shipped as `100`; the flight packet sends this value directly to the client, which expected `4` (PAIRING_LAND_OF_THE_DEAD). `ZoneService.NormalizeZoneInfoMetadata()` now corrects this at load time so both the in-memory state and the database match.
+
+2. **Wrong taxi destinations** (`update_011_lotd_taxi_world_coordinate_fix.sql`): The `zone_taxis` rows for zone 191 stored local zone pins instead of world coordinates. `ZoneService.NormalizeTaxiWorldPosition()` now detects and converts pin-format rows at load time. The migration persists the corrected Order/Destruction world coordinates directly.
+
+### Parallel Build Copy Stabilized
+
+`Directory.Build.targets` now uses `DestinationFiles` (explicit per-file output paths) instead of `DestinationFolder`, adds an `Exists(...)` condition guard, and retries three times with a 100 ms delay. This prevents transient "file not found" failures during parallel MSBuild solution builds where shared output files may be momentarily locked or missing.
 
 ### T1 RvR Functionality Restored
 
