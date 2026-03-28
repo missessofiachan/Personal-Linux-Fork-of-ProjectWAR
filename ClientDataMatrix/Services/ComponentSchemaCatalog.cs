@@ -2312,23 +2312,65 @@ namespace ClientDataMatrix.Services
             if (operationId != 36 || observations == null || observations.Count == 0)
                 return false;
 
-            // SERVER_COMMAND Value[2]: 337 non-zero, 59 distinct (-1, 1, 10–17, 150, 170, 1000, 12823, 16336, 100000...).
-            // Likely the primary command argument: sentinel (-1=all/override), small enums (1–17), ID refs (12823, 16336), max sentinel (100000).
+            // SERVER_COMMAND Value[0]: command code. Londos DB (War_AbilityComponentBin.sql, 1065 op=36 rows) confirms Values[0] = command code
+            // (72+ distinct values: 32, 50, 87, 101, 228, 304, 327, 328, 332, 374, etc.). Value[0] has no handler below — falls through to generic.
+            // TODO: add per-command-code named inferences once BIN Values[0] distribution is verified.
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                string scV0Dominant = BuildDominantRawValueSummary(observations, 12);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "SERVER_COMMAND Value[0] — command code (polymorphic command selector).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[0] holds the SERVER_COMMAND command code. Londos DB (War_AbilityComponentBin.sql) confirms 72+ distinct command codes in this position "
+                        + "(e.g., 32=award item/ability, 50=similar award, 327/328=state toggle, 332=career mastery unlock, 87=unresolved, 304=unresolved). "
+                        + "FlagsRaw (1,2,4,5,6,16,18,175) is a separate behavioral bit-field, NOT the command code. "
+                        + "Retail name for Value[0] unresolved. "
+                        + (string.IsNullOrWhiteSpace(scV0Dominant) ? string.Empty : "Observed: " + scV0Dominant + ".")
+                };
+                return true;
+            }
+
+            // SERVER_COMMAND Value[1]: primary command argument — the polymorphic arg keyed on Value[0] command code.
+            // Londos DB: Values[1] = ability/item/zone ID for most commands; small enum for some (327/328 always = 1).
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                string scV1Dominant = BuildDominantRawValueSummary(observations, 12);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "SERVER_COMMAND Value[1] — primary command argument (polymorphic; role depends on Value[0] command code).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[1] is the primary argument for the command specified in Value[0]. Londos DB patterns: "
+                        + "command 32 → large IDs (30000–60000, likely award IDs); "
+                        + "command 50 → similar large IDs; "
+                        + "command 327/328 → constant value 1; "
+                        + "command 332 → career line or mastery IDs (6–59 range); "
+                        + "command 173 → 0 (arg is in Value[2]); "
+                        + "command 87/88/101 → small enum or 0. "
+                        + "Retail field name unresolved. "
+                        + (string.IsNullOrWhiteSpace(scV1Dominant) ? string.Empty : "Observed: " + scV1Dominant + ".")
+                };
+                return true;
+            }
+
+            // SERVER_COMMAND Value[2]: 337 non-zero, 59 distinct — secondary command argument.
+            // Londos confirms this is the second argument slot (after command code in Value[0] and primary arg in Value[1]).
+            // Some commands (e.g., 173) use Value[2] as the primary arg with Value[1]=0.
             if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
             {
                 string scV2Dominant = BuildDominantRawValueSummary(observations, 12);
                 inference = new FieldObservationInference
                 {
-                    SemanticSummary = "SERVER_COMMAND Value[2] — primary command argument (337 non-zero records, 59 distinct values; tri-modal: small enums, ID references, and sentinel values).",
+                    SemanticSummary = "SERVER_COMMAND Value[2] — secondary command argument (337 non-zero records, 59 distinct values; tri-modal: small enums, ID references, and sentinel values).",
                     Confidence = SemanticConfidence.Inferred,
-                    Notes = "Value[2] has 337 non-zero records with 59 distinct values spanning multiple ranges: "
-                        + "−1 (universal sentinel: all-types or no-filter), "
-                        + "small integers 1–17 (command mode or sub-type enum), "
+                    Notes = "Value[2] is the secondary argument slot for SERVER_COMMAND. Distinct value ranges: "
+                        + "−1 (sentinel: all-types or no-filter), "
+                        + "small integers 1–17 (sub-type enum or mode selector), "
                         + "mid-range 150–1000 (percentage or scaled parameter), "
-                        + "high-range 12823/16336 (entity or resource ID references), "
+                        + "high-range 12823/16336 (entity or resource ID references, used when Value[1]=0), "
                         + "100000 (maximum/infinity sentinel). "
-                        + "This tri-modal pattern is consistent with a polymorphic command argument whose role depends on FlagsRaw/Value[3] context. "
-                        + "Retail name unresolved — this is the second-highest-priority remaining Unknown field. "
+                        + "Londos: command 332 has Values[2]=5 (constant); command 53 has Values[2]=0/1/2/3 (variant enum); command 173 has Values[2]=large ID. "
+                        + "Retail name unresolved. "
                         + (string.IsNullOrWhiteSpace(scV2Dominant) ? string.Empty : "Observed: " + scV2Dominant + ".")
                 };
                 return true;

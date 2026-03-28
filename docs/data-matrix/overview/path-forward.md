@@ -29,7 +29,7 @@ Confirmed from decompiled server-side `DAMAGE.cs`:
 
 ### What is unresolved
 
-`SERVER_COMMAND (op=36)` field mapping. Our BIN analysis documented `FlagsRaw` as the command code (8 distinct values) and `Value[2]` as the polymorphic argument (337 non-zero, 59 distinct values). The Londos DB (see below) shows `Values[0]` = command code and `Values[1]` = primary argument, with `Flags=0` on all rows. These two pictures need reconciling before per-command inference can be written.
+`SERVER_COMMAND (op=36)` Values[0] and Values[1] are not yet analyzed in `TryBuildServerCommandStructuralInference`. The current handler covers Value[2-5], FlagsRaw, Value08, Value15. The Londos DB shows Values[0] = command code and Values[1] = primary argument. Our BIN FlagsRaw (8 distinct values: **1, 2, 4, 5, 6, 16, 18, 175**) is confirmed as a behavioral bit-field, NOT a command code — these are CC/mode bits. The command code lives in Values[0] (also unanalyzed in our BIN).
 
 The Londos DB reveals **72+ distinct command codes** and their argument patterns. The most frequent commands:
 
@@ -55,11 +55,11 @@ The Londos DB reveals **72+ distinct command codes** and their argument patterns
 
 ### Remaining approach
 
-**Step 1 — Reconcile FlagsRaw vs Values[0].**
-Our BIN says "FlagsRaw = command code, 8 distinct". Londos says "Values[0] = command code, Flags=0". These may be consistent if the Londos devs remapped FlagsRaw → Values[0] on import. Verify by checking what values our `abilitycomponentexport.bin` FlagsRaw field holds for op=36 rows. If those FlagsRaw values match known Londos command codes (32, 50, etc.), the mapping is confirmed.
+**Step 1 — Add Values[0] and Values[1] handlers to `TryBuildServerCommandStructuralInference`.**
+These fields have no handler yet. Londos confirms: Values[0] = command code (72+ distinct: 32, 50, 327, 332, etc.), Values[1] = primary argument (ability/item/zone ID or small enum). Add Inferred-confidence handlers for both fields. Note that our BIN Values[2] is currently labeled "primary command argument" — update it to "secondary argument" once Values[0] and [1] are handled.
 
 **Step 2 — Per-command inference.**
-Once the field that holds the command code is confirmed, extend `TryBuildServerCommandStructuralInference` to emit per-command-code named inferences (e.g., "command=32: grant item/ability ID via Values[1]") instead of the single "polymorphic command argument" label.
+Extend `TryBuildServerCommandStructuralInference` to emit per-command-code named inferences keyed on Values[0] (e.g., "command=32: grant/award ID via Values[1]", "command=332: career mastery unlock, Values[1]=career ID, Values[2/3]=5"). The Londos command code table in this document provides the full distribution.
 
 **Step 3 — Identify specific command semantics.**
 Work through the 72 command codes. Many can be inferred by correlating Values[1] with known ability/item ID ranges and by examining the ability descriptions of abilities that use each command.
