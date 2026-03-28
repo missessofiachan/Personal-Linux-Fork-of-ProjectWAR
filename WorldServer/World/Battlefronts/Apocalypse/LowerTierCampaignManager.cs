@@ -90,6 +90,8 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
         public Campaign GetActiveCampaign()
         {
+            if (ActiveBattleFront == null)
+                return null;
 
             var activeRegionId = ActiveBattleFront.RegionId;
             foreach (var regionMgr in RegionMgrs)

@@ -1,4 +1,4 @@
-﻿using Common;
+using Common;
 using FrameWork;
 using System.Collections.Generic;
 using WorldServer.World.Objects;

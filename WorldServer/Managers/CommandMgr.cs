@@ -1421,6 +1421,8 @@ namespace WorldServer.Managers
                 plr.SendLocalizeString("", ChatLogFilters.CHATLOGFILTERS_USER_ERROR, Localized_text.TEXT_GUILD_INVITE_ERR_ENEMY);
             else if (receiver.GldInterface.IsInGuild())
                 plr.SendLocalizeString("", ChatLogFilters.CHATLOGFILTERS_USER_ERROR, Localized_text.TEXT_GUILD_INVITE_ERR_GUILDED);
+            else if (plr.GldInterface.Guild.IsSystemGuild() && receiver._Value.LeftSystemGuild)
+                plr.SendClientMessage("This player has left the system guild and cannot be invited back.", ChatLogFilters.CHATLOGFILTERS_USER_ERROR);
             else if (receiver.GldInterface.invitedTo != null)
                 plr.SendLocalizeString("", ChatLogFilters.CHATLOGFILTERS_USER_ERROR, Localized_text.TEXT_BG_PLAYER_PENDING_ANOTHER);
             else

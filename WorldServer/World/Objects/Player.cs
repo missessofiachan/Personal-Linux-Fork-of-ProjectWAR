@@ -201,11 +201,14 @@ namespace WorldServer.World.Objects
 
         public static Player CreatePlayer(GameClient client, Character Char)
         {
-            GameClient other = ((TCPServer)client.Server).GetClientByAccount(client, Char.AccountId);
-            if (other != null)
+            if (!(client is BotClient))
             {
-                other.Disconnect("Null account in CreatePlayer");
-                return null;
+                GameClient other = ((TCPServer)client.Server).GetClientByAccount(client, Char.AccountId);
+                if (other != null)
+                {
+                    other.Disconnect("Null account in CreatePlayer");
+                    return null;
+                }
             }
 
             lock (_Players)
@@ -798,6 +801,17 @@ namespace WorldServer.World.Objects
                 if (Info.FirstConnect && GmLevel == 1)
                 {
                     Info.FirstConnect = false;
+
+                    if (!GldInterface.IsInGuild() && !_Value.LeftSystemGuild)
+                    {
+                        string systemGuildName = Realm == Realms.REALMS_REALM_ORDER ? "Forces of Order" : "Forces of Destruction";
+                        Guild.Guild systemGuild = Guild.Guild.GetGuild(systemGuildName);
+                        if (systemGuild != null)
+                        {
+                            systemGuild.JoinGuild(this);
+                        }
+                    }
+
                     if (!IsBanned)
                     {
                         if (WorldServer.World.Scripting.CareerPackages.Intros.TryGetValue(Info.Career, out var intro))
@@ -2447,7 +2461,7 @@ namespace WorldServer.World.Objects
 
             PacketOut Out = new PacketOut((byte)Opcodes.F_PLAYER_QUIT, 2);
             Out.WriteByte(0);
-            Out.WriteByte((byte)(CloseClient ? 0 : 1)); // 1 = Page de sélection des perso, 0 = Exit
+            Out.WriteByte((byte)(CloseClient ? 0 : 1)); // 1 = Page de sï¿½lection des perso, 0 = Exit
             SendPacket(Out);
         }
 
@@ -4708,7 +4722,7 @@ namespace WorldServer.World.Objects
         public ushort MaxActionPoints { get; set; }
 
 
-        public byte PctAp => (byte)((ActionPoints * 100) / MaxActionPoints);
+        public byte PctAp => MaxActionPoints > 0 ? (byte)((ActionPoints * 100) / MaxActionPoints) : (byte)0;
 
         public override bool HasActionPoints(int amount)
         {

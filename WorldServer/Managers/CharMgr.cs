@@ -722,6 +722,11 @@ namespace WorldServer.Managers
 
         }
 
+        public static Character GetCharacter(string name)
+        {
+            return GetCharacter(name, false);
+        }
+
         public static Character GetCharacter(string name, bool fullLoad)
         {
             uint characterId = GetCharacterId(name);
@@ -737,6 +742,11 @@ namespace WorldServer.Managers
             }
 
             return LoadCharacterInfo(name, fullLoad);
+        }
+
+        public static Character GetCharacter(uint id)
+        {
+            return GetCharacter(id, false);
         }
 
         public static Character GetCharacter(uint id, bool fullLoad)
@@ -1472,6 +1482,63 @@ namespace WorldServer.Managers
                 }
             }
 
+            EnsureSystemGuilds();
+        }
+
+        private static void EnsureSystemGuilds()
+        {
+            string[] systemGuildNames = { "Forces of Destruction", "Forces of Order" };
+            byte[] realms = { 2, 1 }; // Destruction = 2, Order = 1
+
+            for (int i = 0; i < systemGuildNames.Length; i++)
+            {
+                string name = systemGuildNames[i];
+                byte realm = realms[i];
+
+                Guild guild = Guild.GetGuild(name);
+                if (guild == null)
+                {
+                    Log.Info("EnsureSystemGuilds", $"Creating system guild: {name}");
+                    Guild_info info = new Guild_info
+                    {
+                        Name = name,
+                        Motd = $"Welcome to the {name}!",
+                        AboutUs = "System Guild",
+                        Level = Guild.MaxGuildLevel,
+                        Xp = 0,
+                        Realm = realm,
+                        CreateDate = TCPManager.GetTimeStamp(),
+                        GuildId = Guild.GenerateMaxGuildId(),
+                        Members = new Dictionary<uint, Guild_member>(),
+                        Ranks = new Dictionary<byte, Guild_rank>(),
+                        Logs = new List<Guild_log>()
+                    };
+                    Database.AddObject(info);
+
+                    // Create basic ranks
+                    for (byte r = 0; r < 10; r++)
+                    {
+                        Guild_rank rank = new Guild_rank
+                        {
+                            GuildId = info.GuildId,
+                            RankId = r,
+                            Name = r == 9 ? "System" : r == 8 ? "Officer" : r == 1 ? "Member" : "Initiate",
+                            Permissions = r == 9 ? "FF FF FF FF FF FF FF 3F" : "00 B0 80 06 8F CF 60 10",
+                            Enabled = r <= 1 || r >= 8
+                        };
+                        Database.AddObject(rank);
+                        info.Ranks.Add(r, rank);
+                    }
+
+                    guild = new Guild(info);
+                    Guild.Guilds.Add(guild);
+                }
+                else if (guild.Info.Level != Guild.MaxGuildLevel)
+                {
+                    guild.Info.Level = Guild.MaxGuildLevel;
+                    Database.SaveObject(guild.Info);
+                }
+            }
         }
 
         public static bool ChangeGuildName(Guild_info guild, string newName)

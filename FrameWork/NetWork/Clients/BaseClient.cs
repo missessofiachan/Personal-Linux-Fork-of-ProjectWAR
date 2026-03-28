@@ -321,7 +321,7 @@ namespace FrameWork
             }
         }
 
-        public void Disconnect(string reason)
+        public virtual void Disconnect(string reason)
         {
             try
             {

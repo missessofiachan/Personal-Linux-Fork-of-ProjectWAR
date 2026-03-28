@@ -1,4 +1,4 @@
-﻿namespace WorldServer.World.Objects
+namespace WorldServer.World.Objects
 {
     public enum BotRole
     {

@@ -1,4 +1,5 @@
-﻿using Common;
+using Common;
+using GameData;
 using WorldServer.World.AI;
 using WorldServer.World.Objects;
 using WorldServer.World.Interfaces;

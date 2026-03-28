@@ -12,6 +12,8 @@ The Bot System is designed to populate the world with autonomous, player-like en
 ### 2. Management & Persistence (BotManager.cs & BotLoadoutManager.cs)
 - **Account**: All bots are linked to Account ID 9999 ("BotAccount").
 - **Persistence**: Bots are saved in the characters table. If a bot group is requested and characters don't exist, they are generated natively.
+- **Faction Integration**: Bots are organized into exact race-matched sub-factions (e.g. Empire, Dwarfs, High Elves for Order; Chaos, Greenskins, Dark Elves for Destruction).
+- **Permanent Guilds**: Groups are automatically assigned to permanent guilds bearing their faction's name, identical to player-created guilds in the database, complete with all ranks and full persistence.
 - **Gear Discovery**: BotLoadoutManager automatically scans the ItemService on startup to find and equip sets like Annihilator, Warlord, and Sovereign based on the bot's tier and renown rank.
 
 ### 3. Intelligence (BotBrain.cs)

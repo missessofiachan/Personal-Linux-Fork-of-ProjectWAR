@@ -82,7 +82,7 @@ namespace WorldServer.Managers.Commands
         /// <summary>Bot commands under .bot</summary>
         public static List<GmCommandHandler> BotCommands = new List<GmCommandHandler>
         {
-            new GmCommandHandler(\"spawn\", BotSpawn, null, EGmLevel.GM, 4, \"Spawns a group of bots.\")
+            new GmCommandHandler("spawn", BotSpawn, null, EGmLevel.GM, 4, "Spawns a group of bots.")
         };
         /// <summary>RvR campaign commmands under .campaign</summary>
         public static List<GmCommandHandler> CampaignCommands = CommandsBuilder.BuildCommands(typeof(CampaignCommands));
@@ -435,6 +435,8 @@ namespace WorldServer.Managers.Commands
             new GmCommandHandler("deletecharat", DeleteCharInSlot, null, EGmLevel.GM, 2, "Removes a character from the given account (string accountName, int slotId)"),
             new GmCommandHandler("togglequest", ToggleQuest, null, EGmLevel.GM, 1, ".togglequest <QuestID> <0: Memory | 1: Database>, turns a quest on or off."),
             new GmCommandHandler("getguildid", GetGuildID, null, EGmLevel.GM, 1, "Get the guildID (string GuildName)"),
+            new GmCommandHandler("guildadd", GuildAdd, null, EGmLevel.GM, 2, "Adds a player to a guild (string playerName, string guildName)"),
+            new GmCommandHandler("guildremove", GuildRemove, null, EGmLevel.GM, 1, "Removes a player from their guild (string playerName)"),
             new GmCommandHandler("blockname", BlockName, null, EGmLevel.GM, 2,
                 "Prevents a name from being used by characters (string name, string <Equals|StartsWith|Contains>)"),
             new GmCommandHandler("unblockname", UnblockName, null, EGmLevel.GM, 1, "Removes a character name filter (string name)"),

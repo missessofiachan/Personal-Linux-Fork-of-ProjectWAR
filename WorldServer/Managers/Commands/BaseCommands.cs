@@ -2357,6 +2357,69 @@ namespace WorldServer.Managers.Commands
                 return true;
             }
         }
+        public static bool GuildAdd(Player plr, ref List<string> values)
+        {
+            string playerName = GetString(ref values);
+            string guildName = GetTotalString(ref values);
+
+            Player target = Player.GetPlayer(playerName);
+            if (target == null)
+            {
+                plr.SendClientMessage("Player " + playerName + " not found.");
+                return false;
+            }
+
+            Guild guild = Guild.GetGuild(guildName);
+            if (guild == null)
+            {
+                plr.SendClientMessage("Guild " + guildName + " not found.");
+                return false;
+            }
+
+            if (target.GldInterface.IsInGuild())
+            {
+                plr.SendClientMessage("Player " + playerName + " is already in a guild.");
+                return false;
+            }
+
+            if (guild.IsSystemGuild())
+                target._Value.LeftSystemGuild = false;
+
+            guild.JoinGuild(target);
+            plr.SendClientMessage("Added " + playerName + " to " + guildName);
+            return true;
+        }
+
+        public static bool GuildRemove(Player plr, ref List<string> values)
+        {
+            string playerName = GetString(ref values);
+
+            Player target = Player.GetPlayer(playerName);
+            if (target == null)
+            {
+                plr.SendClientMessage("Player " + playerName + " not found.");
+                return false;
+            }
+
+            if (!target.GldInterface.IsInGuild())
+            {
+                plr.SendClientMessage("Player " + playerName + " is not in a guild.");
+                return false;
+            }
+
+            Guild guild = target.GldInterface.Guild;
+            Guild_member member = null;
+            if (guild.Info.Members.TryGetValue(target.CharacterId, out member))
+            {
+                guild.LeaveGuild(member, true);
+                plr.SendClientMessage("Removed " + playerName + " from " + guild.Info.Name);
+                return true;
+            }
+
+            plr.SendClientMessage("Failed to find member record for " + playerName);
+            return false;
+        }
+
         /// <summary>
         /// removes a guild from its alliance
         /// </summary>

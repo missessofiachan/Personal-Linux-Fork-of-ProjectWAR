@@ -1,35 +1,39 @@
-﻿using Common;
+using Common;
+using GameData;
 using WorldServer.World.Objects;
 using WorldServer.World.Positions;
 using System;
+using System.Collections.Generic;
+using static WorldServer.Managers.Commands.BaseCommands;
+using static WorldServer.Managers.Commands.GMUtils;
 
 namespace WorldServer.Managers.Commands
 {
     internal static class BotCommands
     {
-        public static void BotSpawn(Player player, string text)
+        public static bool BotSpawn(Player player, ref List<string> values)
         {
             try
             {
-                string[] args = text.Split(' ');
-                if (args.Length < 4)
+                if (values.Count < 4)
                 {
-                    player.SendClientMessage(""Usage: .bot spawn <realm> <tier> <rr> <namePrefix>"");
-                    return;
+                    player.SendClientMessage("Usage: .bot spawn <realm> <tier> <rr> <namePrefix>");
+                    return true;
                 }
 
-                Realms realm = (Realms)int.Parse(args[0]);
-                int tier = int.Parse(args[1]);
-                int rr = int.Parse(args[2]);
-                string prefix = args[3];
+                Realms realm = (Realms)int.Parse(GetString(ref values));
+                int tier = int.Parse(GetString(ref values));
+                int rr = int.Parse(GetString(ref values));
+                string prefix = GetTotalString(ref values);
 
-                BotManager.Instance.SpawnBotGroup(realm, tier, rr, prefix, player.ZoneId);
-                player.SendClientMessage($""Spawned bot group {prefix} for realm {realm} at Warcamp in zone {player.ZoneId}"");
+                BotManager.Instance.SpawnBotGroup(realm, tier, rr, prefix, player.Zone?.ZoneId ?? 0);
+                player.SendClientMessage($"Spawned bot group {prefix} for realm {realm} at Warcamp in zone {player.Zone?.ZoneId ?? 0}");
             }
             catch (Exception ex)
             {
-                player.SendClientMessage($""Error spawning bots: {ex.Message}"");
+                player.SendClientMessage($"Error spawning bots: {ex.Message}");
             }
+            return true;
         }
     }
 }

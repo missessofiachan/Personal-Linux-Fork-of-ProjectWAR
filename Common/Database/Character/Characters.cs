@@ -149,6 +149,9 @@ namespace Common
             set { _hidden = value; Dirty = true; }
         }
 
+        public byte Level { get; set; }
+        public byte RenownRank { get; set; }
+
         public byte[] bTraits
         {
             get { return _traits; }

@@ -50,6 +50,14 @@ namespace Common
 
         private string _lockouts = string.Empty;
         private int _disconecttime;
+        private bool _leftSystemGuild;
+
+        [DataElement(AllowDbNull = true)]
+        public bool LeftSystemGuild
+        {
+            get { return _leftSystemGuild; }
+            set { _leftSystemGuild = value; Dirty = true; }
+        }
 
         [PrimaryKey]
         public uint CharacterId

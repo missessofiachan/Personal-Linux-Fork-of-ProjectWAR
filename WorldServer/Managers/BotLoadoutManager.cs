@@ -1,4 +1,4 @@
-﻿using Common;
+using Common;
 using GameData;
 using System.Collections.Generic;
 using WorldServer.Services.World;
@@ -32,7 +32,7 @@ namespace WorldServer.Managers
              // This is where we would use the DB to find items like 'Annihilator', 'Warlord', 'Sovereign', etc.
              // Since I am an AI, I will provide the logic to find them by name in the ItemService cache.
              
-             string[] setNames = { ""Annihilator"", ""Warlord"", ""Sovereign"", ""Doomflayer"", ""Warpforged"" };
+             string[] setNames = { "Annihilator", "Warlord", "Sovereign", "Doomflayer", "Warpforged" };
              BotTier[] tiers = { BotTier.T4_RR40, BotTier.T4_RR70, BotTier.T4_RR80, BotTier.T4_RR90, BotTier.T4_RR100 };
 
              for(int i=0; i < setNames.Length; i++)

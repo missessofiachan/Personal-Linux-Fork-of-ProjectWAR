@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Common;
 using FrameWork;
+using WorldServer.Services.World;
 using WorldServer.World.Battlefronts.Apocalypse;
 using WorldServer.World.Objects;
 using GameData;
@@ -22,7 +23,7 @@ namespace WorldServer.Managers
 
         public void Start()
         {
-            Log.Info(""DynamicBotManager"", ""Started bot monitoring service on server up."");
+            Log.Info("DynamicBotManager", "Started bot monitoring service on server up.");
             ProcessBattlefields();
         }
 
@@ -36,7 +37,7 @@ namespace WorldServer.Managers
             }
             catch (Exception ex)
             {
-                Log.Error(""DynamicBotManager"", $""Error in monitoring loop: {ex.Message}\n{ex.StackTrace}"");
+                Log.Error("DynamicBotManager", $"Error in monitoring loop: {ex.Message}\n{ex.StackTrace}");
             }
         }
 
@@ -66,8 +67,8 @@ namespace WorldServer.Managers
             int tier = campaign.Tier;
             ushort zoneId = (ushort)campaign.ActiveBattleFrontStatus.ZoneId;
             
-            string orderPrefix = $""Bot_T{tier}_O_{zoneId}"";
-            string destroPrefix = $""Bot_T{tier}_D_{zoneId}"";
+            string orderPrefix = $"Bot_T{tier}_O_{zoneId}";
+            string destroPrefix = $"Bot_T{tier}_D_{zoneId}";
 
             var players = Player.GetPlayersSnapshot();
             if (!players.Any(p => p.Name.StartsWith(orderPrefix)))
@@ -88,8 +89,8 @@ namespace WorldServer.Managers
 
             // Spawn and queue scenario bots
             // We want at least one group per realm queued for scenarios
-            string orderScenPrefix = ""Bot_Scen_O"";
-            string destroScenPrefix = ""Bot_Scen_D"";
+            string orderScenPrefix = "Bot_Scen_O";
+            string destroScenPrefix = "Bot_Scen_D";
 
             var players = Player.GetPlayersSnapshot();
             

@@ -280,11 +280,22 @@ namespace WorldServer.World.Guild
         public static byte MaxGuildLevel = 40;
         public static byte MaxEvents = 10;
 
+        public static bool IsSystemGuild(string name)
+        {
+            return string.Equals(name, "Forces of Destruction", StringComparison.OrdinalIgnoreCase) || 
+                   string.Equals(name, "Forces of Order", StringComparison.OrdinalIgnoreCase);
+        }
+
+        public bool IsSystemGuild()
+        {
+            return IsSystemGuild(Info.Name);
+        }
+
         public static Guild GetGuild(string name)
         {
             foreach (Guild guild in Guilds)
             {
-                if (guild.Info.Name == name)
+                if (string.Equals(guild.Info.Name, name, StringComparison.OrdinalIgnoreCase))
                     return guild;
             }
 
@@ -477,28 +488,52 @@ namespace WorldServer.World.Guild
 
             if (info.Realm == 0)
             {
-                info.Realm = CharMgr.GetCharacter(info.LeaderId, false).Realm;
+                Character leader = CharMgr.GetCharacter(info.LeaderId, false);
+                if (leader != null)
+                    info.Realm = leader.Realm;
             }
 
 
             if (string.IsNullOrEmpty(info.Heraldry))
             {
                 Character tmp = CharMgr.GetCharacter(info.LeaderId, false);
-                if (tmp.Realm == 1)
+                if (tmp != null)
                 {
-                    _heraldryEmblem = 1;
-                    _heraldryPattern = 1;
-                    _heraldryColor1 = 1;
-                    _heraldryColor2 = 1;
-                    _heraldryShape = 1;
+                    if (tmp.Realm == 1)
+                    {
+                        _heraldryEmblem = 1;
+                        _heraldryPattern = 1;
+                        _heraldryColor1 = 1;
+                        _heraldryColor2 = 1;
+                        _heraldryShape = 1;
+                    }
+                    if (tmp.Realm == 2)
+                    {
+                        _heraldryEmblem = 2;
+                        _heraldryPattern = 100;
+                        _heraldryColor1 = 2;
+                        _heraldryColor2 = 2;
+                        _heraldryShape = 1;
+                    }
                 }
-                if (tmp.Realm == 2)
+                else
                 {
-                    _heraldryEmblem = 2;
-                    _heraldryPattern = 100;
-                    _heraldryColor1 = 2;
-                    _heraldryColor2 = 2;
-                    _heraldryShape = 1;
+                    if (info.Realm == 1)
+                    {
+                        _heraldryEmblem = 1;
+                        _heraldryPattern = 1;
+                        _heraldryColor1 = 1;
+                        _heraldryColor2 = 1;
+                        _heraldryShape = 1;
+                    }
+                    else
+                    {
+                        _heraldryEmblem = 2;
+                        _heraldryPattern = 100;
+                        _heraldryColor1 = 2;
+                        _heraldryColor2 = 2;
+                        _heraldryShape = 1;
+                    }
                 }
                 info.Heraldry = _heraldryEmblem + ";" + _heraldryPattern + ";" + _heraldryColor1 + ";" + _heraldryColor2 + ";" + _heraldryShape;
             }
@@ -2341,7 +2376,7 @@ namespace WorldServer.World.Guild
             Guild_member member = new Guild_member
             {
                 CharacterId = plr.Info.CharacterId,
-                GuildId = plr.GldInterface.Guild.Info.GuildId,
+                GuildId = Info.GuildId,
                 RankId = 1,
                 PublicNote = "",
                 OfficerNote = "",
@@ -2351,6 +2386,7 @@ namespace WorldServer.World.Guild
             Info.Members.Add(plr.CharacterId, member);
             CharMgr.Database.AddObject(member);
 
+            plr.GldInterface.Guild = this;
             AddGuildLog(0, plr.Name);
             AddOnlineMember(plr);
             SendGuildInfo(plr);
@@ -2358,6 +2394,16 @@ namespace WorldServer.World.Guild
 
         public void LeaveGuild(Guild_member member, bool kicked)
         {
+            if (IsSystemGuild())
+            {
+                Character chara = CharMgr.GetCharacter(member.CharacterId, false);
+                if (chara != null && chara.Value != null)
+                {
+                    chara.Value.LeftSystemGuild = true;
+                    CharMgr.Database.SaveObject(chara.Value);
+                }
+            }
+
             Info.Members.Remove(member.CharacterId);
             CharMgr.Database.DeleteObject(member);
 

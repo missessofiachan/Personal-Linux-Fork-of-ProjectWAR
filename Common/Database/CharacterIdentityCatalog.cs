@@ -21,7 +21,7 @@ namespace Common
 
     public static class CharacterIdentityCatalog
     {
-        private static readonly CharacterIdentityRecord[] CareerLineRecords =
+        public static readonly CharacterIdentityRecord[] CareerLineRecords =
         {
             default(CharacterIdentityRecord),
             new CharacterIdentityRecord((byte)CareerLine.CAREERLINE_IRON_BREAKER, (byte)Races.RACES_DWARF, (byte)Realms.REALMS_REALM_ORDER, "Ironbreaker"),

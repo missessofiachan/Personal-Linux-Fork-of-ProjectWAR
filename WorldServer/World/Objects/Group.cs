@@ -839,6 +839,9 @@ namespace WorldServer.World.Objects
             Out.WriteByte((byte)Members.Count);
             foreach (Player plr in Members)
             {
+                if (plr == null || plr.Info == null || plr._Value == null)
+                    continue;
+
                 Out.WriteVarUInt(plr.CharacterId);
                 Out.WriteByte(0x0F); // ?
                 Out.WriteByte(plr.Info.ModelId);
@@ -1289,7 +1292,7 @@ namespace WorldServer.World.Objects
             _groupCompositionDirty = true;
         }
 
-        private void SetMainAssist(Player newMain)
+        public void SetMainAssist(Player newMain)
         {
             _mainAssist = newMain;
             _groupCompositionDirty = true;
