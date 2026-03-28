@@ -430,6 +430,7 @@ namespace ClientDataMatrix.Model
         public int ValueCount { get; set; }
         public int DistinctMeaningCount { get; set; }
         public int DuplicateMeaningCount { get; set; }
+        public bool DuplicatesAreExpected { get; set; }
         public string RecommendedUsage { get; set; }
         public string Notes { get; set; }
         public List<IdentityDomainValueRecord> Values { get; set; }

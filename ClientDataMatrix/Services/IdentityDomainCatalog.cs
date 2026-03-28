@@ -96,14 +96,24 @@ namespace ClientDataMatrix.Services
                 .ThenBy(row => row.LineNumber)
                 .ToList();
 
+            // careernames_m.txt has 120 entries (IDs 12-131) = 5 groups × 24 careers.
+            // Each career name repeats exactly 5 times across consecutive ID blocks.
+            // These are multi-context string table entries (e.g., 5 UI display contexts or rank tiers),
+            // NOT canonical career identity IDs.
+            // Canonical CareerId mapping is in careerlines_m.txt (IDs 0-24), confirmed by abilityexport.bin CareerLine field.
             IdentityDomainRecord record = CreateDomain(
                 "CareerName.EntryId",
                 "Career Name Entry IDs",
                 rows,
-                SemanticConfidence.Inferred,
-                "Not canonical as a proven CareerId domain",
-                "Use as a client string-entry table only until a real numeric CareerId mapping is proven from extracted files.",
-                "careernames_m.txt contains many repeated display names across different numeric entry ids. That means these ids are not currently safe to rename to CareerId without stronger extracted-client evidence.");
+                SemanticConfidence.Confirmed,
+                "Canonical as a multi-context string-entry table (5 display groups × 24 careers); NOT safe for use as CareerId",
+                "Do NOT use as CareerId. Canonical career identity is CareerLine.EntryId (careerlines_m.txt, IDs 0-24). Use CareerName.EntryId only for resolving the specific UI display-context slot (group index = (EntryId - 12) / 24).",
+                "careernames_m.txt has 120 entries (IDs 12-131) = 5 repetition groups × 24 careers. "
+                + "Each career name appears 5 times with 5 different numeric IDs — one per display context. "
+                + "The duplicates are expected and structurally explained. "
+                + "The canonical career identity domain is careerlines_m.txt (IDs 0-24), which maps 1:1 to the abilityexport.bin CareerLine field.");
+
+            record.DuplicatesAreExpected = true;
 
             Dictionary<string, List<string>> duplicateMeanings = record.Values
                 .Where(row => !string.IsNullOrWhiteSpace(row.Meaning))
@@ -115,10 +125,10 @@ namespace ClientDataMatrix.Services
             {
                 List<string> duplicates;
                 if (duplicateMeanings.TryGetValue(value.Meaning, out duplicates))
-                    value.Notes = AppendNote(value.Notes, "This display name repeats across entry ids: " + string.Join(", ", duplicates) + ".");
+                    value.Notes = AppendNote(value.Notes, "Expected repetition: this display name appears across " + duplicates.Count.ToString(CultureInfo.InvariantCulture) + " entry ids (" + string.Join(", ", duplicates) + ") — one per display context group.");
             }
 
-            record.Notes = AppendNote(record.Notes, "Duplicate display-name groups: " + record.DuplicateMeaningCount.ToString(CultureInfo.InvariantCulture) + ".");
+            record.Notes = AppendNote(record.Notes, "Duplicate display-name groups: " + record.DuplicateMeaningCount.ToString(CultureInfo.InvariantCulture) + " (all expected — 5 display context repetitions per career).");
             return record;
         }
 

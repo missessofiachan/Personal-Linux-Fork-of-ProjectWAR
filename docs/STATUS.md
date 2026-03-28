@@ -99,6 +99,10 @@ See `docs/data-matrix/overview/path-forward.md` for the full roadmap.
 
 A fully integrated, player-like Bot System is now implemented to populate the world with autonomous entities. They participate in RvR and Scenarios, running with zero network overhead. Bots are automatically assigned to permanent race-specific faction guilds (e.g., Empire, Greenskins) and operate cohesively in tactical groups. See `BOT_SYSTEM.md` for detailed information on architecture, logic, and GM commands.
 
+## System Guilds
+
+A new automated guild system provides "Forces of Order" and "Forces of Destruction" as starter guilds for all new players. These guilds are automatically maintained at level 40. Players who leave are tracked to prevent re-entry via regular invites. See `docs/SYSTEM_GUILDS.md` for full details.
+
 ## Recently Resolved Issues
 
 ### T1 RvR Functionality Restored

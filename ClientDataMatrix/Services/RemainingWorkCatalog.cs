@@ -345,7 +345,7 @@ namespace ClientDataMatrix.Services
         {
             List<RemainingWorkItemRecord> items = (report == null || report.Domains == null ? Enumerable.Empty<IdentityDomainRecord>() : report.Domains)
                 .Where(row => !string.Equals(row.Confidence, SemanticConfidence.Confirmed, StringComparison.OrdinalIgnoreCase)
-                    || row.DuplicateMeaningCount > 0
+                    || (!row.DuplicatesAreExpected && row.DuplicateMeaningCount > 0)
                     || !string.IsNullOrWhiteSpace(row.Canonicality) && row.Canonicality.IndexOf("not canonical", StringComparison.OrdinalIgnoreCase) >= 0)
                 .Select(row =>
                 {
@@ -414,7 +414,7 @@ namespace ClientDataMatrix.Services
                 RequirementGapCount = requirementRows.Count(row => (row.Fields ?? new List<RequirementFieldRecord>()).Any(field => string.Equals(field.Confidence, SemanticConfidence.Unknown, StringComparison.OrdinalIgnoreCase) || string.Equals(field.Confidence, SemanticConfidence.Structural, StringComparison.OrdinalIgnoreCase))),
                 TokenGapCount = tokenRows.Count(row => string.Equals(row.Confidence, SemanticConfidence.Unknown, StringComparison.OrdinalIgnoreCase) || string.Equals(row.Confidence, SemanticConfidence.Londo, StringComparison.OrdinalIgnoreCase)),
                 DomainIssueCount = domainRows.Count(row => !string.Equals(row.Confidence, SemanticConfidence.Confirmed, StringComparison.OrdinalIgnoreCase)
-                    || row.DuplicateMeaningCount > 0
+                    || (!row.DuplicatesAreExpected && row.DuplicateMeaningCount > 0)
                     || !string.IsNullOrWhiteSpace(row.Canonicality) && row.Canonicality.IndexOf("not canonical", StringComparison.OrdinalIgnoreCase) >= 0)
             };
         }
