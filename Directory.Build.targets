@@ -6,10 +6,13 @@
                        Exclude="$(OutDir)*config.xml;$(OutDir)Common.dll;$(OutDir)Common.dll.config;$(OutDir)FrameWork.dll;$(OutDir)FrameWork.dll.config" />
     </ItemGroup>
     <MakeDir Directories="$(OutDir)libs" Condition="'@(FilesToRelocate)' != ''" />
+    <!-- Shared output directories can change during parallel solution builds, so copy only files that still exist. -->
     <Copy SourceFiles="@(FilesToRelocate)"
-          DestinationFolder="$(OutDir)libs"
+          DestinationFiles="@(FilesToRelocate->'$(OutDir)libs\%(Filename)%(Extension)')"
           SkipUnchangedFiles="true"
-          Condition="'@(FilesToRelocate)' != ''"
+          Condition="'@(FilesToRelocate)' != '' and Exists('%(FilesToRelocate.Identity)')"
+          Retries="3"
+          RetryDelayMilliseconds="100"
           ContinueOnError="WarnAndContinue" />
   </Target>
 </Project>

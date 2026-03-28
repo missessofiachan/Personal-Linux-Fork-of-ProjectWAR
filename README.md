@@ -218,6 +218,10 @@ Get-Process | Where-Object { $_.Name -match 'AccountCacher|LauncherServer|LobbyS
   - if `WorldServer` logs show `lotd_resource_tracker ... Type mismatch (INT UNSIGNED in DB - INT in emulator)`, also apply `Database/update_006_lotd_resource_tracker_schema_fix.sql`.
   - if `WorldServer` logs show `LotdService ... StructExpressionBinder`, update to the current build as well; the runtime binder now supports nullable tracker timestamps.
   - if a realm owns LOTD but the client still cannot see the zone `191` flight path, update to the current `WorldServer` build as well; LOTD taxis now bypass the generic T4 Tome-token gate once `LotdService` has unlocked them for that realm.
+  - if the LOTD node shows in the flight-master map but cannot be clicked, apply `Database/update_012_lotd_zone_pairing_fix.sql`.
+  - the current `WorldServer` build also normalizes the shipped `zone_infos.Pairing = 100` metadata for zone `191` to the proper Land of the Dead pairing id (`4`) on load, because the flight packet sends that value directly to the client.
+  - if the LOTD taxi appears but taking it lands in the wrong place or fails to move the character cleanly, apply `Database/update_011_lotd_taxi_world_coordinate_fix.sql`.
+  - the current `WorldServer` build also normalizes malformed LOTD taxi rows on load, because the shipped zone `191` taxi destinations were stored as local pins instead of world coordinates.
   - if the expedition tracker is still invisible, confirm the server log reaches `Loaded Land of the Dead resource tracker` on the current build before debugging packet display behavior; older failed boots in `bin/Release/logs` do not prove the current binaries loaded the tracker.
 - Live event tables are missing or the live-event UI is empty because `war_world.liveevent_*` was dropped or truncated:
   - apply `Database/update_010_restore_liveevent_tables.sql`.

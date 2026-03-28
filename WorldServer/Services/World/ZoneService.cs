@@ -24,6 +24,7 @@ namespace WorldServer.Services.World
             Log.Debug("WorldMgr", "Loading Zone_Info...");
 
             _Zone_Info = Database.SelectAllObjects<Zone_Info>() as List<Zone_Info>;
+            NormalizeZoneInfoMetadata();
 
             Log.Success("LoadZone_Info", "Loaded " + _Zone_Info.Count + " Zone_Info");
 
@@ -37,6 +38,31 @@ namespace WorldServer.Services.World
             LoadZoneJumps();
             WorldMgr.WorldUpdateStart();
             WorldMgr.GroupUpdateStart();
+        }
+
+        private static void NormalizeZoneInfoMetadata()
+        {
+            if (_Zone_Info == null)
+                return;
+
+            foreach (Zone_Info zone in _Zone_Info)
+                NormalizeZoneInfo(zone);
+        }
+
+        private static void NormalizeZoneInfo(Zone_Info zone)
+        {
+            if (zone == null)
+                return;
+
+            if (zone.ZoneId != LotdService.LotdZoneId || zone.Pairing == (byte)Pairing.PAIRING_LAND_OF_THE_DEAD)
+                return;
+
+            byte originalPairing = zone.Pairing;
+            zone.Pairing = (byte)Pairing.PAIRING_LAND_OF_THE_DEAD;
+            zone.Dirty = false;
+
+            Log.Notice("Zone_Info", "Normalized zone " + zone.ZoneId + " pairing from " + originalPairing +
+                " to " + zone.Pairing + " for Land of the Dead flight metadata.");
         }
 
         /// <summary>
@@ -272,6 +298,9 @@ namespace WorldServer.Services.World
 
             foreach (Zone_Taxi Taxi in Taxis)
             {
+                Taxi.Info = GetZone_Info(Taxi.ZoneID);
+                NormalizeTaxiWorldPosition(Taxi);
+
                 Zone_Taxi[] Tax;
                 if (!_Zone_Taxi.TryGetValue(Taxi.ZoneID, out Tax))
                 {
@@ -283,6 +312,47 @@ namespace WorldServer.Services.World
             }
 
             Log.Success("LoadZone_Info", "Loaded " + Taxis.Count + " Zone_Taxis");
+        }
+
+        private static void NormalizeTaxiWorldPosition(Zone_Taxi taxi)
+        {
+            if (taxi == null || taxi.WorldX == 0 || taxi.WorldY == 0)
+                return;
+
+            Zone_Info zone = taxi.Info ?? GetZone_Info(taxi.ZoneID);
+            if (zone == null)
+            {
+                Log.Error("Zone_Taxi", "Taxi zone " + taxi.ZoneID + " realm " + taxi.RealmID + " references unknown zone.");
+                return;
+            }
+
+            taxi.Info = zone;
+            if (IsWorldPositionInsideZone(zone, (int)taxi.WorldX, (int)taxi.WorldY))
+                return;
+
+            if (taxi.WorldX > UInt16.MaxValue || taxi.WorldY > UInt16.MaxValue)
+            {
+                Log.Notice("Zone_Taxi", "Taxi zone " + taxi.ZoneID + " realm " + taxi.RealmID +
+                    " uses out-of-zone world coordinates " + taxi.WorldX + "," + taxi.WorldY + ".");
+                return;
+            }
+
+            uint originalX = taxi.WorldX;
+            uint originalY = taxi.WorldY;
+            Point3D world = GetWorldPosition(zone, (ushort)taxi.WorldX, (ushort)taxi.WorldY, taxi.WorldZ);
+            if (!IsWorldPositionInsideZone(zone, world.X, world.Y))
+            {
+                Log.Notice("Zone_Taxi", "Taxi zone " + taxi.ZoneID + " realm " + taxi.RealmID +
+                    " has invalid coordinates " + taxi.WorldX + "," + taxi.WorldY + " that could not be normalized.");
+                return;
+            }
+
+            taxi.WorldX = (uint)world.X;
+            taxi.WorldY = (uint)world.Y;
+            taxi.WorldZ = (ushort)world.Z;
+
+            Log.Notice("Zone_Taxi", "Normalized taxi zone " + taxi.ZoneID + " realm " + taxi.RealmID +
+                " local pins " + originalX + "," + originalY + " to world " + taxi.WorldX + "," + taxi.WorldY + ".");
         }
 
         public static Zone_Taxi GetZoneTaxi(ushort ZoneId, byte Realm)
@@ -334,6 +404,17 @@ namespace WorldServer.Services.World
         public static uint CalcOffset(Zone_Info Info, ushort Pin, bool x)
         {
             return (uint)Math.Truncate((decimal)(Pin / 4096 + (x ? Info.OffX : Info.OffY))) << 12;
+        }
+
+        private static bool IsWorldPositionInsideZone(Zone_Info zone, int worldX, int worldY)
+        {
+            if (zone == null || worldX <= 0 || worldY <= 0)
+                return false;
+
+            int offX = worldX >> 12;
+            int offY = worldY >> 12;
+            return offX >= zone.OffX && offX < zone.OffX + WorldServer.World.Map.RegionMgr.MaxCells &&
+                   offY >= zone.OffY && offY < zone.OffY + WorldServer.World.Map.RegionMgr.MaxCells;
         }
         #endregion
 
