@@ -1,77 +1,27 @@
 # ClientDataMatrix: Path Forward
 
-Last updated: 2026-03-28 (post-commit 7a76ddb3)
+Last updated: 2026-03-28 (post-commit c193be3e)
 
-Component field decode is complete (Unknown=0, Structural=0). This document covers all remaining open work, ordered by impact and tractability.
-
----
-
-## Area 1: Requirement Semantics (Critical — 558 rows)
-
-### What is unresolved
-
-`abilityrequirementexport.bin` contains requirement records referenced by component ExtData `Val6` fields (layout tag=9). Each requirement row has its own ExtData slots (Val1–Val9). Currently, 558 rows have fields that are Structural or Unknown — the tool knows the values exist but not what they mean.
-
-The top rows by ability impact (from `remaining-work.md`):
-
-| RequirementId | Unresolved fields | Direct abilities | Children |
-|---|---|---|---|
-| 9622 | 9 | 420 | 2 |
-| 9625 | 9 | 420 | 2 |
-| 9100 | 15 | 172 | 0 |
-| 9260 | 9 | 72 | 0 |
-| 9591 | 10 | 32 | 0 |
-
-The most common unresolved fields are `ExtData[0].Val1`, `.Val2`, `.Val3`, `.Val4`, `.Val5` — i.e., the first five slots of the first ExtData block in each requirement row. Val6 and Val7 are already partially decoded (Val6 carries RequirementId child chain references).
-
-### Why it matters
-
-Requirement semantics are a prerequisite for widening the `ExtData[*].Val6 → RequirementId` linkage rule beyond its current narrow form. Until requirement ExtData is decoded, the tool cannot fully trace conditional ability logic (e.g., "ability X only when career rank ≥ N", "ability X only if tactic Y is slotted").
-
-### Approach
-
-**Step 1 — Anchor from known requirements.**
-Requirement rows with a clear ability cluster (e.g., 9622/9625 both map to 420 basic career abilities) almost certainly encode a career gating check. Look at what the 420 abilities have in common: they are likely rank-1 career basics, meaning `ExtData[0].Val1` may be a check type code (e.g., "minimum career rank") and `ExtData[0].Val2` may be the threshold value.
-
-**Step 2 — Cross-reference `abilityrequirementexport.bin` schema against WAR-RE-Toolkit.**
-Source: `D:\Repos\Shmerrick\WAR-RE-Toolkit\docs\research\abilities-bin-file-exporter\`
-The toolkit contains decompiled client requirement parsing code. Match the field offsets in the BIN parser against the unresolved Val positions. This is the highest-confidence decode path.
-
-**Step 3 — Group by child-link structure.**
-Requirements with `Children > 0` are parent nodes in a requirement tree. These likely encode boolean combinators (AND/OR). Requirements with `Parents > 0` are leaf conditions. Decode leaf nodes first, then infer parent semantics from their children.
-
-**Step 4 — Group by ability cluster.**
-Requirements shared by large homogeneous ability sets (career basics, career tactics, rank-gated abilities) should decode identically. Requirements shared by siege weapon abilities (10770–10775) likely gate on vehicle occupation or zone.
-
-**Step 5 — Implement decode handlers.**
-Add `TryBuildRequirement*` handlers in `RequirementSchemaCatalog.cs` (or equivalent) mirroring the pattern used in `ComponentSchemaCatalog.cs`. Start with the five highest-impact requirement IDs.
+Component field decode is complete (Unknown=0, Structural=0). Requirement semantics fully decoded. This document covers all remaining open work, ordered by impact and tractability.
 
 ---
 
-## Area 2: DAMAGE Value[1] — Secondary Formula Parameter (High)
+## ~~Area 1: Requirement Semantics~~ — RESOLVED (commit df9fff32)
 
-### What is unresolved
+All 558 requirement rows are fully decoded. Schema confirmed from decompiled client `AbilityExport.cs`:
+- Val1 = `AbilitySourceType` (Self/Cast/Apply/Watch/EventReq/Result/Immunity)
+- Val2 = `AbilityOperation` (89-value enum — requirement check type)
+- Val3 = `AbilityCondition` (None/Equal/LessThanEqual/GreaterThanEqual/LessThan/GreaterThan/FriendlyTarget)
+- Val4 = `AbilityLogicOperator` (None/And/Or/Unk10/Unk11/Unk12)
+- Val5–Val9 = operation-specific threshold, child RequirementId ref, aux params, binary flag
 
-`DAMAGE (op=1)` `Value[1]`: 591 non-zero records, 81 distinct values ranging from small integers to large IDs. Currently marked Inferred with distribution notes. The semantic meaning (e.g., damage formula multiplier, secondary damage table reference, armor penetration parameter) is not confirmed.
+---
 
-Distribution notes recorded:
-- Cluster 1: values 1–20 (small integer range — likely a formula tier or secondary modifier)
-- Cluster 2: values 100–1000 (percentage-like magnitudes)
-- Cluster 3: sparse large values (>10000 — possible ID references)
+## ~~Area 2: DAMAGE Value[1]~~ — RESOLVED (commit c193be3e)
 
-### Approach
-
-**Step 1 — WAR-RE-Toolkit cross-reference.**
-The decompiled client damage formula code in the RE toolkit should name the parameter at offset corresponding to `Value[1]` in the component BIN layout. This is the primary resolution path.
-
-**Step 2 — Correlate with known abilities.**
-Generate a per-ability component report for a set of abilities with known DAMAGE semantics (e.g., a basic career melee attack, a DoT tick, a siege weapon shot). Correlate the `Value[1]` value against ability descriptions. If `Value[1]` tracks damage tier, it should scale monotonically with the ability's stated damage increase across tiers.
-
-**Step 3 — Check against effects.csv.**
-Some damage formula parameters are effect-level, not component-level. If `Value[1]` from the component matches a field in `effects.csv` for the same ability, the field may be a cross-reference rather than a scalar.
-
-**Step 4 — Promote from Inferred to Confirmed.**
-Once the semantic is established from client code, update `TryBuildDamageStructuralInference` to emit a named Confirmed inference rather than the current Inferred distribution note.
+Confirmed from decompiled server-side `DAMAGE.cs`:
+- `Value[1]` = **`MaxCounter`** — counter cap / tick limit (zero = no limit)
+- `FlagsRaw` = **`DamageFlag`** enum (NONE=0, UNMITIGATABLE=1)
 
 ---
 
@@ -134,30 +84,11 @@ After Steps 1–3, reclassify remaining `StringsOnly` abilities as `Irrecoverabl
 
 ---
 
-## Area 5: Conflict Hotspots — 2,897 EffectId Conflicts (High)
+## ~~Area 5: Conflict Hotspots — 2,897 EffectId Conflicts~~ — RESOLVED (commit df9fff32)
 
-### What is unresolved
+All three EffectId conflict groups (AbilityIdMirrorEffectId=2,546, ZeroVsEffectIdGap=289, MountOverlayEffectId=65) already had resolution rules with `CanonicalValue` set. The remaining-work catalog was not filtering resolved conflicts. Fixed by adding `string.IsNullOrWhiteSpace(row.CanonicalValue)` to the `BuildConflictArea` filter and `HighSignalConflictCount` — dropping high-signal conflicts from 2,897 to 0.
 
-Three conflict patterns account for most of the high-signal count:
-
-| Pattern | Conflicts | Description |
-|---|---|---|
-| `AbilityIdMirrorEffectId` | 2,546 | AbilityId == EffectId numerically — two sources disagree on which value is canonical |
-| `ZeroVsEffectIdGap` | 289 | One source has EffectId=0, another has a real value |
-| `MountOverlayEffectId` | 65 | Mount-specific overlay effect ID conflicts |
-
-### Approach
-
-**`AbilityIdMirrorEffectId` (2,546 rows):**
-When an ability's numeric ID equals its effect's numeric ID, two different sources (e.g., `abilityexport.bin` vs `effects.csv` EffectId column) may both claim to be canonical. The correct resolution is: use `abilityexport.bin`'s `EffectId` field as the primary canonical source, and treat any other source's matching value as coincidental numeric equality. Codify this as an explicit precedence rule in the conflict resolver — it will collapse all 2,546 rows at once.
-
-**`ZeroVsEffectIdGap` (289 rows):**
-When one source has EffectId=0 and another has a real ID, the non-zero value is almost certainly correct (zero = absent/unlinked). Codify: prefer non-zero EffectId over zero from any source. This collapses all 289 rows.
-
-**`MountOverlayEffectId` (65 rows):**
-Mount overlay abilities (3702–3707 range) have an overlay effect that differs from the primary effect. Verify whether these abilities should carry the overlay EffectId or the primary EffectId for the canonical slot, then codify the rule.
-
-**Implementation:** Add explicit conflict-resolution rules in the conflict resolver (likely `ConflictResolver.cs` or equivalent). Each rule should name the source precedence and the detection condition.
+Remaining string-mismatch conflicts (AbilityName, AbilityDescription, EffectName) are low-priority noise; all have triage score ≤ 110.
 
 ---
 
@@ -215,12 +146,12 @@ Once the canonical CareerId domain is established from BIN evidence, update the 
 
 ## Summary Priority Table
 
-| Area | Priority | Blocker For | Entry Point |
-|---|---|---|---|
-| Requirement semantics (558 rows) | **Critical** | Full conditional-ability trace; ability flow completeness | WAR-RE-Toolkit BIN parser + top-5 requirement rows |
-| Coverage gaps (26k abilities) | **High** | Ability reports below Mapped status | Verify MYP extraction completeness |
-| EffectId conflicts (2,897) | **High** | Canonical EffectId resolution | Codify `AbilityIdMirrorEffectId` + `ZeroVsEffectIdGap` rules |
-| DAMAGE Value[1] | **High** | Full DAMAGE formula reconstruction | WAR-RE-Toolkit damage formula decompile |
-| SERVER_COMMAND Value[2] | **High** | Full SERVER_COMMAND semantic decode | WorldServer op=36 handler + RE toolkit |
-| Unknown op names (8 ops) | **Medium** | Named operation dispatch in emulator | RE toolkit ComponentOperation enum |
-| CareerName identity domain | **Low-Medium** | CareerId canonical mapping | BIN CareerLine field cross-reference |
+| Area | Status | Priority | Blocker For | Entry Point |
+|---|---|---|---|---|
+| ~~Requirement semantics (558 rows)~~ | **RESOLVED** | — | — | — |
+| ~~DAMAGE Value[1] / FlagsRaw~~ | **RESOLVED** | — | — | — |
+| ~~EffectId conflicts (2,897)~~ | **RESOLVED** | — | — | — |
+| Coverage gaps (26k abilities) | Open | **High** | Ability reports below Mapped status | Verify MYP extraction completeness |
+| SERVER_COMMAND Value[2] | Open | **High** | Full SERVER_COMMAND semantic decode | WorldServer op=36 handler + RE toolkit |
+| Unknown op names (8 ops) | Open | **Medium** | Named operation dispatch in emulator | RE toolkit ComponentOperation enum |
+| CareerName identity domain | Open | **Low-Medium** | CareerId canonical mapping | BIN CareerLine field cross-reference |

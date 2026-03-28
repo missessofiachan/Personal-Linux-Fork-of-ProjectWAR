@@ -55,7 +55,7 @@ Reports are generated at runtime to a local output directory. They are not commi
 
 Tool usage: `docs/client-data-matrix-usage.md`.
 
-### Component Field Decode Status (as of commit 7a76ddb3, 2026-03-28)
+### Component Field Decode Status (as of commit c193be3e, 2026-03-28)
 
 All 18,526 component records across all operation types have been fully decoded. **Unknown = 0, Structural = 0.**
 
@@ -67,19 +67,24 @@ Every field in `abilitycomponentexport.bin` is now at Confirmed or Inferred conf
 - **Value08**: universal binary flag (= 1 across all operations)
 - **Value15**: universal CC gate (CrowdControlTypes bits, mask 0x8FF) across all operations
 
-Two fields remain semantically ambiguous but are marked Inferred with full distribution notes:
-- `DAMAGE Value[1]` — 591 non-zero, 81 distinct values; secondary formula parameter, semantics unresolved
+Previously ambiguous fields now resolved:
+- `DAMAGE Value[1]` — **Confirmed as `MaxCounter`** (counter cap / tick limit); from decompiled server `DAMAGE.cs`
+- `DAMAGE FlagsRaw` — **Confirmed as `DamageFlag` enum** (NONE=0, UNMITIGATABLE=1); from same source
+
+One field remains Inferred:
 - `SERVER_COMMAND Value[2]` — 337 non-zero, 59 distinct values; polymorphic command argument (tri-modal: small enum / ID ref / sentinel)
 
-The next major open work area is **requirement semantics** (558 rows in `abilityrequirementexport.bin` with unresolved ExtData fields).
+All 558 requirement rows in `abilityrequirementexport.bin` are now decoded (Val1=AbilitySourceType, Val2=AbilityOperation, Val3=AbilityCondition, Val4=AbilityLogicOperator from decompiled `AbilityExport.cs`).
 
-See `docs/data-matrix/overview/path-forward.md` for the full roadmap of remaining work.
+Remaining open work: coverage gaps (26,627 abilities below Mapped), SERVER_COMMAND Value[2] semantics, unknown op names for ops 29/30/32/40/41/43/47/51, CareerName identity domain.
+
+See `docs/data-matrix/overview/path-forward.md` for the full roadmap.
 
 ## External Data Locations
 
 | Path | Contents |
 |------|----------|
-| `C:\Users\Admin\Pictures\WAR_extracted` | Extracted WAR client files (gamedata CSV, strings TXT, BIN exports, zones, assetdb) |
+| `C:\Users\Admin\Downloads\myps` | Extracted WAR client files (gamedata CSV, strings TXT, BIN exports, zones, assetdb) |
 | `C:\Users\Admin\Music\Warhammer` | Original MYP archives, PacketLogger, reference docs, WAR.exe |
 | `C:\temp\world_extract` | Extracted world/zone asset tree (assetdb, zones) |
 | `C:\temp\los` | Native-generated LOS output (zone 280 bin) |
