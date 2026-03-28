@@ -914,6 +914,9 @@ namespace WorldServer.World.Objects
 
                 WorldMgr.SendZoneFightLevel(this);
 
+                if (IsBot)
+                    RestoreBotPositionFromValue();
+
                 // Zaru: here it is always: initialized = false
                 //if (!_initialized)
                 CrrInterface.NotifyInitialized();
@@ -937,6 +940,35 @@ namespace WorldServer.World.Objects
             PendingDumpStatic = false;
             CrrInterface.NotifyClientLoaded();
             LotdService.SendResourceTracker(this);
+        }
+
+        private void RestoreBotPositionFromValue()
+        {
+            if (!IsBot || Zone == null || _Value == null)
+                return;
+
+            int localX = _Value.WorldX - (Zone.Info.OffX << 12);
+            int localY = _Value.WorldY - (Zone.Info.OffY << 12);
+
+            if (localX < 0 || localX > ushort.MaxValue || localY < 0 || localY > ushort.MaxValue)
+            {
+                if (WorldMgr.NormalizePlayerWorldPosition(this, out string reason))
+                {
+                    Log.Info("BotManager", $"Normalized live bot position for {Name}: {reason}");
+                    localX = _Value.WorldX - (Zone.Info.OffX << 12);
+                    localY = _Value.WorldY - (Zone.Info.OffY << 12);
+                }
+
+                if (localX < 0 || localX > ushort.MaxValue || localY < 0 || localY > ushort.MaxValue)
+                {
+                    Log.Error("BotManager", $"Unable to restore bot position for {Name} in zone {Zone.ZoneId}.");
+                    return;
+                }
+            }
+
+            ushort pinZ = (ushort)Math.Max(0, Math.Min(_Value.WorldZ, ushort.MaxValue));
+            ushort heading = (ushort)Math.Max(0, Math.Min(_Value.WorldO, ushort.MaxValue));
+            SetPosition((ushort)localX, (ushort)localY, pinZ, heading, Zone.ZoneId);
         }
 
         private long _lastLevelResourceAdd;

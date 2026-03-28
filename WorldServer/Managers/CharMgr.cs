@@ -24,6 +24,7 @@ namespace WorldServer.Managers
     {
         public int AccountId;
         public Realms Realm = Realms.REALMS_REALM_NEUTRAL;
+        private readonly Dictionary<byte, Character> _hiddenChars = new Dictionary<byte, Character>();
 
         public bool Loaded { get; set; }
 
@@ -34,13 +35,33 @@ namespace WorldServer.Managers
 
         public Character[] Chars = new Character[CharMgr.MaxSlot];
 
-        public byte GenerateFreeSlot()
+        public bool TryGenerateFreeSlot(bool allowHiddenSlots, out byte slotId)
         {
             for (byte i = 0; i < Chars.Length; i++)
                 if (Chars[i] == null)
-                    return i;
+                {
+                    slotId = i;
+                    return true;
+                }
 
-            return CharMgr.MaxSlot;
+            if (!allowHiddenSlots)
+            {
+                slotId = 0;
+                return false;
+            }
+
+            for (int i = Chars.Length; i <= byte.MaxValue; ++i)
+            {
+                byte candidate = (byte)i;
+                if (!_hiddenChars.ContainsKey(candidate))
+                {
+                    slotId = candidate;
+                    return true;
+                }
+            }
+
+            slotId = 0;
+            return false;
         }
 
         public bool AddChar(Character Char)
@@ -50,34 +71,63 @@ namespace WorldServer.Managers
 
             Realm = (Realms)Char.Realm;
 
-            Chars[Char.SlotId] = Char;
+            if (Char.SlotId < Chars.Length)
+                Chars[Char.SlotId] = Char;
+            else
+                _hiddenChars[Char.SlotId] = Char;
 
             return true;
         }
         public uint RemoveCharacter(byte slot)
         {
             uint characterId = 0;
-            if (Chars[slot] != null)
-                characterId = Chars[slot].CharacterId;
+            if (slot < Chars.Length)
+            {
+                if (Chars[slot] != null)
+                    characterId = Chars[slot].CharacterId;
 
-            Chars[slot] = null;
-            Realm = Realms.REALMS_REALM_NEUTRAL;
+                Chars[slot] = null;
+            }
+            else if (_hiddenChars.TryGetValue(slot, out Character hiddenChar))
+            {
+                characterId = hiddenChar.CharacterId;
+                _hiddenChars.Remove(slot);
+            }
 
-            foreach (Character Char in Chars)
-                if (Char != null)
-                {
-                    Realm = (Realms)Char.Realm;
-                    break;
-                }
+            UpdateRealm();
 
             return characterId;
         }
         public Character GetCharacterBySlot(byte slot)
         {
-            if (slot > Chars.Length)
-                return null;
+            if (slot < Chars.Length)
+                return Chars[slot];
 
-            return Chars[slot];
+            _hiddenChars.TryGetValue(slot, out Character hiddenChar);
+            return hiddenChar;
+        }
+
+        private void UpdateRealm()
+        {
+            Realm = Realms.REALMS_REALM_NEUTRAL;
+
+            foreach (Character Char in Chars)
+            {
+                if (Char == null)
+                    continue;
+
+                Realm = (Realms)Char.Realm;
+                return;
+            }
+
+            foreach (Character Char in _hiddenChars.Values)
+            {
+                if (Char == null)
+                    continue;
+
+                Realm = (Realms)Char.Realm;
+                return;
+            }
         }
     };
 
@@ -645,7 +695,7 @@ namespace WorldServer.Managers
             return (uint)Interlocked.Increment(ref _maxCharGuid);
         }
 
-        public static bool CreateChar(Character Char)
+        public static bool CreateChar(Character Char, bool allowHiddenSlot = false)
         {
             CharacterIdentityRecord identity;
             if (CharacterIdentityCatalog.TryGetByCareerLine(Char.CareerLine, out identity))
@@ -655,7 +705,15 @@ namespace WorldServer.Managers
             }
 
             AccountChars chars = GetAccountChar(Char.AccountId);
-            Char.SlotId = chars.GenerateFreeSlot();
+            if (!chars.TryGenerateFreeSlot(allowHiddenSlot, out byte slotId))
+            {
+                Log.Error("CreateChar", allowHiddenSlot
+                    ? "Failed: maximum number of hidden character slots reached."
+                    : "Failed: no visible character slots available.");
+                return false;
+            }
+
+            Char.SlotId = slotId;
 
             lock (Chars)
             {
@@ -671,8 +729,13 @@ namespace WorldServer.Managers
                 }
 
                 Char.CharacterId = charId;
+                if (!chars.AddChar(Char))
+                {
+                    Log.Error("CreateChar", $"Failed to cache character {Char.Name} in account slot {Char.SlotId}.");
+                    return false;
+                }
+
                 Chars[Char.CharacterId] = Char;
-                chars.AddChar(Char);
             }
 
             lock (CharIdLookup)
@@ -1325,6 +1388,8 @@ namespace WorldServer.Managers
 
                 foreach (Guild_info guild in guilds)
                 {
+                    bool isSystemGuild = WorldServer.World.Guild.Guild.IsSystemGuild(guild.Name);
+
                     if (guild.AllianceId > 0)
                     {
                         if (Alliance.Alliances.ContainsKey(guild.AllianceId))
@@ -1401,6 +1466,16 @@ namespace WorldServer.Managers
 
 
                     //checks for guild leader id player not found guildleader banned or guild leader inactive is so tryes to set a new guild leader if no guildleader can be found guild is set to inactive
+                    if (isSystemGuild && guild.LeaderId == 0 && guild.Members.Count == 0)
+                    {
+                        Guild.GetGuild(guild.Name).Inactive = true;
+
+                        if (guild.GuildId > Guild.MaxGuildGUID)
+                            Guild.MaxGuildGUID = (int)guild.GuildId;
+
+                        continue;
+                    }
+
                     Account accountEntity = null;
                     var characterEntity = CharMgr.GetCharacter(guild.LeaderId, true);
                     if (characterEntity != null)
@@ -1504,9 +1579,17 @@ namespace WorldServer.Managers
                         Name = name,
                         Motd = $"Welcome to the {name}!",
                         AboutUs = "System Guild",
+                        BriefDescription = string.Empty,
+                        Summary = string.Empty,
                         Level = Guild.MaxGuildLevel,
                         Xp = 0,
                         Realm = realm,
+                        Tax = 0,
+                        Money = 0,
+                        Heraldry = string.Empty,
+                        Banners = string.Empty,
+                        guildvaultpurchased = new byte[5],
+                        GuildTacticsPurchased = new ushort[40],
                         CreateDate = TCPManager.GetTimeStamp(),
                         GuildId = Guild.GenerateMaxGuildId(),
                         Members = new Dictionary<uint, Guild_member>(),
@@ -1530,12 +1613,26 @@ namespace WorldServer.Managers
                         info.Ranks.Add(r, rank);
                     }
 
-                    guild = new Guild(info);
+                    guild = new Guild(info) { Inactive = true };
                     Guild.Guilds.Add(guild);
                 }
                 else if (guild.Info.Level != Guild.MaxGuildLevel)
                 {
                     guild.Info.Level = Guild.MaxGuildLevel;
+                    Database.SaveObject(guild.Info);
+                }
+
+                if (guild != null)
+                {
+                    guild.Inactive = true;
+                    if (guild.Info.BriefDescription == null)
+                        guild.Info.BriefDescription = string.Empty;
+                    if (guild.Info.Summary == null)
+                        guild.Info.Summary = string.Empty;
+                    if (guild.Info.Heraldry == null)
+                        guild.Info.Heraldry = string.Empty;
+                    if (guild.Info.Banners == null)
+                        guild.Info.Banners = string.Empty;
                     Database.SaveObject(guild.Info);
                 }
             }

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Common;
+using SystemData;
 using Common.Database.World.Maps;
 using FrameWork;
 using GameData;
@@ -54,8 +55,11 @@ namespace WorldServer.World.Map
         {
             BattlefrontCommunications = battlefrontCommunications;
             RegionId = regionId;
-            ZonesInfo = zones;
+            ZonesInfo = zones?.Where(zone => zone != null).ToList() ?? new List<Zone_Info>();
             RegionName = name;
+
+            if (ZonesInfo.Count == 0)
+                throw new InvalidOperationException($"Region {RegionId} ({RegionName}) could not be created because no zone metadata was found.");
 
             LoadSpawns();
 

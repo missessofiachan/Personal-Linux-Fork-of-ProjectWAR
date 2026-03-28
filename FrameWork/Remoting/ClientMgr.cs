@@ -13,22 +13,22 @@ namespace FrameWork
     {
         public override void OnClientConnected(RpcClientInfo Info)
         {
-            Log.Notice("ClientMgr", Info.Description() + " | Connected");
+            Log.Info("ClientMgr", Info.Description() + " | Connected");
         }
 
         public override void OnClientDisconnected(RpcClientInfo Info)
         {
-            Log.Notice("ClientMgr", Info.Description() + " | Disconnected");
+            Log.Info("ClientMgr", Info.Description() + " | Disconnected");
         }
 
         public override void OnServerConnected()
         {
-            Log.Notice("ClientMgr", "Server connected !");
+            Log.Info("ClientMgr", "Server connected !");
         }
 
         public override void OnServerDisconnected()
         {
-            Log.Notice("ClientMgr", "Server disconnected !");
+            Log.Info("ClientMgr", "Server disconnected !");
 
         }
 

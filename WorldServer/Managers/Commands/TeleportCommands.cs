@@ -639,6 +639,14 @@ namespace WorldServer.Managers.Commands
             if (preferred != null)
                 return preferred;
 
+            preferred = SelectCenterCandidate(candidates, candidate => candidate.Source == DerivedTeleportSource.ChapterPin && candidate.RealmMatch && candidate.TerrainValidated);
+            if (preferred != null)
+                return preferred;
+
+            preferred = SelectCenterCandidate(candidates, candidate => candidate.Source == DerivedTeleportSource.ChapterPin && candidate.TerrainValidated);
+            if (preferred != null)
+                return preferred;
+
             preferred = SelectCenterCandidate(candidates, candidate => candidate.Source == DerivedTeleportSource.ExternalZoneJump && candidate.TerrainValidated);
             if (preferred != null)
                 return preferred;
@@ -652,6 +660,14 @@ namespace WorldServer.Managers.Commands
                 return preferred;
 
             preferred = SelectCenterCandidate(candidates, candidate => IsHighConfidenceCenterAnchor(candidate));
+            if (preferred != null)
+                return preferred;
+
+            preferred = SelectCenterCandidate(candidates, candidate => candidate.Source == DerivedTeleportSource.ChapterPin && candidate.RealmMatch);
+            if (preferred != null)
+                return preferred;
+
+            preferred = SelectCenterCandidate(candidates, candidate => candidate.Source == DerivedTeleportSource.ChapterPin);
             if (preferred != null)
                 return preferred;
 
@@ -675,7 +691,6 @@ namespace WorldServer.Managers.Commands
                 case DerivedTeleportSource.ZoneRespawn:
                 case DerivedTeleportSource.ZoneTaxi:
                 case DerivedTeleportSource.RallyPoint:
-                case DerivedTeleportSource.ChapterPin:
                     return true;
                 default:
                     return false;
@@ -819,6 +834,18 @@ namespace WorldServer.Managers.Commands
             if (world.X <= 0 || world.Y <= 0 || world.Z < 0)
                 return;
 
+            bool samePin = resolvedAnchor.PinX == pinX && resolvedAnchor.PinY == pinY;
+            int zDelta = Math.Abs(world.Z - candidate.WorldZ);
+
+            if (ShouldPreserveAuthoritativeHeight(candidate, samePin, world.Z, zDelta))
+            {
+                candidate.TerrainValidated = true;
+                candidate.PinX = resolvedAnchor.PinX;
+                candidate.PinY = resolvedAnchor.PinY;
+                candidate.Detail += $" pin={resolvedAnchor.PinX},{resolvedAnchor.PinY} preserve-z source={candidate.WorldZ} terrain={world.Z}";
+                return;
+            }
+
             candidate.WorldX = (uint)world.X;
             candidate.WorldY = (uint)world.Y;
             candidate.WorldZ = (ushort)world.Z;
@@ -828,6 +855,24 @@ namespace WorldServer.Managers.Commands
             candidate.Detail += resolvedAnchor.PinX == pinX && resolvedAnchor.PinY == pinY
                 ? $" pin={resolvedAnchor.PinX},{resolvedAnchor.PinY}"
                 : $" snap={resolvedAnchor.PinX},{resolvedAnchor.PinY} from={pinX},{pinY}";
+        }
+
+        private static bool ShouldPreserveAuthoritativeHeight(DerivedTeleportPoint candidate, bool samePin, int terrainZ, int zDelta)
+        {
+            if (!samePin || zDelta < 192 || candidate.WorldZ <= terrainZ)
+                return false;
+
+            switch (candidate.Source)
+            {
+                case DerivedTeleportSource.ZoneRespawn:
+                case DerivedTeleportSource.ZoneTaxi:
+                case DerivedTeleportSource.RallyPoint:
+                case DerivedTeleportSource.ExternalZoneJump:
+                case DerivedTeleportSource.InternalZoneJump:
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         private static bool TryGetPinFromWorld(Zone_Info zone, uint worldX, uint worldY, out ushort pinX, out ushort pinY)

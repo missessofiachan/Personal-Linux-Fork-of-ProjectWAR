@@ -33,7 +33,7 @@ namespace WorldServer.World.AI
         protected ABrain(Unit unit)
         {
             _unit = unit;
-            Combat = (CombatInterface_Npc)unit.CbtInterface;
+            Combat = unit.CbtInterface as CombatInterface_Npc;
             AI = unit.AiInterface;
             _pet = unit as Pet;
         }

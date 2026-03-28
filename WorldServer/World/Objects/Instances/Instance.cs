@@ -69,7 +69,7 @@ namespace WorldServer.World.Objects.Instances
             ID = id;
             ZoneID = zoneid;
             Realm = realm;
-            Region = new RegionMgr(zoneid, ZoneService.GetZoneRegion(zoneid),"", new BattlefrontCommunications());
+            Region = new RegionMgr(zoneid, ZoneService.GetRegionOrZone(zoneid),"", new BattlefrontCommunications());
             InstanceService._InstanceInfo.TryGetValue(zoneid, out Info);
             LoadBossSpawns();
             LoadSpawns(); // todo get the saved progress from group

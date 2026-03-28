@@ -183,8 +183,8 @@ namespace FrameWork
 
                             Log.Debug("DataConnection", $"SQL Select ({isolation}) exec time {Environment.TickCount - start}ms");
 
-                            if (Environment.TickCount - start > 500)
-                                Log.Notice($"Exec time { Environment.TickCount - start} ms", sqlcommand);
+                            if (Environment.TickCount - start > 2000)
+                                Log.Notice("DataConnection", $"Slow SQL Select ({Environment.TickCount - start}ms)\n{sqlcommand}");
                         }
 
                         conn.Close();

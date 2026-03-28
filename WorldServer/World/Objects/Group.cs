@@ -831,16 +831,27 @@ namespace WorldServer.World.Objects
         {
 
             int disabled = WorldMgr.WorldSettingsMgr.GetGenericSetting(17);
+            List<Player> visibleMembers = new List<Player>(Members.Count);
+
+            foreach (Player plr in Members)
+            {
+                if (plr == null || plr.Info == null || plr._Value == null || !plr.Loaded || !plr.Initialized)
+                    continue;
+
+                visibleMembers.Add(plr);
+            }
+
+            if (visibleMembers.Count == 0)
+                return;
 
             PacketOut Out = new PacketOut((byte)Opcodes.F_CHARACTER_INFO);
             Out.WriteByte(0x06); // Group info
             Out.WriteByte(2);
             Out.WriteVarUInt(GroupId);
-            Out.WriteByte((byte)Members.Count);
-            foreach (Player plr in Members)
+            Out.WriteByte((byte)visibleMembers.Count);
+            foreach (Player plr in visibleMembers)
             {
-                if (plr == null || plr.Info == null || plr._Value == null)
-                    continue;
+                string guildName = plr.GldInterface?.GetGuildName() ?? string.Empty;
 
                 Out.WriteVarUInt(plr.CharacterId);
                 Out.WriteByte(0x0F); // ?
@@ -856,9 +867,9 @@ namespace WorldServer.World.Objects
                 Out.WriteByte((byte)plr.Name.Length);
                 Out.Fill(0, 3);
                 Out.WriteStringBytes(plr.Name);
-                Out.WriteByte((byte)plr.GldInterface.GetGuildName().Length);
+                Out.WriteByte((byte)guildName.Length);
                 Out.Fill(0, 3);
-                Out.WriteStringBytes(plr.GldInterface.GetGuildName());
+                Out.WriteStringBytes(guildName);
                 if (disabled == 1)
                 {
                     Out.WriteVarUInt((uint)plr.X);

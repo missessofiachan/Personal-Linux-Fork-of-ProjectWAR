@@ -195,6 +195,27 @@ namespace WorldServer
             Log.Info("Battlefront Manager", "Creating Lower Tier Campaign Manager", ConsoleColor.Cyan);
             WorldMgr.LowerTierCampaignManager = new LowerTierCampaignManager(RVRProgressionService._RVRProgressions.Where(x => x.Tier == 1).ToList(), WorldMgr._Regions);
 
+            if (Config.ResetBattlefrontsOnStartup)
+            {
+                Log.Info("Battlefront Manager", "ResetBattlefrontsOnStartup enabled - resetting battlefront progression", ConsoleColor.Cyan);
+                ResetBattlefrontProgressionsOnStartup();
+            }
+
+            Log.Info("Battlefront Manager", "Getting Progression based upon rvr_progression.LastOpenedZone", ConsoleColor.Cyan);
+            WorldMgr.UpperTierCampaignManager.GetActiveBattleFrontFromProgression();
+            WorldMgr.LowerTierCampaignManager.GetActiveBattleFrontFromProgression();
+
+            Log.Info("Battlefront Manager", "Attaching Campaigns to Regions", ConsoleColor.Cyan);
+            WorldMgr.AttachCampaignsToRegions();
+
+            Log.Info("Battlefront Manager", "Locking Battlefronts", ConsoleColor.Cyan);
+            WorldMgr.UpperTierCampaignManager.LockBattleFrontsAllRegions(4, Config.ResetBattlefrontsOnStartup);
+            WorldMgr.LowerTierCampaignManager.LockBattleFrontsAllRegions(1, Config.ResetBattlefrontsOnStartup);
+
+            Log.Info("Battlefront Manager", "Opening Active battlefronts", ConsoleColor.Cyan);
+            WorldMgr.UpperTierCampaignManager.OpenActiveBattlefront();
+            WorldMgr.LowerTierCampaignManager.OpenActiveBattlefront();
+
             WorldMgr.UpdateRegionCaptureStatus(WorldMgr.LowerTierCampaignManager, WorldMgr.UpperTierCampaignManager);
 
             if (!TCPManager.Listen<TCPServer>(Rm.Port, "World"))
@@ -205,14 +226,13 @@ namespace WorldServer
             AcctMgr.UpdateRealm(Client.Info, Rm.RealmId);
             AcctMgr.UpdateRealmCharacters(Rm.RealmId, (uint)CharMgr.Database.GetObjectCount<Character>("Realm=1"), (uint)CharMgr.Database.GetObjectCount<Character>("Realm=2"));
 
-            // Bot Initialization
+            Log.Info("GameCommands", "Available Game Commands:");
+            WorldServer.Managers.Commands.CommandsBuilder.ListAllCommands(WorldServer.Managers.Commands.CommandDeclarations.BaseCommand);
+
             Log.Info("Bot Manager", "Initializing Bot Management Services", ConsoleColor.Cyan);
             BotManager.Instance.Initialize();
             DynamicBotManager.Instance.Start();
             _botTimer = new Timer(DynamicBotManager.Instance.Update, null, 10000, 60000);
-
-            Log.Info("GameCommands", "Available Game Commands:");
-            WorldServer.Managers.Commands.CommandsBuilder.ListAllCommands(WorldServer.Managers.Commands.CommandDeclarations.BaseCommand);
 
             ConsoleMgr.Start();
         }

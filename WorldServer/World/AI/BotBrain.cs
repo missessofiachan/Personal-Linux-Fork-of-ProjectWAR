@@ -19,12 +19,68 @@ namespace WorldServer.World.AI
         private HoldObject _currentTargetScenarioObject;
         private long _nextObjectiveCheck = 0;
         private Point3D _formationOffset = new Point3D(0, 0, 0);
+        private CombatInterface_Player PlayerCombat => _unit?.CbtInterface as CombatInterface_Player;
 
         public BotBrain(Unit unit) : base(unit)
         {
             Random rand = new Random(unit.Oid);
             _formationOffset.X = rand.Next(-10, 10);
             _formationOffset.Y = rand.Next(-10, 10);
+        }
+
+        public override bool StartCombat(Unit fighter)
+        {
+            Player player = _unit as Player;
+            CombatInterface_Player combat = PlayerCombat;
+
+            if (player == null || combat == null || fighter == null || fighter.IsDead || player.IsDead)
+                return false;
+
+            GetAggro(fighter.Oid).DamageReceived += 100;
+
+            combat.SetTarget(fighter.Oid, TargetTypes.TARGETTYPES_TARGET_ENEMY);
+            combat.IsAttacking = true;
+            player.CbtInterface.RefreshCombatTimer();
+
+            FollowCombatTarget(player, fighter, true);
+            return true;
+        }
+
+        public override void Fight()
+        {
+            Player player = _unit as Player;
+            CombatInterface_Player combat = PlayerCombat;
+
+            if (player == null || combat == null)
+                return;
+
+            Unit target = combat.GetCurrentTarget();
+            if (target == null || target.IsDead || target.PendingDisposal || target.IsDisposed || !CombatInterface.CanAttack(player, target))
+            {
+                AI.ProcessCombatEnd();
+                return;
+            }
+
+            if (player.IsDisabled || player.IsStaggered)
+                return;
+
+            combat.IsAttacking = true;
+            FollowCombatTarget(player, target);
+        }
+
+        public override bool EndCombat()
+        {
+            Player player = _unit as Player;
+            CombatInterface_Player combat = PlayerCombat;
+
+            if (player == null || combat == null)
+                return false;
+
+            combat.IsAttacking = false;
+            combat.SetTarget((ushort)0, TargetTypes.TARGETTYPES_TARGET_ENEMY);
+            player.MvtInterface.StopMove();
+            Aggros = new Dictionary<ushort, AggroInfo>();
+            return true;
         }
 
         public override void Think(long tick)
@@ -87,6 +143,28 @@ namespace WorldServer.World.AI
                     Point3D targetPos = new Point3D(_currentTargetObjective.WorldPosition.X + _formationOffset.X, _currentTargetObjective.WorldPosition.Y + _formationOffset.Y, _currentTargetObjective.WorldPosition.Z);
                     player.MvtInterface.Move(targetPos);
                 }
+            }
+        }
+
+        private void FollowCombatTarget(Player player, Unit target, bool forceMove = false)
+        {
+            int desiredRange = GetDesiredCombatRange(player);
+            int minTolerance = Math.Max(5, desiredRange - 5);
+            int maxTolerance = Math.Max(minTolerance + 1, desiredRange);
+
+            player.MvtInterface.Follow(target, minTolerance, maxTolerance, false, forceMove);
+        }
+
+        private int GetDesiredCombatRange(Player player)
+        {
+            switch (player.Role)
+            {
+                case BotRole.Healer:
+                    return 80;
+                case BotRole.RangedDPS:
+                    return 70;
+                default:
+                    return 5;
             }
         }
 

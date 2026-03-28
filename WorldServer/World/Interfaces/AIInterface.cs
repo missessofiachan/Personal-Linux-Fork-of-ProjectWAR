@@ -198,7 +198,11 @@ namespace WorldServer.World.Interfaces
         public void UpdateThink(long tick)
         {
             if (HasPlayer())
-                return;
+            {
+                Player player = _unit as Player;
+                if (player == null || !player.IsBot)
+                    return;
+            }
 
             if (_unit != null)
             {

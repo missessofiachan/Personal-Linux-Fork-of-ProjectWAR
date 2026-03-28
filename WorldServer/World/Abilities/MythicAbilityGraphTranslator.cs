@@ -894,9 +894,11 @@ namespace WorldServer.World.Abilities
                 if (!HasCompatibleBuffInfo(existing, component, isDebuff))
                 {
                     if (report.ConflictingBuffEntrySet.Add(entry))
+                    {
                         report.ConflictingBuffEntries++;
+                        Log.Debug("MythicAbilityGraph", "Conflicting buff timings for entry " + entry + "; skipping graph component type " + component.Type + ".");
+                    }
 
-                    Log.Error("MythicAbilityGraph", "Conflicting buff timings for entry " + entry + "; skipping graph component type " + component.Type + ".");
                     buff = null;
                     return false;
                 }

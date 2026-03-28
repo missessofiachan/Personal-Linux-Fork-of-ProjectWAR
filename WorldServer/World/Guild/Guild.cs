@@ -333,12 +333,15 @@ namespace WorldServer.World.Guild
 
             foreach (Guild guild in Guild.Guilds)
             {
-                if (guild.Inactive)
+                if (guild.Inactive || guild.IsSystemGuild())
                 {
                     continue;
                 }
 
-                if (guild.Info.Members[guild.Info.LeaderId].Member.Realm == (int)realm)
+                if (!guild.Info.Members.TryGetValue(guild.Info.LeaderId, out Guild_member leaderMember) || leaderMember?.Member == null)
+                    continue;
+
+                if (leaderMember.Member.Realm == (int)realm)
                 {
                     if (pop == 0 || guild.Info.Members.Count > pop)
                     {
@@ -369,18 +372,17 @@ namespace WorldServer.World.Guild
 
         public static void BuildGuild(ref PacketOut Out, Guild guild)
         {
+            guild.Info.Members.TryGetValue(guild.Info.LeaderId, out Guild_member leaderMember);
 
             Out.WriteUInt32(guild.Info.GuildId);
             Out.WriteByte(guild.Info.Level); //level
             Out.WriteShortString(guild.Info.Name);
-            if (guild.Info.Members[guild.Info.LeaderId] != null)
-                Out.WriteShortString(guild.Info.Members[guild.Info.LeaderId].Member.Name);
+            if (leaderMember?.Member != null)
+                Out.WriteShortString(leaderMember.Member.Name);
             else
-            {
                 Out.WriteShortString("UNKNOWN");
-            }
-            Out.WriteShortString(guild.Info.BriefDescription);
-            Out.WriteShortString(guild.Info.Summary);
+            Out.WriteShortString(guild.Info.BriefDescription ?? string.Empty);
+            Out.WriteShortString(guild.Info.Summary ?? string.Empty);
             Out.WriteByte(guild.Info.PlayStyle);
             Out.WriteByte(guild.Info.Atmosphere); // atmosphere
             Out.WriteUInt32(guild.Info.CareersNeeded);
@@ -780,10 +782,25 @@ namespace WorldServer.World.Guild
 
         public void SendMember(Player plr, Guild_member guildPlr)
         {
-            
+            if (guildPlr == null)
+                return;
+
             if (plr != null)
                 GuildLogger.Debug($"{plr.Name}");
             Player onlinePlr = GetGuildPlayer(guildPlr.CharacterId);
+            Character memberCharacter = guildPlr.Member ?? CharMgr.GetCharacter(guildPlr.CharacterId, false);
+
+            if (memberCharacter == null)
+            {
+                Log.Error("Guild", $"SendMember: missing character {guildPlr.CharacterId} for guild {Info?.Name}");
+                return;
+            }
+
+            if (memberCharacter.Value == null)
+                memberCharacter.Value = CharMgr.Database.SelectObject<Character_value>("CharacterId=" + guildPlr.CharacterId);
+
+            guildPlr.Member = memberCharacter;
+            Info.Ranks.TryGetValue(guildPlr.RankId, out Guild_rank memberRank);
 
             LogGuildBug(onlinePlr);
 
@@ -796,21 +813,21 @@ namespace WorldServer.World.Guild
             Out.WriteByte((byte)(guildPlr.RealmCaptain ? 1 : 0)); // 1 -realm captain
             Out.WriteByte(guildPlr.RankId);
             Out.WriteByte(0);
-            Out.WriteStringToZero(Info.Ranks[guildPlr.RankId].Name);
+            Out.WriteStringToZero(memberRank?.Name ?? "Member");
             Out.WriteByte((byte)((guildPlr.RankId == 9 ? 4 : guildPlr.AllianceOfficer ? 3 : guildPlr.RankId > 0 ? 2 : 0)));   //todo Alliance rank
             Out.WriteByte(0);
-            Out.WriteStringToZero(guildPlr.Member.Name + (guildPlr.Member.Sex == 1 ? "^F" : "^M"));
-            Out.WriteByte(guildPlr.Member.Value.Level);
+            Out.WriteStringToZero(memberCharacter.Name + (memberCharacter.Sex == 1 ? "^F" : "^M"));
+            Out.WriteByte((byte)(memberCharacter.Value?.Level ?? 0));
             Out.WriteByte(0);
-            Out.WriteByte(guildPlr.Member.Career);
+            Out.WriteByte(memberCharacter.Career);
             Out.WriteByte(0);
             Out.WriteUInt32(guildPlr.LastSeen);
             Out.WriteByte((byte)(guildPlr.GuildRecruiter ? 1 : 0)); // 1 - guild recruiter (red) 2 - guild recruiter (blue)
             Out.WriteByte((byte)(onlinePlr == null ? 0 : onlinePlr.WorldGroup == null ? 0 : onlinePlr.WorldGroup.IsWarband ? 2 : 1)); // 1 - party 2 - warband
             Out.WriteByte((byte)(onlinePlr == null ? 0 : onlinePlr.WorldGroup == null ? 0 : onlinePlr.WorldGroup.PartyOpen ? 2 : 0)); // 0 - closed 2 - open
             Out.WriteByte(1);
-            Out.WriteShortStringToZero(guildPlr.PublicNote);
-            Out.WriteShortStringToZero(guildPlr.OfficerNote);
+            Out.WriteShortStringToZero(guildPlr.PublicNote ?? string.Empty);
+            Out.WriteShortStringToZero(guildPlr.OfficerNote ?? string.Empty);
 
 
             if (plr == null)
@@ -2333,14 +2350,23 @@ namespace WorldServer.World.Guild
 
         public void AddOnlineMember(Player plr)
         {
+            if (plr == null)
+                return;
+
             LogGuildBug(plr);
             lock (OnlineMembers)
             {
+                if (OnlineMembers.Contains(plr))
+                    return;
+
                 OnlineMembers.Add(plr);
                 plr.EvtInterface.AddEventNotify(EventName.OnAddXP, OnAddXp);
                 plr.EvtInterface.AddEventNotify(EventName.OnAddRenown, OnAddRenown);
 
-                SendMember(null, Info.Members[plr.CharacterId]);
+                if (Info.Members.TryGetValue(plr.CharacterId, out Guild_member member))
+                    SendMember(null, member);
+                else
+                    Log.Error("Guild", $"AddOnlineMember: {plr.Name} ({plr.CharacterId}) is not present in guild {Info?.Name}");
 
                 if (Info.AllianceId > 0)
                     UpdateAlliance_OnlineCount();

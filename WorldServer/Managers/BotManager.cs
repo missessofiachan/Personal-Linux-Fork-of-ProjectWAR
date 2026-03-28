@@ -69,58 +69,114 @@ namespace WorldServer.Managers
                 return null;
             }
 
+            if (!TryGetBotTemplate(career, out CharacterInfo template, out CharacterIdentityRecord identity))
+                return null;
+
             Character character = CharMgr.GetCharacter(name);
+            bool saveCharacter = false;
+            bool saveValue = false;
+
             if (character == null)
             {
-                byte race = 0;
-                foreach (var record in CharacterIdentityCatalog.CareerLineRecords)
-                {
-                    if (record.CareerLine == career)
-                    {
-                        race = record.Race;
-                        break;
-                    }
-                }
-
                 character = new Character
                 {
+                    Anonymous = false,
                     Name = name,
+                    Surname = string.Empty,
+                    OldName = string.Empty,
+                    PetName = string.Empty,
                     AccountId = _botAccount.AccountId,
+                    RealmId = Program.Rm?.RealmId ?? 1,
+                    Career = template.Career,
                     CareerLine = career,
-                    Realm = (byte)realm,
-                    Race = race,
-                    ModelId = 0 
+                    Realm = identity.Realm,
+                    Race = identity.Race,
+                    ModelId = 0,
+                    Sex = 0,
+                    Hidden = false,
+                    PetModel = 0,
+                    bTraits = new byte[8],
+                    FirstConnect = false
                 };
 
-                if (!CharMgr.CreateChar(character))
+                if (!CharMgr.CreateChar(character, true))
                 {
                     Log.Error("BotManager", $"Failed to create bot character {name}");
                     return null;
                 }
 
-                // Create Character_value for the bot
-                character.Value = new Character_value
-                {
-                    CharacterId = character.CharacterId,
-                    Level = level,
-                    RenownRank = renownRank,
-                    Online = false,
-                    Speed = 100
-                };
+                character.Value = CreateBotCharacterValue(character, template, level, renownRank, realm);
                 CharMgr.Database.AddObject(character.Value);
+                character.ClientData = new CharacterClientData { CharacterId = character.CharacterId };
+                CharMgr.Database.AddObject(character.ClientData);
             }
-            else if (character.Value == null)
+            else
             {
-                // Ensure Value is loaded if character exists
-                character.Value = CharMgr.Database.SelectObject<Character_value>("CharacterId=" + character.CharacterId);
+                if (character.Value == null)
+                    character.Value = CharMgr.Database.SelectObject<Character_value>("CharacterId=" + character.CharacterId);
+
+                if (character.ClientData == null)
+                    character.ClientData = CharMgr.Database.SelectObject<CharacterClientData>("CharacterId=" + character.CharacterId);
+
+                saveCharacter = RepairBotCharacter(character, template, identity);
+
+                if (character.Value == null)
+                {
+                    character.Value = CreateBotCharacterValue(character, template, level, renownRank, realm);
+                    CharMgr.Database.AddObject(character.Value);
+                }
+                else
+                    saveValue = RepairBotCharacterValue(character, template, level, renownRank, realm);
+
+                if (character.ClientData == null)
+                {
+                    character.ClientData = new CharacterClientData { CharacterId = character.CharacterId };
+                    CharMgr.Database.AddObject(character.ClientData);
+                }
+            }
+
+            if (EnsureBotCollections(character))
+                saveCharacter = true;
+
+            if (saveCharacter)
+                CharMgr.Database.SaveObject(character);
+
+            if (saveValue)
+                CharMgr.Database.SaveObject(character.Value);
+
+            Player existingPlayer = Player.GetPlayersSnapshot()
+                .FirstOrDefault(player => player.IsBot && player.Info != null && player.Info.CharacterId == character.CharacterId);
+
+            if (existingPlayer != null)
+            {
+                existingPlayer.IsBot = true;
+                existingPlayer.Role = role;
+                existingPlayer.Info.FirstConnect = false;
+                if (existingPlayer.MaxActionPoints < 250)
+                    existingPlayer.MaxActionPoints = 250;
+                if (existingPlayer.ActionPoints == 0)
+                    existingPlayer.ActionPoints = existingPlayer.MaxActionPoints;
+
+                return existingPlayer;
             }
 
             BotClient client = new BotClient(Program.Server);
             client._Account = _botAccount;
 
             Player player = Player.CreatePlayer(client, character);
+            if (player == null)
+            {
+                Log.Error("BotManager", $"Failed to create bot player object for {name}");
+                return null;
+            }
+
             player.IsBot = true;
             player.Role = role;
+            player.Info.FirstConnect = false;
+            if (player.MaxActionPoints < 250)
+                player.MaxActionPoints = 250;
+            if (player.ActionPoints == 0)
+                player.ActionPoints = player.MaxActionPoints;
 
             return player;
         }
@@ -134,6 +190,21 @@ namespace WorldServer.Managers
                 return null;
             }
 
+            Zone_Info zoneInfo = ZoneService.GetZone_Info(zoneId);
+            if (zoneInfo == null)
+            {
+                Log.Error("BotManager", $"No zone info found for zone {zoneId}");
+                return null;
+            }
+
+            var region = WorldMgr.GetRegion(zoneInfo.Region, true);
+            if (region == null)
+            {
+                Log.Error("BotManager", $"No region found for zone {zoneId}");
+                return null;
+            }
+
+            Point3D worldSpawn = ZoneService.GetWorldPosition(zoneInfo, (ushort)spawnPos.X, (ushort)spawnPos.Y, (ushort)spawnPos.Z);
             BotFaction[] factions = realm == Realms.REALMS_REALM_ORDER ? OrderFactions : DestroFactions;
             BotFaction faction = factions[RandomMgr.Next(factions.Length)];
 
@@ -158,6 +229,12 @@ namespace WorldServer.Managers
             // 6. Melee 2
             bots.Add(CreateOrLoadBot($"{groupPrefix}_M2", meleeCareer, GetMaxLevel(tier), (byte)rr, realm, BotRole.MeleeDPS));
 
+            if (bots.Any(bot => bot == null))
+            {
+                Log.Error("BotManager", $"Failed to create a full bot group for {groupPrefix}");
+                return null;
+            }
+
             Group group = new Group();
             Player leader = bots.FirstOrDefault(b => b != null);
             if (leader == null) return null;
@@ -177,13 +254,12 @@ namespace WorldServer.Managers
 
             foreach (var bot in bots)
             {
-                if (bot != null)
-                {
-                    bot.SetPosition((ushort)spawnPos.X, (ushort)spawnPos.Y, (ushort)spawnPos.Z, 0, zoneId);
-                    ApplyLoadout(bot, tier, rr);
-                    WorldMgr.GetRegion(zoneId, true).AddObject(bot, zoneId);
-                }
+                StageBotSpawn(bot, zoneInfo, worldSpawn);
+                ApplyLoadout(bot, tier, rr);
+                region.AddObject(bot, zoneId);
             }
+
+            CharMgr.Database.ForceSave();
 
             return group;
         }
@@ -205,9 +281,17 @@ namespace WorldServer.Managers
                     Motd = "Bot Faction Guild",
                     LeaderId = firstBot.CharacterId,
                     AboutUs = "",
+                    BriefDescription = string.Empty,
+                    Summary = string.Empty,
                     Level = 40,
                     Realm = (byte)firstBot.Realm,
                     Xp = 0,
+                    Tax = 0,
+                    Money = 0,
+                    Heraldry = string.Empty,
+                    Banners = string.Empty,
+                    guildvaultpurchased = new byte[5],
+                    GuildTacticsPurchased = new ushort[40],
                     CreateDate = TCPManager.GetTimeStamp(),
                     GuildId = World.Guild.Guild.GenerateMaxGuildId(),
                     Members = new Dictionary<uint, Guild_member>(),
@@ -237,50 +321,86 @@ namespace WorldServer.Managers
                 World.Guild.Guild.Guilds.Add(guild);
                 guild.AddGuildLog(12, info.Name);
             }
+            else if (!guild.Info.Members.ContainsKey(guild.Info.LeaderId))
+            {
+                guild.Info.LeaderId = firstBot.CharacterId;
+                CharMgr.Database.SaveObject(guild.Info);
+            }
 
             foreach (var bot in bots)
             {
                 if (bot == null) continue;
-                if (bot.GldInterface.Guild != null) continue; // Already in a guild
 
-                Guild_member member = new Guild_member
+                RemoveBotFromOtherGuilds(bot, guild);
+
+                if (!guild.Info.Members.TryGetValue(bot.CharacterId, out Guild_member member))
                 {
-                    CharacterId = bot.CharacterId,
-                    GuildId = guild.Info.GuildId,
-                    RankId = (bot == firstBot && isNewGuild) ? (byte)9 : (byte)1,
-                    PublicNote = "",
-                    OfficerNote = "",
-                    Member = bot.Info,
-                    JoinDate = (uint)TCPManager.GetTimeStamp()
-                };
-                
-                // Add member to dictionary to prevent duplicate key errors if guild was just loaded/created
-                if (!guild.Info.Members.ContainsKey(bot.CharacterId))
-                {
+                    member = new Guild_member
+                    {
+                        CharacterId = bot.CharacterId,
+                        GuildId = guild.Info.GuildId,
+                        RankId = (bot == firstBot && isNewGuild) ? (byte)9 : (byte)1,
+                        PublicNote = "",
+                        OfficerNote = "",
+                        Member = bot.Info,
+                        JoinDate = (uint)TCPManager.GetTimeStamp()
+                    };
+
                     guild.Info.Members.Add(bot.CharacterId, member);
                     CharMgr.Database.AddObject(member);
+                    guild.AddGuildLog(0, bot.Name);
+                    if (bot == firstBot && isNewGuild)
+                        guild.AddGuildLog(11, bot.Name);
+                }
+                else
+                {
+                    member.Member = bot.Info;
                 }
 
                 bot.GldInterface.Guild = guild;
-                guild.AddOnlineMember(bot);
-                
-                guild.AddGuildLog(0, bot.Name);
-                if (bot == firstBot && isNewGuild)
-                    guild.AddGuildLog(11, bot.Name);
+                bot.Info.Value.LeftSystemGuild = true;
             }
-            
-            CharMgr.Database.ForceSave();
         }
 
         private void ApplyLoadout(Player bot, int tier, int rr)
         {
+            if (bot?.Info == null)
+                return;
+
             BotLoadoutManager.BotTier bTier = GetBotTier(tier, rr);
             var loadout = BotLoadoutManager.GetLoadout(bTier, (byte)bot.Info.CareerLine);
             if (loadout == null) return;
 
-            foreach (var itemEntry in loadout.SlotItems)
+            List<CharacterItem> existingItems = CharMgr.GetItemsForCharacter(bot.Info) ?? new List<CharacterItem>();
+
+            foreach (KeyValuePair<ushort, uint> itemEntry in loadout.SlotItems)
             {
-                bot.ItmInterface.CreateItem(itemEntry.Value, 1, false, (ushort)itemEntry.Key);
+                ushort slotId = itemEntry.Key;
+                CharacterItem existing = existingItems.FirstOrDefault(item => item.SlotId == slotId);
+                if (existing != null)
+                    continue;
+
+                Item_Info itemInfo = ItemService.GetItem_Info(itemEntry.Value);
+                if (itemInfo == null)
+                {
+                    Log.Error("BotManager", $"Missing loadout item {itemEntry.Value} for {bot.Name}");
+                    continue;
+                }
+
+                CharacterItem item = new CharacterItem
+                {
+                    CharacterId = bot.CharacterId,
+                    Entry = itemEntry.Value,
+                    ModelId = itemInfo.ModelId,
+                    SlotId = slotId,
+                    Counts = 1,
+                    PrimaryDye = 0,
+                    SecondaryDye = 0,
+                    BoundtoPlayer = false
+                };
+
+                CharMgr.CreateItem(item);
+                existingItems.Add(item);
             }
         }
 
@@ -300,6 +420,312 @@ namespace WorldServer.Managers
         private byte GetMaxLevel(int tier)
         {
             return tier switch { 1 => 11, 2 => 21, 3 => 31, 4 => 40, _ => 40 };
+        }
+
+        private bool TryGetBotTemplate(byte careerLine, out CharacterInfo template, out CharacterIdentityRecord identity)
+        {
+            template = CharMgr.GetCharacterInfo(careerLine);
+            if (template == null)
+                template = CharMgr.CharacterInfos.Values.FirstOrDefault(info => info.CareerLine == careerLine);
+
+            if (template == null)
+            {
+                Log.Error("BotManager", $"No CharacterInfo found for career line {careerLine}");
+                identity = default;
+                return false;
+            }
+
+            if (!CharacterIdentityCatalog.TryGetByCareerLine(careerLine, out identity))
+            {
+                Log.Error("BotManager", $"No identity mapping found for career line {careerLine}");
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool RepairBotCharacter(Character character, CharacterInfo template, CharacterIdentityRecord identity)
+        {
+            bool dirty = false;
+
+            if (character.AccountId != _botAccount.AccountId)
+            {
+                character.AccountId = _botAccount.AccountId;
+                dirty = true;
+            }
+
+            if (character.RealmId != (Program.Rm?.RealmId ?? 1))
+            {
+                character.RealmId = Program.Rm?.RealmId ?? 1;
+                dirty = true;
+            }
+
+            if (character.Career != template.Career)
+            {
+                character.Career = template.Career;
+                dirty = true;
+            }
+
+            if (character.CareerLine != identity.CareerLine)
+            {
+                character.CareerLine = identity.CareerLine;
+                dirty = true;
+            }
+
+            if (character.Realm != identity.Realm)
+            {
+                character.Realm = identity.Realm;
+                dirty = true;
+            }
+
+            if (character.Race != identity.Race)
+            {
+                character.Race = identity.Race;
+                dirty = true;
+            }
+
+            if (character.bTraits == null || character.bTraits.Length < 8)
+            {
+                character.bTraits = new byte[8];
+                dirty = true;
+            }
+
+            if (character.Surname == null)
+            {
+                character.Surname = string.Empty;
+                dirty = true;
+            }
+
+            if (character.OldName == null)
+            {
+                character.OldName = string.Empty;
+                dirty = true;
+            }
+
+            if (character.PetName == null)
+            {
+                character.PetName = string.Empty;
+                dirty = true;
+            }
+
+            if (character.Sex > 1)
+            {
+                character.Sex = 0;
+                dirty = true;
+            }
+
+            if (character.Anonymous)
+            {
+                character.Anonymous = false;
+                dirty = true;
+            }
+
+            if (character.Hidden)
+            {
+                character.Hidden = false;
+                dirty = true;
+            }
+
+            character.FirstConnect = false;
+            return dirty;
+        }
+
+        private static Character_value CreateBotCharacterValue(Character character, CharacterInfo template, byte level, byte renownRank, Realms realm)
+        {
+            Character_value value = new Character_value
+            {
+                CharacterId = character.CharacterId,
+                Level = level,
+                Money = 0,
+                Online = false,
+                RallyPoint = template.RallyPt,
+                RegionId = ZoneService.GetZone_Info(template.ZoneId)?.Region ?? template.Region,
+                Renown = 0,
+                RenownRank = renownRank,
+                RestXp = 0,
+                Skills = template.Skills,
+                Speed = 100,
+                PlayedTime = 0,
+                WorldO = template.WorldO,
+                WorldX = template.WorldX,
+                WorldY = template.WorldY,
+                WorldZ = template.WorldZ,
+                Xp = 0,
+                ZoneId = template.ZoneId,
+                LeftSystemGuild = true
+            };
+
+            if (WorldMgr.NormalizeCharacterWorldPosition(value, (byte)realm, character.Name, out string spawnReason))
+                Log.Info("BotManager", $"Normalized bot position for {character.Name}: {spawnReason}");
+
+            return value;
+        }
+
+        private static bool RepairBotCharacterValue(Character character, CharacterInfo template, byte level, byte renownRank, Realms realm)
+        {
+            Character_value value = character.Value;
+            bool dirty = false;
+
+            if (value.CharacterId != character.CharacterId)
+            {
+                value.CharacterId = character.CharacterId;
+                dirty = true;
+            }
+
+            if (value.Level != level)
+            {
+                value.Level = level;
+                dirty = true;
+            }
+
+            if (value.RenownRank != renownRank)
+            {
+                value.RenownRank = renownRank;
+                dirty = true;
+            }
+
+            if (value.Speed <= 0)
+            {
+                value.Speed = 100;
+                dirty = true;
+            }
+
+            if (value.RallyPoint == 0)
+            {
+                value.RallyPoint = template.RallyPt;
+                dirty = true;
+            }
+
+            if (value.RegionId <= 0)
+            {
+                value.RegionId = ZoneService.GetZone_Info(template.ZoneId)?.Region ?? template.Region;
+                dirty = true;
+            }
+
+            if (value.ZoneId == 0)
+            {
+                value.ZoneId = template.ZoneId;
+                dirty = true;
+            }
+
+            if (value.WorldX == 0 && value.WorldY == 0)
+            {
+                value.WorldX = template.WorldX;
+                value.WorldY = template.WorldY;
+                value.WorldZ = template.WorldZ;
+                value.WorldO = template.WorldO;
+                dirty = true;
+            }
+
+            if (value.Skills == 0)
+            {
+                value.Skills = template.Skills;
+                dirty = true;
+            }
+
+            if (!value.LeftSystemGuild)
+            {
+                value.LeftSystemGuild = true;
+                dirty = true;
+            }
+
+            if (WorldMgr.NormalizeCharacterWorldPosition(value, (byte)realm, character.Name, out string spawnReason))
+            {
+                dirty = true;
+                Log.Info("BotManager", $"Repaired bot position for {character.Name}: {spawnReason}");
+            }
+
+            return dirty;
+        }
+
+        private static bool EnsureBotCollections(Character character)
+        {
+            bool dirty = false;
+
+            if (character.Mails == null)
+            {
+                character.Mails = new List<Character_mail>();
+                dirty = true;
+            }
+
+            if (character.Quests == null)
+            {
+                character.Quests = new List<Character_quest>();
+                dirty = true;
+            }
+
+            if (character.Toks == null)
+            {
+                character.Toks = new List<Character_tok>();
+                dirty = true;
+            }
+
+            if (character.TokKills == null)
+            {
+                character.TokKills = new List<Character_tok_kills>();
+                dirty = true;
+            }
+
+            if (character.Socials == null)
+            {
+                character.Socials = new List<Character_social>();
+                dirty = true;
+            }
+
+            if (character.Influences == null)
+            {
+                character.Influences = new List<Characters_influence>();
+                dirty = true;
+            }
+
+            if (character.Bag_Pools == null)
+            {
+                character.Bag_Pools = new List<Characters_bag_pools>();
+                dirty = true;
+            }
+
+            if (character.Buffs == null)
+            {
+                character.Buffs = new List<CharacterSavedBuff>();
+                dirty = true;
+            }
+
+            return dirty;
+        }
+
+        private static void StageBotSpawn(Player bot, Zone_Info zoneInfo, Point3D worldSpawn)
+        {
+            if (bot?.Info?.Value == null || zoneInfo == null || worldSpawn == null)
+                return;
+
+            bot.Info.Value.ZoneId = zoneInfo.ZoneId;
+            bot.Info.Value.RegionId = zoneInfo.Region;
+            bot.Info.Value.WorldX = worldSpawn.X;
+            bot.Info.Value.WorldY = worldSpawn.Y;
+            bot.Info.Value.WorldZ = worldSpawn.Z;
+            bot.Info.Value.WorldO = 0;
+            bot.Info.Value.LeftSystemGuild = true;
+        }
+
+        private static void RemoveBotFromOtherGuilds(Player bot, World.Guild.Guild targetGuild)
+        {
+            if (bot == null)
+                return;
+
+            foreach (World.Guild.Guild guild in World.Guild.Guild.Guilds.ToList())
+            {
+                if (guild == null || guild == targetGuild)
+                    continue;
+
+                if (!guild.Info.Members.TryGetValue(bot.CharacterId, out Guild_member member))
+                    continue;
+
+                guild.Info.Members.Remove(bot.CharacterId);
+                CharMgr.Database.DeleteObject(member);
+
+                if (guild.IsSystemGuild() && bot.Info?.Value != null)
+                    bot.Info.Value.LeftSystemGuild = true;
+            }
         }
     }
 }

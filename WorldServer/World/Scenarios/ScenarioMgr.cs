@@ -404,6 +404,14 @@ namespace WorldServer.World.Scenarios
 
         public void AddGroup(GroupQueueAction newGroup)
         {
+            if (newGroup?.CurMembers == null || newGroup.CurMembers.Count < 2 || newGroup.CurMembers.Count > 6)
+            {
+                Log.Error("ScenarioMgr", "Refusing to queue a group with invalid member count "
+                    + (newGroup?.CurMembers?.Count ?? 0)
+                    + ".");
+                return;
+            }
+
             List<GroupQueueAction> groupList = QueuedGroups[newGroup.CurMembers.Count - 2];
 
             for (int i = 0; i <= groupList.Count; ++i)
@@ -640,9 +648,9 @@ namespace WorldServer.World.Scenarios
                             {
                                 AddGroup((GroupQueueAction) action);
                             }
-                            catch
+                            catch (Exception ex)
                             {
-                                Log.Error("ScenarioMgr", "Exception thrown from AddGroup");
+                                Log.Error("ScenarioMgr", "Exception thrown from AddGroup: " + ex);
                                 ((GroupQueueAction) action).MyGroup.LatentDequeueAll();
                             }
                         }
@@ -1785,7 +1793,7 @@ namespace WorldServer.World.Scenarios
                     //plr.PlaySound(705,false);
                     break;
                 case ScenarioUpdateType.GroupQueued:
-                    if (plr.WorldGroup.Leader == plr)
+                    if (plr.WorldGroup?.Leader == plr)
                         plr.SendLocalizeString("", ChatLogFilters.CHATLOGFILTERS_SAY, Localized_text.TEXT_SCENARIO_JOIN_GROUP_LEADER);
 
                     plr.SendLocalizeString(scenario.Name, ChatLogFilters.CHATLOGFILTERS_SAY, Localized_text.TEXT_SCENARIO_JOIN_GROUP);

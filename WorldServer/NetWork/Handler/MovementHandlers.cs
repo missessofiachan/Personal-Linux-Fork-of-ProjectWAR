@@ -76,6 +76,19 @@ namespace WorldServer.NetWork.Handler
         private static long _lavatimer = 0;
         private static readonly Dictionary<Unit, NewBuff> _lavaBuffs = new Dictionary<Unit, NewBuff>();
 
+        private static void TeleportToRealmFallback(Player player)
+        {
+            if (player == null)
+                return;
+
+            ushort capitalZoneId = player.Realm == Realms.REALMS_REALM_DESTRUCTION ? (ushort)161 : (ushort)162;
+            SpawnPoint fallback = WorldMgr.GetZoneRespawn(capitalZoneId, (byte)player.Realm, player);
+            if (fallback == null)
+                return;
+
+            player.Teleport(fallback.ZoneId, (uint)fallback.X, (uint)fallback.Y, (ushort)fallback.Z, 0);
+        }
+
         private static void AddLavaBuff(NewBuff lavaBuff)
         {
             if (lavaBuff == null)
@@ -292,14 +305,7 @@ namespace WorldServer.NetWork.Handler
                 if ((zoneID == 0 && player.ZoneId.HasValue) && player.Client.IsPlaying())
                 {
                     player.SendClientMessage("You managed to go outside of the worlds boundries, as such you have been forcefully moved to your capital", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
-                    if (player.Realm == Realms.REALMS_REALM_DESTRUCTION)
-                        player.Teleport(161, 439815, 134493, 16865, 0);
-                   
-
-
-                    else if (player.Realm == Realms.REALMS_REALM_ORDER)
-                        player.Teleport(162, 124084, 130213, 12572, 0);
-
+                    TeleportToRealmFallback(player);
                 }
                 
                 //stop players from getting stuck below the world like below IC
@@ -519,12 +525,7 @@ namespace WorldServer.NetWork.Handler
                 if ((zoneID == 0 && player.ZoneId.HasValue) && player.Client.IsPlaying())
                 {
                     player.SendClientMessage("You managed to go outside of the worlds boundries, as such you have been forcefully moved to your capital", ChatLogFilters.CHATLOGFILTERS_CSR_TELL_RECEIVE);
-                    if (player.Realm == Realms.REALMS_REALM_DESTRUCTION)
-                        player.Teleport(161, 439815, 134493, 16865, 0);
-
-                    else if (player.Realm == Realms.REALMS_REALM_ORDER)
-                        player.Teleport(162, 124084, 130213, 12572, 0);
-
+                    TeleportToRealmFallback(player);
                 }
 
                 //player should not be able to cast while in the air.

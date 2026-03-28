@@ -207,6 +207,9 @@ Get-Process | Where-Object { $_.Name -match 'AccountCacher|LauncherServer|LobbyS
 - GM `.teleport center` or `.teleport entry` lands in a bad spot:
   - the command now prefers respawns, taxis, rally points, chapter pins, and validated portal arrivals before using `zone_infos`-derived fallbacks.
   - if a zone still has no reliable anchors, curate its respawn/taxi/rally/chapter data rather than relying on geometric center points.
+- Scenario starts are missing, College of Corruption starts in the wrong place, or capital fallback teleports are unsafe:
+  - apply `Database/update_009_scenario_restore_and_capital_spawn_repairs.sql`.
+  - this restores the stable scenario pool, repairs missing scenario respawns, fixes College of Corruption starts, and corrects the capital spawn data used by teleport recovery and fallback logic.
 - Land of the Dead expedition flights never appear or never unlock:
   - apply `Database/update_005_lotd_resource_tracker.sql`.
   - the LOTD tracker uses T4 battlefront locks to award realm points, unlocks expedition access for one realm at a time, then resets after the configured ownership window.
@@ -214,7 +217,12 @@ Get-Process | Where-Object { $_.Name -match 'AccountCacher|LauncherServer|LobbyS
   - if the `lotd_resource_tracker` table is missing, the server now keeps the LOTD flights hidden instead of exposing them to both realms.
   - if `WorldServer` logs show `lotd_resource_tracker ... Type mismatch (INT UNSIGNED in DB - INT in emulator)`, also apply `Database/update_006_lotd_resource_tracker_schema_fix.sql`.
   - if `WorldServer` logs show `LotdService ... StructExpressionBinder`, update to the current build as well; the runtime binder now supports nullable tracker timestamps.
+  - if a realm owns LOTD but the client still cannot see the zone `191` flight path, update to the current `WorldServer` build as well; LOTD taxis now bypass the generic T4 Tome-token gate once `LotdService` has unlocked them for that realm.
   - if the expedition tracker is still invisible, confirm the server log reaches `Loaded Land of the Dead resource tracker` on the current build before debugging packet display behavior; older failed boots in `bin/Release/logs` do not prove the current binaries loaded the tracker.
+- Live event tables are missing or the live-event UI is empty because `war_world.liveevent_*` was dropped or truncated:
+  - apply `Database/update_010_restore_liveevent_tables.sql`.
+  - this recreates the `liveevent_infos`, `liveevent_task_infos`, `liveevent_subtask_infos`, and `liveevent_reward_infos` tables if needed and restores the archived seed rows preserved in repo history.
+  - the restore leaves all events disabled by default (`Allowed = 0`) so you can re-enable specific events intentionally instead of booting into a forced live-event state.
 - The active T4 battlefront opens, but its objectives still behave as `ZoneLocked` or Praag immediately aborts domination checks:
   - update to the current `WorldServer` build.
   - battlefront objective lock/open calls now drive the FSM consistently and force a neutral-safe reset if an objective stays stuck in `ZoneLocked`.

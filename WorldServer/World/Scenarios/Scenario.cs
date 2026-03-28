@@ -177,7 +177,7 @@ namespace WorldServer.World.Scenarios
                 RespawnHeadings[i] = 0;
             }
 
-            Region = new RegionMgr(Info.MapId, ZoneService.GetZoneRegion(Info.RegionId), info.Name, new BattlefrontCommunications()) { Scenario = this };
+            Region = new RegionMgr(Info.MapId, ZoneService.GetRegionOrZone(Info.MapId), info.Name, new BattlefrontCommunications()) { Scenario = this };
 
             /* create groups */
             for (int i = 0; i < 2; ++i)

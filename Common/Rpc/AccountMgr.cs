@@ -573,6 +573,9 @@ namespace Common {
             AccountMgr.Database.AddObject(Acct);
             AccountMgr.Database.ForceSave();
 
+            lock (_accounts)
+                _accounts[normalizedUsername] = Acct;
+
 
             Log.Success("CreateAccount", $"Created {Acct.Username}");
             return true;

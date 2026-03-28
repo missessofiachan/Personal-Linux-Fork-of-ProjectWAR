@@ -61,6 +61,26 @@ namespace WorldServer.Services.World
                     list.Add(zone);
             return list;
         }
+
+        /// <summary>
+        /// Gets all zones in the given region, or falls back to a single zone when the identifier is already a zone id.
+        /// </summary>
+        public static List<Zone_Info> GetRegionOrZone(ushort regionOrZoneId)
+        {
+            List<Zone_Info> zones = GetZoneRegion(regionOrZoneId);
+
+            if (zones.Count > 0)
+                return zones;
+
+            Zone_Info zone = GetZone_Info(regionOrZoneId);
+
+            if (zone == null)
+                return zones;
+
+            zones.Add(zone);
+            return zones;
+        }
+
         public static Zone_Info GetZoneFromOffsets(int OffsetX, int OffsetY)
         {
             foreach (Zone_Info Info in _Zone_Info)

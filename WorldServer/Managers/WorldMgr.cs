@@ -530,9 +530,21 @@ namespace WorldServer.Managers
 
         private static SpawnPoint GetRealmSafeFallback(byte realm, string reason)
         {
-            SpawnPoint fallback = realm == (byte)Realms.REALMS_REALM_DESTRUCTION
-                ? new SpawnPoint(161, 439815, 134493, 16865)
-                : new SpawnPoint(162, 124084, 130213, 12572);
+            ushort fallbackZoneId = realm == (byte)Realms.REALMS_REALM_DESTRUCTION ? (ushort)161 : (ushort)162;
+
+            SpawnPoint fallback = TryGetZoneRespawnFallback(fallbackZoneId, realm);
+            if (fallback == null)
+                fallback = TryGetZoneTaxiFallback(fallbackZoneId, realm);
+
+            if (fallback == null)
+                fallback = TryGetZoneJumpFallback(fallbackZoneId);
+
+            if (fallback == null)
+            {
+                fallback = realm == (byte)Realms.REALMS_REALM_DESTRUCTION
+                    ? new SpawnPoint(161, 442630, 127892, 17396)
+                    : new SpawnPoint(162, 116235, 147790, 14121);
+            }
 
             _logger.Warn($"Using realm fallback {fallback} because {reason}");
             return fallback;
@@ -591,7 +603,9 @@ namespace WorldServer.Managers
                 if (!LotdService.ShouldExposeTaxi(Plr, taxi))
                     continue;
 
-                if (taxi.Tier > 0)
+                // LOTD visibility is controlled by LotdService; the generic tier token unlocks
+                // would otherwise hide the taxi again even after a realm wins access.
+                if (taxi.Tier > 0 && taxi.ZoneID != LotdService.LotdZoneId)
                 {
                     switch (taxi.Tier)
                     {

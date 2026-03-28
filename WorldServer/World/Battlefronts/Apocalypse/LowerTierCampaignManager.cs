@@ -65,6 +65,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 						LockTimeStamp = 0,
 						Locked = true,
 						RegionId = battleFrontProgression.RegionId,
+						ZoneId = battleFrontProgression.ZoneId,
 						Description = battleFrontProgression.Description,
 						KeepList = keeps ?? new List<Keep_Info>(),
 						BattlefieldObjectives = battlefieldObjectives ?? new List<BattleFront_Objective>()
