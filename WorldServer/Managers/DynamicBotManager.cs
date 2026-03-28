@@ -88,13 +88,6 @@ namespace WorldServer.Managers
 
             int tier = campaign.Tier;
 
-            if (BattleFrontService.GetWarcampEntrance(zoneId, Realms.REALMS_REALM_ORDER) == null
-                || BattleFrontService.GetWarcampEntrance(zoneId, Realms.REALMS_REALM_DESTRUCTION) == null)
-            {
-                Log.Error("DynamicBotManager", $"Skipping bot spawn for zone {zoneId}: missing warcamp entrance data.");
-                return;
-            }
-            
             string orderPrefix = $"Bot_T{tier}_O_{zoneId}";
             string destroPrefix = $"Bot_T{tier}_D_{zoneId}";
 
@@ -176,10 +169,6 @@ namespace WorldServer.Managers
             zoneId = 0;
 
             if (!TryGetCampaignZoneId(campaign, out ushort candidateZoneId))
-                return false;
-
-            if (BattleFrontService.GetWarcampEntrance(candidateZoneId, Realms.REALMS_REALM_ORDER) == null
-                || BattleFrontService.GetWarcampEntrance(candidateZoneId, Realms.REALMS_REALM_DESTRUCTION) == null)
                 return false;
 
             zoneId = candidateZoneId;

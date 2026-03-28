@@ -151,6 +151,7 @@ namespace WorldServer.Managers
             {
                 existingPlayer.IsBot = true;
                 existingPlayer.Role = role;
+                existingPlayer.CbtInterface.IsPvp = true;
                 existingPlayer.Info.FirstConnect = false;
                 if (existingPlayer.MaxActionPoints < 250)
                     existingPlayer.MaxActionPoints = 250;
@@ -172,6 +173,7 @@ namespace WorldServer.Managers
 
             player.IsBot = true;
             player.Role = role;
+            player.CbtInterface.IsPvp = true;
             player.Info.FirstConnect = false;
             if (player.MaxActionPoints < 250)
                 player.MaxActionPoints = 250;
@@ -181,15 +183,25 @@ namespace WorldServer.Managers
             return player;
         }
 
+        private static Point3D ResolveSpawnPoint(ushort zoneId, Realms realm, Zone_Info zoneInfo)
+        {
+            // 1. Warcamp entrance (preferred).
+            Point3D warcampPin = BattleFrontService.GetWarcampEntrance(zoneId, realm);
+            if (warcampPin != null)
+                return ZoneService.GetWorldPosition(zoneInfo, (ushort)warcampPin.X, (ushort)warcampPin.Y, (ushort)warcampPin.Z);
+
+            // 2. Zone respawn point for this realm (or any realm as fallback).
+            Zone_Respawn respawn = ZoneService.GetZoneRespawn(zoneId, (byte)realm);
+            if (respawn != null)
+                return ZoneService.GetWorldPosition(zoneInfo, respawn.PinX, respawn.PinY, respawn.PinZ);
+
+            // 3. Zone grid center.
+            Log.Info("BotManager", $"No spawn anchor found for zone {zoneId} realm {realm}; using zone center.");
+            return new Point3D((zoneInfo.OffX + 4) << 12, (zoneInfo.OffY + 4) << 12, 0);
+        }
+
         public Group SpawnBotGroup(Realms realm, int tier, int rr, string groupPrefix, ushort zoneId)
         {
-            Point3D spawnPos = BattleFrontService.GetWarcampEntrance(zoneId, realm);
-            if (spawnPos == null)
-            {
-                Log.Error("BotManager", $"No warcamp entrance found for zone {zoneId}, realm {realm}");
-                return null;
-            }
-
             Zone_Info zoneInfo = ZoneService.GetZone_Info(zoneId);
             if (zoneInfo == null)
             {
@@ -204,7 +216,7 @@ namespace WorldServer.Managers
                 return null;
             }
 
-            Point3D worldSpawn = ZoneService.GetWorldPosition(zoneInfo, (ushort)spawnPos.X, (ushort)spawnPos.Y, (ushort)spawnPos.Z);
+            Point3D worldSpawn = ResolveSpawnPoint(zoneId, realm, zoneInfo);
             BotFaction[] factions = realm == Realms.REALMS_REALM_ORDER ? OrderFactions : DestroFactions;
             BotFaction faction = factions[RandomMgr.Next(factions.Length)];
 

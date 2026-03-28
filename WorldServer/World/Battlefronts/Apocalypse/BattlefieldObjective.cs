@@ -235,6 +235,20 @@ namespace WorldServer.World.Battlefronts.Apocalypse
             return false;
         }
 
+        /// <summary>
+        /// Returns true if any guard belonging to this objective is alive within 100 feet of the flag.
+        /// Used by bot AI to skip guarded objectives in favour of unguarded ones.
+        /// </summary>
+        public bool HasLiveGuardsNearby()
+        {
+            foreach (var guard in Guards)
+            {
+                if (guard.Creature != null && !guard.Creature.IsDead && GetDistanceTo(guard.Creature) < 100)
+                    return true;
+            }
+            return false;
+        }
+
         private bool DespawnAllGuards()
         {
             if (Guards != null)
