@@ -41,6 +41,15 @@ namespace WorldServer.Services.World
             int Count = 0;
             foreach (BattleFront_Objective Obj in Objectives)
             {
+                Zone_Info zone = ZoneService.GetZone_Info(Obj.ZoneId);
+                if (zone != null && Obj.X < 65536 && Obj.Y < 65536 && (zone.OffX > 0 || zone.OffY > 0))
+                {
+                    Point3D world = ZoneService.GetWorldPosition(zone, (ushort)Obj.X, (ushort)Obj.Y, (ushort)Obj.Z);
+                    Obj.X = world.X;
+                    Obj.Y = world.Y;
+                    Obj.Z = world.Z;
+                }
+
                 if (!_BattleFrontObjectives.ContainsKey(Obj.RegionId))
                     _BattleFrontObjectives.Add(Obj.RegionId, new List<BattleFront_Objective>());
 
@@ -84,6 +93,15 @@ namespace WorldServer.Services.World
             int Count = 0;
             foreach (Keep_Info keepInfo in keepInfos)
             {
+                Zone_Info zone = ZoneService.GetZone_Info(keepInfo.ZoneId);
+                if (zone != null && keepInfo.X < 65536 && keepInfo.Y < 65536 && (zone.OffX > 0 || zone.OffY > 0))
+                {
+                    Point3D world = ZoneService.GetWorldPosition(zone, (ushort)keepInfo.X, (ushort)keepInfo.Y, (ushort)keepInfo.Z);
+                    keepInfo.X = world.X;
+                    keepInfo.Y = world.Y;
+                    keepInfo.Z = world.Z;
+                }
+
                 if (!_KeepInfos.ContainsKey(keepInfo.RegionId))
                     _KeepInfos.Add(keepInfo.RegionId, new List<Keep_Info>());
 

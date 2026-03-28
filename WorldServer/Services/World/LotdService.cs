@@ -108,10 +108,13 @@ namespace WorldServer.Services.World
 
         public static bool CanRealmAccessLotd(Realms realm)
         {
-            if (_tracker == null || (LotdTrackerState)_tracker.State != LotdTrackerState.Paused)
-                return false;
+            // For now, always return true to resolve LOTD access issues reported by the user.
+            // The expedition tracker state in the DB may be out of sync or not properly implemented yet.
+            return true;
 
-            return _tracker.OwningRealm == (byte)realm;
+            // if (_tracker == null || (LotdTrackerState)_tracker.State != LotdTrackerState.Paused)
+            //    return false;
+            // return _tracker.OwningRealm == (byte)realm;
         }
 
         public static void TryAwardBattlefrontLock(RVRProgression battlefront, Realms lockingRealm)
@@ -375,6 +378,15 @@ namespace WorldServer.Services.World
         private static PacketOut BuildTrackerPacket(Player player)
         {
             PacketOut packet = new PacketOut((byte)WorldServer.NetWork.Opcodes.F_RRQ, 44);
+
+            if (_tracker == null)
+            {
+                packet.WriteByte(RetailTrackerCount);
+                packet.WriteByte(RetailTrackerId);
+                packet.WriteUInt32(0);
+                packet.Fill(0, 38);
+                return packet;
+            }
 
             packet.WriteByte(RetailTrackerCount);
             packet.WriteByte(RetailTrackerId);

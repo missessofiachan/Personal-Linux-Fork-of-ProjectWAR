@@ -1,10 +1,10 @@
 CREATE DATABASE  IF NOT EXISTS `war_accounts` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `war_accounts`;
--- MySQL dump 10.13  Distrib 8.0.18, for Win64 (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.45, for Win64 (x86_64)
 --
 -- Host: localhost    Database: war_accounts
 -- ------------------------------------------------------
--- Server version	8.0.18
+-- Server version	8.0.45
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -25,13 +25,13 @@ DROP TABLE IF EXISTS `account_sanction_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `account_sanction_logs` (
-  `AccountId` int(11) DEFAULT NULL,
+  `AccountId` int DEFAULT NULL,
   `IssuedBy` varchar(24) DEFAULT NULL,
   `ActionType` varchar(24) DEFAULT NULL,
-  `IssuerGmLevel` int(11) DEFAULT NULL,
+  `IssuerGmLevel` int DEFAULT NULL,
   `ActionDuration` text,
   `ActionLog` varchar(255) DEFAULT NULL,
-  `ActionTime` int(11) DEFAULT NULL,
+  `ActionTime` int DEFAULT NULL,
   `account_sanction_logs_ID` varchar(255) NOT NULL,
   PRIMARY KEY (`account_sanction_logs_ID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
@@ -54,8 +54,8 @@ DROP TABLE IF EXISTS `account_value`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `account_value` (
-  `Id` int(11) NOT NULL AUTO_INCREMENT,
-  `AccountId` int(11) DEFAULT NULL,
+  `Id` int NOT NULL AUTO_INCREMENT,
+  `AccountId` int DEFAULT NULL,
   `InstallId` text,
   `IP` text,
   `MAC` text,
@@ -83,24 +83,24 @@ DROP TABLE IF EXISTS `accounts`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `accounts` (
-  `AccountId` int(11) NOT NULL AUTO_INCREMENT,
-  `PacketLog` tinyint(3) unsigned DEFAULT NULL,
+  `AccountId` int NOT NULL AUTO_INCREMENT,
+  `PacketLog` tinyint unsigned DEFAULT NULL,
   `Username` varchar(255) DEFAULT NULL,
   `Password` varchar(255) DEFAULT NULL,
   `CryptPassword` varchar(255) DEFAULT NULL,
   `Ip` varchar(255) DEFAULT NULL,
   `Token` varchar(255) DEFAULT NULL,
-  `GmLevel` tinyint(4) NOT NULL,
-  `Banned` int(11) NOT NULL,
+  `GmLevel` tinyint NOT NULL,
+  `Banned` int NOT NULL,
   `BanReason` text,
-  `AdviceBlockEnd` int(11) DEFAULT NULL,
-  `StealthMuteEnd` int(11) DEFAULT NULL,
-  `CoreLevel` int(11) DEFAULT NULL,
-  `LastLogged` int(11) DEFAULT NULL,
-  `LastNameChanged` int(11) DEFAULT NULL,
+  `AdviceBlockEnd` int DEFAULT NULL,
+  `StealthMuteEnd` int DEFAULT NULL,
+  `CoreLevel` int DEFAULT NULL,
+  `LastLogged` int DEFAULT NULL,
+  `LastNameChanged` int DEFAULT NULL,
   `LastPatcherLog` text,
-  `InvalidPasswordCount` int(10) unsigned NOT NULL,
-  `noSurname` tinyint(4) NOT NULL,
+  `InvalidPasswordCount` int unsigned NOT NULL,
+  `noSurname` tinyint NOT NULL,
   `Email` text,
   PRIMARY KEY (`AccountId`),
   UNIQUE KEY `Username` (`Username`)
@@ -124,7 +124,7 @@ DROP TABLE IF EXISTS `blogs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `blogs` (
-  `BlogId` int(11) NOT NULL AUTO_INCREMENT,
+  `BlogId` int NOT NULL AUTO_INCREMENT,
   `BlogTimestamp` datetime(6) DEFAULT NULL,
   `BlogText` mediumtext,
   `BlogUrl` varchar(200) DEFAULT NULL,
@@ -150,13 +150,13 @@ DROP TABLE IF EXISTS `characters_value_24hr`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `characters_value_24hr` (
-  `characterIdint` int(11) NOT NULL,
-  `Levelint` int(11) DEFAULT NULL,
-  `xpint` int(11) DEFAULT NULL,
-  `RenownRankint` int(11) DEFAULT NULL,
-  `Moneyint` int(11) DEFAULT NULL,
+  `characterIdint` int NOT NULL,
+  `Levelint` int DEFAULT NULL,
+  `xpint` int DEFAULT NULL,
+  `RenownRankint` int DEFAULT NULL,
+  `Moneyint` int DEFAULT NULL,
   `timestampdatetime` timestamp NOT NULL,
-  `characterId` int(11) NOT NULL,
+  `characterId` int NOT NULL,
   PRIMARY KEY (`characterId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -179,7 +179,7 @@ DROP TABLE IF EXISTS `ip_bans`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `ip_bans` (
   `Ip` varchar(255) NOT NULL,
-  `Expire` int(11) DEFAULT NULL,
+  `Expire` int DEFAULT NULL,
   PRIMARY KEY (`Ip`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -201,13 +201,13 @@ DROP TABLE IF EXISTS `launcher_files`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `launcher_files` (
-  `Id` int(11) NOT NULL AUTO_INCREMENT,
+  `Id` int NOT NULL AUTO_INCREMENT,
   `Name` varchar(2000) DEFAULT NULL,
-  `CRC32` int(10) unsigned DEFAULT NULL,
-  `Size` bigint(20) DEFAULT NULL,
-  `GmLevel` int(10) unsigned DEFAULT NULL,
+  `CRC32` int unsigned DEFAULT NULL,
+  `Size` bigint DEFAULT NULL,
+  `GmLevel` int unsigned DEFAULT NULL,
   `ModifyDate` datetime DEFAULT NULL,
-  `ModifyAccountId` int(11) DEFAULT NULL,
+  `ModifyAccountId` int DEFAULT NULL,
   PRIMARY KEY (`Id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -229,16 +229,16 @@ DROP TABLE IF EXISTS `launcher_hashes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `launcher_hashes` (
-  `Id` int(11) NOT NULL AUTO_INCREMENT,
+  `Id` int NOT NULL AUTO_INCREMENT,
   `Name` varchar(2000) DEFAULT NULL,
   `File` varchar(4000) DEFAULT NULL,
-  `CRC32` int(10) unsigned DEFAULT NULL,
-  `Hash` bigint(20) unsigned DEFAULT NULL,
-  `Size` bigint(20) DEFAULT NULL,
-  `MetaDataSize` int(10) unsigned DEFAULT NULL,
-  `ArchiveId` int(11) DEFAULT NULL,
+  `CRC32` int unsigned DEFAULT NULL,
+  `Hash` bigint unsigned DEFAULT NULL,
+  `Size` bigint DEFAULT NULL,
+  `MetaDataSize` int unsigned DEFAULT NULL,
+  `ArchiveId` int DEFAULT NULL,
   `ModifyDate` datetime DEFAULT NULL,
-  `ModifyAccountId` int(11) DEFAULT NULL,
+  `ModifyAccountId` int DEFAULT NULL,
   PRIMARY KEY (`Id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -260,14 +260,14 @@ DROP TABLE IF EXISTS `launcher_info`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `launcher_info` (
-  `LauncherId` int(11) NOT NULL AUTO_INCREMENT,
-  `GmLevel` tinyint(4) NOT NULL,
+  `LauncherId` int NOT NULL AUTO_INCREMENT,
+  `GmLevel` tinyint NOT NULL,
   `PatchNotes` text NOT NULL,
-  `ServerState` int(11) NOT NULL,
-  `Version` int(11) DEFAULT NULL,
+  `ServerState` int NOT NULL,
+  `Version` int DEFAULT NULL,
   `FilePath` varchar(2000) DEFAULT NULL,
   `ModifiedDate` datetime DEFAULT NULL,
-  `ModifyAccountId` int(11) DEFAULT NULL,
+  `ModifyAccountId` int DEFAULT NULL,
   PRIMARY KEY (`LauncherId`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -289,9 +289,9 @@ DROP TABLE IF EXISTS `launcher_myps`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `launcher_myps` (
-  `Id` int(11) NOT NULL AUTO_INCREMENT,
+  `Id` int NOT NULL AUTO_INCREMENT,
   `Name` varchar(2000) DEFAULT NULL,
-  `CRC32` int(11) DEFAULT NULL,
+  `CRC32` int DEFAULT NULL,
   PRIMARY KEY (`Id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -313,11 +313,11 @@ DROP TABLE IF EXISTS `realms`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `realms` (
-  `RealmId` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `RealmId` tinyint unsigned NOT NULL DEFAULT '0',
   `Name` varchar(255) DEFAULT NULL,
   `Language` varchar(255) DEFAULT NULL,
   `Adresse` varchar(255) DEFAULT NULL,
-  `Port` int(11) NOT NULL,
+  `Port` int NOT NULL,
   `AllowTrials` varchar(32) DEFAULT NULL,
   `CharfxerAvailable` varchar(32) DEFAULT NULL,
   `Legacy` varchar(32) DEFAULT NULL,
@@ -333,17 +333,17 @@ CREATE TABLE `realms` (
   `OpenRvr` varchar(32) DEFAULT NULL,
   `Rp` varchar(32) DEFAULT NULL,
   `Status` varchar(32) DEFAULT NULL,
-  `Online` tinyint(3) unsigned NOT NULL,
+  `Online` tinyint unsigned NOT NULL,
   `OnlineDate` datetime DEFAULT NULL,
-  `OnlinePlayers` int(10) unsigned DEFAULT NULL,
-  `OrderCount` int(10) unsigned DEFAULT NULL,
-  `DestructionCount` int(10) unsigned DEFAULT NULL,
-  `MaxPlayers` int(10) unsigned DEFAULT NULL,
-  `OrderCharacters` int(10) unsigned DEFAULT NULL,
-  `DestruCharacters` int(10) unsigned DEFAULT NULL,
-  `NextRotationTime` bigint(20) DEFAULT NULL,
+  `OnlinePlayers` int unsigned DEFAULT NULL,
+  `OrderCount` int unsigned DEFAULT NULL,
+  `DestructionCount` int unsigned DEFAULT NULL,
+  `MaxPlayers` int unsigned DEFAULT NULL,
+  `OrderCharacters` int unsigned DEFAULT NULL,
+  `DestruCharacters` int unsigned DEFAULT NULL,
+  `NextRotationTime` bigint DEFAULT NULL,
   `MasterPassword` text,
-  `BootTime` int(11) DEFAULT NULL,
+  `BootTime` int DEFAULT NULL,
   PRIMARY KEY (`RealmId`),
   UNIQUE KEY `RealmId` (`RealmId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
@@ -368,4 +368,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2019-12-18 16:36:25
+-- Dump completed on 2026-03-28 18:29:05

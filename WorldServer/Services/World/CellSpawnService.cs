@@ -4,6 +4,7 @@ using FrameWork;
 using System;
 using System.Collections.Generic;
 using WorldServer.World.Map;
+using WorldServer.World.Positions;
 
 namespace WorldServer.Services.World
 {
@@ -69,8 +70,20 @@ namespace WorldServer.Services.World
                     Info = ZoneService.GetZone_Info(Spawn.ZoneId);
                     if (Info != null)
                     {
-                        X = (ushort)(Spawn.WorldX >> 12);
-                        Y = (ushort)(Spawn.WorldY >> 12);
+                        int worldX = Spawn.WorldX;
+                        int worldY = Spawn.WorldY;
+
+                        // If the coordinates are within the 0-65535 range but the zone origin is non-zero,
+                        // they are likely local pins that need to be normalized to world coordinates.
+                        if (worldX < 65536 && worldY < 65536 && (Info.OffX > 0 || Info.OffY > 0))
+                        {
+                            Point3D world = ZoneService.GetWorldPosition(Info, (ushort)worldX, (ushort)worldY, (ushort)Spawn.WorldZ);
+                            worldX = world.X;
+                            worldY = world.Y;
+                        }
+
+                        X = (ushort)(worldX >> 12);
+                        Y = (ushort)(worldY >> 12);
 
                         GetRegionCell(Info.Region, X, Y).AddSpawn(Spawn);
 
@@ -107,8 +120,20 @@ namespace WorldServer.Services.World
                     Info = ZoneService.GetZone_Info(Spawn.ZoneId);
                     if (Info != null)
                     {
-                        X = (ushort)(Spawn.WorldX >> 12);
-                        Y = (ushort)(Spawn.WorldY >> 12);
+                        int worldX = Spawn.WorldX;
+                        int worldY = Spawn.WorldY;
+
+                        // If the coordinates are within the 0-65535 range but the zone origin is non-zero,
+                        // they are likely local pins that need to be normalized to world coordinates.
+                        if (worldX < 65536 && worldY < 65536 && (Info.OffX > 0 || Info.OffY > 0))
+                        {
+                            Point3D world = ZoneService.GetWorldPosition(Info, (ushort)worldX, (ushort)worldY, (ushort)Spawn.WorldZ);
+                            worldX = world.X;
+                            worldY = world.Y;
+                        }
+
+                        X = (ushort)(worldX >> 12);
+                        Y = (ushort)(worldY >> 12);
 
                         GetRegionCell(Info.Region, X, Y).AddSpawn(Spawn);
 
