@@ -1,6 +1,6 @@
 # ClientDataMatrix: Path Forward
 
-Last updated: 2026-03-28 (post-commit c193be3e)
+Last updated: 2026-03-28 (post-commit 6fb7cfa3)
 
 Component field decode is complete (Unknown=0, Structural=0). Requirement semantics fully decoded. This document covers all remaining open work, ordered by impact and tractability.
 
@@ -36,16 +36,24 @@ Three observed modes:
 - ID references (100–10000+): likely entity/ability/effect IDs
 - Sentinel values (-1, 100000): boundary/max/all semantics
 
-### Approach
+### Sources searched (2026-03-28)
+
+| Source | Path searched | Result |
+|---|---|---|
+| RE toolkit AbilityEnums.cs | `D:\Repos\Shmerrick\WAR-RE-Toolkit\docs\research\abilities-bin-file-exporter\AbilityEnums.cs` | `ComponentOperationType` enum names op=36 as `SERVER_COMMAND` but has no Value field names |
+| RE toolkit ComponentOP.cs | `D:\Repos\Shmerrick\WAR-RE-Toolkit\apps\admintool\MYPLib\MYPLib\ComponentOP.cs` | Alternative op names for 12/13/15/22/23/25/28; nothing for op=36 Value fields |
+| WorldServer codebase | grep for `ServerCommand`, `server_command`, `op.*36`, `ComponentOperation` | **No matches** — emulator does not implement ability component dispatch |
+
+### Remaining approach
 
 **Step 1 — Enumerate FlagsRaw command codes.**
 `SERVER_COMMAND FlagsRaw` has 8 distinct values. Map each FlagsRaw code to its Value[2] distribution. If each command code has a consistent Value[2] type (enum vs ID vs sentinel), the polymorphism is resolved by conditioning on FlagsRaw.
 
-**Step 2 — Cross-reference server-side command handler.**
-The `WorldServer` codebase must have a command dispatch handler that reads `op=36` component data. Search for the SERVER_COMMAND enum or op=36 parsing code. The handler argument parsing will name each Value[2] role per command code.
+**Step 2 — Londos database.**
+Search the Londos ability database for op=36 entries. Londo-sourced data was previously reverted from the tool due to confidence policy — but the raw data may still name the Value[2] field.
 
-**Step 3 — Cross-reference WAR-RE-Toolkit.**
-The client code that serializes SERVER_COMMAND arguments should mirror the server-side parser. Look for the BIN export class that writes Value[2] for op=36 components.
+**Step 3 — Broader RE toolkit search.**
+Search all decompiled client files in `D:\Repos\Shmerrick\WAR-RE-Toolkit\` (not just the abilities-bin-file-exporter folder) for `SERVER_COMMAND`, `ServerCommand`, or a class at op=36. A server-side handler class named something like `SERVER_COMMAND.cs` may exist.
 
 **Step 4 — Update inference.**
 Once each (FlagsRaw, Value[2]) combination is semantically labeled, extend `TryBuildServerCommandStructuralInference` to emit per-command-code named inferences instead of the single "polymorphic command argument" Inferred label.
@@ -112,18 +120,29 @@ Eight operation codes have no confirmed name. Their fields are fully decoded str
 | 47 | 8 | Value[1] = regular 10-unit increments (10,20,30,40) |
 | 51 | 39 | Value[0] = high-range ID refs; FlagsRaw = bit2; Value[2] = small enum; Value[3] = ordinal |
 
-### Approach
+### Sources searched (2026-03-28)
 
-**Step 1 — WAR-RE-Toolkit decompiled enum.**
-The client's `ComponentOperation` or equivalent enum almost certainly names all operation codes. Look in `D:\Repos\Shmerrick\WAR-RE-Toolkit\docs\research\abilities-bin-file-exporter\` for the exported BIN parser class — it will have a switch statement or enum mapping that names ops 29, 30, 32, 40, 41, 43, 47, 51.
+| Source | Path searched | Result |
+|---|---|---|
+| RE toolkit AbilityEnums.cs | `D:\Repos\Shmerrick\WAR-RE-Toolkit\docs\research\abilities-bin-file-exporter\AbilityEnums.cs` | `ComponentOperationType` enum — **does not contain** ops 29, 30, 32, 40, 41, 43, 47, 51 |
+| RE toolkit ComponentOP.cs | `D:\Repos\Shmerrick\WAR-RE-Toolkit\apps\admintool\MYPLib\MYPLib\ComponentOP.cs` | Contains DISABLE=12, PROC=13, BUFF_PARAM=15, BONUS_TYPE=22, LINKED_ABILITY=23, CAREER_RESOURCE=25, SIEGE_CARRY=28. **Does not contain** ops 29, 30, 32, 40, 41, 43, 47, 51 |
+| WorldServer codebase | grep for op codes, component dispatch | No ability component dispatch implemented |
 
-**Step 2 — Anchor via ability clusters.**
-Op=51 (39 records) and op=47 (8 records) have enough samples to cluster by ability. Run the ability report for the abilities that use op=51. If they are all in one career or one ability category, the operation purpose follows.
+### Remaining approach
 
-**Step 3 — Anchor op=41 via op=42 similarity.**
-Op=41's Value[1/2/3] use the same 187701–187706 ID range as op=42 (`RECOVER_STANDARD`). They may be related operations (e.g., RECOVER_STANDARD_ALT or RECOVER_STANDARD_CLEAR). Cross-reference which abilities use both ops together.
+**Step 1 — Londos database.**
+Search the Londos ability database for op codes 29, 30, 32, 40, 41, 43, 47, 51. Londo-sourced data was previously reverted from the tool due to confidence policy — but the raw data may still name these operations.
 
-**Step 4 — Once named, update ComponentOperationType enum.**
+**Step 2 — Broader RE toolkit search.**
+Search all decompiled client files in `D:\Repos\Shmerrick\WAR-RE-Toolkit\` beyond the abilities-bin-file-exporter folder. Look for a comprehensive component operation switch/dispatch that names all codes including the unknowns.
+
+**Step 3 — Anchor via ability clusters.**
+Op=51 (39 records) and op=47 (8 records) have enough samples to cluster by ability. Run the ability report for abilities that use op=51. If they are all in one career or one ability category, the operation purpose follows from context.
+
+**Step 4 — Anchor op=41 via op=42 similarity.**
+Op=41's Value[1/2/3] use the same 187701–187706 ID range as op=42 (`RECOVER_STANDARD`). They may be related (e.g., RECOVER_STANDARD_ALT or RECOVER_STANDARD_CLEAR). Cross-reference which abilities use both ops together.
+
+**Step 5 — Once named, update ComponentOperationType enum.**
 Add the resolved names to the operation type enum in the emulator and update the schema catalog labels.
 
 ---

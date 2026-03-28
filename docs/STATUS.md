@@ -55,30 +55,49 @@ Reports are generated at runtime to a local output directory. They are not commi
 
 Tool usage: `docs/client-data-matrix-usage.md`.
 
-### Component Field Decode Status (as of commit c193be3e, 2026-03-28)
+### Component Field Decode Status (as of commit 6fb7cfa3, 2026-03-28)
 
 All 18,526 component records across all operation types have been fully decoded. **Unknown = 0, Structural = 0.**
 
-Every field in `abilitycomponentexport.bin` is now at Confirmed or Inferred confidence:
-- **ExtData Val1–Val4** (application target, operation type code, application profile, layout tag): universal cross-op decode
-- **Values[0–7]**: per-operation semantics documented for all 40+ operation types, including all unnamed ops (29, 30, 32, 40, 41, 43, 47, 51)
-- **Multipliers[0–7]**: scaling percentages decoded per operation
-- **FlagsRaw**: CrowdControlTypes bitmasks, bit-field flags, sequential enums decoded per operation
-- **Value08**: universal binary flag (= 1 across all operations)
-- **Value15**: universal CC gate (CrowdControlTypes bits, mask 0x8FF) across all operations
+Every field in `abilitycomponentexport.bin` is at Confirmed or Inferred confidence:
+- **ExtData Val1–Val4**: universal cross-op decode (ApplicationTarget, ComponentOperation type, ApplicationProfile, LayoutTag)
+- **Values[0–7]**: per-operation semantics for all 40+ operation types including unnamed ops (29, 30, 32, 40, 41, 43, 47, 51)
+- **Multipliers[0–7]**: scaling percentages per operation
+- **FlagsRaw**: CrowdControlTypes bitmasks, bit-field flags, sequential enums per operation
+- **Value08**: universal binary flag; **Value15**: universal CC gate (CrowdControlTypes bits, mask 0x8FF)
 
-Previously ambiguous fields now resolved:
-- `DAMAGE Value[1]` — **Confirmed as `MaxCounter`** (counter cap / tick limit); from decompiled server `DAMAGE.cs`
-- `DAMAGE FlagsRaw` — **Confirmed as `DamageFlag` enum** (NONE=0, UNMITIGATABLE=1); from same source
+Confirmed resolves this session:
+- `DAMAGE Value[1]` → **`MaxCounter`** (counter cap/tick limit) — from decompiled server `DAMAGE.cs`
+- `DAMAGE FlagsRaw` → **`DamageFlag`** enum (NONE=0, UNMITIGATABLE=1) — same source
 
-One field remains Inferred:
-- `SERVER_COMMAND Value[2]` — 337 non-zero, 59 distinct values; polymorphic command argument (tri-modal: small enum / ID ref / sentinel)
+All 558 requirement rows decoded (Val1=AbilitySourceType, Val2=AbilityOperation, Val3=AbilityCondition, Val4=AbilityLogicOperator — from decompiled client `AbilityExport.cs`).
 
-All 558 requirement rows in `abilityrequirementexport.bin` are now decoded (Val1=AbilitySourceType, Val2=AbilityOperation, Val3=AbilityCondition, Val4=AbilityLogicOperator from decompiled `AbilityExport.cs`).
+### Coverage Status (as of commit 6fb7cfa3)
 
-Remaining open work: coverage gaps (26,627 abilities below Mapped), SERVER_COMMAND Value[2] semantics, unknown op names for ops 29/30/32/40/41/43/47/51, CareerName identity domain.
+| Status | Count | Notes |
+|--------|------:|-------|
+| MappedWithRequirements | 390 | Fully mapped with requirement links |
+| Mapped | 1,984 | Fully mapped |
+| Partial | 11,635 | Have BIN or CSV but missing some pieces |
+| StringsOnly | 1,029 | Named in strings but no BIN/CSV/effect/component |
+| BlankSlot | 13,963 | Empty sequential string-table slots — excluded from gap count as irrecoverable |
+| **Coverage gap total** | **12,664** | Partial + StringsOnly only |
 
-See `docs/data-matrix/overview/path-forward.md` for the full roadmap.
+`BlankSlot` was introduced this session to filter the 13,963 empty placeholder IDs from the 29,001-entry string files that were inflating the gap count.
+
+### Identity Domains (as of commit 2a4c1bd7)
+
+- `Race.EntryId`: Confirmed — canonical race string IDs
+- `CareerLine.EntryId`: Confirmed — canonical career IDs 0–24, used by `abilityexport.bin` CareerLine field
+- `CareerName.EntryId`: Confirmed — **NOT CareerId**; 5 display-context groups × 24 careers (IDs 12–131). Duplicates are expected and structurally explained.
+
+### Remaining Open Work
+
+- **Coverage gaps (12,664)**: inherent data gaps — Partial abilities have broken effect chains or missing CSV rows; StringsOnly have names but no client BIN evidence
+- **SERVER_COMMAND `Value[2]`**: tri-modal polymorphic (small enum / ID ref / sentinel); 337 non-zero, 59 distinct values; no source yet names the field
+- **Unknown op names**: ops 29, 30, 32, 40, 41, 43, 47, 51 — structurally decoded but semantically unnamed; not found in `AbilityEnums.cs` or `ComponentOP.cs`
+
+See `docs/data-matrix/overview/path-forward.md` for full roadmap and source-search notes.
 
 ## External Data Locations
 
