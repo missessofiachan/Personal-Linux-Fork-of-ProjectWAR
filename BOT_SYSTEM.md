@@ -32,6 +32,24 @@ The Bot System is designed to populate the world with autonomous, player-like en
 - **Group.cs**: Exposed MainAssist for AI targeting.
 - **Program.cs**: Added initialization hooks for the Bot services.
 
+## Automatic Deployment
+
+`DynamicBotManager` runs every 60 seconds (initial delay: 10 seconds after server start). It:
+1. Queries the active campaign from `WorldMgr.UpperTierCampaignManager` and `WorldMgr.LowerTierCampaignManager`.
+2. For each campaign zone, checks that warcamp entrance data exists in `BattleFrontObjects` for both realms.
+3. If a complete 6-man bot group (suffix pattern `_H _R _MT _OT _M1 _M2`) is not already online, calls `BotManager.SpawnBotGroup`.
+4. Scenario bots are checked every 30 seconds and queued into active scenarios.
+
+Bot group names follow the pattern `Bot_T{tier}_{O|D}_{zoneId}` for RvR and `Bot_Scen_{O|D}` for scenarios.
+
+## Startup Dependency
+
+Bots require the WorldServer to complete its full startup (campaign, region, and zone loading) before the 10-second initial timer fires. If the server crashed at startup, no bots will have spawned. Verify the server started cleanly before investigating bot absence.
+
+## Prerequisite: Warcamp Entrance Data
+
+`DynamicBotManager` will skip a campaign zone and log an error if `BattleFrontObjects` has no warcamp entrance entry (`Type = WARCAMP_ENTRANCE`) for either realm in that zone. Bots for that zone are silently skipped until data is present.
+
 ## Usage (GM Commands)
 - .bot spawn <realm> <tier> <rr> <namePrefix>
   - Spawns a full 6-man tactical group at the current zone's Warcamp.

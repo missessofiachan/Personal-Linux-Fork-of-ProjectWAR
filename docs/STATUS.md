@@ -1,6 +1,6 @@
 # ProjectWAR Status
 
-ProjectWAR is a C# private server emulator for Warhammer Online: Age of Reckoning. It targets .NET 4.8, x64. The solution is `WarEmulator.sln`.
+ProjectWAR is a C# private server emulator for Warhammer Online: Age of Reckoning. It targets .NET 4.8, x64. The solution is `ProjectWAR.sln`.
 
 ## Built Projects
 
@@ -21,7 +21,7 @@ The C++ runtime extension `WarZone64.dll` ships prebuilt in `WorldServer/`.
 
 Build command:
 ```powershell
-& 'C:\Program Files\Microsoft Visual Studio\18\Enterprise\MSBuild\Current\Bin\amd64\MSBuild.exe' WarEmulator.sln /p:Platform=x64 /p:Configuration=Release /t:Build /m /nologo /verbosity:minimal
+& 'C:\Program Files\Microsoft Visual Studio\18\Enterprise\MSBuild\Current\Bin\amd64\MSBuild.exe' ProjectWAR.sln /p:Platform=x64 /p:Configuration=Release /t:Build /m /nologo /verbosity:minimal
 ```
 
 ## LOS Generation Status
@@ -128,9 +128,9 @@ A new automated guild system provides "Forces of Order" and "Forces of Destructi
 
 Zone 191 (Land of the Dead) had two data defects that prevented the flight-master from working:
 
-1. **Unclickable flight node** (`update_012_lotd_zone_pairing_fix.sql`): `zone_infos.Pairing` was shipped as `100`; the flight packet sends this value directly to the client, which expected `4` (PAIRING_LAND_OF_THE_DEAD). `ZoneService.NormalizeZoneInfoMetadata()` now corrects this at load time so both the in-memory state and the database match.
+1. **Unclickable flight node**: `zone_infos.Pairing` was shipped as `100`; the flight packet sends this value directly to the client, which expected `4` (PAIRING_LAND_OF_THE_DEAD). `ZoneService.NormalizeZoneInfoMetadata()` now corrects this at load time. The fix is baked into the current `war_world` dump (included in `Database/war_world.7z`).
 
-2. **Wrong taxi destinations** (`update_011_lotd_taxi_world_coordinate_fix.sql`): The `zone_taxis` rows for zone 191 stored local zone pins instead of world coordinates. `ZoneService.NormalizeTaxiWorldPosition()` now detects and converts pin-format rows at load time. The migration persists the corrected Order/Destruction world coordinates directly.
+2. **Wrong taxi destinations**: The `zone_taxis` rows for zone 191 stored local zone pins instead of world coordinates. `ZoneService.NormalizeTaxiWorldPosition()` now detects and converts pin-format rows at load time. The corrected Order/Destruction world coordinates are baked into the current `war_world` dump.
 
 ### Parallel Build Copy Stabilized
 

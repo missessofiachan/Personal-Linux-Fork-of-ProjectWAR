@@ -12,6 +12,14 @@
 *.vs
 .claude/
 git_recent.txt
+# Build debug logs (root-level artifacts from MSBuild/CI sessions)
+build_errors*.txt
+common_errors.txt
+*_build.log
+*_build.txt
+solution_build*.log
+post_patch_build.log
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/

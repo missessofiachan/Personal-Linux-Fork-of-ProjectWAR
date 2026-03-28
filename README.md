@@ -70,14 +70,14 @@ Manual example:
 
 ```powershell
 $env:PROJECTWAR_GENERATE_LOS = '1'
-$env:PROJECTWAR_EXTRACTED_ROOT = 'C:\Users\Admin\Pictures\WAR_extracted'
+$env:PROJECTWAR_EXTRACTED_ROOT = 'C:\Users\Admin\Downloads\myps'
 msbuild ProjectWAR.sln /p:Configuration=Release /p:Platform=x64
 ```
 
 Direct tool usage:
 
 ```powershell
-bin\Release\LosBuilder.exe generate --input-root C:\Users\Admin\Pictures\WAR_extracted --output-root bin\Release\los
+bin\Release\LosBuilder.exe generate --input-root C:\Users\Admin\Downloads\myps --output-root bin\Release\los
 ```
 
 Inspect shipped or generated LOS binaries:
@@ -97,15 +97,12 @@ Create three databases:
 - `war_characters`
 - `war_world`
 
-Import these SQL files:
-
-- `Database/war_accounts.sql`
-- `Database/war_characters.sql`
-- `Database/war_world.sql`
-
-Example commands:
+Import the SQL files. `war_world` is shipped as a compressed archive — extract it first:
 
 ```powershell
+# Extract war_world.sql from the 7z archive
+7z e Database\war_world.7z -o Database\
+
 mysql -u root -p -e "CREATE DATABASE war_accounts; CREATE DATABASE war_characters; CREATE DATABASE war_world;"
 mysql -u root -p war_accounts < Database/war_accounts.sql
 mysql -u root -p war_characters < Database/war_characters.sql
@@ -202,44 +199,35 @@ Get-Process | Where-Object { $_.Name -match 'AccountCacher|LauncherServer|LobbyS
   - do not manually start `AccountCacher`, `LauncherServer`, `LobbyServer`, and `WorldServer` in parallel.
 - Characters stuck after a failed teleport or zone move:
   - update to the current `WorldServer` build.
-  - apply the latest incremental database scripts, including `Database/update_003_portal_zone_jump_fixes.sql` and `Database/update_004_greenskin_start_position_fix.sql`.
   - the server now repairs invalid saved login positions and falls back to safe realm locations instead of leaving the character in a load loop.
 - GM `.teleport center` or `.teleport entry` lands in a bad spot:
   - the command now prefers respawns, taxis, rally points, chapter pins, and validated portal arrivals before using `zone_infos`-derived fallbacks.
   - if a zone still has no reliable anchors, curate its respawn/taxi/rally/chapter data rather than relying on geometric center points.
 - Scenario starts are missing, College of Corruption starts in the wrong place, or capital fallback teleports are unsafe:
-  - apply `Database/update_009_scenario_restore_and_capital_spawn_repairs.sql`.
-  - this restores the stable scenario pool, repairs missing scenario respawns, fixes College of Corruption starts, and corrects the capital spawn data used by teleport recovery and fallback logic.
+  - update to the current `WorldServer` build and re-import `war_world.sql` from the latest `Database/war_world.7z`.
+  - the stable scenario pool, missing scenario respawns, College of Corruption starts, and capital spawn data are all baked into the current `war_world` dump.
 - Land of the Dead expedition flights never appear or never unlock:
-  - apply `Database/update_005_lotd_resource_tracker.sql`.
+  - the LOTD tracker, taxi data, and zone pairing fixes are all included in the current `war_world` dump — re-import from `Database/war_world.7z` if upgrading from an older dump.
   - the LOTD tracker uses T4 battlefront locks to award realm points, unlocks expedition access for one realm at a time, then resets after the configured ownership window.
   - RoR refers to the visible LOTD bar as the `expedition tracker`, but current client evidence still points at the Tomb Kings `F_RRQ` / RRQ tracker container for that UI.
   - if the `lotd_resource_tracker` table is missing, the server now keeps the LOTD flights hidden instead of exposing them to both realms.
-  - if `WorldServer` logs show `lotd_resource_tracker ... Type mismatch (INT UNSIGNED in DB - INT in emulator)`, also apply `Database/update_006_lotd_resource_tracker_schema_fix.sql`.
-  - if `WorldServer` logs show `LotdService ... StructExpressionBinder`, update to the current build as well; the runtime binder now supports nullable tracker timestamps.
-  - if a realm owns LOTD but the client still cannot see the zone `191` flight path, update to the current `WorldServer` build as well; LOTD taxis now bypass the generic T4 Tome-token gate once `LotdService` has unlocked them for that realm.
-  - if the LOTD node shows in the flight-master map but cannot be clicked, apply `Database/update_012_lotd_zone_pairing_fix.sql`.
-  - the current `WorldServer` build also normalizes the shipped `zone_infos.Pairing = 100` metadata for zone `191` to the proper Land of the Dead pairing id (`4`) on load, because the flight packet sends that value directly to the client.
-  - if the LOTD taxi appears but taking it lands in the wrong place or fails to move the character cleanly, apply `Database/update_011_lotd_taxi_world_coordinate_fix.sql`.
-  - the current `WorldServer` build also normalizes malformed LOTD taxi rows on load, because the shipped zone `191` taxi destinations were stored as local pins instead of world coordinates.
-  - if the expedition tracker is still invisible, confirm the server log reaches `Loaded Land of the Dead resource tracker` on the current build before debugging packet display behavior; older failed boots in `bin/Release/logs` do not prove the current binaries loaded the tracker.
+  - if a realm owns LOTD but the client still cannot see the zone `191` flight path, update to the current `WorldServer` build; LOTD taxis now bypass the generic T4 Tome-token gate once `LotdService` has unlocked them for that realm.
+  - `WorldServer` normalizes the shipped `zone_infos.Pairing = 100` metadata for zone `191` to the proper Land of the Dead pairing id (`4`) on load, so the flight-master node is clickable.
+  - `WorldServer` also normalizes malformed LOTD taxi rows on load; zone `191` taxi destinations previously stored as local pins are converted to world coordinates at boot.
+  - if the expedition tracker is still invisible, confirm the server log reaches `Loaded Land of the Dead resource tracker` on the current build before debugging packet display behavior.
 - Live event tables are missing or the live-event UI is empty because `war_world.liveevent_*` was dropped or truncated:
-  - apply `Database/update_010_restore_liveevent_tables.sql`.
-  - this recreates the `liveevent_infos`, `liveevent_task_infos`, `liveevent_subtask_infos`, and `liveevent_reward_infos` tables if needed and restores the archived seed rows preserved in repo history.
-  - the restore leaves all events disabled by default (`Allowed = 0`) so you can re-enable specific events intentionally instead of booting into a forced live-event state.
+  - re-import from the current `Database/war_world.7z`; the dump includes the live event tables with all events disabled by default (`Allowed = 0`).
 - The active T4 battlefront opens, but its objectives still behave as `ZoneLocked` or Praag immediately aborts domination checks:
   - update to the current `WorldServer` build.
   - battlefront objective lock/open calls now drive the FSM consistently and force a neutral-safe reset if an objective stays stuck in `ZoneLocked`.
 - Battlefield objectives can be clicked, but flags never capture:
-  - apply `Database/update_007_interaction_buff_fix.sql`.
-  - this repairs missing `buff_infos.Entry = 60000` (`Interaction`) data in `war_world`, which otherwise causes BO and world-object interactions to stall after click.
-  - the current server build also installs a runtime fallback for buff `60000`, so BO capture no longer depends entirely on the DB row being present.
+  - the `buff_infos.Entry = 60000` (`Interaction`) row is included in the current `war_world` dump.
+  - the server also installs a runtime fallback for buff `60000`, so BO capture no longer depends entirely on the DB row being present.
 - Entering a warcamp incorrectly RvR-flags the player or counts as being in the lake:
   - update to the current `WorldServer` build.
   - lake state is now computed separately from raw `zone_areas` so warcamp entrances suppress RvR-lake behavior until the player actually leaves the warcamp buffer.
 - Greenskin starters appear in the wrong Mt Bloodhorn position:
-  - apply `Database/update_004_greenskin_start_position_fix.sql`.
-  - this fixes the four Greenskin `characterinfo` templates that were stored as local pins instead of world coordinates.
+  - re-import from the current `Database/war_world.7z`; the corrected Greenskin `characterinfo` templates are included.
 - Random name suggestions repeat, are sequential, or offer taken names:
   - update to the current `WorldServer` build.
   - random suggestions still draw from `war_world.random_names`, but they are now shuffled per request, checked against existing character names, and replaced with generated valid names only if the curated pool is exhausted.
@@ -251,10 +239,8 @@ Get-Process | Where-Object { $_.Name -match 'AccountCacher|LauncherServer|LobbyS
 
 ## Developer Documentation
 
-For contributors and AI agents, please refer to the following architectural and restoration documents:
+For contributors and AI agents, please refer to the following architectural documents:
 
-- **[1.4.8 Restoration Plan](1_4_8_RESTORATION_PLAN.md)**: Details the project's core mission and data restoration workflow.
-- **[Systemic Divergences](SYSTEMIC_DIVERGENCES.md)**: Maps differences between Retail and Emulator logic.
 - **[System Guilds](docs/SYSTEM_GUILDS.md)**: Details the automated guild experience for new players.
 - **[Bot System](BOT_SYSTEM.md)**: Details the architecture, logic, and GM commands for the integrated player-like Bot System.
 - **[AI Agent Rules](AGENTS.md)**: Single source of truth for repository-specific AI instructions.
@@ -262,7 +248,7 @@ For contributors and AI agents, please refer to the following architectural and 
 ## Development Resources
 
 When analyzing network protocols, game assets, structures, or looking for reverse engineering findings, all contributors and AI agents should reference the **WAR-RE-Toolkit** repository:
-- **Local Path**: `C:\Users\Admin\source\repos\Shmerrick\WAR-RE-Toolkit`
+- **Local Path**: `D:\Repos\Shmerrick\WAR-RE-Toolkit`
 - **Remote**: Private GitHub repo `Shmerrick/WAR-RE-Toolkit`
 
 This toolkit contains essential companion tools like `WarClientTool`, `AssetHashHunter`, `Diffuser`, and various database scripts required for emulator improvement.
