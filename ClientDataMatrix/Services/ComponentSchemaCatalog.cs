@@ -1544,20 +1544,18 @@ namespace ClientDataMatrix.Services
             if (operationId != 1 || observations == null || observations.Count == 0)
                 return false;
 
-            // DAMAGE Value[1]: 591 non-zero, 81 distinct (1, 10–12, 100, 102, 107, 110, 120, 124, 125, 1000...).
-            // Wide-spread values suggesting a secondary damage formula parameter: power level, formula variant, or damage-type code.
+            // DAMAGE Value[1] = MaxCounter — counter cap / tick limit.
+            // Confirmed from decompiled server-side DAMAGE.cs: public int MaxCounter { get { return Values[1]; } }
             if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
             {
                 string dmgV1Dominant = BuildDominantRawValueSummary(observations, 12);
                 inference = new FieldObservationInference
                 {
-                    SemanticSummary = "DAMAGE Value[1] — secondary damage formula parameter (591 non-zero records, 81 distinct values; wide range suggests power level, formula variant, or damage-type code).",
-                    Confidence = SemanticConfidence.Inferred,
-                    Notes = "Value[1] has 591 non-zero records with 81 distinct values spanning a wide range. "
-                        + "Small values (1, 10–12) suggest sub-type or mode codes; mid-range values (100–125) could be percentage-based power levels; large values (1000+) may be formula IDs. "
-                        + "The high distinct-value count (81) combined with irregular spacing rules out a simple enum. "
-                        + "Plausible interpretations: a secondary damage coefficient, a damage-formula selector ID, or an encoded DamageType variant. "
-                        + "Retail name unresolved — this is the highest-priority remaining Unknown field. "
+                    SemanticSummary = "DAMAGE Value[1] — MaxCounter: counter cap / tick limit for this damage component.",
+                    Confidence = SemanticConfidence.Confirmed,
+                    Notes = "Confirmed from decompiled server-side DAMAGE.cs: `public int MaxCounter { get { return Values[1]; } }`. "
+                        + "Controls the maximum number of ticks or counter threshold before the damage component stops applying. "
+                        + "591 non-zero records with 81 distinct values; zero means no counter limit. "
                         + (string.IsNullOrWhiteSpace(dmgV1Dominant) ? string.Empty : "Observed: " + dmgV1Dominant + ".")
                 };
                 return true;
@@ -1568,12 +1566,11 @@ namespace ClientDataMatrix.Services
                 string dmgFrDominant = BuildDominantRawValueSummary(observations, 6);
                 inference = new FieldObservationInference
                 {
-                    SemanticSummary = "DAMAGE FlagsRaw — sparse 2-bit modifier field (88% zero; 1=bit0-set 11%, 2=bit1-set 0.15%, 3=bits0+1 0.25%).",
-                    Confidence = SemanticConfidence.Inferred,
-                    Notes = "FlagsRaw is 0 in 3494 of 3963 DAMAGE records (88%). "
-                        + "Bit 0 (value=1) is the only common non-zero value at 11.4% (453 records). "
-                        + "Bit 1 (value=2) and both-bits (value=3) are rare (<0.25%). "
-                        + "Exact bit semantics are unresolved but the low cardinality suggests a behavioral modifier flag rather than a free bitfield. "
+                    SemanticSummary = "DAMAGE FlagsRaw — DamageFlag enum (NONE=0, UNMITIGATABLE=1); bit0=unmitigatable 11%, bits1+ rare.",
+                    Confidence = SemanticConfidence.Confirmed,
+                    Notes = "Confirmed from decompiled server-side DAMAGE.cs: `public DamageFlag Type { get => (DamageFlag)Flags; }` where DamageFlag is NONE=0, UNMITIGATABLE=1. "
+                        + "FlagsRaw=1 (UNMITIGATABLE) means the damage bypasses mitigation/armor calculations. "
+                        + "FlagsRaw is 0 in 3494 of 3963 DAMAGE records (88%); value=1 in 453 records (11.4%); values 2 and 3 are rare (<0.25%). "
                         + (string.IsNullOrWhiteSpace(dmgFrDominant) ? string.Empty : "Observed: " + dmgFrDominant + ".")
                 };
                 return true;
