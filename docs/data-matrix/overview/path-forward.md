@@ -128,22 +128,13 @@ Add the resolved names to the operation type enum in the emulator and update the
 
 ---
 
-## Area 7: Identity Domain — CareerName.EntryId (Low-Medium)
+## ~~Area 7: Identity Domain — CareerName.EntryId~~ — RESOLVED (commit 2a4c1bd7)
 
-### What is unresolved
+`careernames_m.txt` has **120 entries (IDs 12–131) = 5 display-context groups × 24 careers**. Each career name repeats 5 times with different IDs — one per UI display context. The duplicates are structurally expected, not a CareerId collision risk.
 
-`careernames_m.txt` contains 132 distinct entry IDs but 24 groups of duplicate display names. This means entry IDs cannot currently be used as canonical `CareerId` values without risking collision.
+Canonical CareerId mapping: **`careerlines_m.txt` IDs 0–24** (25 entries, unique, confirmed by `abilityexport.bin` CareerLine field). `CareerName.EntryId` is a string-context table, not an identity domain.
 
-### Approach
-
-**Step 1 — Find CareerId in `abilityexport.bin` or `pregame_chars.xml`.**
-The `abilityexport.bin` CareerLine field uses a numeric career identifier. Cross-reference it against the string entry IDs in `careernames_m.txt`. If the numeric values from BIN match a subset of the string entry IDs, those are canonical.
-
-**Step 2 — Verify uniqueness in the matched subset.**
-If the 24 duplicate groups all fall outside the matched subset (i.e., the BIN uses only a small set of non-duplicated IDs), the risk is resolved.
-
-**Step 3 — Promote confidence from Inferred to Confirmed.**
-Once the canonical CareerId domain is established from BIN evidence, update the identity domain registry in the tool.
+Implementation: Added `DuplicatesAreExpected` to `IdentityDomainRecord`; updated catalog and filter. Identity-domain risks: 1 → 0.
 
 ---
 
@@ -157,4 +148,4 @@ Once the canonical CareerId domain is established from BIN evidence, update the 
 | Coverage gaps (12,664 abilities) | Open | **High** | Ability reports below Mapped status | Investigate broken effect chains in Partial bucket |
 | SERVER_COMMAND Value[2] | Open | **High** | Full SERVER_COMMAND semantic decode | WorldServer op=36 handler + RE toolkit |
 | Unknown op names (8 ops) | Open | **Medium** | Named operation dispatch in emulator | RE toolkit ComponentOperation enum |
-| CareerName identity domain | Open | **Low-Medium** | CareerId canonical mapping | BIN CareerLine field cross-reference |
+| ~~CareerName identity domain~~ | **RESOLVED** | — | — | — |
