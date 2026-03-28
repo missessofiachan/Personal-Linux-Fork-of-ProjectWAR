@@ -187,6 +187,9 @@ namespace Common {
         /// This method automatically upgrades legacy SHA256 hashed passwords to strong BCrypt hashes 
         /// upon the first successful login, ensuring no passwords remain weakly protected.
         /// </summary>
+        /// <summary>GmLevel value reserved for system/bot accounts that must never be player-accessible.</summary>
+        public const sbyte SYSTEM_ACCOUNT_GMLEVEL = -2;
+
         public LoginResult CheckAccount(string username, string password, string ip, out int accountId) {
             username = username.ToLowerInvariant();
 
@@ -200,7 +203,12 @@ namespace Common {
                     return LoginResult.LOGIN_INVALID_USERNAME_PASSWORD;
                 }
 
-                accountId = Acct.AccountId;
+                // Block system accounts (e.g. the bot account) before any password work.
+                // Return the same result as a bad password so the account's existence is not revealed.
+                if (Acct.GmLevel == SYSTEM_ACCOUNT_GMLEVEL) {
+                    Log.Error("CheckAccount", $"Blocked login attempt for system account '{username}' from {ip}.");
+                    return LoginResult.LOGIN_INVALID_USERNAME_PASSWORD;
+                }
 
                 bool matchedLegacyHash;
                 bool valid = VerifyStoredPassword(Acct, password, out matchedLegacyHash);
@@ -223,6 +231,9 @@ namespace Common {
                     }
                 }
 
+                // Password verified — safe to expose the account ID to the caller.
+                accountId = Acct.AccountId;
+
                 if (!usedMasterPassword) {
                     if (matchedLegacyHash) {
                         SaveCanonicalPasswordHash(
@@ -235,8 +246,13 @@ namespace Common {
                     }
                 }
 
-                // Reload the account to check if it's changed. Blech.
+                // Reload the account to pick up any changes made since the cached copy was loaded.
                 Account baseAcct = Database.SelectObject<Account>("Username='" + Database.Escape(username) + "'");
+
+                if (baseAcct == null) {
+                    Log.Error("CheckAccount", $"Failed to reload account record for '{username}' after authentication.");
+                    return LoginResult.LOGIN_INVALID_USERNAME_PASSWORD;
+                }
 
                 if (baseAcct.GmLevel < 0) {
                     Log.Info("CheckAccount", "Account is inactive.");
@@ -246,7 +262,7 @@ namespace Common {
                 // Check if banned
                 if (baseAcct.Banned != 0) {
                     // 1 - Perm Banned, otherwise timestamp
-                    if (baseAcct.Banned == 1) //|| TCPManager.GetTimeStamp() < baseAcct.Banned)
+                    if (baseAcct.Banned == 1)
                         return LoginResult.LOGIN_BANNED;
                 }
                 baseAcct.LastLogged = TCPManager.GetTimeStamp();
@@ -254,9 +270,9 @@ namespace Common {
                 Database.SaveObject(baseAcct);
             } catch (Exception e) {
                 Log.Error("CheckAccount", e.ToString());
+                accountId = 0;
                 return LoginResult.LOGIN_INVALID_USERNAME_PASSWORD;
             }
-
 
             return LoginResult.LOGIN_SUCCESS;
         }

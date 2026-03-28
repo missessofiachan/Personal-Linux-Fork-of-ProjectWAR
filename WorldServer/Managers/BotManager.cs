@@ -59,6 +59,16 @@ namespace WorldServer.Managers
                     Log.Error("BotManager", "Failed to create BotAccount!");
                 }
             }
+
+            // Lock down the bot account so no player can log in with it.
+            // CreateAccount clamps GmLevel to a minimum of 1, so we must set
+            // the system-account sentinel (-2) explicitly after creation.
+            if (_botAccount != null && _botAccount.GmLevel != Common.AccountMgr.SYSTEM_ACCOUNT_GMLEVEL)
+            {
+                _botAccount.GmLevel = Common.AccountMgr.SYSTEM_ACCOUNT_GMLEVEL;
+                Program.AcctMgr.UpdateAccount(_botAccount);
+                Log.Info("BotManager", "BotAccount locked against player login (GmLevel set to system sentinel).");
+            }
         }
 
         public Player CreateOrLoadBot(string name, byte career, byte level, byte renownRank, Realms realm, BotRole role)
