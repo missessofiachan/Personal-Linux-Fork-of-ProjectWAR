@@ -1,6 +1,6 @@
 # ClientDataMatrix: Path Forward
 
-Last updated: 2026-03-28 (Londos DB + WorldServer searched; op=43 confirmed; ops 40/41/51/29/47 have contextual evidence)
+Last updated: 2026-03-28 (Londos DB + WorldServer + live war_world DB searched; op=43 confirmed; ops 29/30/32/40/41/47/51 row counts and patterns fully documented)
 
 Component field decode is complete (Unknown=0, Structural=0). Requirement semantics fully decoded. This document covers all remaining open work, ordered by impact and tractability.
 
@@ -115,26 +115,30 @@ Remaining string-mismatch conflicts (AbilityName, AbilityDescription, EffectName
 
 Eight operation codes have no confirmed name. Their fields are fully decoded structurally, but the semantic purpose of the operation itself is unknown. Londos DB investigation (2026-03-28) provided contextual evidence for several ops. Op=43 now has a confirmed description. Op=40, 41 have strong contextual inference. Op=51, 47, 29 have partial context. Ops 30 and 32 remain most ambiguous.
 
-| Op | Records | Key field patterns | Londos context (2026-03-28) |
+| Op | Records | Key field patterns | Londos context + live DB (2026-03-28) |
 |---|---|---|---|
-| 29 | 11 | Value[0] = ID refs (66001–66300 range) or small enum (10, 11); FlagsRaw = CC bits | Witch Hunter "Accusations" ability chain. Values=[10,11] (head) + Values=[66298/99/300, 11, 10] (chain). 66001–66300 may be Witch Hunter accusation-target ability IDs |
-| 30 | 1 | Value[0] = 18 (single record) | HEAD of "Crack Shot" (AbilityID=1536, Engi ranged disarm). No Londos description on component; ability desc = "deals damage and disarms target" |
-| 32 | 15 | Value[0] = high-range IDs (5424–10020) | HEAD of "Eye of Sheerian" (AbilityID=8606, group armor+resist buff). Component desc template = "{COM_0_VAL0}" = armor amount. Likely GROUP_AREA_STAT or AURA_STAT |
-| 40 | 2 | Values=[0] or [1] — binary | Standard-bearing context: adjacent to SIEGE_CARRY (op=28) and "If you die with a standard in-hand, it will be destroyed!" proc. Values=[0]=off, [1]=on. Likely STANDARD_CARRIER_STATE or BANNER_FLAG |
-| 41 | 4 | Value[0] = 14; Value[1/2/3] = sequential IDs (187701–187706) | Same standard-bearing ability chain as op=40; Values=[14, 187701–187706] shares 187701–187706 ID range with op=42 (RECOVER_STANDARD). Likely TAKE_STANDARD or CAPTURE_STANDARD |
-| 43 | 2 | Value[0] = 21 or 27 | **Confirmed via Londos component description**: "Can autoattack while moving." HEAD of "Cleave" (AbilityID=5104). Suggests MOVEMENT_AUTOATTACK |
-| 47 | 8 | Value[0] = 0 or 1; Value[1] = 10/20/30/40 | Adjacent to op=48/49/50 (also unknown) and Halloween event transforms (pig/boar/wolf transforms, pet summons). Pairs: [0,10],[1,10],[0,20],[1,20],[0,30],[1,30],[0,40],[1,40]. Value[0]=direction/toggle, Value[1]=magnitude step |
-| 51 | 39 | Value[0] = ability/effect ID; Value[2] = small enum; Value[3] = ordinal | Multiple clusters: HEAD of "Searing Vitality" (tactic, AbilityID=8205, vals=[17666,0,0,0]); "You are a coward!" debuff (vals=[17643,0,0,13/14]); battlefront/fort ordinals 39–42 (IDs 20760–20767) and 89–91 (IDs 31018–31020). Value[3] = rank/progression ordinal |
+| 29 | 12 | Value[0] = ID refs (66001–66300 range) or small enum (0,10); Value[1] = 11 or 40; FlagsRaw = CC bits | 12 rows total. Main cluster: Witch Hunter Accusations chain — Values=[AccusationAbilityID 66001–66300, 11, 10]. Secondary: comp 14230 vals=[0,40], comps 17901/17935–17937 vals=[9979,40]. Outliers: comp 14556 vals=[192555,0], comp 24010 vals=[208470,0,7]. Value[0] = 66xxx = Witch Hunter accusation target ability ID; small values (0, 9979) may index into an accusation tier table. Cannot confirm op name without server code. |
+| 30 | 1 | Value[0] = 18 (single record) | **Only 1 row total**: comp 708, HEAD of "Crack Shot" (AbilityID=1536). Crack Shot is a Witch Hunter ability: "deals damage and disarms target." Value[0]=18 is unresolved (could be disarm effect code or weapon skill). No Londos description on component. Cannot confirm op name — only 1 data point. |
+| 32 | 15 | Value[0] = high-range IDs (5424–10020); Value[1] = 0, 65, or 100 | 15 rows. comp 2131 is HEAD of "Eye of Sheerian" (AbilityID=8606, WP group armor+resist aura). Values=[5424,65], [5432,65], [7735,0], [6854,0], [9998,100], [8394–8399, 0]. Large ID in Value[0] likely an AoE aura/group-stat reference; Value[1]=65 or 100 may be scaling. Likely a GROUP_STAT or AURA_APPLY op. Cannot confirm name. |
+| 40 | 2 | Values=[0] or [1] — binary | **2 rows only**: comp 14201 vals=[0] (state OFF), comp 14209 vals=[1] (state ON). In standard-bearing chain adjacent to SIEGE_CARRY (op=28) and "die with standard" EVENT_LISTENER (op=13). Binary toggle for carrier state. |
+| 41 | 4 | Value[0] = 14; Value[1/2/3] = sequential IDs (187701–187706) | **4 rows**: comps 14214, 14215, 14583, 14584. Values=[14, 187701–187703] and [14, 187704–187706]. Same 187701–187706 ID range as op=42 (RECOVER_STANDARD). Note: AbilityID=14214 "Night of Murder" event ability has EffectID=2927 (different from comp 14214). These comps are in the standard-bearing chain after head comp. |
+| 43 | 2 | Value[0] = 21 or 27 | **Confirmed**: "Can autoattack while moving." (Londos comp 3431 desc). HEAD of Cleave (AbilityID=5104 via Londos). Live DB: `MoveAndShoot` buff command on "Skirmish Stance" (9094) and "Spiked Squig" (1844). Emulator `BuffEffectInvoker.MoveAndShoot()` sets `CombatInterface_Player.MoveAndShoot = true/false`. |
+| 47 | 8 | Value[0] = 0 or 1; Value[1] = 10, 20, 30, or 40 | **8 rows, exactly 4 pairs**: (0,10),(1,10),(0,20),(1,20),(0,30),(1,30),(0,40),(1,40). AbilityBin IDs 10733–10740 are "BotS - Tier 1/2 Glyph/Stone/Rod" (Bite of the Skaven event abilities) with EffectIDs 3266/3958; op=47 comps are in their chains. Value[0]=0/1 = visible/invisible toggle or on/off state; Value[1]=10/20/30/40 = tier/type code (Tier1=10, Tier2=20, Tier3=30, Tier4=40). |
+| 51 | 38 | Value[0] = ability/buff reference ID; Value[2] = small enum (0–4); Value[3] = ordinal | **38 rows**. comp 1597 = HEAD of "Searing Vitality" (DoK tactic, AbilityID=8205), vals=[17666,0,0,0]. Comps 27992–27993: desc="You are a coward!", vals=[17643,0,0,13] and [17643,0,0,14]. Comps 26661–26668: vals=[20760–20767, 0, 0–3, 39–42] (battlefront ordinals). Comps 26900–26923: vals=[30030–30069, 0, 1–4, 49–91]. Comps 26941–26943: vals=[31018–31020, 0, 0, 89–91] (fortress ordinals). AbilityID 20760="TEST Skaven - Grey Seer", 20761="Streaked Blast". Value[0] = ability/buff reference; Value[3] = ordinal/rank index. |
 
-### Sources searched (2026-03-28)
+### Sources searched (2026-03-28, sessions 1 and 2)
 
 | Source | Path searched | Result |
 |---|---|---|
-| RE toolkit AbilityEnums.cs | `D:\Repos\Shmerrick\WAR-RE-Toolkit\docs\research\abilities-bin-file-exporter\AbilityEnums.cs` | `ComponentOperationType` enum — **does not contain** ops 29, 30, 32, 40, 41, 43, 47, 51 |
-| RE toolkit ComponentOP.cs | `D:\Repos\Shmerrick\WAR-RE-Toolkit\apps\admintool\MYPLib\MYPLib\ComponentOP.cs` | Contains DISABLE=12, PROC=13, BUFF_PARAM=15, BONUS_TYPE=22, LINKED_ABILITY=23, CAREER_RESOURCE=25, SIEGE_CARRY=28. **Does not contain** ops 29, 30, 32, 40, 41, 43, 47, 51 |
+| RE toolkit AbilityEnums.cs | `D:\Repos\Shmerrick\WAR-RE-Toolkit\docs\research\abilities-bin-file-exporter\AbilityEnums.cs` | `ComponentOperationType` enum — **does not contain** ops 29, 30, 32, 40, 41, 43, 47, 51. Also contains `AbilityOperation` (requirement check types) with `DamageType=29`, `SiegeControl=40`, `TargetBack=51` — **these are requirement Val2 check-type codes, NOT component operation codes.** |
+| RE toolkit ComponentOP.cs | `D:\Repos\Shmerrick\WAR-RE-Toolkit\apps\admintool\MYPLib\MYPLib\ComponentOP.cs` | Client-side `ComponentOP` enum from decompiled MYPLib.dll. Contains DISABLE=12, PROC=13, BUFF_PARAM=15, BONUS_TYPE=22, LINKED_ABILITY=23, CAREER_RESOURCE=25, SIEGE_CARRY=28. **Does not contain** ops 29, 30, 32, 40, 41, 43, 47, 51. Absence from this enum confirms these ops are **server-side only** — the client does not process them. |
 | WorldServer MythicAbilityGraphTranslator.cs | `WorldServer/World/Abilities/MythicAbilityGraphTranslator.cs` | Component dispatch switch: only cases 1, 3, 8, 22, 23. No implementation for any of the 8 unknown ops |
 | RE toolkit broader search | `D:\Repos\Shmerrick\WAR-RE-Toolkit\apps\` and `docs\research\` | No additional op-name source found beyond AbilityEnums.cs and ComponentOP.cs. AbilityEngine.cs uses `ComponentOperationType` without adding new values |
-| **Londos DB War_AbilityComponentBin.sql** | `D:\Repos\Shmerrick\WAR-RE-Toolkit\data\database-tables\Londos Server v2\War_AbilityComponentBin.sql` | **18,524 component rows; component `Description` field names the buff tooltip. Op=43 component 3431: desc="Can autoattack while moving." Op=51 component 27992/27993: desc="You are a coward!". Op=40/41: standard-bearing context. Op=29: Witch Hunter Accusations context. Op=47: near Halloween event transforms. No op code names in schema itself.** |
+| **Londos DB War_AbilityComponentBin.sql** | `D:\Repos\Shmerrick\WAR-RE-Toolkit\data\database-tables\Londos Server v2\War_AbilityComponentBin.sql` | **18,524 component rows (bulk INSERT, 74 lines); op=47 exactly 8 rows; op=51 exactly 38 rows; op=29 exactly 12 rows; op=30 exactly 1 row; op=32 exactly 15 rows; op=40 exactly 2 rows; op=41 exactly 4 rows. Op=43 comp 3431 desc="Can autoattack while moving." Op=51 comp 27992/27993 desc="You are a coward!". All values documented above. No op code enum in this file.** |
+| **Londos DB War_AbilityBin.sql** | `D:\Repos\Shmerrick\WAR-RE-Toolkit\data\database-tables\Londos Server v2\War_AbilityBin.sql` | **59-column table; EffectID at column [13]. Confirms: Crack Shot (1536)→comp 708 (op=30); Searing Vitality (8205)→comp 1597 (op=51); Eye of Sheerian (8606)→comp 2131 (op=32); Night of Murder (14214)→EffectID=2927 (NOT comp 14214). BotS abilities 10733–10740 have EffectIDs 3266/3958 (op=46 CATAPULT), not 10733–10740 — op=47 comps are in their chains.** |
+| **Live war_world DB buff_commands** | `MySQL 127.0.0.1:3306 war_world, buff_commands table` | **`MoveAndShoot` CommandName on "Skirmish Stance" (Entry=9094) and "Spiked Squig" (Entry=1844) — confirmed emulator translation of op=43. `ObjectEffectState` CommandName on Squig Armor (6), Stealth (12), Chicken (14), BotS transforms (28–30,38) etc.** |
+| **WorldServer BuffEffectInvoker.cs** | `WorldServer/World/Abilities/Buffs/BuffEffectInvoker.cs` | `MoveAndShoot()` method (line 3145): sets `CombatInterface_Player.MoveAndShoot = true/false` — op=43 emulator implementation. `ObjectEffectState()` (line 3080): calls `OSInterface.AddEffect(cmd.PrimaryValue)` for visual transforms. `HoldTheLine()` (line 2792): increments HTLStacks. |
+| **Common/Database/GameData.cs** | `Common/Database/GameData.cs` line 979 | `ObjectEffectState` enum: BERSERK=1, WAAAGH=2, CARRYING_BANNER=3, KNOCKED_DOWN=4, SCALE_UP=7, MOVEMENT_SPEED=8, TAUNTED=9, DETAUNTED=10, CARRYING_FLAG=11, STEALTH=12, CHAOS_CHICKEN=13, ORDER_CHICKEN=14, etc. `RealmCaptainManager.cs` uses CARRYING_BANNER to mark standard bearers. |
 
 ### Key Londos DB chain context (2026-03-28)
 
@@ -158,33 +162,51 @@ Component 14220 op=28  vals=[14508]      SIEGE_CARRY standard ID
 ```
 Component 3431 op=43 vals=[27] desc="Can autoattack while moving."  HEAD of Cleave (AbilityID=5104)
 Component 9497 op=43 vals=[21] desc=""
+Emulator: MoveAndShoot buff cmd (BuffEffectInvoker.cs:3145) on Skirmish Stance (9094), Spiked Squig (1844)
 ```
 
-**Op=51 — Progression ordinal / ability-linked rank:**
+**Op=47 — Bite of the Skaven event (4-pair state, 8 rows total):**
 ```
-Component 1597  op=51 vals=[17666,0,0,0]   desc=""  HEAD of "Searing Vitality" (tactic)
+Component 10733 op=47 vals=[0,10]  ← Invis-off, Code10
+Component 10734 op=47 vals=[1,10]  ← On,   Code10
+Component 10735 op=47 vals=[0,20]  ← Invis-off, Code20
+Component 10736 op=47 vals=[1,20]  ← On,   Code20
+Component 10737 op=47 vals=[0,30]  ← Invis-off, Code30
+Component 10738 op=47 vals=[1,30]  ← On,   Code30
+Component 10739 op=47 vals=[0,40]  ← Invis-off, Code40
+Component 10740 op=47 vals=[1,40]  ← On,   Code40
+AbilityBin IDs 10733–10741: "BotS - Tier 1/2 Glyph/Stone/Rod" (EffectID=3266 or 3958, op=46 CATAPULT head)
+Op=47 comps are in the ability chain (not the HEAD); they set a state code when the BotS transform activates/deactivates.
+```
+
+**Op=51 — Progression ordinal / ability-linked rank (38 rows):**
+```
+Component 1597  op=51 vals=[17666,0,0,0]   desc=""  HEAD of "Searing Vitality" (DoK tactic, AbilityID=8205)
 Component 27992 op=51 vals=[17643,0,0,13]  desc="You are a coward!"
 Component 27993 op=51 vals=[17643,0,0,14]  desc="You are a coward!"
-Components 26661–26668: vals=[20760–20767, 0, 0/1/2/3, 39–42]  (battlefront ordinals)
-Components 26941–26943: vals=[31018–31020, 0, 0, 89–91]         (fortress ordinals)
+Components 26661–26668: vals=[20760–20767, 0, 0–3, 39–42]  (battlefront ordinals, AbilityID 20760="TEST Skaven Grey Seer")
+Components 26900–26923: vals=[30030–30069, 0, 1–4, 49–91]  (higher battlefront ordinals)
+Components 26941–26943: vals=[31018–31020, 0, 0, 89–91]    (fortress ordinals)
+Value[0]=ability reference, Value[2]=sub-index (0–4), Value[3]=rank/ordinal
 ```
 
 ### Remaining approach
 
-**Step 1 — Op=43: Update ComponentOperationType enum.**
-Name is effectively confirmed as MOVEMENT_AUTOATTACK (or equivalent). Add to enum and update schema catalog inference from Inferred to Confirmed.
+**Op=43 — DONE: name confirmed, emulator translation confirmed (MoveAndShoot).** Only remaining step is adding MOVEMENT_AUTOATTACK to the ComponentOperationType enum if desired. Schema catalog already has Inferred-confidence description.
 
-**Step 2 — Op=40 and op=41: Cross-check with RECOVER_STANDARD.**
-Op=42 = RECOVER_STANDARD. Op=41 uses the same 187701–187706 ID range. Op=40 is a binary toggle in the same ability chain. Likely names: op=41 = TAKE_STANDARD, op=40 = STANDARD_CARRIER_STATE (or similar). Confirm by reading the full "Carry the Standard" ability description from AbilityBin.
+**Op=40/41 — Names not found; source exhausted.** All available data sources (Londos DB, RE toolkit, live DB, emulator) have been searched. Both ops are confirmed in the standard-bearing component chain. op=40 = binary state toggle (CARRIER_STATE?), op=41 = standard take/place with 187701–187706 IDs. No further naming progress possible from available sources.
 
-**Step 3 — Op=51: Read associated abilities.**
-Ability "Searing Vitality" (AbilityID=8205) has op=51 as head component with vals=[17666,0,0,0]. Read the full ability chain and description to determine if op=51 = tactic modifier or progression rank. The "coward" debuff (vals=[17643,0,0,13/14]) and battlefront ordinals (vals=[...,0,0,89-91]) suggest a rank/tier mechanism.
+**Op=47 — Context identified (BotS event), name not found.** Eight rows forming a 4-pair toggle pattern in Bite of the Skaven event ability chains. Value[0]=0/1 toggle, Value[1]=10/20/30/40 tier/type code. No further naming progress possible.
 
-**Step 4 — Op=29: Identify 66001–66300 ID range.**
-Search `abilityexport.bin` for abilities in the 66001–66300 ID range. If they are all Witch Hunter Accusations or a related sub-ability set, op=29 = ACCUSATION_APPLY or equivalent.
+**Op=51 — Pattern documented, name not found.** 38 rows: ability-reference + ordinal pattern. Associated with DoK tactic "Searing Vitality", "coward" debuff (ordinals 13/14), battlefront/fortress ordinals (39–91). Could be RANK_LINKED_ABILITY or TACTIC_TIER_REFERENCE. No further naming progress possible from available sources.
 
-**Step 5 — Once named, update ComponentOperationType enum.**
-Add confirmed names to the operation type enum and update schema catalog labels.
+**Op=29 — Pattern documented, name not found.** 12 rows. Main cluster: Witch Hunter accusation-target IDs (66001–66300). Secondary cluster: vals=[0/9979, 40]. Emulator's `DamageWhileMoving` buff command appears on "Sudden Accusation" (8096) but also on non-WH abilities — uncertain mapping. No confirmed op name.
+
+**Op=30 — Only 1 row; HEAD of Crack Shot (disarm).** Insufficient data points to name. Value[0]=18 unresolved.
+
+**Op=32 — 15 rows; HEAD of Eye of Sheerian (group aura).** Insufficient data to name. Likely GROUP_STAT_CHANGE or similar. No further naming progress possible.
+
+**All ops: If decompiled WAR server code (WarServer.dll) becomes available**, check `WarServer.Game.Ability.Ext.Components` namespace (referenced in AbilityEngine.cs) for component type implementations — this would give authoritative names for all server-only ops.
 
 ---
 
