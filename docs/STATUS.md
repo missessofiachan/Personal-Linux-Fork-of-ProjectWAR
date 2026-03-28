@@ -46,7 +46,7 @@ See `docs/los/occ-re-notes.md` for OCC format documentation and full per-chunk c
 
 `ClientDataMatrix` is a read-only analysis tool that ingests extracted WAR client files and builds a provenance-tracked graph of ability, effect, and identity data. It produces per-ability reports, conflict ledgers, coverage summaries, and operation schema ledgers.
 
-Source files it reads are all under `C:\Users\Admin\Pictures\WAR_extracted`:
+Source files it reads are all under `C:\Users\Admin\Downloads\myps`:
 - `data/gamedata/abilities.csv`, `effects.csv`, `pregame_chars.xml`
 - `data/strings/english/abilitynames.txt`, `abilitydesc.txt`, `abilityeffect.txt`, `careernames_m.txt`, `careerlines_m.txt`, `racenames_m.txt`
 - `data/bin/abilityexport.bin`, `abilitycomponentexport.bin`, `abilityrequirementexport.bin`
@@ -54,6 +54,26 @@ Source files it reads are all under `C:\Users\Admin\Pictures\WAR_extracted`:
 Reports are generated at runtime to a local output directory. They are not committed to the repo.
 
 Tool usage: `docs/client-data-matrix-usage.md`.
+
+### Component Field Decode Status (as of commit 7a76ddb3, 2026-03-28)
+
+All 18,526 component records across all operation types have been fully decoded. **Unknown = 0, Structural = 0.**
+
+Every field in `abilitycomponentexport.bin` is now at Confirmed or Inferred confidence:
+- **ExtData Val1–Val4** (application target, operation type code, application profile, layout tag): universal cross-op decode
+- **Values[0–7]**: per-operation semantics documented for all 40+ operation types, including all unnamed ops (29, 30, 32, 40, 41, 43, 47, 51)
+- **Multipliers[0–7]**: scaling percentages decoded per operation
+- **FlagsRaw**: CrowdControlTypes bitmasks, bit-field flags, sequential enums decoded per operation
+- **Value08**: universal binary flag (= 1 across all operations)
+- **Value15**: universal CC gate (CrowdControlTypes bits, mask 0x8FF) across all operations
+
+Two fields remain semantically ambiguous but are marked Inferred with full distribution notes:
+- `DAMAGE Value[1]` — 591 non-zero, 81 distinct values; secondary formula parameter, semantics unresolved
+- `SERVER_COMMAND Value[2]` — 337 non-zero, 59 distinct values; polymorphic command argument (tri-modal: small enum / ID ref / sentinel)
+
+The next major open work area is **requirement semantics** (558 rows in `abilityrequirementexport.bin` with unresolved ExtData fields).
+
+See `docs/data-matrix/overview/path-forward.md` for the full roadmap of remaining work.
 
 ## External Data Locations
 
@@ -72,7 +92,7 @@ Tool usage: `docs/client-data-matrix-usage.md`.
 
 ## Bot System
 
-A fully integrated, player-like Bot System is now implemented to populate the world with autonomous entities. They participate in RvR and Scenarios, running with zero network overhead. See `BOT_SYSTEM.md` for detailed information on architecture, logic, and GM commands.
+A fully integrated, player-like Bot System is now implemented to populate the world with autonomous entities. They participate in RvR and Scenarios, running with zero network overhead. Bots are automatically assigned to permanent race-specific faction guilds (e.g., Empire, Greenskins) and operate cohesively in tactical groups. See `BOT_SYSTEM.md` for detailed information on architecture, logic, and GM commands.
 
 ## Recently Resolved Issues
 

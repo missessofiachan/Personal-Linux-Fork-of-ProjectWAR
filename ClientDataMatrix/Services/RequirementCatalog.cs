@@ -17,6 +17,60 @@ namespace ClientDataMatrix.Services
         private readonly Dictionary<ushort, List<AbilityComponentUsage>> _abilityUsagesByComponentId;
         private readonly Dictionary<ushort, RequirementAnalysisRecord> _analysisByRequirementId;
 
+        // Requirement ExtData field schema (from decompiled client AbilityExport.cs):
+        //   Val1 = AbilitySourceType, Val2 = AbilityOperation, Val3 = AbilityCondition,
+        //   Val4 = AbilityLogicOperator, Val5 = threshold/parameter, Val6 = child RequirementId or op-specific ref,
+        //   Val7/Val8 = auxiliary parameters, Val9 = binary flag byte.
+
+        private static readonly Dictionary<int, string> AbilitySourceTypeNames = new Dictionary<int, string>
+        {
+            { 0, "Self" }, { 1, "Cast" }, { 2, "Apply" }, { 3, "Watch" },
+            { 4, "EventReq" }, { 6, "Result" }, { 7, "Immunity" },
+        };
+
+        private static readonly Dictionary<int, string> AbilityOperationNames = new Dictionary<int, string>
+        {
+            { 0, "Default" }, { 1, "FriendlyTargeted" }, { 2, "EnemyTargeted" },
+            { 3, "BuffGroupCounterSum" }, { 4, "Range" }, { 5, "Unk5" },
+            { 6, "BuffGroupCount" }, { 7, "Unk7" }, { 8, "GetGroupOnAbilityUsed" },
+            { 9, "Random" }, { 10, "RequirmentGroupCheck" }, { 11, "TargetActivatedComponent" },
+            { 12, "AbilityType" }, { 13, "SpellConvention" }, { 14, "TargetCheck" },
+            { 15, "TargetIsPlayer" }, { 16, "MonsterType" }, { 17, "PreviousComponentActivated" },
+            { 18, "WoundsPercent" }, { 19, "TargetRace" }, { 20, "TargetInSameGroup" },
+            { 21, "TargetBackSide" }, { 22, "Unk22" }, { 23, "RequirmentGroupCheck2" },
+            { 24, "MasteryPath" }, { 25, "Ap" }, { 26, "ApPercent" },
+            { 27, "TargetRandom" }, { 28, "TargetIsMonster" }, { 29, "DamageType" },
+            { 30, "Unk30" }, { 31, "InCombat" }, { 32, "Unk32" }, { 33, "Unk33" },
+            { 34, "TargetIsMoving" }, { 35, "KeepDoor" }, { 36, "Unk36" }, { 37, "Unk37" },
+            { 38, "TargetGreatWeapon" }, { 39, "Unk39" }, { 40, "SiegeControl" },
+            { 41, "Unk41" }, { 42, "Unk42" }, { 43, "Unk43" }, { 44, "EquippedInventorySlot" },
+            { 45, "Unk45" }, { 46, "Unk46" }, { 47, "Unk47" }, { 48, "Unk48" },
+            { 49, "GuildLevel" }, { 50, "Unk50" }, { 51, "TargetBack" },
+            { 52, "TargetBuildTimesChanged" }, { 53, "Unk53" }, { 54, "Unk54" },
+            { 55, "TargetDead" }, { 56, "Unk56" }, { 57, "Unk57" }, { 58, "Unk58" },
+            { 59, "Zone" }, { 60, "DoorTarget" }, { 61, "Unk61" }, { 62, "Unk62" },
+            { 63, "Unk63" }, { 64, "Unk64" }, { 65, "Unk65" }, { 66, "Unk66" },
+            { 67, "BuffAbilityIDSum" }, { 68, "Unk68" }, { 69, "Unk69" },
+            { 70, "ItemSlotted" }, { 71, "Unk71" }, { 72, "Zone2" },
+            { 73, "TimerLastTick" }, { 74, "AbilityLevel" }, { 75, "Finisher" },
+            { 76, "ScenarioCheck" }, { 77, "BolsterLevel" }, { 78, "CanMounted" },
+            { 79, "Mounted" }, { 80, "HasPet" }, { 81, "Unk81" },
+            { 82, "LastAbilityResult" }, { 83, "Unk83" }, { 84, "Unk84" },
+            { 85, "Unk85" }, { 86, "Unk86" }, { 87, "Unk87" },
+            { 88, "TierCheck88" }, { 89, "Unk89" },
+        };
+
+        private static readonly Dictionary<int, string> AbilityConditionNames = new Dictionary<int, string>
+        {
+            { 0, "None" }, { 1, "Equal" }, { 2, "Unk2" }, { 4, "LessThanEqual" },
+            { 5, "GreaterThanEqual" }, { 6, "LessThan" }, { 7, "GreaterThan" }, { 8, "FriendlyTarget" },
+        };
+
+        private static readonly Dictionary<int, string> AbilityLogicOperatorNames = new Dictionary<int, string>
+        {
+            { 0, "None" }, { 8, "And" }, { 9, "Or" }, { 10, "Unk10" },
+        };
+
         public RequirementCatalog(AbilityDataset dataset)
         {
             _dataset = dataset;
@@ -337,7 +391,28 @@ namespace ClientDataMatrix.Services
                 string semanticSummary = string.Empty;
                 string confidence = SemanticConfidence.Unknown;
                 string notes = string.Empty;
-                if (pair.Key.EndsWith(".Val6", StringComparison.OrdinalIgnoreCase))
+                if (pair.Key.EndsWith(".Val1", StringComparison.OrdinalIgnoreCase))
+                {
+                    TryDecodeEnumField(distinctValues, AbilitySourceTypeNames, "AbilitySourceType", out confidence, out semanticSummary, out notes);
+                }
+                else if (pair.Key.EndsWith(".Val2", StringComparison.OrdinalIgnoreCase))
+                {
+                    TryDecodeEnumField(distinctValues, AbilityOperationNames, "AbilityOperation", out confidence, out semanticSummary, out notes);
+                }
+                else if (pair.Key.EndsWith(".Val3", StringComparison.OrdinalIgnoreCase))
+                {
+                    TryDecodeEnumField(distinctValues, AbilityConditionNames, "AbilityCondition", out confidence, out semanticSummary, out notes);
+                }
+                else if (pair.Key.EndsWith(".Val4", StringComparison.OrdinalIgnoreCase))
+                {
+                    TryDecodeEnumField(distinctValues, AbilityLogicOperatorNames, "AbilityLogicOperator", out confidence, out semanticSummary, out notes);
+                }
+                else if (pair.Key.EndsWith(".Val5", StringComparison.OrdinalIgnoreCase))
+                {
+                    confidence = SemanticConfidence.Inferred;
+                    semanticSummary = "Operation-specific threshold or comparison value (semantics depend on AbilityOperation). Position confirmed from decompiled client ExtData schema.";
+                }
+                else if (pair.Key.EndsWith(".Val6", StringComparison.OrdinalIgnoreCase))
                 {
                     List<ushort> matchedRequirementIds = distinctValues
                         .Select(ParseRequirementId)
@@ -355,6 +430,22 @@ namespace ClientDataMatrix.Services
                             : "Some observed values in this field match known RequirementId rows.";
                         notes = "Example requirement ids: " + string.Join(", ", matchedRequirementIds.Take(12).Select(row => row.ToString(CultureInfo.InvariantCulture))) + ".";
                     }
+                    else
+                    {
+                        confidence = SemanticConfidence.Inferred;
+                        semanticSummary = "Operation-specific reference value (RequirementId child link, ability ID, monster type, or other reference depending on AbilityOperation). Position confirmed from decompiled client ExtData schema.";
+                    }
+                }
+                else if (pair.Key.EndsWith(".Val7", StringComparison.OrdinalIgnoreCase)
+                      || pair.Key.EndsWith(".Val8", StringComparison.OrdinalIgnoreCase))
+                {
+                    confidence = SemanticConfidence.Inferred;
+                    semanticSummary = "Operation-specific auxiliary parameter. Position confirmed from decompiled client ExtData schema.";
+                }
+                else if (pair.Key.EndsWith(".Val9", StringComparison.OrdinalIgnoreCase))
+                {
+                    confidence = SemanticConfidence.Inferred;
+                    semanticSummary = "Binary flag byte. Position confirmed from decompiled client ExtData schema.";
                 }
 
                 fields.Add(new RequirementFieldRecord
@@ -596,6 +687,48 @@ namespace ClientDataMatrix.Services
 
             requirementId = (ushort)rawValue;
             return _knownRequirementIds.Contains(requirementId);
+        }
+
+        private static void TryDecodeEnumField(
+            List<string> distinctValues,
+            Dictionary<int, string> enumNames,
+            string enumTypeName,
+            out string confidence,
+            out string semanticSummary,
+            out string notes)
+        {
+            confidence = SemanticConfidence.Unknown;
+            semanticSummary = string.Empty;
+            notes = string.Empty;
+
+            if (distinctValues == null || distinctValues.Count == 0)
+                return;
+
+            List<string> namedEntries = new List<string>();
+            int matchCount = 0;
+            foreach (string rawValue in distinctValues)
+            {
+                int intValue;
+                if (!int.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out intValue))
+                    continue;
+
+                string enumName;
+                if (enumNames.TryGetValue(intValue, out enumName))
+                {
+                    namedEntries.Add(intValue.ToString(CultureInfo.InvariantCulture) + "=" + enumName);
+                    matchCount++;
+                }
+                else
+                {
+                    namedEntries.Add(intValue.ToString(CultureInfo.InvariantCulture) + "=Unk");
+                }
+            }
+
+            if (matchCount == 0)
+                return;
+
+            confidence = matchCount == distinctValues.Count ? SemanticConfidence.Confirmed : SemanticConfidence.Inferred;
+            semanticSummary = enumTypeName + ": " + string.Join(", ", namedEntries) + ".";
         }
 
         private string BuildAbilityLabel(ushort abilityId)

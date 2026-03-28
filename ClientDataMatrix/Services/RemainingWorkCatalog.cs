@@ -164,7 +164,7 @@ namespace ClientDataMatrix.Services
         {
             List<ConflictRecord> rows = report == null || report.Conflicts == null
                 ? new List<ConflictRecord>()
-                : report.Conflicts.Where(row => !row.IsNoise).ToList();
+                : report.Conflicts.Where(row => !row.IsNoise && string.IsNullOrWhiteSpace(row.CanonicalValue)).ToList();
 
             List<RemainingWorkItemRecord> items = rows
                 .GroupBy(BuildConflictGroupKey, StringComparer.OrdinalIgnoreCase)
@@ -406,7 +406,7 @@ namespace ClientDataMatrix.Services
                 HighCount = items.Count(row => string.Equals(row.PriorityBucket, "High", StringComparison.OrdinalIgnoreCase)),
                 CoverageGapAbilityCount = coverageRows.Count(row => !string.Equals(row.CoverageStatus, "MappedWithRequirements", StringComparison.OrdinalIgnoreCase)
                     && !string.Equals(row.CoverageStatus, "Mapped", StringComparison.OrdinalIgnoreCase)),
-                HighSignalConflictCount = conflictRows.Count(IsHighSignal),
+                HighSignalConflictCount = conflictRows.Count(row => IsHighSignal(row) && string.IsNullOrWhiteSpace(row.CanonicalValue)),
                 UnknownFieldCount = operationFields.Count(row => string.Equals(row.Confidence, SemanticConfidence.Unknown, StringComparison.OrdinalIgnoreCase)),
                 StructuralFieldCount = operationFields.Count(row => string.Equals(row.Confidence, SemanticConfidence.Structural, StringComparison.OrdinalIgnoreCase)),
                 RequirementGapCount = requirementRows.Count(row => (row.Fields ?? new List<RequirementFieldRecord>()).Any(field => string.Equals(field.Confidence, SemanticConfidence.Unknown, StringComparison.OrdinalIgnoreCase) || string.Equals(field.Confidence, SemanticConfidence.Structural, StringComparison.OrdinalIgnoreCase))),
