@@ -1,6 +1,6 @@
 # ClientDataMatrix: Path Forward
 
-Last updated: 2026-03-28 (post-commit 6fb7cfa3)
+Last updated: 2026-03-28 (Londos DB + WorldServer searched; op=43 confirmed; ops 40/41/51/29/47 have contextual evidence)
 
 Component field decode is complete (Unknown=0, Structural=0). Requirement semantics fully decoded. This document covers all remaining open work, ordered by impact and tractability.
 
@@ -25,16 +25,24 @@ Confirmed from decompiled server-side `DAMAGE.cs`:
 
 ---
 
-## Area 3: SERVER_COMMAND Value[2] — Polymorphic Command Argument (High)
+## Area 3: SERVER_COMMAND — Field Mapping Clarification Needed (High)
 
 ### What is unresolved
 
-`SERVER_COMMAND (op=36)` `Value[2]`: 337 non-zero, 59 distinct values. Currently documented as a polymorphic argument whose role depends on companion fields (FlagsRaw command code + Value[3/4/5] context).
+`SERVER_COMMAND (op=36)` field mapping. Our BIN analysis documented `FlagsRaw` as the command code (8 distinct values) and `Value[2]` as the polymorphic argument (337 non-zero, 59 distinct values). The Londos DB (see below) shows `Values[0]` = command code and `Values[1]` = primary argument, with `Flags=0` on all rows. These two pictures need reconciling before per-command inference can be written.
 
-Three observed modes:
-- Small enum values (1–10): likely command sub-type selectors
-- ID references (100–10000+): likely entity/ability/effect IDs
-- Sentinel values (-1, 100000): boundary/max/all semantics
+The Londos DB reveals **72+ distinct command codes** and their argument patterns. The most frequent commands:
+
+| Command code | Count | Values[1] pattern | Values[2] | Interpretation (Inferred) |
+|---|---|---|---|---|
+| 32 | 310 | 30000–60000 IDs | 0 | Award/grant item or ability by ID |
+| 50 | 101 | 30000–50000 IDs | 0 | Similar to 32 |
+| 327 | 90 | 1 (constant) | 1 | Toggle/enable state (sub-type 1) |
+| 328 | 90 | 1 (constant) | 0 | Toggle/disable state (sub-type 1) |
+| 332 | 32 | career/mastery IDs | 5, 5 | Career mastery or specialization unlock |
+| 53 | 64 | 87000+ IDs | 0/1/2/3 enum | ID grant with variant selector |
+| 173 | 26 | 0 | large IDs | Context reversed — Values[2] = ability ID |
+| 23 | 26 | small IDs | 0 | Small-enum command arg |
 
 ### Sources searched (2026-03-28)
 
@@ -42,21 +50,19 @@ Three observed modes:
 |---|---|---|
 | RE toolkit AbilityEnums.cs | `D:\Repos\Shmerrick\WAR-RE-Toolkit\docs\research\abilities-bin-file-exporter\AbilityEnums.cs` | `ComponentOperationType` enum names op=36 as `SERVER_COMMAND` but has no Value field names |
 | RE toolkit ComponentOP.cs | `D:\Repos\Shmerrick\WAR-RE-Toolkit\apps\admintool\MYPLib\MYPLib\ComponentOP.cs` | Alternative op names for 12/13/15/22/23/25/28; nothing for op=36 Value fields |
-| WorldServer codebase | grep for `ServerCommand`, `server_command`, `op.*36`, `ComponentOperation` | **No matches** — emulator does not implement ability component dispatch |
+| WorldServer MythicAbilityGraphTranslator.cs | `WorldServer/World/Abilities/MythicAbilityGraphTranslator.cs` | Component dispatch switch implements only ops 1, 3, 8, 22, 23. No case for op=36 |
+| **Londos DB War_AbilityComponentBin.sql** | `D:\Repos\Shmerrick\WAR-RE-Toolkit\data\database-tables\Londos Server v2\War_AbilityComponentBin.sql` | **1065 op=36 rows; Flags=0 on all rows; Values[0] = command code (72+ distinct); Values[1] = primary arg; Values[2]/[3] = secondary args; confirms polymorphic structure keyed on Values[0]** |
 
 ### Remaining approach
 
-**Step 1 — Enumerate FlagsRaw command codes.**
-`SERVER_COMMAND FlagsRaw` has 8 distinct values. Map each FlagsRaw code to its Value[2] distribution. If each command code has a consistent Value[2] type (enum vs ID vs sentinel), the polymorphism is resolved by conditioning on FlagsRaw.
+**Step 1 — Reconcile FlagsRaw vs Values[0].**
+Our BIN says "FlagsRaw = command code, 8 distinct". Londos says "Values[0] = command code, Flags=0". These may be consistent if the Londos devs remapped FlagsRaw → Values[0] on import. Verify by checking what values our `abilitycomponentexport.bin` FlagsRaw field holds for op=36 rows. If those FlagsRaw values match known Londos command codes (32, 50, etc.), the mapping is confirmed.
 
-**Step 2 — Londos database.**
-Search the Londos ability database for op=36 entries. Londo-sourced data was previously reverted from the tool due to confidence policy — but the raw data may still name the Value[2] field.
+**Step 2 — Per-command inference.**
+Once the field that holds the command code is confirmed, extend `TryBuildServerCommandStructuralInference` to emit per-command-code named inferences (e.g., "command=32: grant item/ability ID via Values[1]") instead of the single "polymorphic command argument" label.
 
-**Step 3 — Broader RE toolkit search.**
-Search all decompiled client files in `D:\Repos\Shmerrick\WAR-RE-Toolkit\` (not just the abilities-bin-file-exporter folder) for `SERVER_COMMAND`, `ServerCommand`, or a class at op=36. A server-side handler class named something like `SERVER_COMMAND.cs` may exist.
-
-**Step 4 — Update inference.**
-Once each (FlagsRaw, Value[2]) combination is semantically labeled, extend `TryBuildServerCommandStructuralInference` to emit per-command-code named inferences instead of the single "polymorphic command argument" Inferred label.
+**Step 3 — Identify specific command semantics.**
+Work through the 72 command codes. Many can be inferred by correlating Values[1] with known ability/item ID ranges and by examining the ability descriptions of abilities that use each command.
 
 ---
 
@@ -107,18 +113,18 @@ Remaining string-mismatch conflicts (AbilityName, AbilityDescription, EffectName
 
 ### What is unresolved
 
-Eight operation codes have no confirmed name. Their fields are fully decoded structurally, but the semantic purpose of the operation itself is unknown.
+Eight operation codes have no confirmed name. Their fields are fully decoded structurally, but the semantic purpose of the operation itself is unknown. Londos DB investigation (2026-03-28) provided contextual evidence for several ops. Op=43 now has a confirmed description. Op=40, 41 have strong contextual inference. Op=51, 47, 29 have partial context. Ops 30 and 32 remain most ambiguous.
 
-| Op | Records | Key field patterns |
-|---|---|---|
-| 29 | 11 | Value[0] = ID refs (66001–66300 range), FlagsRaw = CC bits |
-| 30 | 1 | Value[0] = 18 (single record) |
-| 32 | 15 | Value[0] = high-range IDs (5424–10020) |
-| 40 | 1 | Value[0] = 1 (single record) |
-| 41 | 4 | Value[0] = 14; Value[1/2/3] = sequential ID groups (187701–187706) |
-| 43 | 2 | Value[0] = 21 or 27 |
-| 47 | 8 | Value[1] = regular 10-unit increments (10,20,30,40) |
-| 51 | 39 | Value[0] = high-range ID refs; FlagsRaw = bit2; Value[2] = small enum; Value[3] = ordinal |
+| Op | Records | Key field patterns | Londos context (2026-03-28) |
+|---|---|---|---|
+| 29 | 11 | Value[0] = ID refs (66001–66300 range) or small enum (10, 11); FlagsRaw = CC bits | Witch Hunter "Accusations" ability chain. Values=[10,11] (head) + Values=[66298/99/300, 11, 10] (chain). 66001–66300 may be Witch Hunter accusation-target ability IDs |
+| 30 | 1 | Value[0] = 18 (single record) | HEAD of "Crack Shot" (AbilityID=1536, Engi ranged disarm). No Londos description on component; ability desc = "deals damage and disarms target" |
+| 32 | 15 | Value[0] = high-range IDs (5424–10020) | HEAD of "Eye of Sheerian" (AbilityID=8606, group armor+resist buff). Component desc template = "{COM_0_VAL0}" = armor amount. Likely GROUP_AREA_STAT or AURA_STAT |
+| 40 | 2 | Values=[0] or [1] — binary | Standard-bearing context: adjacent to SIEGE_CARRY (op=28) and "If you die with a standard in-hand, it will be destroyed!" proc. Values=[0]=off, [1]=on. Likely STANDARD_CARRIER_STATE or BANNER_FLAG |
+| 41 | 4 | Value[0] = 14; Value[1/2/3] = sequential IDs (187701–187706) | Same standard-bearing ability chain as op=40; Values=[14, 187701–187706] shares 187701–187706 ID range with op=42 (RECOVER_STANDARD). Likely TAKE_STANDARD or CAPTURE_STANDARD |
+| 43 | 2 | Value[0] = 21 or 27 | **Confirmed via Londos component description**: "Can autoattack while moving." HEAD of "Cleave" (AbilityID=5104). Suggests MOVEMENT_AUTOATTACK |
+| 47 | 8 | Value[0] = 0 or 1; Value[1] = 10/20/30/40 | Adjacent to op=48/49/50 (also unknown) and Halloween event transforms (pig/boar/wolf transforms, pet summons). Pairs: [0,10],[1,10],[0,20],[1,20],[0,30],[1,30],[0,40],[1,40]. Value[0]=direction/toggle, Value[1]=magnitude step |
+| 51 | 39 | Value[0] = ability/effect ID; Value[2] = small enum; Value[3] = ordinal | Multiple clusters: HEAD of "Searing Vitality" (tactic, AbilityID=8205, vals=[17666,0,0,0]); "You are a coward!" debuff (vals=[17643,0,0,13/14]); battlefront/fort ordinals 39–42 (IDs 20760–20767) and 89–91 (IDs 31018–31020). Value[3] = rank/progression ordinal |
 
 ### Sources searched (2026-03-28)
 
@@ -126,24 +132,59 @@ Eight operation codes have no confirmed name. Their fields are fully decoded str
 |---|---|---|
 | RE toolkit AbilityEnums.cs | `D:\Repos\Shmerrick\WAR-RE-Toolkit\docs\research\abilities-bin-file-exporter\AbilityEnums.cs` | `ComponentOperationType` enum — **does not contain** ops 29, 30, 32, 40, 41, 43, 47, 51 |
 | RE toolkit ComponentOP.cs | `D:\Repos\Shmerrick\WAR-RE-Toolkit\apps\admintool\MYPLib\MYPLib\ComponentOP.cs` | Contains DISABLE=12, PROC=13, BUFF_PARAM=15, BONUS_TYPE=22, LINKED_ABILITY=23, CAREER_RESOURCE=25, SIEGE_CARRY=28. **Does not contain** ops 29, 30, 32, 40, 41, 43, 47, 51 |
-| WorldServer codebase | grep for op codes, component dispatch | No ability component dispatch implemented |
+| WorldServer MythicAbilityGraphTranslator.cs | `WorldServer/World/Abilities/MythicAbilityGraphTranslator.cs` | Component dispatch switch: only cases 1, 3, 8, 22, 23. No implementation for any of the 8 unknown ops |
+| RE toolkit broader search | `D:\Repos\Shmerrick\WAR-RE-Toolkit\apps\` and `docs\research\` | No additional op-name source found beyond AbilityEnums.cs and ComponentOP.cs. AbilityEngine.cs uses `ComponentOperationType` without adding new values |
+| **Londos DB War_AbilityComponentBin.sql** | `D:\Repos\Shmerrick\WAR-RE-Toolkit\data\database-tables\Londos Server v2\War_AbilityComponentBin.sql` | **18,524 component rows; component `Description` field names the buff tooltip. Op=43 component 3431: desc="Can autoattack while moving." Op=51 component 27992/27993: desc="You are a coward!". Op=40/41: standard-bearing context. Op=29: Witch Hunter Accusations context. Op=47: near Halloween event transforms. No op code names in schema itself.** |
+
+### Key Londos DB chain context (2026-03-28)
+
+**Op=40 / Op=41 — Standard mechanic:**
+```
+Component 14199 op=8  "Mounted speed +10%"
+Component 14200 op=15  blank BUFF_PARAM
+Component 14201 op=40  vals=[0]          ← state OFF
+Component 14202 op=15  blank
+...
+Component 14209 op=40  vals=[1]          ← state ON
+...
+Component 14212 op=13  "If you die with a standard in-hand, it will be destroyed!"
+Component 14213 op=23  vals=[99999]      LINKED_ABILITY (sentinel = any)
+Component 14214 op=41  vals=[14,187701,187702,187703]   ← same ID range as op=42 RECOVER_STANDARD
+Component 14215 op=41  vals=[14,187704,187705,187706]
+Component 14220 op=28  vals=[14508]      SIEGE_CARRY standard ID
+```
+
+**Op=43 — Autoattack while moving (confirmed):**
+```
+Component 3431 op=43 vals=[27] desc="Can autoattack while moving."  HEAD of Cleave (AbilityID=5104)
+Component 9497 op=43 vals=[21] desc=""
+```
+
+**Op=51 — Progression ordinal / ability-linked rank:**
+```
+Component 1597  op=51 vals=[17666,0,0,0]   desc=""  HEAD of "Searing Vitality" (tactic)
+Component 27992 op=51 vals=[17643,0,0,13]  desc="You are a coward!"
+Component 27993 op=51 vals=[17643,0,0,14]  desc="You are a coward!"
+Components 26661–26668: vals=[20760–20767, 0, 0/1/2/3, 39–42]  (battlefront ordinals)
+Components 26941–26943: vals=[31018–31020, 0, 0, 89–91]         (fortress ordinals)
+```
 
 ### Remaining approach
 
-**Step 1 — Londos database.**
-Search the Londos ability database for op codes 29, 30, 32, 40, 41, 43, 47, 51. Londo-sourced data was previously reverted from the tool due to confidence policy — but the raw data may still name these operations.
+**Step 1 — Op=43: Update ComponentOperationType enum.**
+Name is effectively confirmed as MOVEMENT_AUTOATTACK (or equivalent). Add to enum and update schema catalog inference from Inferred to Confirmed.
 
-**Step 2 — Broader RE toolkit search.**
-Search all decompiled client files in `D:\Repos\Shmerrick\WAR-RE-Toolkit\` beyond the abilities-bin-file-exporter folder. Look for a comprehensive component operation switch/dispatch that names all codes including the unknowns.
+**Step 2 — Op=40 and op=41: Cross-check with RECOVER_STANDARD.**
+Op=42 = RECOVER_STANDARD. Op=41 uses the same 187701–187706 ID range. Op=40 is a binary toggle in the same ability chain. Likely names: op=41 = TAKE_STANDARD, op=40 = STANDARD_CARRIER_STATE (or similar). Confirm by reading the full "Carry the Standard" ability description from AbilityBin.
 
-**Step 3 — Anchor via ability clusters.**
-Op=51 (39 records) and op=47 (8 records) have enough samples to cluster by ability. Run the ability report for abilities that use op=51. If they are all in one career or one ability category, the operation purpose follows from context.
+**Step 3 — Op=51: Read associated abilities.**
+Ability "Searing Vitality" (AbilityID=8205) has op=51 as head component with vals=[17666,0,0,0]. Read the full ability chain and description to determine if op=51 = tactic modifier or progression rank. The "coward" debuff (vals=[17643,0,0,13/14]) and battlefront ordinals (vals=[...,0,0,89-91]) suggest a rank/tier mechanism.
 
-**Step 4 — Anchor op=41 via op=42 similarity.**
-Op=41's Value[1/2/3] use the same 187701–187706 ID range as op=42 (`RECOVER_STANDARD`). They may be related (e.g., RECOVER_STANDARD_ALT or RECOVER_STANDARD_CLEAR). Cross-reference which abilities use both ops together.
+**Step 4 — Op=29: Identify 66001–66300 ID range.**
+Search `abilityexport.bin` for abilities in the 66001–66300 ID range. If they are all Witch Hunter Accusations or a related sub-ability set, op=29 = ACCUSATION_APPLY or equivalent.
 
 **Step 5 — Once named, update ComponentOperationType enum.**
-Add the resolved names to the operation type enum in the emulator and update the schema catalog labels.
+Add confirmed names to the operation type enum and update schema catalog labels.
 
 ---
 
@@ -165,6 +206,6 @@ Implementation: Added `DuplicatesAreExpected` to `IdentityDomainRecord`; updated
 | ~~DAMAGE Value[1] / FlagsRaw~~ | **RESOLVED** | — | — | — |
 | ~~EffectId conflicts (2,897)~~ | **RESOLVED** | — | — | — |
 | Coverage gaps (12,664 abilities) | Open | **High** | Ability reports below Mapped status | Investigate broken effect chains in Partial bucket |
-| SERVER_COMMAND Value[2] | Open | **High** | Full SERVER_COMMAND semantic decode | WorldServer op=36 handler + RE toolkit |
-| Unknown op names (8 ops) | Open | **Medium** | Named operation dispatch in emulator | RE toolkit ComponentOperation enum |
+| SERVER_COMMAND field mapping | Open | **High** | Full SERVER_COMMAND semantic decode | Reconcile FlagsRaw vs Values[0]; Londos shows Values[0]=command code |
+| Unknown op names (8 ops) | Open | **Medium** | Named operation dispatch in emulator | Op=43 confirmed MOVEMENT_AUTOATTACK; ops 40/41/51 have strong contextual inference |
 | ~~CareerName identity domain~~ | **RESOLVED** | — | — | — |

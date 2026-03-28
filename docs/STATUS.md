@@ -94,8 +94,8 @@ All 558 requirement rows decoded (Val1=AbilitySourceType, Val2=AbilityOperation,
 ### Remaining Open Work
 
 - **Coverage gaps (12,664)**: inherent data gaps — Partial abilities have broken effect chains or missing CSV rows; StringsOnly have names but no client BIN evidence
-- **SERVER_COMMAND `Value[2]`**: tri-modal polymorphic (small enum / ID ref / sentinel); 337 non-zero, 59 distinct values; no source yet names the field
-- **Unknown op names**: ops 29, 30, 32, 40, 41, 43, 47, 51 — structurally decoded but semantically unnamed; not found in `AbilityEnums.cs` or `ComponentOP.cs`
+- **SERVER_COMMAND field mapping**: field that holds the command code needs reconciliation — BIN analysis says FlagsRaw (8 distinct), Londos DB (`War_AbilityComponentBin.sql`) shows Values[0] (72+ distinct), Flags=0 always; likely a Londos remapping; 72+ command codes with per-code argument patterns now documented
+- **Unknown op names**: ops 29, 30, 32, 40, 41, 43, 47, 51 — Londos DB searched 2026-03-28; op=43 confirmed "Can autoattack while moving" (MOVEMENT_AUTOATTACK); ops 40/41 confirmed standard-bearing context (STANDARD_CARRIER_STATE, TAKE_STANDARD); op=51 has tactic modifier + progression ordinal context; op=29 has Witch Hunter Accusations context; ops 30, 32, 47 still ambiguous
 
 See `docs/data-matrix/overview/path-forward.md` for full roadmap and source-search notes.
 
