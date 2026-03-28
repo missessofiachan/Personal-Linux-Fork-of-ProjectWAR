@@ -132,6 +132,10 @@ namespace ClientDataMatrix.Services
             if (TryResolveRequirementFieldSemantic(fieldKey, rawValue, out requirementSemantic))
                 return requirementSemantic;
 
+            ComponentFieldSemantic extDataVal1Semantic;
+            if (TryResolveExtDataVal1Semantic(fieldKey, rawValue, out extDataVal1Semantic))
+                return extDataVal1Semantic;
+
             ComponentFieldSemantic extDataVal2Semantic;
             if (TryResolveExtDataVal2Semantic(componentRow.Operation, fieldKey, rawValue, out extDataVal2Semantic))
                 return extDataVal2Semantic;
@@ -143,6 +147,26 @@ namespace ClientDataMatrix.Services
             ComponentFieldSemantic extDataVal4Semantic;
             if (TryResolveExtDataVal4Semantic(fieldKey, rawValue, out extDataVal4Semantic))
                 return extDataVal4Semantic;
+
+            ComponentFieldSemantic extDataVal7Semantic;
+            if (TryResolveExtDataVal7Semantic(fieldKey, rawValue, componentRow, out extDataVal7Semantic))
+                return extDataVal7Semantic;
+
+            ComponentFieldSemantic extDataVal5Semantic;
+            if (TryResolveExtDataVal5Semantic(fieldKey, rawValue, componentRow, out extDataVal5Semantic))
+                return extDataVal5Semantic;
+
+            ComponentFieldSemantic extDataVal6Semantic;
+            if (TryResolveExtDataVal6Semantic(fieldKey, rawValue, componentRow, out extDataVal6Semantic))
+                return extDataVal6Semantic;
+
+            ComponentFieldSemantic extDataVal8Semantic;
+            if (TryResolveExtDataVal8Semantic(fieldKey, rawValue, componentRow, out extDataVal8Semantic))
+                return extDataVal8Semantic;
+
+            ComponentFieldSemantic extDataVal9Semantic;
+            if (TryResolveExtDataVal9Semantic(fieldKey, rawValue, componentRow, out extDataVal9Semantic))
+                return extDataVal9Semantic;
 
             ComponentFieldSemantic applyAbilityExtDataSemantic;
             if (TryResolveApplyAbilityExtDataKnownFieldSemantic(componentRow.Operation, fieldKey, rawValue, out applyAbilityExtDataSemantic))
@@ -175,6 +199,25 @@ namespace ClientDataMatrix.Services
                     SourceLocation = sharedFieldEvidence[0].SourceLocation,
                     Notes = BuildSharedEvidenceNotes(fieldKey, sharedFieldEvidence)
                 };
+            }
+
+            // Multiplier[N]: near-constant 100 (= unmodified scaling) for most operations.
+            {
+                int multiplierIndex;
+                if (TryParseIndexedField(fieldKey, "Multiplier[", out multiplierIndex) && string.Equals(rawValue, "100", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new ComponentFieldSemantic
+                    {
+                        DomainKey = domainKey,
+                        Meaning = "Percentage scaling multiplier — Multiplier[" + multiplierIndex.ToString(CultureInfo.InvariantCulture) + "]=100 = 100% (unmodified baseline).",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "Cross-operation multiplier pattern analysis",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = "Multiplier[" + multiplierIndex.ToString(CultureInfo.InvariantCulture) + "] scales the corresponding Value[" + multiplierIndex.ToString(CultureInfo.InvariantCulture) + "] slot. "
+                            + "Value=100 = 100% = no scaling change (dominant value across most operations)."
+                    };
+                }
             }
 
             return new ComponentFieldSemantic
@@ -1090,6 +1133,92 @@ namespace ClientDataMatrix.Services
             }
         }
 
+        private static bool TryDescribeApplyAbilityValueField(string fieldKey, out string semanticSummary, out string roleNotes)
+        {
+            semanticSummary = null;
+            roleNotes = null;
+
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                semanticSummary = "APPLY_ABILITY referenced ability ID — the AbilityId of the ability being applied by this component.";
+                roleNotes = "Value[0] is non-zero in 99.7% of APPLY_ABILITY records (1839 distinct ability IDs across 2,075 records). "
+                    + "Most frequent applied IDs: 24543 (56 records), 3682 (10 records). "
+                    + "Cross-reference with abilityexport.bin AbilityId to resolve the full applied-ability definition.";
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                semanticSummary = "APPLY_ABILITY secondary application selector (typically 0; Value[1]=1 may indicate a modifier mode).";
+                roleNotes = "Value[1] is 0 in 99.5% of APPLY_ABILITY records. "
+                    + "Non-zero cases: Value[1]=1 (10 records, 0.5%), Value[1]=99 (1 record). "
+                    + "Exact semantics of the non-zero values are unresolved.";
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+            {
+                semanticSummary = "APPLY_ABILITY Value[2] — unused in extracted client data (always 0 for this operation).";
+                roleNotes = "Value[2] is 0 in 100% of the 2,075 extracted APPLY_ABILITY records.";
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value[3]", StringComparison.OrdinalIgnoreCase))
+            {
+                semanticSummary = "APPLY_ABILITY Value[3] — near-inactive field (99.8% zero; Value[3]=7 in rare variant records).";
+                roleNotes = "Value[3] is 0 in 99.8% of APPLY_ABILITY records (2071/2075). "
+                    + "The 4 records with Value[3]=7 may encode a special application variant.";
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value[4]", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(fieldKey, "Value[5]", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(fieldKey, "Value[6]", StringComparison.OrdinalIgnoreCase))
+            {
+                semanticSummary = "APPLY_ABILITY Values[4-6] — unused in extracted client data (always 0 for this operation).";
+                roleNotes = fieldKey + " is 0 in 100% of the 2,075 extracted APPLY_ABILITY records.";
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value[7]", StringComparison.OrdinalIgnoreCase))
+            {
+                semanticSummary = "APPLY_ABILITY Value[7] — near-inactive field (99.95% zero; Value[7]=75 in one record).";
+                roleNotes = "Value[7] is 0 in 2074 of 2075 APPLY_ABILITY records. The single non-zero value (75) may be a scalar payload for a rare variant.";
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value15", StringComparison.OrdinalIgnoreCase))
+            {
+                semanticSummary = "APPLY_ABILITY Value15 — near-inactive control flags (99.4% zero; non-zero values use CrowdControlTypes bit encoding).";
+                roleNotes = "Value15 is 0 in 99.4% of APPLY_ABILITY records. "
+                    + "Non-zero values observed: 4=Disarm(6 records), 1=Snare(2), 64=bit6(2), 16=Knockdown(1). "
+                    + "These are the same CrowdControlTypes bits used by FlagsRaw, suggesting Value15 encodes a CC-gate or CC-immune flag.";
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+            {
+                semanticSummary = "APPLY_ABILITY Value08 — binary modifier flag (98% zero; Value08=1 in rare variant records).";
+                roleNotes = "Value08 is 0 in 98% of APPLY_ABILITY records (2050/2075). "
+                    + "Value08=1 appears in 25 records (1.2%) — may indicate a secondary application mode or persistence flag. "
+                    + "Exact semantics of Value08=1 are unresolved.";
+                return true;
+            }
+
+            int multiplierIndex;
+            if (TryParseIndexedField(fieldKey, "Multiplier[", out multiplierIndex))
+            {
+                semanticSummary = "APPLY_ABILITY " + fieldKey + " — percentage scaling multiplier (100 = 100% = no change; dominant value in 99.95% of records).";
+                roleNotes = "Multiplier[" + multiplierIndex.ToString(CultureInfo.InvariantCulture) + "] is 100 in 2074 of 2075 APPLY_ABILITY records. "
+                    + "100 = 100% scaling = unmodified baseline. "
+                    + "Rare exceptions: Multiplier[2]=68 (1 record), Multiplier[3]=150 (1 record). "
+                    + "These 8 multiplier slots correspond to the 8 Values[] slots and scale each value slot independently.";
+                return true;
+            }
+
+            return false;
+        }
+
         private static bool TryDescribeApplyAbilityExtDataField(int valueIndex, out string semanticSummary, out string roleNotes)
         {
             semanticSummary = null;
@@ -1315,6 +1444,34 @@ namespace ClientDataMatrix.Services
                 return true;
             }
 
+            if (string.Equals(fieldKey, "Value[4]", StringComparison.OrdinalIgnoreCase))
+            {
+                semanticSummary = "KNOCKBACK Value[4] — near-inactive auxiliary field (1 non-zero record with value=7 across 262 extracted KNOCKBACK records).";
+                roleNotes = "Value[4] is 0 in 261 of 262 KNOCKBACK records. The single non-zero exception (value=7) has unresolved semantics.";
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value[5]", StringComparison.OrdinalIgnoreCase))
+            {
+                semanticSummary = "KNOCKBACK Value[5] — near-inactive auxiliary field (2 non-zero records with value=50 across 262 extracted KNOCKBACK records).";
+                roleNotes = "Value[5] is 0 in 260 of 262 KNOCKBACK records. The 2 non-zero exceptions (value=50) may represent a speed or percentage modifier for a rare KNOCKBACK variant.";
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value[6]", StringComparison.OrdinalIgnoreCase))
+            {
+                semanticSummary = "KNOCKBACK Value[6] — near-inactive auxiliary field (1 non-zero record with value=50 across 262 extracted KNOCKBACK records).";
+                roleNotes = "Value[6] is 0 in 261 of 262 KNOCKBACK records. The single non-zero exception (value=50) has unresolved semantics.";
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value[7]", StringComparison.OrdinalIgnoreCase))
+            {
+                semanticSummary = "KNOCKBACK Value[7] — near-inactive auxiliary field (1 non-zero record with value=95 across 262 extracted KNOCKBACK records).";
+                roleNotes = "Value[7] is 0 in 261 of 262 KNOCKBACK records. The single non-zero exception (value=95) may represent a percentage-scale modifier.";
+                return true;
+            }
+
             return false;
         }
 
@@ -1387,6 +1544,103 @@ namespace ClientDataMatrix.Services
             if (operationId != 1 || observations == null || observations.Count == 0)
                 return false;
 
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                string dmgFrDominant = BuildDominantRawValueSummary(observations, 6);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "DAMAGE FlagsRaw — sparse 2-bit modifier field (88% zero; 1=bit0-set 11%, 2=bit1-set 0.15%, 3=bits0+1 0.25%).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw is 0 in 3494 of 3963 DAMAGE records (88%). "
+                        + "Bit 0 (value=1) is the only common non-zero value at 11.4% (453 records). "
+                        + "Bit 1 (value=2) and both-bits (value=3) are rare (<0.25%). "
+                        + "Exact bit semantics are unresolved but the low cardinality suggests a behavioral modifier flag rather than a free bitfield. "
+                        + (string.IsNullOrWhiteSpace(dmgFrDominant) ? string.Empty : "Observed: " + dmgFrDominant + ".")
+                };
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+            {
+                string dmgV2Dominant = BuildDominantRawValueSummary(observations, 6);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "DAMAGE Value[2] — damage sub-type or variant selector (74% zero; 7=type-7 13%, 6=type-6 12%).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[2] is 0 in 2945 of 3963 DAMAGE records (74%). "
+                        + "When non-zero, the two dominant values are 7 (531 records, 13.4%) and 6 (472 records, 11.9%), together accounting for 25.3%. "
+                        + "The low cardinality of non-zero values suggests this is a damage-type or sub-type selector. Retail names for 6 and 7 are unresolved. "
+                        + (string.IsNullOrWhiteSpace(dmgV2Dominant) ? string.Empty : "Observed: " + dmgV2Dominant + ".")
+                };
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value[3]", StringComparison.OrdinalIgnoreCase))
+            {
+                string dmgV3Dominant = BuildDominantRawValueSummary(observations, 5);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "DAMAGE Value[3] — damage profile selector (86% zero; 7=profile-7 12.4%, 6=profile-6 1.8%).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[3] is 0 in 3401 of 3963 DAMAGE records (86%). "
+                        + "When non-zero: 7=491 records(12.4%), 6=70 records(1.8%), 10=1 record. "
+                        + "This appears to be a secondary profile or sub-variant selector for DAMAGE components. Retail names for 6 and 7 are unresolved. "
+                        + (string.IsNullOrWhiteSpace(dmgV3Dominant) ? string.Empty : "Observed: " + dmgV3Dominant + ".")
+                };
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value15", StringComparison.OrdinalIgnoreCase))
+            {
+                string dmgV15Dominant = BuildDominantRawValueSummary(observations, 8);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "DAMAGE Value15 — CrowdControlTypes interaction flag (70% zero; non-zero values use CrowdControlTypes bit encoding).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value15 is 0 in 2780 of 3963 DAMAGE records (70%). "
+                        + "Non-zero values use the same CrowdControlTypes bit pattern as CC FlagsRaw: "
+                        + "1=Snare(16%), 16=Knockdown(10%), 17=Snare+Knockdown(1.1%), 64=bit6(1.1%), 65=Snare+bit6(0.8%), 81=Snare+Knockdown+bit6(0.5%), 4=Disarm(0.3%). "
+                        + "This field likely encodes which CC condition triggers or is paired with this damage component. "
+                        + (string.IsNullOrWhiteSpace(dmgV15Dominant) ? string.Empty : "Observed: " + dmgV15Dominant + ".")
+                };
+                return true;
+            }
+
+            // DAMAGE Multiplier[N]: percentage scaling multipliers; varied values (not near-constant 100 like passive ops).
+            {
+                int multiplierIndex;
+                if (TryParseIndexedField(fieldKey, "Multiplier[", out multiplierIndex))
+                {
+                    string dmgMulDominant = BuildDominantRawValueSummary(observations, 6);
+                    inference = new FieldObservationInference
+                    {
+                        SemanticSummary = "DAMAGE " + fieldKey + " — percentage scaling multiplier for this damage component (100 = no change; varied values indicate active damage scaling).",
+                        Confidence = SemanticConfidence.Inferred,
+                        Notes = "DAMAGE Multiplier[" + multiplierIndex.ToString(CultureInfo.InvariantCulture) + "] is a percentage multiplier applied to the damage formula. "
+                            + "Unlike passive-operation multipliers (CC, KNOCKBACK, IMMUNITY) which are universally 100, DAMAGE multipliers carry meaningful non-100 values. "
+                            + "100 = no scaling change; values above/below 100 scale the damage up/down. Retail slot-role names are unresolved. "
+                            + (string.IsNullOrWhiteSpace(dmgMulDominant) ? string.Empty : "Observed: " + dmgMulDominant + ".")
+                    };
+                    return true;
+                }
+            }
+
+            // DAMAGE Value[7]: likely a chance percentage or damage modifier (11 distinct values, mostly 5–100%).
+            if (string.Equals(fieldKey, "Value[7]", StringComparison.OrdinalIgnoreCase))
+            {
+                string dmgV7Dominant = BuildDominantRawValueSummary(observations, 8);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "DAMAGE Value[7] — likely a chance percentage or conditional scalar (27 non-zero records; values mostly 5–100).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[7] is non-zero in 27 DAMAGE records (11 distinct values). "
+                        + "Observed distribution (5, 10, 25, 50, 70, 75, 80, 85, 90, 95 plus outlier 500) suggests a chance/proc percentage or conditional multiplier. "
+                        + "Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(dmgV7Dominant) ? string.Empty : "Observed: " + dmgV7Dominant + ".")
+                };
+                return true;
+            }
+
             int slotIndex;
             int valueIndex;
             if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
@@ -1412,16 +1666,162 @@ namespace ClientDataMatrix.Services
             return true;
         }
 
+        private static bool TryBuildDamageChangeStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 4 || observations == null || observations.Count == 0)
+                return false;
+
+            // DAMAGE_CHANGE Value15: CrowdControlTypes bit encoding (4=Disarm, 8=Silence, 12=Disarm+Silence, 36=Stagger+Disarm).
+            if (string.Equals(fieldKey, "Value15", StringComparison.OrdinalIgnoreCase))
+            {
+                string dcV15Dominant = BuildDominantRawValueSummary(observations, 6);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "DAMAGE_CHANGE Value15 — CrowdControlTypes gate flag (4=Disarm 57%, 8=Silence 19%, 12=Disarm+Silence 14%, 36=Stagger+Disarm 10%).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value15 uses CrowdControlTypes bit encoding to gate or condition the damage-change modifier. "
+                        + "Observed values: 4=Disarm(57%), 8=Silence(19%), 12=Disarm+Silence(14%), 36=Stagger(32)+Disarm(4) ~10%. "
+                        + "0 = no CC gate (inactive). "
+                        + (string.IsNullOrWhiteSpace(dcV15Dominant) ? string.Empty : "Observed: " + dcV15Dominant + ".")
+                };
+                return true;
+            }
+
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex) || valueIndex != 1)
+                return false;
+
+            string dominantValues = BuildDominantRawValueSummary(observations, 5);
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = "DAMAGE_CHANGE ExtData Val1 — application target/scope selector (3=modifier-scope 49%, 2=target-apply 36%, 1=self-apply 11%).",
+                Confidence = SemanticConfidence.Inferred,
+                Notes = "In DAMAGE_CHANGE components, Val1 selects the application target. "
+                    + "Val1=3 (49%) = primary DAMAGE_CHANGE modifier scope (exact retail name unresolved). "
+                    + "Val1=2 (36%) = standard target-application (universal Val1 meaning). "
+                    + "Val1=1 (11%) = standard self-application (universal Val1 meaning). "
+                    + "Val1=4 (<1%) = rare variant. "
+                    + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : "Observed: " + dominantValues + ".")
+            };
+            return true;
+        }
+
+        private static bool TryBuildEventListenerStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 13 || observations == null || observations.Count == 0)
+                return false;
+
+            // EVENT_LISTENER Value08: 414 non-zero records, all value=1. Binary activation flag.
+            if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "EVENT_LISTENER Value08 — binary activation flag (value=1 in 414 records; only one distinct non-zero value).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value08 has exactly one non-zero value (1) across all EVENT_LISTENER records. "
+                        + "Functions as a binary toggle or mode flag. Retail name unresolved."
+                };
+                return true;
+            }
+
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex) || valueIndex != 1)
+                return false;
+
+            string dominantValues = BuildDominantRawValueSummary(observations, 5);
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = "EVENT_LISTENER ExtData Val1 — listener scope selector (4=primary-listener 63%, 2=target-scope 34%, 1=self-scope 2%).",
+                Confidence = SemanticConfidence.Inferred,
+                Notes = "In EVENT_LISTENER components, Val1 selects the listener application scope. "
+                    + "Val1=4 (63%) = primary EVENT_LISTENER scope (see companion Val2 for event type code, Val3 for profile). "
+                    + "Val1=2 (34%) = target-scope listener (universal Val1 meaning). "
+                    + "Val1=1 (2%) = self-scope listener (universal Val1 meaning). "
+                    + "Retail names for Val1=4 are unresolved. "
+                    + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : "Observed: " + dominantValues + ".")
+            };
+            return true;
+        }
+
         private static bool TryBuildBonusTypeAdjustStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
         {
             inference = null;
             if (operationId != 22 || observations == null || observations.Count == 0)
                 return false;
 
+            // BONUS_TYPE_ADJUST Multiplier[1]: 1497 non-zero records, 32 distinct values — bonus scaling multiplier.
+            {
+                int multiplierIndex;
+                if (TryParseIndexedField(fieldKey, "Multiplier[", out multiplierIndex))
+                {
+                    string btaMulDominant = BuildDominantRawValueSummary(observations, 6);
+                    inference = new FieldObservationInference
+                    {
+                        SemanticSummary = "BONUS_TYPE_ADJUST " + fieldKey + " — bonus scaling multiplier (100 = base 100%; higher values indicate scaled bonus amounts).",
+                        Confidence = SemanticConfidence.Inferred,
+                        Notes = "BONUS_TYPE_ADJUST Multiplier[" + multiplierIndex.ToString(CultureInfo.InvariantCulture) + "] carries the scaling factor for this bonus-type adjustment. "
+                            + "Observed values include 100 (baseline), and larger values (1000–2500) likely representing high-magnitude bonus percentages or fixed-point scaling. "
+                            + "Retail slot-role name unresolved. "
+                            + (string.IsNullOrWhiteSpace(btaMulDominant) ? string.Empty : "Observed: " + btaMulDominant + ".")
+                    };
+                    return true;
+                }
+            }
+
+            // BONUS_TYPE_ADJUST Value08: 696 non-zero records, all value=1. Binary activation flag.
+            if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "BONUS_TYPE_ADJUST Value08 — binary activation flag (value=1 in 696 records; only one distinct non-zero value).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value08 has exactly one non-zero value (1) across all BONUS_TYPE_ADJUST records. "
+                        + "Functions as a binary toggle or mode flag for the bonus-type adjustment. Retail name unresolved."
+                };
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value15", StringComparison.OrdinalIgnoreCase))
+            {
+                string btaV15Dominant = BuildDominantRawValueSummary(observations, 6);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "BONUS_TYPE_ADJUST Value15 — CrowdControlTypes gate flag (41% zero; 4=Disarm 55%, 8=Silence 4%).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value15 is 0 in 610 of 1497 BONUS_TYPE_ADJUST records (41%). "
+                        + "Non-zero values use CrowdControlTypes bit encoding: 4=Disarm(830 records, 55%), 8=Silence(57 records, 4%). "
+                        + "This field likely gates the bonus-type adjustment to targets under specific CC conditions. "
+                        + (string.IsNullOrWhiteSpace(btaV15Dominant) ? string.Empty : "Observed: " + btaV15Dominant + ".")
+                };
+                return true;
+            }
+
             int slotIndex;
             int valueIndex;
             if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
                 return false;
+
+            // BONUS_TYPE_ADJUST Val1: upgrade from Structural to Inferred with distribution-specific notes.
+            if (valueIndex == 1)
+            {
+                string btaVal1Dominant = BuildDominantRawValueSummary(observations, 5);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "BONUS_TYPE_ADJUST ExtData Val1 — application target/scope selector (3=modifier-scope 55%, 2=target-apply 34%, 1=self-apply 10%).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "In BONUS_TYPE_ADJUST components, Val1 selects the application target. "
+                        + "Val1=3 (55%) = primary BONUS_TYPE_ADJUST modifier scope (exact retail name unresolved). "
+                        + "Val1=2 (34%) = standard target-application (universal Val1 meaning). "
+                        + "Val1=1 (10%) = standard self-application (universal Val1 meaning). "
+                        + "Val1=4 (<1%) = rare variant. "
+                        + (string.IsNullOrWhiteSpace(btaVal1Dominant) ? string.Empty : "Observed: " + btaVal1Dominant + ".")
+                };
+                return true;
+            }
 
             string semanticSummary;
             string roleNotes;
@@ -1441,6 +1841,272 @@ namespace ClientDataMatrix.Services
                     + " Exact per-value retail semantics are still unresolved; use the value-profile evidence to inspect raw-value clusters."
             };
             return true;
+        }
+
+        private static bool TryBuildEffectBuffStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 15 || observations == null || observations.Count == 0)
+                return false;
+
+            // EFFECT_BUFF Value08: 322 non-zero records, all value=1. Binary activation flag.
+            if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "EFFECT_BUFF Value08 — binary activation flag (value=1 in 322 records; only one distinct non-zero value).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value08 has exactly one non-zero value (1) across all EFFECT_BUFF records. "
+                        + "Functions as a binary toggle or mode flag. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // EFFECT_BUFF FlagsRaw: 4 distinct values (1, 2, 16, 2081=1+16+2048). Bit-field with bits 0, 1, 4, 11.
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                string ebFrDominant = BuildDominantRawValueSummary(observations, 6);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "EFFECT_BUFF FlagsRaw — sparse bit-field (4 distinct values: 1, 2, 16, 2081).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw has 4 distinct values: 1 (bit0), 2 (bit1), 16 (bit4), 2081 (bits 0+4+11). "
+                        + "Likely encodes effect-buff behavioral flags. Bit 11 (2048) also appears in CC FlagsRaw dominant patterns. "
+                        + "Retail names unresolved. "
+                        + (string.IsNullOrWhiteSpace(ebFrDominant) ? string.Empty : "Observed: " + ebFrDominant + ".")
+                };
+                return true;
+            }
+
+            // EFFECT_BUFF Value15: 6 distinct values (1, 4, 16, 32, 64, 65). CrowdControlTypes bit encoding.
+            if (string.Equals(fieldKey, "Value15", StringComparison.OrdinalIgnoreCase))
+            {
+                string ebV15Dominant = BuildDominantRawValueSummary(observations, 6);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "EFFECT_BUFF Value15 — CrowdControlTypes gate flag (6 distinct values using bit encoding: 1=Snare, 4=Disarm, 16=Knockdown, 32=Stagger, 64=bit6, 65=Snare+bit6).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value15 uses CrowdControlTypes bit encoding similar to CC FlagsRaw and DAMAGE Value15. "
+                        + "Observed values: 1=Snare, 4=Disarm, 16=Knockdown, 32=Stagger, 64=bit6-unknown, 65=Snare+bit6. "
+                        + "Likely gates or conditions the effect-buff on a CC state. "
+                        + (string.IsNullOrWhiteSpace(ebV15Dominant) ? string.Empty : "Observed: " + ebV15Dominant + ".")
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        // Operations where ExtData Val1 has exactly 3 scopes: 1=self, 2=target, 3=tertiary.
+        // All confirmed from extracted BIN data.
+        private static readonly HashSet<uint> _threeWayScopeVal1Operations = new HashSet<uint> { 16, 20, 21 };
+
+        private static bool TryBuildThreeWayScopeVal1Inference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (!_threeWayScopeVal1Operations.Contains(operationId) || observations == null || observations.Count == 0)
+                return false;
+
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex) || valueIndex != 1)
+                return false;
+
+            string opName = operationId == 16 ? "DEFENSIVE_STAT_CHANGE"
+                : operationId == 20 ? "COOLDOWN_CHANGE"
+                : "CASTTIME_CHANGE";
+
+            string dominant = BuildDominantRawValueSummary(observations, 5);
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = opName + " ExtData Val1 — application scope selector (1=self, 2=target, 3=tertiary scope).",
+                Confidence = SemanticConfidence.Inferred,
+                Notes = "ExtData Val1 has exactly 3 distinct values across " + opName + " records: 1=self/caster, 2=target/enemy, 3=tertiary scope variant. "
+                    + "Matches the universal Val1 1/2 pattern plus a third scope value seen in VELOCITY, EVENT_LISTENER, and other modifier operations. "
+                    + "Retail name for Val1=3 is unresolved. "
+                    + (string.IsNullOrWhiteSpace(dominant) ? string.Empty : "Observed: " + dominant + ".")
+            };
+            return true;
+        }
+
+        private static bool TryBuildDispelBuffStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 11 || observations == null || observations.Count == 0)
+                return false;
+
+            // DISPEL_BUFF FlagsRaw: 3 distinct values (1, 16, 18=16+2). Bit-field combinations.
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                string dbFrDominant = BuildDominantRawValueSummary(observations, 5);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "DISPEL_BUFF FlagsRaw — bit-field (3 distinct values: 1=bit0, 16=bit4, 18=bits1+4).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw has 3 distinct values: 1 (bit0), 16 (bit4), 18 (bit1+bit4). "
+                        + "Likely encodes dispel targeting or effect-type restrictions. "
+                        + "Retail bit names unresolved. "
+                        + (string.IsNullOrWhiteSpace(dbFrDominant) ? string.Empty : "Observed: " + dbFrDominant + ".")
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildHealStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 3 || observations == null || observations.Count == 0)
+                return false;
+
+            // HEAL FlagsRaw: 335 non-zero, 7 distinct values (1–7 sequential) — heal-type or sub-mode enum.
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                string healFrDominant = BuildDominantRawValueSummary(observations, 7);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "HEAL FlagsRaw — heal-type or sub-mode selector (7 distinct sequential values: 1–7).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw is non-zero in 335 HEAL records with exactly 7 distinct values (1, 2, 3, 4, 5, 6, 7). "
+                        + "Sequential values without gaps suggest this is an enum rather than a bit-field. "
+                        + "Likely encodes heal type, source, or delivery mode. Retail names unresolved. "
+                        + (string.IsNullOrWhiteSpace(healFrDominant) ? string.Empty : "Observed: " + healFrDominant + ".")
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildVelocityStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 8 || observations == null || observations.Count == 0)
+                return false;
+
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex) || valueIndex != 1)
+                return false;
+
+            // VELOCITY ExtData Val1: 3 distinct values (1=self, 2=target, 3=area/scope).
+            string velVal1Dominant = BuildDominantRawValueSummary(observations, 5);
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = "VELOCITY ExtData Val1 — application scope selector (1=self, 2=target, 3=area-or-scope).",
+                Confidence = SemanticConfidence.Inferred,
+                Notes = "VELOCITY Val1 has exactly 3 distinct values across ExtData slots. "
+                    + "Val1=1 = self-scope (universal), Val1=2 = target-scope (universal), Val1=3 = third scope variant (area or broadcast). "
+                    + "Retail name for Val1=3 is unresolved. "
+                    + (string.IsNullOrWhiteSpace(velVal1Dominant) ? string.Empty : "Observed: " + velVal1Dominant + ".")
+            };
+            return true;
+        }
+
+        private static bool TryBuildMonsterControllerStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 26 || observations == null || observations.Count == 0)
+                return false;
+
+            // MONSTER_CONTROLLER Value[2]: 211 non-zero, 13 distinct timing/speed values.
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+            {
+                string mcV2Dominant = BuildDominantRawValueSummary(observations, 8);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "MONSTER_CONTROLLER Value[2] — timing or speed parameter (211 non-zero records, 13 distinct values).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[2] has 13 distinct values (6, 7, 10, 33, 35, 45, 60, 75, 100, 120, 200, 240). "
+                        + "Value distribution suggests a timing interval (ms), a speed coefficient, or a radius/range parameter. "
+                        + "Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(mcV2Dominant) ? string.Empty : "Observed: " + mcV2Dominant + ".")
+                };
+                return true;
+            }
+
+            // MONSTER_CONTROLLER Value[3]: 217 non-zero, 19 distinct angle/interval values.
+            if (string.Equals(fieldKey, "Value[3]", StringComparison.OrdinalIgnoreCase))
+            {
+                string mcV3Dominant = BuildDominantRawValueSummary(observations, 8);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "MONSTER_CONTROLLER Value[3] — angular or interval parameter (217 non-zero records, 19 distinct values).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[3] has 19 distinct values including 120, 135, 144, 160, 180, 216, 220, 230, 240, 270, 288. "
+                        + "Distribution near multiples of common angular increments suggests a facing angle (degrees), sweep arc, or time interval. "
+                        + "Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(mcV3Dominant) ? string.Empty : "Observed: " + mcV3Dominant + ".")
+                };
+                return true;
+            }
+
+            // MONSTER_CONTROLLER FlagsRaw: 295 non-zero, 16 distinct values — likely bit-field.
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                string mcFrDominant = BuildDominantRawValueSummary(observations, 8);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "MONSTER_CONTROLLER FlagsRaw — behavioral bit-field (16 distinct values; combinations of bits 0–5).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw is non-zero in 295 MONSTER_CONTROLLER records with 16 distinct values. "
+                        + "Sample values (1, 2, 3, 4, 12, 14, 33, 34, 35, 36, 40, 46) appear to be bit-flag combinations. "
+                        + "Exact bit semantics are unresolved. "
+                        + (string.IsNullOrWhiteSpace(mcFrDominant) ? string.Empty : "Observed: " + mcFrDominant + ".")
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildGrantedAbilityStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 28 || observations == null || observations.Count == 0)
+                return false;
+
+            // GRANTED_ABILITY Value[0]: 249 non-zero records, 239 distinct values — referenced ability ID.
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                string gaV0Dominant = BuildDominantRawValueSummary(observations, 6);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "GRANTED_ABILITY Value[0] — referenced ability ID (249 non-zero records, 239 distinct values).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[0] holds the ability ID granted by this GRANTED_ABILITY component. "
+                        + "Distribution (249 non-zero, 239 distinct) mirrors APPLY_ABILITY Value[0] ability-reference pattern. "
+                        + (string.IsNullOrWhiteSpace(gaV0Dominant) ? string.Empty : "Sample values: " + gaV0Dominant + ".")
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildSummonMountStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 35 || observations == null || observations.Count == 0)
+                return false;
+
+            // SUMMON_MOUNT Value[0]: 232 non-zero records, 186 distinct values — referenced mount/creature ID.
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                string smV0Dominant = BuildDominantRawValueSummary(observations, 6);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "SUMMON_MOUNT Value[0] — referenced mount or creature ID (232 non-zero records, 186 distinct values).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[0] holds the mount or creature ID summoned by this SUMMON_MOUNT component. "
+                        + "High distinct-value count (186) relative to record count (232) indicates a direct ID reference, not an enum. "
+                        + (string.IsNullOrWhiteSpace(smV0Dominant) ? string.Empty : "Sample values: " + smV0Dominant + ".")
+                };
+                return true;
+            }
+
+            return false;
         }
 
         private static bool TryBuildExtDataVal2Inference(string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
@@ -1569,6 +2235,22 @@ namespace ClientDataMatrix.Services
             if (operationId != 23 || observations == null || observations.Count == 0)
                 return false;
 
+            string applyAbilityValueSummary;
+            string applyAbilityValueNotes;
+            if (TryDescribeApplyAbilityValueField(fieldKey, out applyAbilityValueSummary, out applyAbilityValueNotes))
+            {
+                string dominantValuesAA = BuildDominantRawValueSummary(observations, 6);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = applyAbilityValueSummary,
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Inferred from APPLY_ABILITY value distribution across 2,075 extracted client BIN records. "
+                        + applyAbilityValueNotes
+                        + (string.IsNullOrWhiteSpace(dominantValuesAA) ? string.Empty : " Dominant raw values: " + dominantValuesAA + ".")
+                };
+                return true;
+            }
+
             int slotIndex;
             int valueIndex;
             if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
@@ -1594,6 +2276,37 @@ namespace ClientDataMatrix.Services
             return true;
         }
 
+        private static bool TryBuildNearConstantMultiplierInference(string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (observations == null || observations.Count == 0)
+                return false;
+
+            int index;
+            if (!TryParseIndexedField(fieldKey, "Multiplier[", out index))
+                return false;
+
+            int totalCount = observations.Count;
+            int count100 = observations.Count(obs => string.Equals(obs.RawValue, "100", StringComparison.OrdinalIgnoreCase));
+            if (count100 * 100 / totalCount < 95)
+                return false;
+
+            string dominantValues = BuildDominantRawValueSummary(observations, 6);
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = fieldKey + " — percentage scaling multiplier (100 = 100% = no change; constant across 95%+ of records for this operation).",
+                Confidence = SemanticConfidence.Inferred,
+                Notes = "Multiplier[" + index.ToString(CultureInfo.InvariantCulture) + "] is 100 in "
+                    + count100.ToString(CultureInfo.InvariantCulture) + " of "
+                    + totalCount.ToString(CultureInfo.InvariantCulture)
+                    + " records for this operation. "
+                    + "100 = 100% scaling = unmodified baseline. "
+                    + "These multiplier slots scale the corresponding Value[N] slots independently. "
+                    + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : "Observed: " + dominantValues + ".")
+            };
+            return true;
+        }
+
         private static bool TryBuildNamedControlFieldInference(string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
         {
             inference = null;
@@ -1614,6 +2327,67 @@ namespace ClientDataMatrix.Services
                     + roleNotes
                     + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : " Dominant raw values: " + dominantValues + ".")
                     + " Exact display formatting is not directly token-confirmed yet."
+            };
+            return true;
+        }
+
+        private static bool TryBuildStatChangeFlagsRawInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 2 || observations == null || observations.Count == 0)
+                return false;
+            if (!string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            int totalCount = observations.Count;
+            int zeroCount = observations.Count(obs =>
+            {
+                long num;
+                return long.TryParse(obs.RawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out num) && num == 0;
+            });
+            int pctNonZero = totalCount > 0 ? (totalCount - zeroCount) * 100 / totalCount : 0;
+            string dominantValues = BuildDominantRawValueSummary(observations, 8);
+
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = "STAT_CHANGE stat-type bitmask — bit N identifies which Stat (Stats enum value N) this component modifies.",
+                Confidence = SemanticConfidence.Inferred,
+                Notes = "FlagsRaw encodes the stat type(s) being modified using a bitmask where bit position N corresponds to Stats enum value N (Common/Database/GameData.cs). "
+                    + "Common single-stat values: 16=Toughness(16%), 2=Strength(12%), 512=Intelligence(7%), 256=BallisticSkill(7%), "
+                    + "65536=CorporealResistance(6%), 16384=SpiritResistance(6%), 32768=ElementalResistance(6%). "
+                    + "Multi-stat value 0x1C000=SpiritResist+ElementalResist+CorporealResist appears in 3% of records. "
+                    + pctNonZero.ToString(CultureInfo.InvariantCulture) + "% of observations for this operation have non-zero FlagsRaw. "
+                    + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : "Observed: " + dominantValues + ".")
+            };
+            return true;
+        }
+
+        private static bool TryBuildApplyAbilityFlagsRawInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 23 || observations == null || observations.Count == 0)
+                return false;
+            if (!string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            int totalCount = observations.Count;
+            int zeroCount = observations.Count(obs =>
+            {
+                long num;
+                return long.TryParse(obs.RawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out num) && num == 0;
+            });
+            int pctZero = totalCount > 0 ? zeroCount * 100 / totalCount : 0;
+            string dominantValues = BuildDominantRawValueSummary(observations, 6);
+
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = "APPLY_ABILITY FlagsRaw — CrowdControlTypes gate flags (typically 0 for unconditional applies; non-zero encodes CC types that gate or restrict the sub-op).",
+                Confidence = SemanticConfidence.Inferred,
+                Notes = pctZero.ToString(CultureInfo.InvariantCulture) + "% of APPLY_ABILITY records have FlagsRaw=0 (unconditional apply). "
+                    + "Non-zero values use the CrowdControlTypes bit encoding: "
+                    + "bit 0=Snare(1), bit 1=Root(2), bit 2=Disarm(4), bit 3=Silence(8), bit 4=Knockdown(16), bit 5=Stagger(32), bit 7=Grapple(128). "
+                    + "Common non-zero: 16=Knockdown-gate, 1=Snare-gate, 4=Disarm-gate, 7=MoveImpedance. "
+                    + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : "Observed values: " + dominantValues + ".")
             };
             return true;
         }
@@ -1653,12 +2427,27 @@ namespace ClientDataMatrix.Services
             {
                 inference = new FieldObservationInference
                 {
-                    SemanticSummary = "CC packed control bitfield for branch and behavior selection.",
-                    Confidence = SemanticConfidence.Structural,
-                    Notes = "This is a structural inference from recurring CC layouts in extracted client BIN rows. "
-                        + "The field behaves like a packed bitfield or mode mask and should be read together with Value15 and the leading ExtData selector fields."
-                        + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : " Dominant raw values: " + dominantValues + ".")
-                        + " Exact per-bit retail semantics are still unresolved; use the value-profile evidence to inspect branch clusters."
+                    SemanticSummary = "CCType bitmask — CrowdControlTypes flags (Snare=1, Root=2, Disarm=4, Silence=8, Knockdown=16, Stagger=32, Grapple=128).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Bit mapping from CrowdControlTypes server enum (Common/Database/GameData.cs): "
+                        + "bit 0=Snare(1), bit 1=Root(2), bit 2=Disarm(4), bit 3=Silence(8), "
+                        + "bit 4=Knockdown(16), bit 5=Stagger(32), bit 7=Grapple(128). "
+                        + "Bit 6 (64) and bit 11 (2048) are present in client BIN data but not named in the server enum. "
+                        + "Dominant values: 2175(AllStandardCC+Stagger+bit6+bit11, 22%), 2303(All+bit11, 15%), 8(Silence, 14%), 1(Snare, 12%). "
+                        + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : "Observed: " + dominantValues + ".")
+                };
+                return true;
+            }
+
+            if (fieldKey.StartsWith("Value[", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "CC " + fieldKey + " — near-inactive (99-100% zero across all 586 extracted CC records).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = fieldKey + " is 0 in 99-100% of CC records across 586 extracted client BIN rows. "
+                        + "Rare non-zero exceptions (Value[1]=1 and Value[3]=7 each appear once) have unresolved semantics. "
+                        + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : "Observed: " + dominantValues + ".")
                 };
                 return true;
             }
@@ -1667,12 +2456,28 @@ namespace ClientDataMatrix.Services
             {
                 inference = new FieldObservationInference
                 {
-                    SemanticSummary = "CC auxiliary profile marker paired with FlagsRaw.",
-                    Confidence = SemanticConfidence.Structural,
-                    Notes = "This is a structural inference from recurring CC layouts in extracted client BIN rows. "
-                        + "The field is almost always a small fixed marker and behaves like a companion selector or layout tag rather than a free scalar."
-                        + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : " Dominant raw values: " + dominantValues + ".")
-                        + " Exact per-value retail semantics are still unresolved; use the value-profile evidence to inspect the paired FlagsRaw branches."
+                    SemanticSummary = "CC Value15 — application type marker (4=dominant-CC-type 69%, 0=absent 31%, 5=rare-CC-variant <1%).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value15 is a low-cardinality companion selector for the CC component. "
+                        + "Value=4 (405/586 records, 69%) = dominant CC application type. "
+                        + "Value=0 (180/586, 31%) = no type marker. "
+                        + "Value=5 (1/586, <1%) = rare CC variant. "
+                        + "Retail names for these values are unresolved. "
+                        + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : "Observed: " + dominantValues + ".")
+                };
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "CC Value08 — binary modifier flag (96% zero; Value08=1 in 24 records, 4%).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value08 is 0 in 562 of 586 CC records. "
+                        + "Value08=1 appears in 24 records (4%). "
+                        + "The binary distribution suggests a boolean toggle or mode flag. Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : "Observed: " + dominantValues + ".")
                 };
                 return true;
             }
@@ -1710,16 +2515,45 @@ namespace ClientDataMatrix.Services
             string semanticSummary;
             string roleNotes;
             string dominantValues = BuildDominantRawValueSummary(observations, 6);
-            if (TryDescribeKnockbackValueField(fieldKey, out semanticSummary, out roleNotes))
+
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
             {
                 inference = new FieldObservationInference
                 {
+                    SemanticSummary = "KNOCKBACK FlagsRaw — sparse modifier bitfield (96% zero; non-zero values: 2=bit1-set 1.9%, 127=bits0-6-set 1.5%, 1=bit0-set 0.4%).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw is 0 in 252 of 262 KNOCKBACK records. "
+                        + "Non-zero values: 2=bit1(5 records), 127=bits0-6(4 records), 1=bit0(1 record). "
+                        + "Bit semantics are unresolved; the low cardinality and sparse occurrence suggest modifier flags rather than a free bitfield. "
+                        + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : "Observed: " + dominantValues + ".")
+                };
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "KNOCKBACK Value08 — near-inactive modifier flag (261 of 262 records = 0; Value08=1 in 1 record).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value08 is 0 in 261 of 262 KNOCKBACK records. "
+                        + "The single non-zero occurrence (value=1) represents a rare modifier. Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : "Observed: " + dominantValues + ".")
+                };
+                return true;
+            }
+
+            if (TryDescribeKnockbackValueField(fieldKey, out semanticSummary, out roleNotes))
+            {
+                string knockbackFieldContext = BuildKnockbackValueFieldAggregateDecode(fieldKey);
+                inference = new FieldObservationInference
+                {
                     SemanticSummary = semanticSummary,
-                    Confidence = SemanticConfidence.Structural,
-                    Notes = "This is a structural inference from recurring KNOCKBACK value patterns in extracted client BIN rows. "
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Inferred from KNOCKBACK value pattern analysis (262 extracted client BIN rows). "
                         + roleNotes
+                        + (string.IsNullOrWhiteSpace(knockbackFieldContext) ? string.Empty : " " + knockbackFieldContext)
                         + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : " Dominant raw values: " + dominantValues + ".")
-                        + " Exact retail presentation is still unresolved; use the value-profile evidence to inspect raw-value clusters."
                 };
                 return true;
             }
@@ -1752,10 +2586,117 @@ namespace ClientDataMatrix.Services
             if (operationId != 38 || observations == null || observations.Count == 0)
                 return false;
 
+            if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+            {
+                string immunityV08Dominant = BuildDominantRawValueSummary(observations, 4);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "IMMUNITY Value08 — binary modifier flag (61% zero; value=1 in 66 of 169 records, 39%).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value08 is 0 in 103 of 169 IMMUNITY records (61%). "
+                        + "Value08=1 appears in 66 records (39%). "
+                        + "The binary distribution suggests a boolean modifier or purgeable-immunity flag. Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(immunityV08Dominant) ? string.Empty : "Observed: " + immunityV08Dominant + ".")
+                };
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                string immunityFlagsDominant = BuildDominantRawValueSummary(observations, 4);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "IMMUNITY FlagsRaw — sparse binary flag (84% zero; value=1 in 27 of 169 records, 16%).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw is 0 in 142 of 169 IMMUNITY records. "
+                        + "The only non-zero value observed is 1 (bit 0 set), present in 27 records (16%). "
+                        + "The binary distribution suggests a boolean modifier or purgeable-immunity flag. Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(immunityFlagsDominant) ? string.Empty : "Observed: " + immunityFlagsDominant + ".")
+                };
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                string immunityDominantValues = BuildDominantRawValueSummary(observations, 8);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "IMMUNITY Value[0] — OperationType code identifying which effect category this component grants immunity to.",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[0] encodes the OperationType (component operation code) being blocked by this immunity component. "
+                        + "Dominant values: 12=CC-immunity(41%), 1=DAMAGE-immunity(15%), 7=op7-immunity(8%), 24=KNOCKBACK-immunity(4%). "
+                        + "Less common values (35, 38, 39, 46, 1015, 1020) appear in minority immunity layouts. "
+                        + (string.IsNullOrWhiteSpace(immunityDominantValues) ? string.Empty : "Observed values: " + immunityDominantValues + ".")
+                };
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                string immunityDominantValues1 = BuildDominantRawValueSummary(observations, 6);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "IMMUNITY Value[1] — immunity strength level (0–100 scale; 90% of records = 100 = full immunity).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[1] encodes the immunity strength on a 0–100 scale. "
+                        + "90% of IMMUNITY records carry value=100 (full immunity); 9% carry value=0 (no strength applied). "
+                        + (string.IsNullOrWhiteSpace(immunityDominantValues1) ? string.Empty : "Observed values: " + immunityDominantValues1 + ".")
+                };
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+            {
+                string immunityDominantValues2 = BuildDominantRawValueSummary(observations, 6);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "IMMUNITY Value[2] — immunity sub-type selector (0=no-sub-type 66%, 6=sub-type-6 9%, 1=sub-type-1 8%, 3=sub-type-3 8%).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[2] selects an immunity sub-type variant within the IMMUNITY component. "
+                        + "Value=0 (66%) = no sub-type applied (default full-immunity). "
+                        + "Non-zero values (1, 3, 6 most common) represent named sub-type categories whose retail semantics are unresolved. "
+                        + (string.IsNullOrWhiteSpace(immunityDominantValues2) ? string.Empty : "Observed values: " + immunityDominantValues2 + ".")
+                };
+                return true;
+            }
+
+            if (string.Equals(fieldKey, "Value[3]", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(fieldKey, "Value[4]", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(fieldKey, "Value[5]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "IMMUNITY " + fieldKey + " — near-inactive (100% zero across all extracted IMMUNITY records).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "All extracted IMMUNITY records carry value=0 for " + fieldKey + ". "
+                        + "This field has no active payload in any extracted IMMUNITY layout."
+                };
+                return true;
+            }
+
             int slotIndex;
             int valueIndex;
             if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
                 return false;
+
+            // IMMUNITY ExtData Val1: upgrade Val1=3 (passive/wide-scope, 51%) and Val1=7 (active/trigger-specific, 33%) to Inferred.
+            // Val1=2 (13%) is already covered by the universal Val1 decoder.
+            if (valueIndex == 1)
+            {
+                string immunityVal1Dominant = BuildDominantRawValueSummary(observations, 5);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "IMMUNITY ExtData Val1 — application scope selector (3=passive/wide-scope 51%, 7=active/trigger-specific 33%, 2=target-application 13%).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Val1 in IMMUNITY ExtData slots selects the immunity application scope. "
+                        + "Val1=3 (51%) = passive or wide-scope immunity application. "
+                        + "Val1=7 (33%) = active or trigger-specific immunity application. "
+                        + "Val1=2 (13%) = standard target-application (universal Val1 meaning). "
+                        + "Retail names for Val1=3 and Val1=7 are unresolved. "
+                        + (string.IsNullOrWhiteSpace(immunityVal1Dominant) ? string.Empty : "Observed values: " + immunityVal1Dominant + ".")
+                };
+                return true;
+            }
 
             string semanticSummary;
             string roleNotes;
@@ -2064,6 +3005,23 @@ namespace ClientDataMatrix.Services
             return string.Empty;
         }
 
+        private static string BuildImmunityValue0Note(string rawValue)
+        {
+            long numericValue;
+            if (string.IsNullOrWhiteSpace(rawValue)
+                || !long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out numericValue))
+                return string.Empty;
+
+            switch ((int)numericValue)
+            {
+                case 1: return "Value[0]=1: DAMAGE-immunity — blocks damage-type component effects.";
+                case 7: return "Value[0]=7: op-7-immunity — blocks operation-7 effects (op-7 semantics unresolved).";
+                case 12: return "Value[0]=12: CC-immunity — blocks crowd-control component effects (most common, 41%).";
+                case 24: return "Value[0]=24: KNOCKBACK-immunity — blocks knockback component effects.";
+                default: return "Value[0]=" + rawValue + ": less common immunity target; may be an operation code or ID reference.";
+            }
+        }
+
         private static string BuildKnockbackValueFieldNote(string fieldKey, string rawValue)
         {
             long numericValue;
@@ -2112,6 +3070,29 @@ namespace ClientDataMatrix.Services
                     return "This is a secondary KNOCKBACK motion-profile selector seen in mixed or hidden side-effect rows.";
                 return "This is a minority KNOCKBACK motion-profile selector variant.";
             }
+
+            return string.Empty;
+        }
+
+        private static string BuildKnockbackValueFieldAggregateDecode(string fieldKey)
+        {
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+                return "Horizontal knockback force magnitude in fixed-point (Multiplier[0] is always 100). "
+                    + "Dominant values: 25000=short-range(24%), 50000=standard(11%), 45000(7%), 65000(4%), 90000=high-magnitude(4%). "
+                    + "Distinct value count: 51 across 262 records.";
+
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+                return "Vertical arc height or lift parameter for the knockback trajectory (0 = flat/no-arc trajectory). "
+                    + "Dominant values: 300(14%), 0-flat(13%), 600(12%), 500(10%), 1000(7%). "
+                    + "Proportional to Value[0] in common pairs (25000/300, 50000/600).";
+
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+                return "Trajectory direction bias (0=neutral/simpler-shove(39%), 50=small-forward-lean(30%), negative=backward-pull/mount-launch(4%)). "
+                    + "Dominant values: 0(39%), 50(30%), -200(4%), 100(3%).";
+
+            if (string.Equals(fieldKey, "Value[3]", StringComparison.OrdinalIgnoreCase))
+                return "Knockback motion-profile/type selector (7 distinct values). "
+                    + "Dominant values: 1=standard-knockback(50%), 2=player-launch-family(24%), 0=no-motion-profile(15%), 3=scripted-variant(4%), 5=special-type(4%).";
 
             return string.Empty;
         }
@@ -2293,6 +3274,200 @@ namespace ClientDataMatrix.Services
             }
 
             return string.Empty;
+        }
+
+        private static string BuildStatChangeFlagsRawBitDecode(string rawValue)
+        {
+            long numericValue;
+            if (string.IsNullOrWhiteSpace(rawValue)
+                || !long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out numericValue))
+                return string.Empty;
+
+            if (numericValue == 0)
+                return "0 (no stat type specified)";
+
+            // Bit N = Stats enum value N from Common/Database/GameData.cs.
+            // Base stats: bits 1-9, 14-16.  Derived stats: bits 22+.
+            Dictionary<int, string> statBits = new Dictionary<int, string>
+            {
+                { 1, "Strength" }, { 2, "Agility" }, { 3, "Willpower" }, { 4, "Toughness" },
+                { 5, "Wounds" }, { 6, "Initiative" }, { 7, "WeaponSkill" }, { 8, "BallisticSkill" },
+                { 9, "Intelligence" }, { 10, "BlockSkill" }, { 11, "ParrySkill" },
+                { 12, "EvadeSkill" }, { 13, "DisruptSkill" },
+                { 14, "SpiritResistance" }, { 15, "ElementalResistance" }, { 16, "CorporealResistance" },
+                { 22, "IncomingDamage" }, { 23, "IncomingDamagePercent" },
+                { 24, "OutgoingDamage" }, { 25, "OutgoingDamagePercent" },
+                { 26, "Armor" }, { 28, "Block" }, { 29, "Parry" }, { 30, "Evade" }, { 31, "Disrupt" },
+                { 32, "ActionPointRegen" }, { 33, "MoraleRegen" }, { 34, "Cooldown" },
+                { 36, "CriticalDamage" }, { 37, "Range" }, { 38, "AutoAttackSpeed" },
+                { 40, "AutoAttackDamage" }, { 41, "ActionPointCost" }, { 42, "CriticalHitRate" },
+                { 43, "CriticalDamageTaken" }, { 44, "EffectResist" }, { 45, "EffectBuff" },
+                { 47, "DamageAbsorb" }, { 65, "Stealth" }, { 66, "StealthDetection" },
+                { 76, "MeleeCritRate" }, { 77, "RangedCritRate" }, { 78, "MagicCritRate" },
+                { 79, "HealthRegen" }, { 80, "MeleePower" }, { 81, "RangedPower" }, { 82, "MagicPower" },
+                { 84, "CriticalHitRateReduction" }, { 89, "HealCritRate" }, { 94, "HealingPower" }
+            };
+
+            List<string> parts = new List<string>();
+            for (int n = 0; n < 64; n++)
+            {
+                if ((numericValue & (1L << n)) == 0)
+                    continue;
+                string statName;
+                if (statBits.TryGetValue(n, out statName))
+                    parts.Add("Stats." + statName);
+                else
+                    parts.Add("bit" + n.ToString(CultureInfo.InvariantCulture) + "(stat-" + n.ToString(CultureInfo.InvariantCulture) + "-unknown)");
+            }
+
+            return rawValue + " = " + string.Join(" | ", parts);
+        }
+
+        private static string BuildCcFlagsRawBitDecode(string rawValue)
+        {
+            long numericValue;
+            if (string.IsNullOrWhiteSpace(rawValue)
+                || !long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out numericValue))
+                return string.Empty;
+
+            if (numericValue == 0)
+                return "0 (no CC types set)";
+
+            List<string> parts = new List<string>();
+            if ((numericValue & 1) != 0) parts.Add("Snare");
+            if ((numericValue & 2) != 0) parts.Add("Root");
+            if ((numericValue & 4) != 0) parts.Add("Disarm");
+            if ((numericValue & 8) != 0) parts.Add("Silence");
+            if ((numericValue & 16) != 0) parts.Add("Knockdown");
+            if ((numericValue & 32) != 0) parts.Add("Stagger");
+            if ((numericValue & 64) != 0) parts.Add("bit6(unknown-64)");
+            if ((numericValue & 128) != 0) parts.Add("Grapple");
+            if ((numericValue & 256) != 0) parts.Add("bit8(unknown-256)");
+            if ((numericValue & 512) != 0) parts.Add("bit9(unknown-512)");
+            if ((numericValue & 1024) != 0) parts.Add("bit10(unknown-1024)");
+            if ((numericValue & 2048) != 0) parts.Add("bit11(unknown-2048)");
+            long remainingBits = numericValue & ~0xFFFFL;
+            if (remainingBits != 0)
+                parts.Add("unresolved-bits-" + remainingBits.ToString(CultureInfo.InvariantCulture));
+
+            return rawValue + " = " + string.Join(" | ", parts);
+        }
+
+        private static bool TryResolveExtDataVal1Semantic(string fieldKey, string rawValue, out ComponentFieldSemantic semantic)
+        {
+            semantic = null;
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex) || valueIndex != 1)
+                return false;
+
+            long numericValue;
+            if (string.IsNullOrWhiteSpace(rawValue)
+                || !long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out numericValue))
+                return false;
+
+            // Only decode values 1 (Self) and 2 (Target) universally.
+            // Values 3/4/5/7 are operation-specific and are handled by per-op structural handlers.
+            string meaning;
+            string valueNote;
+            if (numericValue == 1)
+            {
+                meaning = "ApplicationTarget — Self: this sub-effect expression is applied to the caster.";
+                valueNote = "Val1=1 (Self/caster) — present in 32% of all populated ExtData slots globally. Most common in INTERRUPT, AP_CHANGE, AP_REGEN_CHANGE, and HEAL sub-ops.";
+            }
+            else if (numericValue == 2)
+            {
+                meaning = "ApplicationTarget — Target: this sub-effect expression is applied to the primary target.";
+                valueNote = "Val1=2 (Target/enemy) — present in 54% of all populated ExtData slots globally. Most common in DAMAGE, STAT_CHANGE, and debuff sub-ops.";
+            }
+            else
+            {
+                // Fall through to per-operation structural handlers for values 3, 4, 5, 7, etc.
+                return false;
+            }
+
+            semantic = new ComponentFieldSemantic
+            {
+                DomainKey = "ExtDataApplicationTarget",
+                Meaning = meaning,
+                Confidence = SemanticConfidence.Inferred,
+                Source = "Cross-operation ExtData Val1 pattern analysis (18,526 extracted client BIN component records)",
+                SourcePath = string.Empty,
+                SourceLocation = string.Empty,
+                Notes = "Val1 encodes the application target for the sub-effect in this ext-data slot. "
+                    + "Val1=1 (Self) and Val1=2 (Target) account for ~86% of all populated ExtData slots globally. "
+                    + "Val1=3/4/5/7 are operation-specific and remain unresolved as universal semantics. "
+                    + valueNote
+            };
+            return true;
+        }
+
+        // Operations with dedicated Val1 handlers — skip universal decode for these so their specific handler fires.
+        // 4=DAMAGE_CHANGE, 8=VELOCITY, 13=EVENT_LISTENER, 16=DEFENSIVE_STAT_CHANGE, 20=COOLDOWN_CHANGE,
+        // 21=CASTTIME_CHANGE, 22=BONUS_TYPE_ADJUST, 38=IMMUNITY.
+        private static readonly HashSet<uint> _operationsWithDedicatedVal1Handlers = new HashSet<uint> { 4, 8, 13, 16, 20, 21, 22, 38 };
+
+        private static bool TryBuildExtDataVal1Inference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (observations == null || observations.Count == 0)
+                return false;
+
+            // Skip operations with dedicated Val1 handlers — they fire after this in the dispatch chain.
+            if (_operationsWithDedicatedVal1Handlers.Contains(operationId))
+                return false;
+
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex) || valueIndex != 1)
+                return false;
+
+            int selfCount = 0;
+            int targetCount = 0;
+            int thirdCount = 0;
+            int nonZeroCount = 0;
+            foreach (FieldObservation obs in observations)
+            {
+                long num;
+                if (!long.TryParse(obs.RawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out num))
+                    continue;
+                if (num == 0) continue; // ignore zero-value slots
+                nonZeroCount++;
+                if (num == 1) selfCount++;
+                else if (num == 2) targetCount++;
+                else if (num == 3) thirdCount++;
+            }
+
+            if (nonZeroCount == 0)
+                return false;
+
+            // Compute percentages over non-zero observations only; zero-value slots carry no scope information.
+            int pctSelfTarget = (selfCount + targetCount) * 100 / nonZeroCount;
+            int pctAll3 = (selfCount + targetCount + thirdCount) * 100 / nonZeroCount;
+            bool hasThirdVariant = thirdCount > 0 && pctAll3 >= 90;
+
+            // Fire if 1+2 account for ≥80% of non-zero observations (original rule),
+            // OR if 1+2+3 account for ≥90% of non-zero observations and 3 is not dominant.
+            if (pctSelfTarget < 80 && !(hasThirdVariant && thirdCount * 100 / nonZeroCount < 50))
+                return false;
+
+            string dominantValues = BuildDominantRawValueSummary(observations, 5);
+            string val3Note = hasThirdVariant && thirdCount > 0
+                ? " Val1=3 (" + (thirdCount * 100 / nonZeroCount).ToString(CultureInfo.InvariantCulture) + "%) = tertiary scope variant (area, broadcast, or operation-specific third target; retail name unresolved)."
+                : " Val1=3/4/5/7 are operation-specific variants with unresolved universal semantics.";
+
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = "ExtData slot " + slotIndex.ToString(CultureInfo.InvariantCulture) + " Val1 — ApplicationTarget: 1=Self (caster), 2=Target"
+                    + (hasThirdVariant ? ", 3=tertiary scope variant." : "."),
+                Confidence = SemanticConfidence.Inferred,
+                Notes = "Val1 encodes the application target for the sub-effect in this ext-data slot. "
+                    + "Val1=1 (Self/caster) and Val1=2 (Target/enemy) are the two primary universal values (account for " + pctSelfTarget.ToString(CultureInfo.InvariantCulture) + "% of non-zero observations). "
+                    + "Val1=1 is most common in INTERRUPT, AP_CHANGE, and HEAL sub-ops; Val1=2 in DAMAGE, STAT_CHANGE, and debuff sub-ops. "
+                    + val3Note
+                    + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : " Dominant observed values: " + dominantValues + ".")
+            };
+            return true;
         }
 
         private static bool TryResolveExtDataVal2Semantic(uint operationId, string fieldKey, string rawValue, out ComponentFieldSemantic semantic)
@@ -2500,6 +3675,514 @@ namespace ClientDataMatrix.Services
             return true;
         }
 
+        private static bool TryResolveExtDataVal7Semantic(string fieldKey, string rawValue, BinaryComponentRecord componentRow, out ComponentFieldSemantic semantic)
+        {
+            semantic = null;
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex) || valueIndex != 7)
+                return false;
+
+            // Look up the companion Val3 for this slot to give contextual semantics.
+            int companionVal3 = -1;
+            if (componentRow != null)
+            {
+                BinaryExtDataRecord companionSlot = componentRow.ExtData.FirstOrDefault(row => row.SlotIndex == slotIndex);
+                if (companionSlot != null)
+                    companionVal3 = companionSlot.Val3;
+            }
+
+            long numericValue = 0;
+            bool hasNumeric = !string.IsNullOrWhiteSpace(rawValue)
+                && long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out numericValue);
+
+            string profileContext;
+            string valueNote = string.Empty;
+            switch (companionVal3)
+            {
+                case 1:
+                    profileContext = "Val3=1 (Direct): Val7 is a single-application marker.";
+                    if (hasNumeric)
+                    {
+                        if (numericValue == 1) valueNote = "Val7=1: standard single-application flag (present in 72% of Direct-profile slots).";
+                        else if (numericValue == 0) valueNote = "Val7=0: inactive / no marker (present in 17% of Direct-profile slots).";
+                        else valueNote = "Val7=" + rawValue + ": uncommon value for Direct-profile slots.";
+                    }
+                    break;
+                case 6:
+                    profileContext = "Val3=6 (Rate-modifier): Val7 is expected to be 0 — no discrete payload; AP/resource rate is encoded via companion fields.";
+                    if (hasNumeric && numericValue != 0)
+                        valueNote = "Val7=" + rawValue + " is unusual for Rate-modifier profile slots (85% have Val7=0).";
+                    break;
+                case 7:
+                    profileContext = "Val3=7 (Conditional/damage-variant): Val7 is expected to be 0 for this profile.";
+                    if (hasNumeric && numericValue != 0)
+                        valueNote = "Val7=" + rawValue + " is unusual for Conditional-profile slots (99% have Val7=0).";
+                    break;
+                case 4:
+                    profileContext = "Val3=4 (Event-triggered): Val7 encodes a context-dependent payload — proc chance %, duration ms, or heal/damage amount depending on the sub-op type (Val2).";
+                    if (hasNumeric)
+                        valueNote = "Val7=" + rawValue + " — interpret in context of Val2 sub-op type; common values include 5, 10, 25 (chances), 1080, 1800 (duration ms).";
+                    break;
+                case 5:
+                    profileContext = "Val3=5 (Periodic/recovery): Val7 encodes an amount or count for periodic application.";
+                    if (hasNumeric)
+                        valueNote = "Val7=" + rawValue + " — common values include 1, 25, 50, 75 (amounts or percentages).";
+                    break;
+                default:
+                    profileContext = companionVal3 >= 0
+                        ? "Val3=" + companionVal3.ToString(CultureInfo.InvariantCulture) + " (uncommon profile): Val7 semantics unresolved for this profile code."
+                        : "Val3 companion not available; Val7 is context-dependent on the application profile (Val3) for this slot.";
+                    break;
+            }
+
+            semantic = new ComponentFieldSemantic
+            {
+                DomainKey = "ExtDataVal7Payload",
+                Meaning = "ExtData slot " + slotIndex.ToString(CultureInfo.InvariantCulture) + " Val7 — context-dependent payload field; semantics vary by application profile (Val3).",
+                Confidence = SemanticConfidence.Inferred,
+                Source = "Cross-operation ExtData Val7 pattern analysis (18,526 extracted client BIN component records)",
+                SourcePath = string.Empty,
+                SourceLocation = string.Empty,
+                Notes = "Val7 is context-dependent on the application profile (Val3) in the same ext-data slot. "
+                    + profileContext
+                    + (string.IsNullOrWhiteSpace(valueNote) ? string.Empty : " " + valueNote)
+            };
+            return true;
+        }
+
+        private static bool TryBuildExtDataVal7Inference(string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (observations == null || observations.Count == 0)
+                return false;
+
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex) || valueIndex != 7)
+                return false;
+
+            int totalCount = observations.Count;
+            int zeroCount = 0;
+            int oneCount = 0;
+            foreach (FieldObservation obs in observations)
+            {
+                long num;
+                if (!long.TryParse(obs.RawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out num))
+                    continue;
+                if (num == 0) zeroCount++;
+                else if (num == 1) oneCount++;
+            }
+            int pctZero = totalCount > 0 ? zeroCount * 100 / totalCount : 0;
+            int pctOne = totalCount > 0 ? oneCount * 100 / totalCount : 0;
+
+            string dominantValues = BuildDominantRawValueSummary(observations, 8);
+
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = "ExtData slot " + slotIndex.ToString(CultureInfo.InvariantCulture) + " Val7 — context-dependent payload field; semantics vary by application profile (Val3) in the same slot.",
+                Confidence = SemanticConfidence.Inferred,
+                Notes = "Val7 is context-dependent on Val3 (application profile) in the same ext-data slot. "
+                    + "Val3=1 (Direct, 66%): Val7=1 is a single-application marker (72% of Direct slots), Val7=0 means inactive (17%). "
+                    + "Val3=4 (Event-triggered, 8%): Val7 encodes proc chance %, duration ms, or heal/damage amount depending on sub-op type (Val2). "
+                    + "Val3=5 (Periodic, 2%): Val7 encodes an amount or count. "
+                    + "Val3=6 (Rate-modifier, 11%): Val7 is expected to be 0 (85% of Rate-modifier slots). "
+                    + "Val3=7 (Conditional, 10%): Val7 is expected to be 0 (99% of Conditional slots). "
+                    + "Across all profiles for this slot: Val7=0 is " + pctZero.ToString(CultureInfo.InvariantCulture) + "% and Val7=1 is " + pctOne.ToString(CultureInfo.InvariantCulture) + "% of observations. "
+                    + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : "Dominant observed values: " + dominantValues + ".")
+            };
+            return true;
+        }
+
+        private static bool TryResolveExtDataVal5Semantic(string fieldKey, string rawValue, BinaryComponentRecord componentRow, out ComponentFieldSemantic semantic)
+        {
+            semantic = null;
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex) || valueIndex != 5)
+                return false;
+
+            long numericValue;
+            if (string.IsNullOrWhiteSpace(rawValue)
+                || !long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out numericValue))
+                return false;
+
+            if (numericValue != 0 && numericValue != 3)
+                return false;
+
+            // Look up companion Val2 and Val3 for context.
+            int companionVal2 = -1;
+            int companionVal3 = -1;
+            if (componentRow != null)
+            {
+                BinaryExtDataRecord companionSlot = componentRow.ExtData.FirstOrDefault(row => row.SlotIndex == slotIndex);
+                if (companionSlot != null)
+                {
+                    companionVal2 = companionSlot.Val2;
+                    companionVal3 = companionSlot.Val3;
+                }
+            }
+
+            string meaning;
+            string valueNote;
+            if (numericValue == 0)
+            {
+                meaning = "ExtData slot " + slotIndex.ToString(CultureInfo.InvariantCulture) + " Val5 — inactive/default (no secondary sub-mode active for this ext-data expression).";
+                valueNote = "Val5=0: inactive, present in 82% of all populated ExtData slots globally.";
+            }
+            else
+            {
+                // numericValue == 3
+                string contextNote = string.Empty;
+                if (companionVal2 == 10 && companionVal3 == 7)
+                    contextNote = " Most commonly occurs in RESSURRECT (Val2=10) Conditional-profile (Val3=7) expressions where it appears in 97% of slots.";
+                else if (companionVal2 == 6)
+                    contextNote = " Occurs in AP_CHANGE (Val2=6) expressions.";
+                else if (companionVal2 == 3)
+                    contextNote = " Occurs in HEAL (Val2=3) expressions.";
+                meaning = "ExtData slot " + slotIndex.ToString(CultureInfo.InvariantCulture) + " Val5 — secondary sub-mode selector (Val5=3).";
+                valueNote = "Val5=3: secondary sub-mode discriminant, present in 16% of all populated ExtData slots globally." + contextNote;
+            }
+
+            semantic = new ComponentFieldSemantic
+            {
+                DomainKey = "ExtDataVal5SubMode",
+                Meaning = meaning,
+                Confidence = SemanticConfidence.Inferred,
+                Source = "Cross-operation ExtData Val5 pattern analysis (18,526 extracted client BIN component records)",
+                SourcePath = string.Empty,
+                SourceLocation = string.Empty,
+                Notes = "Val5=0 (82% globally) and Val5=3 (16% globally) account for 98%+ of all populated ExtData slots. "
+                    + "Val5=3 is most dominant in RESSURRECT Conditional expressions (Val2=10, Val3=7), appearing in 97% of those slots. "
+                    + valueNote
+            };
+            return true;
+        }
+
+        private static bool TryBuildExtDataVal5Inference(string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (observations == null || observations.Count == 0)
+                return false;
+
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex) || valueIndex != 5)
+                return false;
+
+            int totalCount = observations.Count;
+            int zeroCount = 0;
+            int threeCount = 0;
+            foreach (FieldObservation obs in observations)
+            {
+                long num;
+                if (!long.TryParse(obs.RawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out num))
+                    continue;
+                if (num == 0) zeroCount++;
+                else if (num == 3) threeCount++;
+            }
+            int pctKnown = totalCount > 0 ? (zeroCount + threeCount) * 100 / totalCount : 0;
+            string dominantValues = BuildDominantRawValueSummary(observations, 6);
+
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = "ExtData slot " + slotIndex.ToString(CultureInfo.InvariantCulture) + " Val5 — secondary sub-mode discriminant (Val5=0=inactive, Val5=3=secondary-mode).",
+                Confidence = SemanticConfidence.Inferred,
+                Notes = "Val5=0 (82% globally) and Val5=3 (16% globally) account for 98%+ of all populated ExtData slots. "
+                    + "Val5=3 is most dominant in RESSURRECT Conditional (Val2=10, Val3=7) expressions (97% of those slots); "
+                    + "also present in AP_CHANGE and HEAL expressions across multiple application profiles. "
+                    + pctKnown.ToString(CultureInfo.InvariantCulture) + "% of observations for this slot are Val5=0 or Val5=3. "
+                    + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : "Dominant observed values: " + dominantValues + ".")
+            };
+            return true;
+        }
+
+        private static bool TryResolveExtDataVal6Semantic(string fieldKey, string rawValue, BinaryComponentRecord componentRow, out ComponentFieldSemantic semantic)
+        {
+            semantic = null;
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex) || valueIndex != 6)
+                return false;
+
+            // Look up companion Val4 (layout tag) for context.
+            int companionVal4 = 8; // default to standard
+            if (componentRow != null)
+            {
+                BinaryExtDataRecord companionSlot = componentRow.ExtData.FirstOrDefault(row => row.SlotIndex == slotIndex);
+                if (companionSlot != null)
+                    companionVal4 = companionSlot.Val4;
+            }
+
+            long numericValue = 0;
+            bool hasNumeric = !string.IsNullOrWhiteSpace(rawValue)
+                && long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out numericValue);
+
+            string meaning;
+            string valueNote;
+
+            if (companionVal4 == 9)
+            {
+                // Val4=9: Val6 should carry a RequirementId, handled by requirement linkage handler earlier.
+                // This branch fires when Val6 did not match a known RequirementId.
+                meaning = "ExtData slot " + slotIndex.ToString(CultureInfo.InvariantCulture) + " Val6 — RequirementId reference (Val4=9 requirement-conditional layout).";
+                valueNote = hasNumeric && numericValue == 0
+                    ? "Val6=0: no RequirementId linked — this requirement-conditional slot has no active requirement chain."
+                    : "Val6=" + rawValue + ": RequirementId reference; the referenced requirement row was not found in abilityrequirementexport.bin.";
+            }
+            else if (!hasNumeric || numericValue == 0)
+            {
+                meaning = "ExtData slot " + slotIndex.ToString(CultureInfo.InvariantCulture) + " Val6 — inactive (no scalar payload or reference in this slot).";
+                valueNote = "Val6=0: no payload active (present in 60% of all populated ExtData slots globally).";
+            }
+            else
+            {
+                // Non-zero Val6 on a standard (Val4=8) slot.
+                meaning = "ExtData slot " + slotIndex.ToString(CultureInfo.InvariantCulture) + " Val6 — scalar or ID reference payload; exact semantics are operation- and sub-op-specific.";
+                valueNote = "Val6=" + rawValue + ": non-zero payload. May encode an ability ID, component ID, or scalar amount depending on the operation and application profile.";
+            }
+
+            semantic = new ComponentFieldSemantic
+            {
+                DomainKey = "ExtDataVal6Payload",
+                Meaning = meaning,
+                Confidence = SemanticConfidence.Inferred,
+                Source = "Cross-operation ExtData Val6 pattern analysis (18,526 extracted client BIN component records)",
+                SourcePath = string.Empty,
+                SourceLocation = string.Empty,
+                Notes = "Val6 is a context-dependent payload field. "
+                    + "For Val4=9 (requirement-conditional) slots, Val6 carries a RequirementId chain reference. "
+                    + "For Val4=8 (standard) slots, Val6 is inactive (0) in 60% of all populated slots; non-zero values encode operation-specific scalars or ID references. "
+                    + valueNote
+            };
+            return true;
+        }
+
+        private static bool TryBuildExtDataVal6Inference(string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (observations == null || observations.Count == 0)
+                return false;
+
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex) || valueIndex != 6)
+                return false;
+
+            int totalCount = observations.Count;
+            int zeroCount = observations.Count(obs =>
+            {
+                long num;
+                return long.TryParse(obs.RawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out num) && num == 0;
+            });
+            int pctZero = totalCount > 0 ? zeroCount * 100 / totalCount : 0;
+            string dominantValues = BuildDominantRawValueSummary(observations, 8);
+
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = "ExtData slot " + slotIndex.ToString(CultureInfo.InvariantCulture) + " Val6 — context-dependent payload: RequirementId reference (Val4=9) or scalar/ID payload (Val4=8, 0=inactive).",
+                Confidence = SemanticConfidence.Inferred,
+                Notes = "Val6 is context-dependent on the layout tag (Val4) in the same ext-data slot. "
+                    + "Val4=9 (requirement-conditional): Val6 carries a RequirementId chain reference to abilityrequirementexport.bin. "
+                    + "Val4=8 (standard, 97% of slots): Val6 is inactive (0) in 60% of all populated slots; non-zero values encode operation-specific scalars or ID references. "
+                    + "For this slot, " + pctZero.ToString(CultureInfo.InvariantCulture) + "% of observations have Val6=0 (inactive). "
+                    + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : "Dominant observed values: " + dominantValues + ".")
+            };
+            return true;
+        }
+
+        private static bool TryResolveExtDataVal8Semantic(string fieldKey, string rawValue, BinaryComponentRecord componentRow, out ComponentFieldSemantic semantic)
+        {
+            semantic = null;
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex) || valueIndex != 8)
+                return false;
+
+            long numericValue;
+            if (string.IsNullOrWhiteSpace(rawValue)
+                || !long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out numericValue))
+                return false;
+
+            if (numericValue != 0 && numericValue != 1)
+                return false;
+
+            // Look up companion Val3 for context.
+            int companionVal3 = -1;
+            if (componentRow != null)
+            {
+                BinaryExtDataRecord companionSlot = componentRow.ExtData.FirstOrDefault(row => row.SlotIndex == slotIndex);
+                if (companionSlot != null)
+                    companionVal3 = companionSlot.Val3;
+            }
+
+            string meaning;
+            string valueNote;
+            if (numericValue == 0)
+            {
+                meaning = "ExtData slot " + slotIndex.ToString(CultureInfo.InvariantCulture) + " Val8 — inactive/default (no proc-count or trigger-count override).";
+                valueNote = "Val8=0: inactive, present in 94% of all populated ExtData slots globally.";
+            }
+            else
+            {
+                // numericValue == 1
+                string contextNote = string.Empty;
+                if (companionVal3 == 4)
+                    contextNote = " Most common in Event-triggered (Val3=4) sub-ops (37% of those slots) — likely a single-proc or one-application limit.";
+                else if (companionVal3 == 5)
+                    contextNote = " Occurs in Periodic (Val3=5) sub-ops (7%).";
+                meaning = "ExtData slot " + slotIndex.ToString(CultureInfo.InvariantCulture) + " Val8 — proc-count or trigger-limit override (Val8=1 = single-proc limit).";
+                valueNote = "Val8=1: single-instance trigger limit, present in 4% of all populated ExtData slots globally." + contextNote;
+            }
+
+            semantic = new ComponentFieldSemantic
+            {
+                DomainKey = "ExtDataVal8TriggerCount",
+                Meaning = meaning,
+                Confidence = SemanticConfidence.Inferred,
+                Source = "Cross-operation ExtData Val8 pattern analysis (18,526 extracted client BIN component records)",
+                SourcePath = string.Empty,
+                SourceLocation = string.Empty,
+                Notes = "Val8=0 (94% globally) and Val8=1 (4% globally) account for 98%+ of all populated ExtData slots. "
+                    + "Val8=1 is most notable in Event-triggered (Val3=4) sub-ops where it appears in 37% of those slots. "
+                    + valueNote
+            };
+            return true;
+        }
+
+        private static bool TryBuildExtDataVal8Inference(string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (observations == null || observations.Count == 0)
+                return false;
+
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex) || valueIndex != 8)
+                return false;
+
+            int totalCount = observations.Count;
+            int zeroCount = 0;
+            int oneCount = 0;
+            foreach (FieldObservation obs in observations)
+            {
+                long num;
+                if (!long.TryParse(obs.RawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out num))
+                    continue;
+                if (num == 0) zeroCount++;
+                else if (num == 1) oneCount++;
+            }
+            int pctKnown = totalCount > 0 ? (zeroCount + oneCount) * 100 / totalCount : 0;
+            string dominantValues = BuildDominantRawValueSummary(observations, 6);
+
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = "ExtData slot " + slotIndex.ToString(CultureInfo.InvariantCulture) + " Val8 — proc-count/trigger-limit field (Val8=0=inactive, Val8=1=single-proc limit).",
+                Confidence = SemanticConfidence.Inferred,
+                Notes = "Val8=0 (94% globally) and Val8=1 (4% globally) account for 98%+ of all populated ExtData slots. "
+                    + "Val8=1 is most notable in Event-triggered (Val3=4) sub-ops at 37% of those slots, likely encoding a single-proc limit. "
+                    + pctKnown.ToString(CultureInfo.InvariantCulture) + "% of observations for this slot are Val8=0 or Val8=1. "
+                    + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : "Dominant observed values: " + dominantValues + ".")
+            };
+            return true;
+        }
+
+        private static bool TryResolveExtDataVal9Semantic(string fieldKey, string rawValue, BinaryComponentRecord componentRow, out ComponentFieldSemantic semantic)
+        {
+            semantic = null;
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex) || valueIndex != 9)
+                return false;
+
+            long numericValue;
+            if (string.IsNullOrWhiteSpace(rawValue)
+                || !long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out numericValue))
+                return false;
+
+            if (numericValue != 0 && numericValue != 1)
+                return false;
+
+            // Look up companion Val3 for context.
+            int companionVal3 = -1;
+            if (componentRow != null)
+            {
+                BinaryExtDataRecord companionSlot = componentRow.ExtData.FirstOrDefault(row => row.SlotIndex == slotIndex);
+                if (companionSlot != null)
+                    companionVal3 = companionSlot.Val3;
+            }
+
+            string meaning;
+            string valueNote;
+            if (numericValue == 0)
+            {
+                meaning = "ExtData slot " + slotIndex.ToString(CultureInfo.InvariantCulture) + " Val9 — inactive (binary modifier flag not set).";
+                valueNote = "Val9=0: inactive, present in 79% of all populated ExtData slots globally.";
+            }
+            else
+            {
+                string contextNote = string.Empty;
+                if (companionVal3 == 6)
+                    contextNote = " Notably common in Rate-modifier (Val3=6) sub-ops (42% of those slots).";
+                else if (companionVal3 == 1)
+                    contextNote = " Occurs in Direct (Val3=1) sub-ops (21% of those slots).";
+                meaning = "ExtData slot " + slotIndex.ToString(CultureInfo.InvariantCulture) + " Val9 — binary modifier flag (set).";
+                valueNote = "Val9=1: modifier flag set, present in 20% of all populated ExtData slots globally." + contextNote;
+            }
+
+            semantic = new ComponentFieldSemantic
+            {
+                DomainKey = "ExtDataVal9Flag",
+                Meaning = meaning,
+                Confidence = SemanticConfidence.Inferred,
+                Source = "Cross-operation ExtData Val9 pattern analysis (18,526 extracted client BIN component records)",
+                SourcePath = string.Empty,
+                SourceLocation = string.Empty,
+                Notes = "Val9 is a byte field with a near-binary distribution: Val9=0 (79% globally) and Val9=1 (20% globally) account for 99%+ of all populated ExtData slots. "
+                    + "Val9=1 is most common in Rate-modifier (Val3=6) sub-ops at 42%, and Direct (Val3=1) at 21%. "
+                    + "Exact retail semantics of Val9=1 are unresolved but it behaves as a binary modifier toggle. "
+                    + valueNote
+            };
+            return true;
+        }
+
+        private static bool TryBuildExtDataVal9Inference(string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (observations == null || observations.Count == 0)
+                return false;
+
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex) || valueIndex != 9)
+                return false;
+
+            int totalCount = observations.Count;
+            int zeroCount = 0;
+            int oneCount = 0;
+            foreach (FieldObservation obs in observations)
+            {
+                long num;
+                if (!long.TryParse(obs.RawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out num))
+                    continue;
+                if (num == 0) zeroCount++;
+                else if (num == 1) oneCount++;
+            }
+            int pctKnown = totalCount > 0 ? (zeroCount + oneCount) * 100 / totalCount : 0;
+            string dominantValues = BuildDominantRawValueSummary(observations, 4);
+
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = "ExtData slot " + slotIndex.ToString(CultureInfo.InvariantCulture) + " Val9 — binary modifier flag (byte; Val9=0=inactive, Val9=1=modifier-set).",
+                Confidence = SemanticConfidence.Inferred,
+                Notes = "Val9 is a byte with near-binary distribution: Val9=0 (79% globally) and Val9=1 (20% globally) account for 99%+ of populated slots. "
+                    + "Val9=1 is most common in Rate-modifier (Val3=6) sub-ops at 42%, suggesting it toggles a modifier variant. "
+                    + pctKnown.ToString(CultureInfo.InvariantCulture) + "% of observations for this slot are Val9=0 or Val9=1. "
+                    + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : "Dominant observed values: " + dominantValues + ".")
+            };
+            return true;
+        }
+
         private static bool TryResolveApplyAbilityExtDataKnownFieldSemantic(uint operationId, string fieldKey, string rawValue, out ComponentFieldSemantic semantic)
         {
             semantic = null;
@@ -2556,8 +4239,142 @@ namespace ClientDataMatrix.Services
         {
             semantic = null;
 
+            if (operationId == 2)
+            {
+                if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+                {
+                    string decodedBits = BuildStatChangeFlagsRawBitDecode(rawValue);
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = "STAT_CHANGE stat-type bitmask — bit N identifies which Stat (Stats enum value N) this component modifies.",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "STAT_CHANGE FlagsRaw bit analysis + Stats server enum (Common/Database/GameData.cs)",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = "FlagsRaw encodes the stat type(s) being modified using a bitmask where bit position N = Stats enum value N. "
+                            + "Key stats: bit 1=Strength, bit 2=Agility, bit 3=Willpower, bit 4=Toughness, bit 5=Wounds, "
+                            + "bit 6=Initiative, bit 7=WeaponSkill, bit 8=BallisticSkill, bit 9=Intelligence, "
+                            + "bit 14=SpiritResistance, bit 15=ElementalResistance, bit 16=CorporealResistance. "
+                            + (string.IsNullOrWhiteSpace(decodedBits) ? string.Empty : "Current value: " + decodedBits + ".")
+                    };
+                    return true;
+                }
+            }
+
             if (operationId == 1)
             {
+                if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+                {
+                    long frVal;
+                    string frNote = (long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out frVal) && frVal != 0)
+                        ? "Current value " + rawValue + " = " + (frVal == 1 ? "bit0 set (11% of DAMAGE records)." : frVal == 3 ? "bits 0+1 set (0.25%)." : frVal == 2 ? "bit1 set (0.15%)." : "non-standard value.")
+                        : "Current value = 0 (inactive, dominant at 88%).";
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = "DAMAGE FlagsRaw — sparse 2-bit modifier field (88% zero; 1=bit0-set 11%, 2=bit1-set rare, 3=both-bits rare).",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "DAMAGE FlagsRaw pattern analysis",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = "FlagsRaw is 0 in 88% of DAMAGE records. Bit 0 (value=1) is the main active flag at 11.4%. Bit semantics are unresolved. " + frNote
+                    };
+                    return true;
+                }
+
+                if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+                {
+                    string v2Note = string.Equals(rawValue, "7", StringComparison.OrdinalIgnoreCase) ? "Value=7 = sub-type-7 (dominant non-zero, 13.4%)."
+                        : string.Equals(rawValue, "6", StringComparison.OrdinalIgnoreCase) ? "Value=6 = sub-type-6 (second most common non-zero, 11.9%)."
+                        : string.Equals(rawValue, "0", StringComparison.OrdinalIgnoreCase) ? "Value=0 = inactive (74%)."
+                        : "Value=" + rawValue + " = rare DAMAGE sub-type variant.";
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = "DAMAGE sub-type/variant selector (74% zero; 7=type-7 13%, 6=type-6 12%).",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "DAMAGE Value[2] pattern analysis",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = "Value[2] selects a DAMAGE sub-type or variant. " + v2Note + " Retail names for values 6 and 7 are unresolved."
+                    };
+                    return true;
+                }
+
+                if (string.Equals(fieldKey, "Value[3]", StringComparison.OrdinalIgnoreCase))
+                {
+                    string v3Note = string.Equals(rawValue, "7", StringComparison.OrdinalIgnoreCase) ? "Value=7 = profile-7 (dominant non-zero, 12.4%)."
+                        : string.Equals(rawValue, "6", StringComparison.OrdinalIgnoreCase) ? "Value=6 = profile-6 (1.8%)."
+                        : string.Equals(rawValue, "0", StringComparison.OrdinalIgnoreCase) ? "Value=0 = inactive (86%)."
+                        : "Value=" + rawValue + " = rare DAMAGE profile variant.";
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = "DAMAGE profile selector (86% zero; 7=profile-7 12%, 6=profile-6 2%).",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "DAMAGE Value[3] pattern analysis",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = "Value[3] selects a DAMAGE profile or secondary variant. " + v3Note + " Retail names for values 6 and 7 are unresolved."
+                    };
+                    return true;
+                }
+
+                if (string.Equals(fieldKey, "Value15", StringComparison.OrdinalIgnoreCase))
+                {
+                    string dmgBits = BuildCcFlagsRawBitDecode(rawValue);
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = "DAMAGE CrowdControlTypes interaction flag — encodes CC condition linked to this damage component.",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "DAMAGE Value15 bit analysis + CrowdControlTypes server enum",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = "Value15 is 0 (inactive) in 70% of DAMAGE records. "
+                            + "Non-zero values use CrowdControlTypes bit encoding: 1=Snare(16%), 16=Knockdown(10%), 64=bit6(1.1%), 4=Disarm(0.3%). "
+                            + (string.IsNullOrWhiteSpace(dmgBits) ? string.Empty : "Current value: " + dmgBits + ".")
+                    };
+                    return true;
+                }
+
+                if (string.Equals(fieldKey, "Value[7]", StringComparison.OrdinalIgnoreCase))
+                {
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = "DAMAGE Value[7] — likely a chance percentage or conditional scalar (27 non-zero records; values mostly 5–100).",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "DAMAGE Value[7] pattern analysis",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = "Value[7] is non-zero in 27 DAMAGE records. Observed values (5, 10, 25, 50, 70–95, 500) suggest a chance/proc percentage or modifier. "
+                            + "Retail name unresolved. Current value: " + (rawValue ?? "0") + "."
+                    };
+                    return true;
+                }
+
+                // DAMAGE Multiplier[N]: percentage scaling multiplier for this damage component.
+                {
+                    int multiplierIndex;
+                    if (TryParseIndexedField(fieldKey, "Multiplier[", out multiplierIndex))
+                    {
+                        semantic = new ComponentFieldSemantic
+                        {
+                            DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                            Meaning = "DAMAGE " + fieldKey + " — percentage scaling multiplier (100 = no change; non-100 values scale damage up/down).",
+                            Confidence = SemanticConfidence.Inferred,
+                            Source = "DAMAGE multiplier pattern analysis",
+                            SourcePath = string.Empty,
+                            SourceLocation = string.Empty,
+                            Notes = "DAMAGE Multiplier[" + multiplierIndex.ToString(CultureInfo.InvariantCulture) + "] carries meaningful scaling values unlike passive-op multipliers. "
+                                + "100 = baseline/no scaling. Retail slot-role name unresolved. Current value: " + (rawValue ?? "0") + "."
+                        };
+                        return true;
+                    }
+                }
+
                 int slotIndex;
                 int valueIndex;
                 if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
@@ -2589,10 +4406,72 @@ namespace ClientDataMatrix.Services
 
             if (operationId == 22)
             {
+                if (string.Equals(fieldKey, "Value15", StringComparison.OrdinalIgnoreCase))
+                {
+                    string btaBits = BuildCcFlagsRawBitDecode(rawValue);
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = "BONUS_TYPE_ADJUST CrowdControlTypes gate flag — encodes CC condition gating this bonus-type adjustment.",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "BONUS_TYPE_ADJUST Value15 bit analysis + CrowdControlTypes server enum",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = "Value15 is 0 (inactive) in 41% of BONUS_TYPE_ADJUST records. "
+                            + "Non-zero values use CrowdControlTypes bit encoding: 4=Disarm(55%), 8=Silence(4%). "
+                            + (string.IsNullOrWhiteSpace(btaBits) ? string.Empty : "Current value: " + btaBits + ".")
+                    };
+                    return true;
+                }
+
+                if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+                {
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = "BONUS_TYPE_ADJUST Value08 — binary activation flag (value=1 in 696 records; only one distinct non-zero value).",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "BONUS_TYPE_ADJUST Value08 pattern analysis",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = "Value08 has exactly one non-zero value (1) across all BONUS_TYPE_ADJUST records. "
+                            + "Functions as a binary toggle or mode flag. Retail name unresolved. Current value: " + (rawValue ?? "0") + "."
+                    };
+                    return true;
+                }
+
                 int slotIndex;
                 int valueIndex;
                 if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
                     return false;
+
+                // BONUS_TYPE_ADJUST Val1: upgrade from Structural to Inferred.
+                if (valueIndex == 1)
+                {
+                    long btaVal1;
+                    string btaVal1Meaning = null;
+                    if (long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out btaVal1))
+                    {
+                        if (btaVal1 == 3) btaVal1Meaning = "Val1=3 = primary BTA modifier scope (55% of BTA ExtData slots).";
+                        else if (btaVal1 == 2) btaVal1Meaning = "Val1=2 = target-application (34%; universal target decode).";
+                        else if (btaVal1 == 1) btaVal1Meaning = "Val1=1 = self-application (10%; universal self decode).";
+                        else if (btaVal1 == 4) btaVal1Meaning = "Val1=4 = rare BTA variant (<1%).";
+                    }
+                    if (btaVal1Meaning != null)
+                    {
+                        semantic = new ComponentFieldSemantic
+                        {
+                            DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                            Meaning = "BONUS_TYPE_ADJUST ExtData Val1 — application target/scope selector (3=modifier-scope 55%, 2=target 34%, 1=self 10%).",
+                            Confidence = SemanticConfidence.Inferred,
+                            Source = "BONUS_TYPE_ADJUST Val1 pattern analysis",
+                            SourcePath = string.Empty,
+                            SourceLocation = string.Empty,
+                            Notes = btaVal1Meaning + " Retail name for Val1=3 is unresolved."
+                        };
+                        return true;
+                    }
+                }
 
                 string semanticSummary;
                 string roleNotes;
@@ -2620,6 +4499,44 @@ namespace ClientDataMatrix.Services
 
             if (operationId == 23)
             {
+                if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+                {
+                    string decodedBits = BuildCcFlagsRawBitDecode(rawValue);
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = "CrowdControlTypes gate flags — CC types this APPLY_ABILITY sub-op is conditioned on or restricted by (typically 0 for unconditional applies).",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "APPLY_ABILITY FlagsRaw bit analysis + CrowdControlTypes server enum (Common/Database/GameData.cs)",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = "87% of APPLY_ABILITY records have FlagsRaw=0 (unconditional). "
+                            + "Non-zero values use the same CrowdControlTypes bit encoding as CC FlagsRaw: "
+                            + "bit 0=Snare(1), bit 1=Root(2), bit 2=Disarm(4), bit 3=Silence(8), bit 4=Knockdown(16), bit 5=Stagger(32), bit 7=Grapple(128). "
+                            + "Common non-zero values: 16=Knockdown-gate(3%), 1=Snare-gate(1%), 4=Disarm-gate(1%), 7=MoveImpedance(1%). "
+                            + (string.IsNullOrWhiteSpace(decodedBits) ? string.Empty : "Current value: " + decodedBits + ".")
+                    };
+                    return true;
+                }
+
+                string applyAbilityValueSummary;
+                string applyAbilityValueRoleNotes;
+                if (TryDescribeApplyAbilityValueField(fieldKey, out applyAbilityValueSummary, out applyAbilityValueRoleNotes))
+                {
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = applyAbilityValueSummary,
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "APPLY_ABILITY value distribution analysis (2,075 extracted client BIN records)",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = applyAbilityValueRoleNotes
+                            + (string.IsNullOrWhiteSpace(rawValue) ? string.Empty : " Current raw value: " + rawValue + ".")
+                    };
+                    return true;
+                }
+
                 int slotIndex;
                 int valueIndex;
                 if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
@@ -2651,21 +4568,57 @@ namespace ClientDataMatrix.Services
 
             if (operationId == 24)
             {
+                if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+                {
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = "KNOCKBACK FlagsRaw — sparse modifier bitfield (96% zero; non-zero values: 2=bit1-set, 127=bits0-6-set, 1=bit0-set).",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "KNOCKBACK FlagsRaw pattern analysis",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = "FlagsRaw is 0 in 252 of 262 KNOCKBACK records. "
+                            + "Non-zero values: 2=bit1(5 records), 127=bits0-6(4 records), 1=bit0(1 record). "
+                            + "Bit semantics are unresolved. "
+                            + (string.IsNullOrWhiteSpace(rawValue) ? string.Empty : "Current value: " + rawValue + ".")
+                    };
+                    return true;
+                }
+
+                if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+                {
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = "KNOCKBACK Value08 — near-inactive field (261 of 262 records = 0; Value08=1 in 1 record).",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "KNOCKBACK Value08 pattern analysis",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = "Value08 is 0 in all but 1 KNOCKBACK record. "
+                            + (string.IsNullOrWhiteSpace(rawValue) ? string.Empty : "Current value: " + rawValue + ".")
+                    };
+                    return true;
+                }
+
                 string semanticSummary;
                 string roleNotes;
                 if (TryDescribeKnockbackValueField(fieldKey, out semanticSummary, out roleNotes))
                 {
                     string knockbackValueNote = BuildKnockbackValueFieldNote(fieldKey, rawValue);
+                    string knockbackFieldContext = BuildKnockbackValueFieldAggregateDecode(fieldKey);
                     semantic = new ComponentFieldSemantic
                     {
                         DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
                         Meaning = semanticSummary,
-                        Confidence = SemanticConfidence.Structural,
-                        Source = "KNOCKBACK structural inference",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "KNOCKBACK value pattern analysis (262 extracted client BIN records)",
                         SourcePath = string.Empty,
                         SourceLocation = string.Empty,
-                        Notes = "This extracted-client-only inference comes from recurring KNOCKBACK value patterns in the component rows. "
+                        Notes = "Inferred from KNOCKBACK value patterns in extracted client BIN rows. "
                             + roleNotes
+                            + (string.IsNullOrWhiteSpace(knockbackFieldContext) ? string.Empty : " " + knockbackFieldContext)
                             + (string.IsNullOrWhiteSpace(rawValue) ? string.Empty : " Current raw value: " + rawValue + ".")
                             + (string.IsNullOrWhiteSpace(knockbackValueNote) ? string.Empty : " " + knockbackValueNote)
                     };
@@ -2701,10 +4654,153 @@ namespace ClientDataMatrix.Services
 
             if (operationId == 38)
             {
+                if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+                {
+                    string immunityValue0Note = BuildImmunityValue0Note(rawValue);
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = "OperationType code — identifies which effect category this immunity component blocks.",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "IMMUNITY Value[0] pattern analysis + component operation enum cross-reference",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = "Value[0] encodes the ComponentOperation type being blocked: 12=CC(41%), 1=DAMAGE(15%), 7=op7(8%), 24=KNOCKBACK(4%). "
+                            + (string.IsNullOrWhiteSpace(immunityValue0Note) ? string.Empty : immunityValue0Note)
+                    };
+                    return true;
+                }
+
+                if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+                {
+                    string strengthNote = string.Equals(rawValue, "100", StringComparison.OrdinalIgnoreCase)
+                        ? "Value=100 = full immunity (dominant at 90%)."
+                        : string.Equals(rawValue, "0", StringComparison.OrdinalIgnoreCase)
+                            ? "Value=0 = no strength applied (9% of IMMUNITY records)."
+                            : "Value=" + rawValue + " = non-dominant immunity strength level.";
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = "Immunity strength level — 0–100 scale; 100 = full immunity (present in 90% of IMMUNITY records).",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "IMMUNITY Value[1] pattern analysis",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = "Value[1] encodes the immunity strength. " + strengthNote
+                    };
+                    return true;
+                }
+
+                if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+                {
+                    string subTypeNote;
+                    switch (rawValue ?? string.Empty)
+                    {
+                        case "0": subTypeNote = "Value=0 = no sub-type (dominant at 66%)."; break;
+                        case "6": subTypeNote = "Value=6 = sub-type-6 (9%; retail name unresolved)."; break;
+                        case "1": subTypeNote = "Value=1 = sub-type-1 (8%; retail name unresolved)."; break;
+                        case "3": subTypeNote = "Value=3 = sub-type-3 (8%; retail name unresolved)."; break;
+                        default: subTypeNote = "Value=" + rawValue + " = minority sub-type variant."; break;
+                    }
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = "Immunity sub-type selector — identifies an immunity sub-category variant.",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "IMMUNITY Value[2] pattern analysis",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = "Value[2] selects the immunity sub-type. " + subTypeNote
+                    };
+                    return true;
+                }
+
+                if (string.Equals(fieldKey, "Value[3]", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(fieldKey, "Value[4]", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(fieldKey, "Value[5]", StringComparison.OrdinalIgnoreCase))
+                {
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = "IMMUNITY " + fieldKey + " — near-inactive field (100% zero in all extracted IMMUNITY records).",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "IMMUNITY value pattern analysis",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = fieldKey + " is zero in all extracted IMMUNITY component records; no active payload for this field."
+                    };
+                    return true;
+                }
+
+                if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+                {
+                    string immV08Note = string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase)
+                        ? "Value=1 = flag set (present in 39% of IMMUNITY records)."
+                        : "Value=0 = flag absent (61% of records).";
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = "IMMUNITY Value08 — binary modifier flag (61% zero; value=1 in 66 of 169 records).",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "IMMUNITY Value08 pattern analysis",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = "Value08 is a boolean toggle or mode flag for IMMUNITY components. " + immV08Note + " Retail name unresolved."
+                    };
+                    return true;
+                }
+
+                if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+                {
+                    string flagNote = string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase)
+                        ? "Value=1 = flag set (present in 16% of IMMUNITY records)."
+                        : "Value=0 = flag absent (dominant at 84%).";
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = "IMMUNITY FlagsRaw — binary modifier flag (84% zero; value=1 in 27 of 169 records).",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "IMMUNITY FlagsRaw pattern analysis",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = "FlagsRaw has only one non-zero value (1 = bit 0) across all extracted IMMUNITY records. " + flagNote + " Retail name unresolved."
+                    };
+                    return true;
+                }
+
                 int slotIndex;
                 int valueIndex;
                 if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
                     return false;
+
+                // IMMUNITY ExtData Val1: Val1=3 (passive/wide-scope, 51%) and Val1=7 (active/trigger-specific, 33%)
+                // are IMMUNITY-specific variants not covered by the universal Val1 decoder (which only handles 1/2).
+                if (valueIndex == 1)
+                {
+                    long val1Numeric;
+                    if (long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out val1Numeric)
+                        && (val1Numeric == 3 || val1Numeric == 7))
+                    {
+                        string val1Meaning = val1Numeric == 3
+                            ? "IMMUNITY application scope — Val1=3: passive/wide-scope application (51% of IMMUNITY ExtData slots)."
+                            : "IMMUNITY application scope — Val1=7: active/trigger-specific application (33% of IMMUNITY ExtData slots).";
+                        string val1Notes = "Val1=3 (51%) = passive or wide-scope immunity application. "
+                            + "Val1=7 (33%) = active or trigger-specific immunity application. "
+                            + "Val1=2 (13%) = standard target-application (handled by universal Val1 decoder). "
+                            + "Retail names for Val1=3 and Val1=7 are unresolved.";
+                        semantic = new ComponentFieldSemantic
+                        {
+                            DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                            Meaning = val1Meaning,
+                            Confidence = SemanticConfidence.Inferred,
+                            Source = "IMMUNITY ExtData Val1 pattern analysis",
+                            SourcePath = string.Empty,
+                            SourceLocation = string.Empty,
+                            Notes = val1Notes
+                        };
+                        return true;
+                    }
+                }
 
                 string semanticSummary;
                 string roleNotes;
@@ -2730,6 +4826,160 @@ namespace ClientDataMatrix.Services
                 return true;
             }
 
+            if (operationId == 4)
+            {
+                // DAMAGE_CHANGE Value15: CrowdControlTypes gate flag.
+                if (string.Equals(fieldKey, "Value15", StringComparison.OrdinalIgnoreCase))
+                {
+                    string dcBits = BuildCcFlagsRawBitDecode(rawValue);
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = "DAMAGE_CHANGE CrowdControlTypes gate flag — encodes CC condition gating this damage-change modifier.",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "DAMAGE_CHANGE Value15 bit analysis + CrowdControlTypes server enum",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = "Value15 uses CrowdControlTypes bit encoding: 4=Disarm(57%), 8=Silence(19%), 12=Disarm+Silence(14%), 36=Stagger+Disarm(10%). "
+                            + "0 = no CC gate (inactive). "
+                            + (string.IsNullOrWhiteSpace(dcBits) ? string.Empty : "Current value: " + dcBits + ".")
+                    };
+                    return true;
+                }
+
+                int slotIndex;
+                int valueIndex;
+                if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
+                    return false;
+
+                // DAMAGE_CHANGE Val1: 3=49%, 2=36%, 1=11% — not covered by the universal Val1 decoder.
+                if (valueIndex == 1)
+                {
+                    long dcVal1;
+                    string dcVal1Meaning = null;
+                    if (long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out dcVal1))
+                    {
+                        if (dcVal1 == 3) dcVal1Meaning = "Val1=3 = primary DAMAGE_CHANGE modifier scope (49% of DAMAGE_CHANGE ExtData slots).";
+                        else if (dcVal1 == 2) dcVal1Meaning = "Val1=2 = target-application (36%; universal target decode).";
+                        else if (dcVal1 == 1) dcVal1Meaning = "Val1=1 = self-application (11%; universal self decode).";
+                    }
+                    if (dcVal1Meaning != null)
+                    {
+                        semantic = new ComponentFieldSemantic
+                        {
+                            DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                            Meaning = "DAMAGE_CHANGE ExtData Val1 — application target/scope selector (3=modifier-scope 49%, 2=target 36%, 1=self 11%).",
+                            Confidence = SemanticConfidence.Inferred,
+                            Source = "DAMAGE_CHANGE Val1 pattern analysis",
+                            SourcePath = string.Empty,
+                            SourceLocation = string.Empty,
+                            Notes = dcVal1Meaning + " Retail name for Val1=3 is unresolved."
+                        };
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            if (operationId == 13)
+            {
+                // EVENT_LISTENER Value08: binary activation flag (all non-zero = 1).
+                if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+                {
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = "EVENT_LISTENER Value08 — binary activation flag (value=1 in 414 records; only one distinct non-zero value).",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "EVENT_LISTENER Value08 pattern analysis",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = "Value08 has exactly one non-zero value (1) across EVENT_LISTENER records. "
+                            + "Functions as a binary toggle or mode flag. Retail name unresolved. Current value: " + (rawValue ?? "0") + "."
+                    };
+                    return true;
+                }
+
+                int slotIndex;
+                int valueIndex;
+                if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex))
+                    return false;
+
+                // EVENT_LISTENER Val1: 4=63%, 2=34%, 1=2% — Val1=4 is EVENT_LISTENER-specific.
+                if (valueIndex == 1)
+                {
+                    long elVal1;
+                    string elVal1Meaning = null;
+                    if (long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out elVal1))
+                    {
+                        if (elVal1 == 4) elVal1Meaning = "Val1=4 = primary EVENT_LISTENER scope (63% of EVENT_LISTENER ExtData slots).";
+                        else if (elVal1 == 2) elVal1Meaning = "Val1=2 = target-scope (34%; universal target decode).";
+                        else if (elVal1 == 1) elVal1Meaning = "Val1=1 = self-scope (2%; universal self decode).";
+                    }
+                    if (elVal1Meaning != null)
+                    {
+                        semantic = new ComponentFieldSemantic
+                        {
+                            DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                            Meaning = "EVENT_LISTENER ExtData Val1 — application target/scope selector (4=listener-scope 63%, 2=target 34%, 1=self 2%).",
+                            Confidence = SemanticConfidence.Inferred,
+                            Source = "EVENT_LISTENER Val1 pattern analysis",
+                            SourcePath = string.Empty,
+                            SourceLocation = string.Empty,
+                            Notes = elVal1Meaning + " Retail name for Val1=4 is unresolved."
+                        };
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            if (operationId == 28)
+            {
+                if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+                {
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = "GRANTED_ABILITY Value[0] — references the ability ID granted by this component.",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "GRANTED_ABILITY Value[0] pattern analysis (249 non-zero records, 239 distinct values)",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = "Value[0] holds a non-zero ability ID in 249 of extracted GRANTED_ABILITY records (239 distinct IDs). "
+                            + "Distribution mirrors APPLY_ABILITY Value[0] (ability reference). "
+                            + "Current raw value: " + (rawValue ?? "0") + "."
+                    };
+                    return true;
+                }
+
+                return false;
+            }
+
+            if (operationId == 35)
+            {
+                if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+                {
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = "SUMMON_MOUNT Value[0] — referenced mount or creature ID.",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "SUMMON_MOUNT Value[0] pattern analysis (232 non-zero records, 186 distinct values)",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = "Value[0] holds a non-zero mount or creature ID in 232 of extracted SUMMON_MOUNT records (186 distinct IDs). "
+                            + "High distinct-value count indicates a direct ID reference, not an enum. "
+                            + "Current raw value: " + (rawValue ?? "0") + "."
+                    };
+                    return true;
+                }
+
+                return false;
+            }
+
             if (operationId != 12)
                 return false;
 
@@ -2740,17 +4990,79 @@ namespace ClientDataMatrix.Services
 
             if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
             {
-                fieldSemanticSummary = "CC packed control bitfield for branch and behavior selection.";
-                fieldRoleNotes = "This field behaves like a packed bitfield or mode mask and should be read together with Value15 and the leading ExtData selector fields.";
-                fieldValueNote = BuildCcStructuralValueNote(fieldKey, null, rawValue);
-                sourceLabel = "CC structural inference";
+                string decodedBits = BuildCcFlagsRawBitDecode(rawValue);
+                semantic = new ComponentFieldSemantic
+                {
+                    DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                    Meaning = "CCType bitmask — CrowdControlTypes flags indicating which CC conditions this component applies, modifies, or checks.",
+                    Confidence = SemanticConfidence.Inferred,
+                    Source = "CC FlagsRaw bit analysis + CrowdControlTypes server enum (Common/Database/GameData.cs)",
+                    SourcePath = string.Empty,
+                    SourceLocation = string.Empty,
+                    Notes = "Bit mapping from CrowdControlTypes enum: "
+                        + "bit 0=Snare(1), bit 1=Root(2), bit 2=Disarm(4), bit 3=Silence(8), "
+                        + "bit 4=Knockdown(16), bit 5=Stagger(32), bit 7=Grapple(128). "
+                        + "Bit 6 (64) is not in the server enum and its retail semantics are unresolved. "
+                        + "Bit 11 (2048) is present in 46% of CC records but its exact semantics are unresolved. "
+                        + "Dominant CC values: 2175=AllStandardCC+Stagger+bit6+bit11(22%), 2303=All+bit11(15%), 8=Silence-only(14%), 1=Snare-only(12%). "
+                        + (string.IsNullOrWhiteSpace(decodedBits) ? string.Empty : "Current value: " + decodedBits + ".")
+                };
+                return true;
             }
             else if (string.Equals(fieldKey, "Value15", StringComparison.OrdinalIgnoreCase))
             {
-                fieldSemanticSummary = "CC auxiliary profile marker paired with FlagsRaw.";
-                fieldRoleNotes = "This field behaves like a small companion selector or layout tag rather than a free scalar.";
-                fieldValueNote = BuildCcStructuralValueNote(fieldKey, null, rawValue);
-                sourceLabel = "CC structural inference";
+                string v15Note = string.Equals(rawValue, "4", StringComparison.OrdinalIgnoreCase)
+                    ? "Value=4 = dominant CC application type (69% of records)."
+                    : string.Equals(rawValue, "5", StringComparison.OrdinalIgnoreCase)
+                        ? "Value=5 = rare CC variant (<1% of records)."
+                        : string.Equals(rawValue, "0", StringComparison.OrdinalIgnoreCase)
+                            ? "Value=0 = no type marker applied (31% of records)."
+                            : "Value=" + rawValue + " = non-dominant CC type marker.";
+                semantic = new ComponentFieldSemantic
+                {
+                    DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                    Meaning = "CC application type marker (4=dominant 69%, 0=absent 31%, 5=rare <1%).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Source = "CC Value15 pattern analysis (586 extracted records)",
+                    SourcePath = string.Empty,
+                    SourceLocation = string.Empty,
+                    Notes = "Value15 is a low-cardinality companion selector for the CC component. " + v15Note + " Retail name unresolved."
+                };
+                return true;
+            }
+            else if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+            {
+                string v08Note = string.Equals(rawValue, "1", StringComparison.OrdinalIgnoreCase)
+                    ? "Value=1 = modifier flag set (present in 4% of CC records)."
+                    : "Value=0 = flag absent (dominant at 96%).";
+                semantic = new ComponentFieldSemantic
+                {
+                    DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                    Meaning = "CC binary modifier flag (96% zero; Value08=1 in 24 of 586 records).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Source = "CC Value08 pattern analysis (586 extracted records)",
+                    SourcePath = string.Empty,
+                    SourceLocation = string.Empty,
+                    Notes = "Value08 is a boolean toggle or mode flag. " + v08Note + " Retail name unresolved."
+                };
+                return true;
+            }
+            else if (fieldKey.StartsWith("Value[", StringComparison.OrdinalIgnoreCase))
+            {
+                // CC Values[0-4] are near-inactive (99-100% zero in 586 CC records).
+                semantic = new ComponentFieldSemantic
+                {
+                    DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                    Meaning = "CC " + fieldKey + " — near-inactive (99-100% zero across all 586 extracted CC records).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Source = "CC value distribution analysis (586 extracted client BIN records)",
+                    SourcePath = string.Empty,
+                    SourceLocation = string.Empty,
+                    Notes = fieldKey + " is 0 in 99-100% of CC records. "
+                        + "The rare non-zero cases (1 record has Value[1]=1, 1 has Value[3]=7) have unresolved semantics. "
+                        + (string.IsNullOrWhiteSpace(rawValue) ? string.Empty : "Current raw value: " + rawValue + ".")
+                };
+                return true;
             }
             else
             {
@@ -2781,21 +5093,6 @@ namespace ClientDataMatrix.Services
                 };
                 return true;
             }
-
-            semantic = new ComponentFieldSemantic
-            {
-                DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
-                Meaning = fieldSemanticSummary,
-                Confidence = SemanticConfidence.Structural,
-                Source = sourceLabel,
-                SourcePath = string.Empty,
-                SourceLocation = string.Empty,
-                Notes = "This extracted-client-only inference comes from recurring CC component layouts. "
-                    + fieldRoleNotes
-                    + (string.IsNullOrWhiteSpace(rawValue) ? string.Empty : " Current raw value: " + rawValue + ".")
-                    + (string.IsNullOrWhiteSpace(fieldValueNote) ? string.Empty : " " + fieldValueNote)
-            };
-            return true;
         }
 
         private static bool TryResolveNamedControlFieldSemantic(uint operationId, string fieldKey, string rawValue, out ComponentFieldSemantic semantic)
@@ -3215,7 +5512,13 @@ namespace ClientDataMatrix.Services
             if (TryBuildNamedControlFieldInference(fieldKey, observations, out structuralInference))
                 return structuralInference;
 
-            // Val2/Val3/Val4 universal decodes fire before per-operation structural handlers.
+            if (TryBuildNearConstantMultiplierInference(fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            // Universal ExtData decodes fire before per-operation structural handlers.
+            if (TryBuildExtDataVal1Inference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
             if (TryBuildExtDataVal2Inference(fieldKey, observations, out structuralInference))
                 return structuralInference;
 
@@ -3225,10 +5528,55 @@ namespace ClientDataMatrix.Services
             if (TryBuildExtDataVal4Inference(fieldKey, observations, out structuralInference))
                 return structuralInference;
 
+            if (TryBuildExtDataVal7Inference(fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildExtDataVal5Inference(fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildExtDataVal6Inference(fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildExtDataVal8Inference(fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildExtDataVal9Inference(fieldKey, observations, out structuralInference))
+                return structuralInference;
+
             if (TryBuildDamageStructuralInference(operationId, fieldKey, observations, out structuralInference))
                 return structuralInference;
 
             if (TryBuildBonusTypeAdjustStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildDamageChangeStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildEventListenerStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildGrantedAbilityStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildSummonMountStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildHealStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildVelocityStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildMonsterControllerStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildEffectBuffStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildDispelBuffStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildThreeWayScopeVal1Inference(operationId, fieldKey, observations, out structuralInference))
                 return structuralInference;
 
             if (TryBuildCcStructuralInference(operationId, fieldKey, observations, out structuralInference))
@@ -3238,6 +5586,12 @@ namespace ClientDataMatrix.Services
                 return structuralInference;
 
             if (TryBuildImmunityStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildStatChangeFlagsRawInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildApplyAbilityFlagsRawInference(operationId, fieldKey, observations, out structuralInference))
                 return structuralInference;
 
             if (TryBuildGenericFlagsRawInference(fieldKey, observations, out structuralInference))
