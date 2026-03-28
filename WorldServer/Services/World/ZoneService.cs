@@ -72,6 +72,7 @@ namespace WorldServer.Services.World
         /// <returns>Zone or null if was not fount</returns>
         public static Zone_Info GetZone_Info(ushort ZoneId)
         {
+            if (_Zone_Info == null) return null;
             return _Zone_Info.FirstOrDefault(zone => zone != null && zone.ZoneId == ZoneId);
         }
             /// <summary>
@@ -82,6 +83,7 @@ namespace WorldServer.Services.World
             public static List<Zone_Info> GetZoneRegion(ushort RegionId)
         {
             List<Zone_Info> list = new List<Zone_Info>();
+            if (_Zone_Info == null) return list;
             foreach (Zone_Info zone in _Zone_Info)
                 if (zone != null && zone.Region == RegionId)
                     list.Add(zone);
@@ -109,6 +111,7 @@ namespace WorldServer.Services.World
 
         public static Zone_Info GetZoneFromOffsets(int OffsetX, int OffsetY)
         {
+            if (_Zone_Info == null) return null;
             foreach (Zone_Info Info in _Zone_Info)
             {
                 if (OffsetX >= Info.OffX && OffsetX < Info.OffX + 16

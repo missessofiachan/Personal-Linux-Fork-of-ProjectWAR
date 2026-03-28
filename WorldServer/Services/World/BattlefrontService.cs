@@ -9,7 +9,7 @@ using WorldServer.World.Positions;
 
 namespace WorldServer.Services.World
 {
-    [Service]
+    [Service(typeof(ZoneService))]
     public class BattleFrontService : ServiceBase
     {
         [LoadingFunction(true)]
