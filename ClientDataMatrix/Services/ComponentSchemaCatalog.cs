@@ -1544,6 +1544,25 @@ namespace ClientDataMatrix.Services
             if (operationId != 1 || observations == null || observations.Count == 0)
                 return false;
 
+            // DAMAGE Value[1]: 591 non-zero, 81 distinct (1, 10–12, 100, 102, 107, 110, 120, 124, 125, 1000...).
+            // Wide-spread values suggesting a secondary damage formula parameter: power level, formula variant, or damage-type code.
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                string dmgV1Dominant = BuildDominantRawValueSummary(observations, 12);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "DAMAGE Value[1] — secondary damage formula parameter (591 non-zero records, 81 distinct values; wide range suggests power level, formula variant, or damage-type code).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[1] has 591 non-zero records with 81 distinct values spanning a wide range. "
+                        + "Small values (1, 10–12) suggest sub-type or mode codes; mid-range values (100–125) could be percentage-based power levels; large values (1000+) may be formula IDs. "
+                        + "The high distinct-value count (81) combined with irregular spacing rules out a simple enum. "
+                        + "Plausible interpretations: a secondary damage coefficient, a damage-formula selector ID, or an encoded DamageType variant. "
+                        + "Retail name unresolved — this is the highest-priority remaining Unknown field. "
+                        + (string.IsNullOrWhiteSpace(dmgV1Dominant) ? string.Empty : "Observed: " + dmgV1Dominant + ".")
+                };
+                return true;
+            }
+
             if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
             {
                 string dmgFrDominant = BuildDominantRawValueSummary(observations, 6);
@@ -1625,6 +1644,62 @@ namespace ClientDataMatrix.Services
                 }
             }
 
+            // DAMAGE Value[4]: sparse sub-type/variant selector (4 records; values 3 and 6 — matches Value[2] sub-type pattern).
+            if (string.Equals(fieldKey, "Value[4]", StringComparison.OrdinalIgnoreCase))
+            {
+                string dmgV4Dominant = BuildDominantRawValueSummary(observations, 4);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "DAMAGE Value[4] — sparse sub-type or variant selector (4 non-zero records; values 3 and 6 match the Value[2] sub-type pattern).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[4] is non-zero in only 4 DAMAGE records with 2 distinct values (3, 6). "
+                        + "Values 3 and 6 appear in the same sub-type range as DAMAGE Value[2] and Value[3]. "
+                        + "Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(dmgV4Dominant) ? string.Empty : "Observed: " + dmgV4Dominant + ".")
+                };
+                return true;
+            }
+
+            // DAMAGE Value[5]: near-inactive (4 records; single value = 90).
+            if (string.Equals(fieldKey, "Value[5]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "DAMAGE Value[5] — near-inactive modifier field (4 non-zero records; single value = 90).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[5] is non-zero in only 4 DAMAGE records, all with value=90. "
+                        + "Likely a percentage-based secondary modifier (90 = 90%). Retail name unresolved."
+                };
+                return true;
+            }
+
+            // DAMAGE Value[6]: near-inactive (4 records; single value = 90).
+            if (string.Equals(fieldKey, "Value[6]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "DAMAGE Value[6] — near-inactive modifier field (4 non-zero records; single value = 90).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[6] is non-zero in only 4 DAMAGE records, all with value=90. "
+                        + "Likely a percentage-based secondary modifier (90 = 90%). Retail name unresolved."
+                };
+                return true;
+            }
+
+            // DAMAGE Value08: 14 non-zero, single value = 1. Binary activation flag (same pattern as BTA/STAT_CHANGE Value08).
+            if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "DAMAGE Value08 — binary activation flag (value=1 in 14 records; only one distinct non-zero value).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value08 has exactly one non-zero value (1) across all DAMAGE records where it appears. "
+                        + "Functions as a binary toggle or mode flag, consistent with the Value08=1 pattern seen in BTA, STAT_CHANGE, and EVENT_LISTENER. "
+                        + "Retail name unresolved."
+                };
+                return true;
+            }
+
             // DAMAGE Value[7]: likely a chance percentage or damage modifier (11 distinct values, mostly 5–100%).
             if (string.Equals(fieldKey, "Value[7]", StringComparison.OrdinalIgnoreCase))
             {
@@ -1672,6 +1747,91 @@ namespace ClientDataMatrix.Services
             if (operationId != 4 || observations == null || observations.Count == 0)
                 return false;
 
+            // DAMAGE_CHANGE Value08: 346 non-zero, single value = 1. Binary activation flag.
+            if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "DAMAGE_CHANGE Value08 — binary activation flag (value=1 in 346 records; only one distinct non-zero value).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value08 has exactly one non-zero value (1) across all DAMAGE_CHANGE records where it appears. "
+                        + "Functions as a binary toggle or mode flag, consistent with the Value08=1 pattern seen in BTA, STAT_CHANGE, and DAMAGE. "
+                        + "Retail name unresolved."
+                };
+                return true;
+            }
+
+            // DAMAGE_CHANGE Value[1]: 43 non-zero, 7 distinct (-20, 1, 2, 5, 7, 20, 40) — damage-change magnitude or modifier parameter.
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                string dcV1Dominant = BuildDominantRawValueSummary(observations, 7);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "DAMAGE_CHANGE Value[1] — damage-change magnitude or secondary modifier (43 non-zero records, 7 distinct values: -20, 1, 2, 5, 7, 20, 40).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[1] has 43 non-zero records with 7 distinct values. "
+                        + "Small integers (1, 2, 5, 7, 20, 40) plus -20 suggest a percentage or flat modifier applied to the damage-change effect. "
+                        + "Negative value (-20) indicates the field can encode a reduction or penalty. Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(dcV1Dominant) ? string.Empty : "Observed: " + dcV1Dominant + ".")
+                };
+                return true;
+            }
+
+            // DAMAGE_CHANGE Value[5]: 1 non-zero record, value=90. Near-inactive percentage modifier.
+            if (string.Equals(fieldKey, "Value[5]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "DAMAGE_CHANGE Value[5] — near-inactive percentage modifier (1 non-zero record; value = 90).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[5] is non-zero in only 1 DAMAGE_CHANGE record (value=90). Matches the 90% near-inactive modifier pattern in DAMAGE Value[5]/Value[6]. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // DAMAGE_CHANGE Value[6]: 1 non-zero record, value=90. Near-inactive percentage modifier.
+            if (string.Equals(fieldKey, "Value[6]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "DAMAGE_CHANGE Value[6] — near-inactive percentage modifier (1 non-zero record; value = 90).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[6] is non-zero in only 1 DAMAGE_CHANGE record (value=90). Matches the 90% near-inactive modifier pattern in DAMAGE Value[5]/Value[6]. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // DAMAGE_CHANGE Value[2]: 5 non-zero, 4 distinct (-10, -33, 5, 10) — sparse secondary modifier or threshold.
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+            {
+                string dcV2Dominant = BuildDominantRawValueSummary(observations, 4);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "DAMAGE_CHANGE Value[2] — sparse secondary modifier or threshold (5 non-zero records; values -33, -10, 5, 10).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[2] is non-zero in only 5 DAMAGE_CHANGE records with 4 distinct values. "
+                        + "Positive and negative values suggest a conditional modifier or percentage threshold. Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(dcV2Dominant) ? string.Empty : "Observed: " + dcV2Dominant + ".")
+                };
+                return true;
+            }
+
+            // DAMAGE_CHANGE FlagsRaw: 232 non-zero, 3 distinct (2=Root, 4=Disarm, 52=Disarm+Knockdown+Stagger). CrowdControlTypes.
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                string dcFrDominant = BuildDominantRawValueSummary(observations, 5);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "DAMAGE_CHANGE FlagsRaw — CrowdControlTypes gate flag (3 distinct values: 2=Root, 4=Disarm, 52=Disarm+Knockdown+Stagger).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw is non-zero in 232 DAMAGE_CHANGE records with 3 distinct values. "
+                        + "Values use CrowdControlTypes bit encoding: 2=Root(bit1), 4=Disarm(bit2), 52=Disarm+Knockdown+Stagger(bits2+4+5). "
+                        + "Mirrors the CC gate pattern in DAMAGE Value15 and BTA Value15. "
+                        + (string.IsNullOrWhiteSpace(dcFrDominant) ? string.Empty : "Observed: " + dcFrDominant + ".")
+                };
+                return true;
+            }
+
             // DAMAGE_CHANGE Value15: CrowdControlTypes bit encoding (4=Disarm, 8=Silence, 12=Disarm+Silence, 36=Stagger+Disarm).
             if (string.Equals(fieldKey, "Value15", StringComparison.OrdinalIgnoreCase))
             {
@@ -1714,6 +1874,45 @@ namespace ClientDataMatrix.Services
             if (operationId != 13 || observations == null || observations.Count == 0)
                 return false;
 
+            // EVENT_LISTENER Value15: 12 non-zero, 2 distinct (4=Disarm, 32=Stagger). CrowdControlTypes bits.
+            if (string.Equals(fieldKey, "Value15", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "EVENT_LISTENER Value15 — CrowdControlTypes gate flag (2 distinct values: 4=Disarm, 32=Stagger).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value15 uses CrowdControlTypes bit encoding: 4=Disarm(bit2), 32=Stagger(bit5). "
+                        + "Only 12 EVENT_LISTENER records have non-zero Value15. 0 = no CC gate."
+                };
+                return true;
+            }
+
+            // EVENT_LISTENER Value[2]: 1 non-zero record, value=1. Near-inactive.
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "EVENT_LISTENER Value[2] — near-inactive field (1 non-zero record; value = 1).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[2] is non-zero in only 1 EVENT_LISTENER record (value=1). Retail name unresolved."
+                };
+                return true;
+            }
+
+            // EVENT_LISTENER FlagsRaw: 1 non-zero record, value=224 (Stagger+bit6+Grapple in CrowdControlTypes encoding).
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "EVENT_LISTENER FlagsRaw — CrowdControlTypes gate flag (1 non-zero record; value=224=Stagger(32)+bit6(64)+Grapple(128)).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw is non-zero in only 1 EVENT_LISTENER record with value=224. "
+                        + "224 = Stagger(32) + bit6(64) + Grapple(128) using CrowdControlTypes bit encoding. "
+                        + "Likely gates the event listener on a CC condition. Retail name unresolved."
+                };
+                return true;
+            }
+
             // EVENT_LISTENER Value08: 414 non-zero records, all value=1. Binary activation flag.
             if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
             {
@@ -1752,6 +1951,62 @@ namespace ClientDataMatrix.Services
             inference = null;
             if (operationId != 22 || observations == null || observations.Count == 0)
                 return false;
+
+            // BONUS_TYPE_ADJUST FlagsRaw: 29 non-zero, 7 distinct (1, 2, 8, 16, 64, 512, 15360) — bit-field encoding bonus-type flags.
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                string btaFrDominant = BuildDominantRawValueSummary(observations, 7);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "BONUS_TYPE_ADJUST FlagsRaw — bit-field encoding bonus-type modifier flags (7 distinct values: 1, 2, 8, 16, 64, 512, 15360).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw is non-zero in 29 BONUS_TYPE_ADJUST records with 7 distinct bit-pattern values: "
+                        + "1(bit0), 2(bit1), 8(bit3), 16(bit4), 64(bit6), 512(bit9), 15360(bits10-13=0x3C00). "
+                        + "Values are all powers-of-two or grouped bit combinations — consistent with a bonus-type flag set rather than an enum. "
+                        + "Retail bit names unresolved. "
+                        + (string.IsNullOrWhiteSpace(btaFrDominant) ? string.Empty : "Observed: " + btaFrDominant + ".")
+                };
+                return true;
+            }
+
+            // BONUS_TYPE_ADJUST Value[2]: 78 non-zero, 6 distinct (-1, 1, 2, 7, 25, 100) — sub-type or modifier selector.
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+            {
+                string btaV2Dominant = BuildDominantRawValueSummary(observations, 6);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "BONUS_TYPE_ADJUST Value[2] — sub-type or modifier selector (78 non-zero records, 6 distinct values: -1, 1, 2, 7, 25, 100).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[2] has 6 distinct values including -1 (possibly 'all types'), 100 (percentage max), and small integers (1, 2, 7, 25). "
+                        + "Likely encodes a sub-type, modifier scope, or secondary bonus parameter. Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(btaV2Dominant) ? string.Empty : "Observed: " + btaV2Dominant + ".")
+                };
+                return true;
+            }
+
+            // BONUS_TYPE_ADJUST Value[3]: 4 non-zero, 2 distinct (2, 10) — sparse secondary modifier.
+            if (string.Equals(fieldKey, "Value[3]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "BONUS_TYPE_ADJUST Value[3] — sparse secondary modifier (4 non-zero records; values 2 and 10).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[3] is non-zero in only 4 BTA records (values 2 and 10). Retail name unresolved."
+                };
+                return true;
+            }
+
+            // BONUS_TYPE_ADJUST Value[7]: 1 non-zero record, value=90. Near-inactive.
+            if (string.Equals(fieldKey, "Value[7]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "BONUS_TYPE_ADJUST Value[7] — near-inactive modifier (1 non-zero record; value = 90).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[7] is non-zero in only 1 BONUS_TYPE_ADJUST record (value=90). Likely a 90% percentage modifier. Retail name unresolved."
+                };
+                return true;
+            }
 
             // BONUS_TYPE_ADJUST Multiplier[1]: 1497 non-zero records, 32 distinct values — bonus scaling multiplier.
             {
@@ -1878,6 +2133,42 @@ namespace ClientDataMatrix.Services
                 return true;
             }
 
+            // EFFECT_BUFF Value[2]: 3 records, values {1, 6} — sparse sub-type selector.
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "EFFECT_BUFF Value[2] — sparse sub-type or variant selector (3 non-zero records; values 1 and 6).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[2] is non-zero in only 3 EFFECT_BUFF records with 2 distinct values (1, 6). Retail name unresolved."
+                };
+                return true;
+            }
+
+            // EFFECT_BUFF Value[3]: 4 records, values {6, 7} — sparse sub-type selector.
+            if (string.Equals(fieldKey, "Value[3]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "EFFECT_BUFF Value[3] — sparse sub-type or variant selector (4 non-zero records; values 6 and 7).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[3] is non-zero in only 4 EFFECT_BUFF records with 2 distinct values (6, 7). Retail name unresolved."
+                };
+                return true;
+            }
+
+            // EFFECT_BUFF Value[5]: 1 record, value = 50. Near-inactive.
+            if (string.Equals(fieldKey, "Value[5]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "EFFECT_BUFF Value[5] — near-inactive modifier (1 non-zero record; value = 50).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[5] is non-zero in only 1 EFFECT_BUFF record (value=50). Likely a percentage modifier. Retail name unresolved."
+                };
+                return true;
+            }
+
             // EFFECT_BUFF Value15: 6 distinct values (1, 4, 16, 32, 64, 65). CrowdControlTypes bit encoding.
             if (string.Equals(fieldKey, "Value15", StringComparison.OrdinalIgnoreCase))
             {
@@ -1890,6 +2181,1432 @@ namespace ClientDataMatrix.Services
                         + "Observed values: 1=Snare, 4=Disarm, 16=Knockdown, 32=Stagger, 64=bit6-unknown, 65=Snare+bit6. "
                         + "Likely gates or conditions the effect-buff on a CC state. "
                         + (string.IsNullOrWhiteSpace(ebV15Dominant) ? string.Empty : "Observed: " + ebV15Dominant + ".")
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildStatChangeStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 2 || observations == null || observations.Count == 0)
+                return false;
+
+            // STAT_CHANGE Value08: 191 non-zero, single value = 1. Binary activation flag.
+            if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "STAT_CHANGE Value08 — binary activation flag (value=1 in 191 records; only one distinct non-zero value).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value08 has exactly one non-zero value (1) across all STAT_CHANGE records. Functions as a binary toggle or mode flag. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // STAT_CHANGE Value15: 181 non-zero, 2 distinct (4=Disarm, 32=Stagger). CrowdControlTypes bits.
+            if (string.Equals(fieldKey, "Value15", StringComparison.OrdinalIgnoreCase))
+            {
+                string scV15Dominant = BuildDominantRawValueSummary(observations, 4);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "STAT_CHANGE Value15 — CrowdControlTypes gate flag (2 distinct values: 4=Disarm, 32=Stagger).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value15 uses CrowdControlTypes bit encoding to gate or condition the stat change. "
+                        + "Non-zero values: 4=Disarm and 32=Stagger. 0 = no CC gate (inactive). "
+                        + "Mirrors the CC gate pattern seen in DAMAGE Value15, BTA Value15, and DAMAGE_CHANGE Value15. "
+                        + (string.IsNullOrWhiteSpace(scV15Dominant) ? string.Empty : "Observed: " + scV15Dominant + ".")
+                };
+                return true;
+            }
+
+            // STAT_CHANGE Value[2]: 37 non-zero, single value = 7. Near-inactive sub-type variant.
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "STAT_CHANGE Value[2] — near-inactive sub-type selector (37 non-zero records; single value = 7).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[2] is non-zero in 37 STAT_CHANGE records, all with value=7. "
+                        + "Matches the sub-type-7 pattern seen in DAMAGE Value[2] and Value[3]. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // STAT_CHANGE Multiplier[N]: 1363 non-zero, 11 distinct (-25, 1, 10, 30, 50, 70, 75, 90, 100, 133, 150).
+            // Percentage scaling multiplier for the stat-change effect — same role as DAMAGE Multiplier[N].
+            {
+                int multiplierIndex;
+                if (TryParseIndexedField(fieldKey, "Multiplier[", out multiplierIndex))
+                {
+                    string scMulDominant = BuildDominantRawValueSummary(observations, 8);
+                    inference = new FieldObservationInference
+                    {
+                        SemanticSummary = "STAT_CHANGE " + fieldKey + " — percentage scaling multiplier for this stat-change component (100 = no change; varied values indicate active stat scaling).",
+                        Confidence = SemanticConfidence.Inferred,
+                        Notes = "STAT_CHANGE Multiplier[" + multiplierIndex.ToString(CultureInfo.InvariantCulture) + "] is a percentage multiplier applied to the stat-change formula. "
+                            + "Observed values include 100 (baseline), percentage increments (10, 30, 50, 70, 75, 90), above-baseline values (133, 150), and a negative value (-25 = 25% reduction). "
+                            + "Mirrors the DAMAGE Multiplier[N] pattern; retail slot-role name unresolved. "
+                            + (string.IsNullOrWhiteSpace(scMulDominant) ? string.Empty : "Observed: " + scMulDominant + ".")
+                    };
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildDiskUpdateStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 44 || observations == null || observations.Count == 0)
+                return false;
+
+            // DISK_UPDATE Value[0]: 43 non-zero, 40 distinct values (high IDs: 507, 1356–9311). ID reference.
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                string diskV0Dominant = BuildDominantRawValueSummary(observations, 6);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "DISK_UPDATE Value[0] — referenced disk/zone object ID (43 non-zero records, 40 distinct values).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[0] holds a non-zero ID in 43 DISK_UPDATE records (40 distinct IDs). "
+                        + "High distinct-value count relative to record count indicates a direct ID reference. "
+                        + "Sample IDs: 507, 1356–1358, 6340, 6390, 7703, 9307–9311. "
+                        + (string.IsNullOrWhiteSpace(diskV0Dominant) ? string.Empty : "Observed: " + diskV0Dominant + ".")
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildDefensiveStatChangeStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 16 || observations == null || observations.Count == 0)
+                return false;
+
+            // DEFENSIVE_STAT_CHANGE FlagsRaw: 166 non-zero, 12 distinct values (1-9, 12, 14, 15). Bit-field or defense-type enum.
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                string dscFrDominant = BuildDominantRawValueSummary(observations, 8);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "DEFENSIVE_STAT_CHANGE FlagsRaw — defense-type selector or bit-field (12 distinct values: 1–9, 12, 14, 15).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw is non-zero in 166 DEFENSIVE_STAT_CHANGE records with 12 distinct values. "
+                        + "Values 1–9 are sequential; 12 (=0b1100), 14 (=0b1110), 15 (=0b1111) suggest bit combinations. "
+                        + "Likely encodes a defense type (magic school, damage type, or stat category) or behavioral flags. "
+                        + "Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(dscFrDominant) ? string.Empty : "Observed: " + dscFrDominant + ".")
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildServerCommandStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 36 || observations == null || observations.Count == 0)
+                return false;
+
+            // SERVER_COMMAND Value[2]: 337 non-zero, 59 distinct (-1, 1, 10–17, 150, 170, 1000, 12823, 16336, 100000...).
+            // Likely the primary command argument: sentinel (-1=all/override), small enums (1–17), ID refs (12823, 16336), max sentinel (100000).
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+            {
+                string scV2Dominant = BuildDominantRawValueSummary(observations, 12);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "SERVER_COMMAND Value[2] — primary command argument (337 non-zero records, 59 distinct values; tri-modal: small enums, ID references, and sentinel values).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[2] has 337 non-zero records with 59 distinct values spanning multiple ranges: "
+                        + "−1 (universal sentinel: all-types or no-filter), "
+                        + "small integers 1–17 (command mode or sub-type enum), "
+                        + "mid-range 150–1000 (percentage or scaled parameter), "
+                        + "high-range 12823/16336 (entity or resource ID references), "
+                        + "100000 (maximum/infinity sentinel). "
+                        + "This tri-modal pattern is consistent with a polymorphic command argument whose role depends on FlagsRaw/Value[3] context. "
+                        + "Retail name unresolved — this is the second-highest-priority remaining Unknown field. "
+                        + (string.IsNullOrWhiteSpace(scV2Dominant) ? string.Empty : "Observed: " + scV2Dominant + ".")
+                };
+                return true;
+            }
+
+            // SERVER_COMMAND Value[3]: 38 non-zero, 5 distinct (-2, 1, 5, 6, 621) — secondary command parameter.
+            if (string.Equals(fieldKey, "Value[3]", StringComparison.OrdinalIgnoreCase))
+            {
+                string scV3Dominant = BuildDominantRawValueSummary(observations, 5);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "SERVER_COMMAND Value[3] — secondary command parameter (38 non-zero records, 5 distinct values: -2, 1, 5, 6, 621).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[3] has 38 non-zero records with 5 distinct values. "
+                        + "Small integers (1, 5, 6) dominate; -2 is a special sentinel or flag value; 621 is a large outlier possibly an ID reference. "
+                        + "Likely encodes a secondary command mode, target override, or parametric argument. Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(scV3Dominant) ? string.Empty : "Observed: " + scV3Dominant + ".")
+                };
+                return true;
+            }
+
+            // SERVER_COMMAND Value[4]: 5 non-zero, 2 distinct (1, 2) — near-inactive binary or mode flag.
+            if (string.Equals(fieldKey, "Value[4]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "SERVER_COMMAND Value[4] — near-inactive binary or mode flag (5 non-zero records; values 1 and 2).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[4] is non-zero in only 5 SERVER_COMMAND records (values 1 and 2). "
+                        + "Likely an optional binary switch or secondary mode selector. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // SERVER_COMMAND Value[5]: 1 non-zero record, value=10. Near-inactive.
+            if (string.Equals(fieldKey, "Value[5]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "SERVER_COMMAND Value[5] — near-inactive field (1 non-zero record; value = 10).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[5] is non-zero in only 1 SERVER_COMMAND record (value=10). Retail name unresolved."
+                };
+                return true;
+            }
+
+            // SERVER_COMMAND Value08: 1 non-zero record, value=1. Binary activation flag.
+            if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "SERVER_COMMAND Value08 — binary activation flag (value=1 in 1 record; only one distinct non-zero value).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value08 has exactly one non-zero value (1) in the single SERVER_COMMAND record where it appears. "
+                        + "Consistent with the Value08=1 binary-flag pattern across operations. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // SERVER_COMMAND Value15: 3 non-zero, 3 distinct (1=Snare, 32=Stagger, 64=bit6). CrowdControlTypes bits.
+            if (string.Equals(fieldKey, "Value15", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "SERVER_COMMAND Value15 — CrowdControlTypes gate flag (3 distinct values: 1=Snare, 32=Stagger, 64=bit6).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value15 uses CrowdControlTypes bit encoding: 1=Snare(bit0), 32=Stagger(bit5), 64=bit6-unknown. "
+                        + "Only 3 SERVER_COMMAND records have non-zero Value15. 0 = no CC gate."
+                };
+                return true;
+            }
+
+            // SERVER_COMMAND FlagsRaw: 8 distinct values — bit-field (1, 2, 4, 5, 6, 16, 18, 175).
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                string scFrDominant = BuildDominantRawValueSummary(observations, 8);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "SERVER_COMMAND FlagsRaw — behavioral bit-field (8 distinct values: 1, 2, 4, 5, 6, 16, 18, 175).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw is non-zero in 144 SERVER_COMMAND records with 8 distinct values. "
+                        + "Values are bit-flag combinations: 1(bit0), 2(bit1), 4(bit2), 5(bits0+2), 6(bits1+2), 16(bit4), 18(bits1+4), 175(multiple bits). "
+                        + "Likely encodes server-side command mode or behavior flags. Retail names unresolved. "
+                        + (string.IsNullOrWhiteSpace(scFrDominant) ? string.Empty : "Observed: " + scFrDominant + ".")
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildApChangeStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 6 || observations == null || observations.Count == 0)
+                return false;
+
+            // AP_CHANGE Value15: 39 non-zero, 4 distinct (1=Snare, 4=Disarm, 16=Knockdown, 32=Stagger). CrowdControlTypes bits.
+            if (string.Equals(fieldKey, "Value15", StringComparison.OrdinalIgnoreCase))
+            {
+                string apV15Dominant = BuildDominantRawValueSummary(observations, 4);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "AP_CHANGE Value15 — CrowdControlTypes gate flag (4 distinct values: 1=Snare, 4=Disarm, 16=Knockdown, 32=Stagger).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value15 uses CrowdControlTypes bit encoding: 1=Snare(bit0), 4=Disarm(bit2), 16=Knockdown(bit4), 32=Stagger(bit5). "
+                        + "Non-zero in 39 AP_CHANGE records. 0 = no CC gate (inactive). "
+                        + "Mirrors the CC gate pattern seen across DAMAGE, STAT_CHANGE, BTA, and other operations. "
+                        + (string.IsNullOrWhiteSpace(apV15Dominant) ? string.Empty : "Observed: " + apV15Dominant + ".")
+                };
+                return true;
+            }
+
+            // AP_CHANGE FlagsRaw: 5 non-zero, 2 distinct (1=bit0, 114688=bits14-16) — bit-field mode flags.
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                string apFrDominant = BuildDominantRawValueSummary(observations, 2);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "AP_CHANGE FlagsRaw — bit-field mode flags (2 distinct values: 1=bit0, 114688=bits14-16).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw is non-zero in 5 AP_CHANGE records with 2 distinct values: 1(bit0) and 114688(0x1C000, bits14-16). "
+                        + "High-bit pattern 114688 is the same 0x1C000 grouping seen in ARMOR_CHANGE FlagsRaw. "
+                        + "Likely encodes AP-change mode or targeting flags. Retail bit names unresolved. "
+                        + (string.IsNullOrWhiteSpace(apFrDominant) ? string.Empty : "Observed: " + apFrDominant + ".")
+                };
+                return true;
+            }
+
+            // AP_CHANGE Value[7]: 2 non-zero, 2 distinct (25, 50) — sparse percentage threshold or modifier.
+            if (string.Equals(fieldKey, "Value[7]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "AP_CHANGE Value[7] — sparse percentage threshold or modifier (2 non-zero records; values 25 and 50).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[7] is non-zero in only 2 AP_CHANGE records (values 25 and 50). "
+                        + "Both values are percentage-like (25% and 50%). Retail name unresolved."
+                };
+                return true;
+            }
+
+            // AP_CHANGE Value[1]: 13 non-zero, 3 distinct (-1, -20, 7) — AP modifier magnitude or index.
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                string apV1Dominant = BuildDominantRawValueSummary(observations, 3);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "AP_CHANGE Value[1] — AP modifier magnitude or parameter (13 non-zero records, 3 distinct values: -20, -1, 7).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[1] has 3 distinct values: -1 (sentinel or all-types marker), -20 (20-unit AP reduction), 7 (sub-type 7). "
+                        + "Mixed positive and negative values suggest an AP amount or percentage modifier. Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(apV1Dominant) ? string.Empty : "Observed: " + apV1Dominant + ".")
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildUpdateCounterStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 25 || observations == null || observations.Count == 0)
+                return false;
+
+            // UPDATE_COUNTER Value08: 148 non-zero, single value = 1. Binary activation flag.
+            if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "UPDATE_COUNTER Value08 — binary activation flag (value=1 in 148 records; only one distinct non-zero value).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value08 has exactly one non-zero value (1) across all UPDATE_COUNTER records where it appears. "
+                        + "Consistent with the Value08=1 binary-flag pattern across operations. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // UPDATE_COUNTER FlagsRaw: 2 non-zero, 2 distinct (1=bit0, 32=bit5) — sparse bit-field modifier.
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "UPDATE_COUNTER FlagsRaw — sparse bit-field modifier (2 non-zero records; values 1=bit0, 32=bit5).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw is non-zero in only 2 UPDATE_COUNTER records with 2 distinct bit values: 1(bit0) and 32(bit5). "
+                        + "Likely encodes an optional counter mode or behavioral flag. Retail bit names unresolved."
+                };
+                return true;
+            }
+
+            // UPDATE_COUNTER Value[3]: 3 non-zero, single value = 6. Near-inactive sub-type.
+            if (string.Equals(fieldKey, "Value[3]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "UPDATE_COUNTER Value[3] — near-inactive sub-type field (3 non-zero records; single value = 6).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[3] is non-zero in only 3 UPDATE_COUNTER records, all with value=6. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // UPDATE_COUNTER Value[4]: 3 non-zero, single value = 100. Near-inactive percentage baseline.
+            if (string.Equals(fieldKey, "Value[4]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "UPDATE_COUNTER Value[4] — near-inactive percentage baseline (3 non-zero records; single value = 100).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[4] is non-zero in only 3 UPDATE_COUNTER records, all with value=100. "
+                        + "100 is consistent with a percentage baseline or scaling constant. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // UPDATE_COUNTER Value[0]: 263 non-zero, 23 distinct (1–240 range). Counter threshold or interval.
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                string ucV0Dominant = BuildDominantRawValueSummary(observations, 10);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "UPDATE_COUNTER Value[0] — counter threshold or primary update parameter (263 non-zero records, 23 distinct values: 1–240).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[0] has 23 distinct values in the range 1–240. "
+                        + "Regular round-number distribution (1, 2, 3, 4, 10, 15, 20, 25, 30, 35, 100, 240) suggests a stack count threshold, interval denominator, or update frequency. "
+                        + "Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(ucV0Dominant) ? string.Empty : "Observed: " + ucV0Dominant + ".")
+                };
+                return true;
+            }
+
+            // UPDATE_COUNTER Value[1]: 252 non-zero, 25 distinct (1–1250 range). Counter value or secondary parameter.
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                string ucV1Dominant = BuildDominantRawValueSummary(observations, 10);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "UPDATE_COUNTER Value[1] — counter value or secondary update parameter (252 non-zero records, 25 distinct values: 1–1250).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[1] has 25 distinct values in the range 1–1250. "
+                        + "Larger values (250, 1000, 1250) relative to Value[0] suggest this may encode a step size, total count, or maximum accumulation. "
+                        + "Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(ucV1Dominant) ? string.Empty : "Observed: " + ucV1Dominant + ".")
+                };
+                return true;
+            }
+
+            // UPDATE_COUNTER Value[2]: 14 non-zero, 3 distinct (1, 2, 7) — sparse sub-type or mode selector.
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+            {
+                string ucV2Dominant = BuildDominantRawValueSummary(observations, 3);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "UPDATE_COUNTER Value[2] — sparse sub-type or mode selector (14 non-zero records; values 1, 2, 7).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[2] is non-zero in 14 UPDATE_COUNTER records with 3 distinct values (1, 2, 7). "
+                        + "Value 7 matches the sub-type-7 pattern seen in DAMAGE and STAT_CHANGE. Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(ucV2Dominant) ? string.Empty : "Observed: " + ucV2Dominant + ".")
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildRecoverStandardStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 42 || observations == null || observations.Count == 0)
+                return false;
+
+            // RECOVER_STANDARD Value[1]: 6 non-zero, single value = 14. Near-inactive parameter.
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "RECOVER_STANDARD Value[1] — near-inactive parameter (6 non-zero records; single value = 14).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[1] is non-zero in 6 RECOVER_STANDARD records, all with value=14. Likely a fixed parameter or threshold. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // RECOVER_STANDARD Value[0]: 6 non-zero, 6 distinct — sequential high-range IDs (187701–187706). ID reference.
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                string rsV0Dominant = BuildDominantRawValueSummary(observations, 6);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "RECOVER_STANDARD Value[0] — sequential ID reference (6 non-zero records, 6 distinct values: 187701–187706).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[0] holds 6 sequential IDs in the range 187701–187706. "
+                        + "Sequential high-range IDs indicate a resource, zone-object, or entity ID reference. "
+                        + "Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(rsV0Dominant) ? string.Empty : "Observed: " + rsV0Dominant + ".")
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildUnknownOp41StructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 41 || observations == null || observations.Count == 0)
+                return false;
+
+            // Unknown op 41: Value[0] = 14 (near-inactive fixed parameter); Value[1/2/3] are paired sequential ID groups.
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "Unknown op 41 Value[0] — near-inactive fixed parameter (4 non-zero records; single value = 14).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[0] is non-zero in 4 op-41 records, all with value=14. Operation 41 has no confirmed retail name. Retail name unresolved."
+                };
+                return true;
+            }
+
+            int valueIndex;
+            {
+                int tmp;
+                if (!TryParseIndexedField(fieldKey, "Value[", out tmp))
+                    return false;
+                valueIndex = tmp;
+            }
+            if (valueIndex < 1 || valueIndex > 3)
+                return false;
+
+            string op41Dominant = BuildDominantRawValueSummary(observations, 6);
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = "Unknown op 41 Value[" + valueIndex.ToString(CultureInfo.InvariantCulture) + "] — sequential ID reference slot (4 non-zero records, 2 distinct sequential IDs).",
+                Confidence = SemanticConfidence.Inferred,
+                Notes = "Value[1/2/3] together hold three consecutive IDs from the 187701–187706 range, split across record pairs. "
+                    + "The sequential-triple pattern suggests these encode a correlated resource or zone-object ID group. "
+                    + "Operation 41 has no confirmed retail name. "
+                    + (string.IsNullOrWhiteSpace(op41Dominant) ? string.Empty : "Observed: " + op41Dominant + ".")
+            };
+            return true;
+        }
+
+        private static bool TryBuildUnknownOp40StructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 40 || observations == null || observations.Count == 0)
+                return false;
+
+            // Unknown op 40 Value[0]: 1 non-zero record, value=1. Near-inactive.
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "Unknown op 40 Value[0] — near-inactive field (1 non-zero record; value = 1).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[0] is non-zero in only 1 op-40 record (value=1). Operation 40 has no confirmed retail name. Retail name unresolved."
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildUnknownOp43StructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 43 || observations == null || observations.Count == 0)
+                return false;
+
+            // Unknown op 43 Value[0]: 2 non-zero, 2 distinct (21, 27) — very sparse small-integer parameter.
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "Unknown op 43 Value[0] — sparse small-integer parameter (2 non-zero records; values 21 and 27).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[0] has 2 distinct values (21, 27) in only 2 op-43 records. Operation 43 has no confirmed retail name. Retail name unresolved."
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildUnknownOp30StructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 30 || observations == null || observations.Count == 0)
+                return false;
+
+            // Unknown op 30 Value[0]: 1 non-zero record, value=18. Near-inactive single-record field.
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "Unknown op 30 Value[0] — near-inactive field (1 non-zero record; value = 18).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[0] is non-zero in only 1 op-30 record (value=18). Operation 30 has no confirmed retail name. Retail name unresolved."
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildRessurrectStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 10 || observations == null || observations.Count == 0)
+                return false;
+
+            // RESSURRECT FlagsRaw: 2 non-zero, single value = 1. Single-bit binary flag.
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "RESSURRECT FlagsRaw — single-bit binary flag (2 non-zero records; single value = 1 = bit0).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw is non-zero in only 2 RESSURRECT records, both with value=1(bit0). "
+                        + "Likely a rarely-activated mode switch. Retail name unresolved."
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildCooldownChangeValue1Inference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 20 || observations == null || observations.Count == 0)
+                return false;
+
+            // COOLDOWN_CHANGE Value[1]: 1 non-zero, single value = 7. Near-inactive sub-type 7 pattern.
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "COOLDOWN_CHANGE Value[1] — near-inactive sub-type field (1 non-zero record; single value = 7).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[1] is non-zero in only 1 COOLDOWN_CHANGE record (value=7). Matches the sub-type-7 pattern seen across operations. Retail name unresolved."
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildMoraleRegenChangeFlagsRawInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 18 || observations == null || observations.Count == 0)
+                return false;
+
+            // MORALE_REGEN_CHANGE FlagsRaw: 1 non-zero, single value = 1. Single-record binary flag.
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "MORALE_REGEN_CHANGE FlagsRaw — single-record binary flag (1 non-zero record; value = 1).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw is non-zero in only 1 MORALE_REGEN_CHANGE record (value=1). Retail name unresolved."
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildHateStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 7 || observations == null || observations.Count == 0)
+                return false;
+
+            // HATE Multiplier[N]: hate scaling multiplier (26 distinct: -500, 10, 100, 1000, 1100, 1200...) — actual hate amounts.
+            {
+                int multiplierIndex;
+                if (TryParseIndexedField(fieldKey, "Multiplier[", out multiplierIndex))
+                {
+                    string hateMulDominant = BuildDominantRawValueSummary(observations, 8);
+                    inference = new FieldObservationInference
+                    {
+                        SemanticSummary = "HATE " + fieldKey + " — hate-amount scaling multiplier (26 distinct values; range −500 to 1900+; 100 = baseline no change).",
+                        Confidence = SemanticConfidence.Inferred,
+                        Notes = "HATE Multiplier[" + multiplierIndex.ToString(CultureInfo.InvariantCulture) + "] has 26 distinct values including large positive values (1000–1900+) indicating aggressive hate generation, "
+                            + "100 (baseline), and −500 (hate reduction). Unlike passive-operation multipliers, HATE Multiplier is a primary scaling control for the hate amount. "
+                            + "Retail slot-role name unresolved. "
+                            + (string.IsNullOrWhiteSpace(hateMulDominant) ? string.Empty : "Observed: " + hateMulDominant + ".")
+                    };
+                    return true;
+                }
+            }
+
+            // HATE Value[1]: 6 non-zero, 2 distinct (-1=sentinel/all-targets, 9999999=max hate marker).
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "HATE Value[1] — hate modifier sentinel field (2 distinct values: -1=all-targets or sentinel, 9999999=maximum hate marker).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[1] has only 2 distinct values in 6 HATE records: -1 (universal sentinel meaning 'all targets' or 'override') and 9999999 (an extreme cap or forced-maximum hate value). "
+                        + "Both values are non-standard sentinels rather than regular hate amounts. Retail name unresolved."
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildMonsterForceTargetStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 39 || observations == null || observations.Count == 0)
+                return false;
+
+            // MONSTER_FORCE_TARGET Value[0]: 6 non-zero, 3 distinct (1, 2, 3) — target mode or scope selector.
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                string mftV0Dominant = BuildDominantRawValueSummary(observations, 3);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "MONSTER_FORCE_TARGET Value[0] — target mode or scope selector (6 non-zero records, 3 distinct values: 1, 2, 3).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[0] has 3 distinct sequential values (1, 2, 3). "
+                        + "Sequential enum pattern likely encodes a force-target mode: primary, secondary, or AOE scope. Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(mftV0Dominant) ? string.Empty : "Observed: " + mftV0Dominant + ".")
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildApRegenChangeStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 17 || observations == null || observations.Count == 0)
+                return false;
+
+            // AP_REGEN_CHANGE Value[1]: 4 non-zero, single value = 7. Near-inactive sub-type 7.
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "AP_REGEN_CHANGE Value[1] — near-inactive sub-type field (4 non-zero records; single value = 7).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[1] is non-zero in only 4 AP_REGEN_CHANGE records, all with value=7. "
+                        + "Matches the sub-type-7 pattern seen across DAMAGE, STAT_CHANGE, MONSTER_CONTROLLER, and others. Retail name unresolved."
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildDefensiveStatChangeValue1Inference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 16 || observations == null || observations.Count == 0)
+                return false;
+
+            // DEFENSIVE_STAT_CHANGE Value[1]: 2 non-zero, single value = 1. Near-inactive binary flag.
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "DEFENSIVE_STAT_CHANGE Value[1] — near-inactive binary flag (2 non-zero records; single value = 1).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[1] is non-zero in only 2 DEFENSIVE_STAT_CHANGE records (value=1). "
+                        + "Consistent with a rarely-activated mode switch. Retail name unresolved."
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildMoraleChangeStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 19 || observations == null || observations.Count == 0)
+                return false;
+
+            // MORALE_CHANGE FlagsRaw: 1 non-zero, single value = 1. Single-record binary flag.
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "MORALE_CHANGE FlagsRaw — single-record binary flag (1 non-zero record; value = 1).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw is non-zero in only 1 MORALE_CHANGE record (value=1). Retail name unresolved."
+                };
+                return true;
+            }
+
+            // MORALE_CHANGE Value[1]: 1 non-zero record, value=50. Percentage parameter.
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "MORALE_CHANGE Value[1] — near-inactive percentage parameter (1 non-zero record; value = 50).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[1] is non-zero in only 1 MORALE_CHANGE record (value=50). Likely a 50% threshold or multiplier. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // MORALE_CHANGE Value[2]: 1 non-zero record, value=7. Sub-type 7 pattern.
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "MORALE_CHANGE Value[2] — near-inactive sub-type field (1 non-zero record; value = 7).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[2] is non-zero in only 1 MORALE_CHANGE record (value=7). Matches the sub-type-7 pattern. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // MORALE_CHANGE Value[7]: 1 non-zero record, value=75. Percentage modifier.
+            if (string.Equals(fieldKey, "Value[7]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "MORALE_CHANGE Value[7] — near-inactive percentage modifier (1 non-zero record; value = 75).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[7] is non-zero in only 1 MORALE_CHANGE record (value=75). Likely a 75% percentage modifier. Retail name unresolved."
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildHealValue1Inference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 3 || observations == null || observations.Count == 0)
+                return false;
+
+            // HEAL Value[1]: 19 non-zero, 16 distinct (1–33 range, many multiples of 3). Likely scaling level or modifier.
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                string healV1Dominant = BuildDominantRawValueSummary(observations, 10);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "HEAL Value[1] — scaling level or periodic modifier (19 non-zero records, 16 distinct values in range 1–33).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[1] has 16 distinct values (1, 2, 3, 10, 12, 15, 18, 21, 24, 27, 30, 33) in 19 HEAL records. "
+                        + "Values in the 12–33 range are multiples of 3, suggesting a rank-based healing level or periodic scaling step. "
+                        + "Smaller values (1, 2, 3, 10) may encode sub-type or mode. Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(healV1Dominant) ? string.Empty : "Observed: " + healV1Dominant + ".")
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildAutoAttackAdjustStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 33 || observations == null || observations.Count == 0)
+                return false;
+
+            // AUTO_ATTACK_ADJUST FlagsRaw: 1 non-zero, single value = 1. Single-record binary flag.
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "AUTO_ATTACK_ADJUST FlagsRaw — single-record binary flag (1 non-zero record; value = 1).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw is non-zero in only 1 AUTO_ATTACK_ADJUST record (value=1). Retail name unresolved."
+                };
+                return true;
+            }
+
+            // AUTO_ATTACK_ADJUST Value[0]: 7 non-zero, single value = 2. Near-inactive mode selector.
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "AUTO_ATTACK_ADJUST Value[0] — near-inactive mode selector (7 non-zero records; single value = 2).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[0] is non-zero in 7 AUTO_ATTACK_ADJUST records, all with value=2. Likely a mode or sub-type selector. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // AUTO_ATTACK_ADJUST Value[2]: 58 non-zero, 17 distinct — mixed small integers (14-26) and large IDs (2073+).
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+            {
+                string aaV2Dominant = BuildDominantRawValueSummary(observations, 10);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "AUTO_ATTACK_ADJUST Value[2] — mixed parameter: small integers (14–26) or large ID references (2073+) (58 non-zero records, 17 distinct values).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[2] has 17 distinct values with a bimodal distribution: small integers (14, 15, 23, 26) and large values (2073, 2182–2184, 2293, 2549–2551). "
+                        + "Small values may encode a sub-type, modifier index, or attack-speed parameter. "
+                        + "Large values (2000+) are in the range of ability or resource ID references. "
+                        + "The dual-range pattern suggests this field may encode different semantic roles depending on a companion FlagsRaw or context value. "
+                        + "Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(aaV2Dominant) ? string.Empty : "Observed: " + aaV2Dominant + ".")
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildStealthStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 34 || observations == null || observations.Count == 0)
+                return false;
+
+            // STEALTH FlagsRaw: 1 non-zero, single value = 2 (bit1). Single-bit behavioral flag.
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "STEALTH FlagsRaw — single-bit behavioral flag (1 non-zero record; value = 2 = bit1).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw is non-zero in only 1 STEALTH record (value=2=bit1). Retail name unresolved."
+                };
+                return true;
+            }
+
+            // STEALTH Value[0]: 6 non-zero, 5 distinct (50, 60, 80, 100, 150) — stealth level or visibility percentage.
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                string stV0Dominant = BuildDominantRawValueSummary(observations, 5);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "STEALTH Value[0] — stealth level or visibility percentage (6 non-zero records, 5 distinct values: 50, 60, 80, 100, 150).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[0] has 5 distinct values (50, 60, 80, 100, 150) that read as percentage levels. "
+                        + "100 = baseline (full stealth), below-100 = partial visibility, 150 = enhanced stealth. "
+                        + "Likely encodes the stealth strength or detection-range multiplier. Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(stV0Dominant) ? string.Empty : "Observed: " + stV0Dominant + ".")
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildUnknownOp47StructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 47 || observations == null || observations.Count == 0)
+                return false;
+
+            // Unknown op 47 Value[0]: 4 non-zero, single value = 1. Near-inactive binary flag.
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "Unknown op 47 Value[0] — near-inactive binary flag (4 non-zero records; single value = 1).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[0] is non-zero in 4 op-47 records, all with value=1. Operation 47 has no confirmed retail name. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // Unknown op 47 Value[1]: 8 non-zero, 4 distinct (10, 20, 30, 40) — regular 10-unit increment, quantity or percentage.
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                string op47V1Dominant = BuildDominantRawValueSummary(observations, 4);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "Unknown op 47 Value[1] — regular increment parameter (8 non-zero records, 4 distinct values: 10, 20, 30, 40).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[1] has 4 distinct values in a regular 10-unit step sequence (10, 20, 30, 40). "
+                        + "Consistent with a quantity level, percentage increment, or tier selector. "
+                        + "Operation 47 has no confirmed retail name. Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(op47V1Dominant) ? string.Empty : "Observed: " + op47V1Dominant + ".")
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildUnknownOp51StructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 51 || observations == null || observations.Count == 0)
+                return false;
+
+            // Unknown op 51 Value[0]: 39 non-zero, 38 distinct — high-range ID reference (17643–30030).
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                string op51V0Dominant = BuildDominantRawValueSummary(observations, 10);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "Unknown op 51 Value[0] — high-range ID reference (39 non-zero records, 38 distinct values: 17643–30030).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[0] has 38 distinct values with near-unique ID density (38/39 distinct per record), indicating a direct entity or asset ID reference. "
+                        + "ID range 17643–30030 is consistent with creature, ability, or resource IDs. "
+                        + "Operation 51 has no confirmed retail name. "
+                        + (string.IsNullOrWhiteSpace(op51V0Dominant) ? string.Empty : "Observed: " + op51V0Dominant + ".")
+                };
+                return true;
+            }
+
+            // Unknown op 51 FlagsRaw: 32 non-zero, single value = 4 (bit2). Single-bit activation flag.
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "Unknown op 51 FlagsRaw — single-bit activation flag (32 non-zero records; single value = 4 = bit2).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw has exactly one non-zero value (4=bit2) across all op-51 records where it appears. "
+                        + "Functions as a binary bit-flag. Operation 51 has no confirmed retail name. Retail bit name unresolved."
+                };
+                return true;
+            }
+
+            // Unknown op 51 Value[2]: 30 non-zero, 4 distinct (1, 2, 3, 4) — small sequential enum.
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+            {
+                string op51V2Dominant = BuildDominantRawValueSummary(observations, 4);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "Unknown op 51 Value[2] — small sequential enum (30 non-zero records, 4 distinct values: 1, 2, 3, 4).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[2] has exactly 4 distinct sequential values (1, 2, 3, 4). "
+                        + "Sequential without gaps suggests an enum selector (e.g., mode, tier, or sub-type). "
+                        + "Operation 51 has no confirmed retail name. "
+                        + (string.IsNullOrWhiteSpace(op51V2Dominant) ? string.Empty : "Observed: " + op51V2Dominant + ".")
+                };
+                return true;
+            }
+
+            // Unknown op 51 Value[3]: 38 non-zero, 34 distinct (13–58 range) — index or ordinal reference.
+            if (string.Equals(fieldKey, "Value[3]", StringComparison.OrdinalIgnoreCase))
+            {
+                string op51V3Dominant = BuildDominantRawValueSummary(observations, 10);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "Unknown op 51 Value[3] — index or ordinal reference (38 non-zero records, 34 distinct values: 13–58).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[3] has 34 distinct values in the range 13–58. "
+                        + "High distinct-value ratio (34/38) and compact integer range suggest an index, slot reference, or sequential ordinal. "
+                        + "Operation 51 has no confirmed retail name. "
+                        + (string.IsNullOrWhiteSpace(op51V3Dominant) ? string.Empty : "Observed: " + op51V3Dominant + ".")
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildUnknownOp29StructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 29 || observations == null || observations.Count == 0)
+                return false;
+
+            // Unknown op 29 Value[1]: 10 non-zero, 2 distinct (11, 40) — sparse secondary parameter.
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "Unknown op 29 Value[1] — sparse secondary parameter (10 non-zero records; values 11 and 40).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[1] has 2 distinct values (11, 40) in 10 op-29 records. "
+                        + "Small integer values suggest a mode parameter or sub-type index. Operation 29 has no confirmed retail name."
+                };
+                return true;
+            }
+
+            // Unknown op 29 Value[2]: 5 non-zero, 2 distinct (7, 10) — sparse sub-type or mode parameter.
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "Unknown op 29 Value[2] — sparse sub-type parameter (5 non-zero records; values 7 and 10).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[2] has 2 distinct values (7, 10) in 5 op-29 records. "
+                        + "Value 7 matches the sub-type-7 pattern. Operation 29 has no confirmed retail name."
+                };
+                return true;
+            }
+
+            // Unknown op 29 FlagsRaw: 9 non-zero, 3 distinct (1, 7, 1143) — bit-field or enum.
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                string op29FrDominant = BuildDominantRawValueSummary(observations, 3);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "Unknown op 29 FlagsRaw — bit-field or enum (3 distinct values: 1, 7, 1143).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw is non-zero in 9 op-29 records with 3 distinct values: 1(bit0), 7(bits0-2), 1143(multiple bits). "
+                        + "Value 1143 = 0x477 = bits0+1+2+6+7+10. Mixed bit pattern suggests a mode or behavioral flag set. "
+                        + "Operation 29 has no confirmed retail name. "
+                        + (string.IsNullOrWhiteSpace(op29FrDominant) ? string.Empty : "Observed: " + op29FrDominant + ".")
+                };
+                return true;
+            }
+
+            // Unknown op 29 Value[0]: 11 non-zero, 8 distinct (10, 9979, 66001, 66298-66300, 192555, 208470) — likely ID reference.
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                string op29V0Dominant = BuildDominantRawValueSummary(observations, 8);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "Unknown op 29 Value[0] — ID reference (11 non-zero records, 8 distinct high-range values: 10, 9979, 66001–66300, 192555, 208470).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[0] has 8 distinct values spanning a wide ID range. "
+                        + "High-range values (66001–66300, 192555, 208470) are consistent with an asset, zone, or creature ID reference. "
+                        + "Operation 29 itself has no confirmed retail name. "
+                        + (string.IsNullOrWhiteSpace(op29V0Dominant) ? string.Empty : "Observed: " + op29V0Dominant + ".")
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildArmorChangeStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 5 || observations == null || observations.Count == 0)
+                return false;
+
+            // ARMOR_CHANGE Multiplier[N]: percentage scaling multiplier for the armor-change effect (4 distinct: 1, 10, 100, 400).
+            {
+                int multiplierIndex;
+                if (TryParseIndexedField(fieldKey, "Multiplier[", out multiplierIndex))
+                {
+                    string acMulDominant = BuildDominantRawValueSummary(observations, 6);
+                    inference = new FieldObservationInference
+                    {
+                        SemanticSummary = "ARMOR_CHANGE " + fieldKey + " — percentage scaling multiplier for this armor-change component (100 = no change; 1/10/400 are active scaling values).",
+                        Confidence = SemanticConfidence.Inferred,
+                        Notes = "ARMOR_CHANGE Multiplier[" + multiplierIndex.ToString(CultureInfo.InvariantCulture) + "] is a percentage multiplier applied to the armor-change formula. "
+                            + "Observed distinct values: 1(near-zero), 10(10%), 100(baseline), 400(4× scaling). "
+                            + "Mirrors the Multiplier[N] pattern in DAMAGE, STAT_CHANGE, and HEAL. Retail slot-role name unresolved. "
+                            + (string.IsNullOrWhiteSpace(acMulDominant) ? string.Empty : "Observed: " + acMulDominant + ".")
+                    };
+                    return true;
+                }
+            }
+
+            // ARMOR_CHANGE Value[2]: 6 non-zero, single value = 7. Near-inactive sub-type 7 (matches DAMAGE/STAT_CHANGE pattern).
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "ARMOR_CHANGE Value[2] — near-inactive sub-type field (6 non-zero records; single value = 7).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[2] is non-zero in only 6 ARMOR_CHANGE records, all with value=7. "
+                        + "Matches the sub-type-7 pattern seen in DAMAGE Value[2]/[3], STAT_CHANGE Value[2], and MONSTER_CONTROLLER Value[7]. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // ARMOR_CHANGE Value[1]: 16 non-zero, 3 distinct (1, 2, 7) — sub-type or mode selector.
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                string acV1Dominant = BuildDominantRawValueSummary(observations, 3);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "ARMOR_CHANGE Value[1] — sub-type or mode selector (16 non-zero records, 3 distinct values: 1, 2, 7).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[1] has 3 distinct values: 1, 2, and 7. "
+                        + "Value 7 matches the sub-type-7 pattern seen in DAMAGE, STAT_CHANGE, and HEAL. "
+                        + "Likely encodes an armor-change sub-type or application mode. Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(acV1Dominant) ? string.Empty : "Observed: " + acV1Dominant + ".")
+                };
+                return true;
+            }
+
+            // ARMOR_CHANGE FlagsRaw: 51 non-zero, 5 distinct (16, 64, 32768, 65536, 114688).
+            // All values are power-of-two or grouped bit combinations outside the CC bit range.
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                string acFrDominant = BuildDominantRawValueSummary(observations, 5);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "ARMOR_CHANGE FlagsRaw — bit-field encoding armor-change modifier flags (5 distinct values: 16, 64, 32768, 65536, 114688).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw is non-zero in 51 ARMOR_CHANGE records with 5 distinct values: "
+                        + "16(bit4), 64(bit6), 32768(bit15), 65536(bit16), 114688(bits14-16=0x1C000). "
+                        + "Values are all power-of-two or grouped high-bit combinations, not in the CC bit range. "
+                        + "Likely encodes armor type, penetration mode, or mitigation-override flags. Retail bit names unresolved. "
+                        + (string.IsNullOrWhiteSpace(acFrDominant) ? string.Empty : "Observed: " + acFrDominant + ".")
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildCatapultStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 46 || observations == null || observations.Count == 0)
+                return false;
+
+            // CATAPULT Multiplier[N]: percentage scaling multiplier (2 distinct: 75, 100).
+            {
+                int multiplierIndex;
+                if (TryParseIndexedField(fieldKey, "Multiplier[", out multiplierIndex))
+                {
+                    string catMulDominant = BuildDominantRawValueSummary(observations, 4);
+                    inference = new FieldObservationInference
+                    {
+                        SemanticSummary = "CATAPULT " + fieldKey + " — percentage scaling multiplier (2 distinct values: 75=75% launch power, 100=full power).",
+                        Confidence = SemanticConfidence.Inferred,
+                        Notes = "CATAPULT Multiplier[" + multiplierIndex.ToString(CultureInfo.InvariantCulture) + "] has 2 distinct values: 100 (baseline, no change) and 75 (75% of nominal launch force). "
+                            + "Mirrors the Multiplier[N] scaling pattern seen across other operations. Retail slot-role name unresolved. "
+                            + (string.IsNullOrWhiteSpace(catMulDominant) ? string.Empty : "Observed: " + catMulDominant + ".")
+                    };
+                    return true;
+                }
+            }
+
+            // CATAPULT FlagsRaw: 8 non-zero, 3 distinct (1, 2, 3) — small sequential enum or mode selector.
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                string catFrDominant = BuildDominantRawValueSummary(observations, 3);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "CATAPULT FlagsRaw — sequential enum or mode selector (3 distinct values: 1, 2, 3).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw has 3 distinct sequential values (1, 2, 3) in 8 CATAPULT records. "
+                        + "Sequential values without gaps suggest an enum (launch type, targeting mode) rather than a true bit-field. "
+                        + "Retail names unresolved. "
+                        + (string.IsNullOrWhiteSpace(catFrDominant) ? string.Empty : "Observed: " + catFrDominant + ".")
+                };
+                return true;
+            }
+
+            // CATAPULT Value[0]: 20 non-zero, 3 distinct (1, 2, 3) — launch type or target mode enum.
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                string catV0Dominant = BuildDominantRawValueSummary(observations, 3);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "CATAPULT Value[0] — launch type or target mode enum (20 non-zero records, 3 distinct values: 1, 2, 3).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[0] has 3 distinct sequential values (1, 2, 3). "
+                        + "Matches the FlagsRaw enum range, suggesting a correlated launch type or mode selector. Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(catV0Dominant) ? string.Empty : "Observed: " + catV0Dominant + ".")
+                };
+                return true;
+            }
+
+            // CATAPULT Value[1]: 20 non-zero, 8 distinct (1, 100, 150, 200, 240, 300, 500, 2000) — launch parameter or percentage.
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                string catV1Dominant = BuildDominantRawValueSummary(observations, 8);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "CATAPULT Value[1] — launch parameter or scaling factor (20 non-zero records, 8 distinct values: 1, 100, 150, 200, 240, 300, 500, 2000).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[1] has 20 non-zero records with 8 distinct values. "
+                        + "The distribution includes percentage-like values (100, 150, 200, 300) and raw integers (1, 240, 500, 2000). "
+                        + "Likely encodes a launch velocity, range scalar, or arc-height parameter. Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(catV1Dominant) ? string.Empty : "Observed: " + catV1Dominant + ".")
+                };
+                return true;
+            }
+
+            // CATAPULT Value[2]: 2 non-zero, single value = 7. Near-inactive sub-type 7 pattern.
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "CATAPULT Value[2] — near-inactive sub-type field (2 non-zero records; single value = 7).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[2] is non-zero in only 2 CATAPULT records (value=7). Matches the sub-type-7 pattern seen across operations. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // CATAPULT Value[3]: 12 non-zero, 7 distinct (12, 20, 30, 50, 60, 180, 500) — angular or range parameter.
+            if (string.Equals(fieldKey, "Value[3]", StringComparison.OrdinalIgnoreCase))
+            {
+                string catV3Dominant = BuildDominantRawValueSummary(observations, 7);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "CATAPULT Value[3] — angular or range parameter (12 non-zero records, 7 distinct values: 12, 20, 30, 50, 60, 180, 500).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[3] has 12 non-zero records with 7 distinct values. "
+                        + "Values include angular multiples (12, 20, 30, 60, 180) and larger integers (50, 500) suggesting an arc angle in degrees, a radius, or a knockback range. "
+                        + "Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(catV3Dominant) ? string.Empty : "Observed: " + catV3Dominant + ".")
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildMoraleRegenChangeStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 18 || observations == null || observations.Count == 0)
+                return false;
+
+            // MORALE_REGEN_CHANGE ExtData Val1: 2 non-zero records, 2 distinct (2=target, 3=tertiary scope).
+            int slotIndex;
+            int valueIndex;
+            if (!TryParseExtDataField(fieldKey, out slotIndex, out valueIndex) || valueIndex != 1)
+                return false;
+
+            string mrDominant = BuildDominantRawValueSummary(observations, 4);
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = "MORALE_REGEN_CHANGE ExtData Val1 — application scope selector (2=target, 3=tertiary scope variant).",
+                Confidence = SemanticConfidence.Inferred,
+                Notes = "ExtData Val1 has 2 distinct values across MORALE_REGEN_CHANGE records: 2=target-scope (universal), 3=tertiary scope variant. "
+                    + "Only 2 records have non-zero Val1. Retail name for Val1=3 is unresolved. "
+                    + (string.IsNullOrWhiteSpace(mrDominant) ? string.Empty : "Observed: " + mrDominant + ".")
+            };
+            return true;
+        }
+
+        private static bool TryBuildInterruptStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 9 || observations == null || observations.Count == 0)
+                return false;
+
+            // INTERRUPT Value[0]: 47 non-zero, 5 distinct (100, 1000, 3000, 4000, 10000) — range or magnitude in fixed units.
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                string intV0Dominant = BuildDominantRawValueSummary(observations, 5);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "INTERRUPT Value[0] — range or magnitude parameter (47 non-zero records, 5 distinct values: 100, 1000, 3000, 4000, 10000).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[0] has 5 distinct values: 100, 1000, 3000, 4000, 10000. "
+                        + "Regular order-of-magnitude distribution suggests a distance in fixed-point units, an area radius, or an interrupt-power threshold. "
+                        + "Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(intV0Dominant) ? string.Empty : "Observed: " + intV0Dominant + ".")
+                };
+                return true;
+            }
+
+            // INTERRUPT Value[2]: 1 non-zero record, value=1. Near-inactive binary flag.
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "INTERRUPT Value[2] — near-inactive binary flag (1 non-zero record; value = 1).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[2] is non-zero in only 1 INTERRUPT record (value=1). Likely a rarely-activated mode switch. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // INTERRUPT Value[1]: 45 non-zero, 7 distinct (250, 500, 1000, 2000, 3000, 4000, 5000) — duration in ms.
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                string intV1Dominant = BuildDominantRawValueSummary(observations, 7);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "INTERRUPT Value[1] — interrupt duration or lockout period in milliseconds (45 non-zero records, 7 distinct values: 250–5000 ms).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[1] has 7 distinct values (250, 500, 1000, 2000, 3000, 4000, 5000) that form a regular progression in multiples of 250 or 1000 ms. "
+                        + "The regular step pattern strongly suggests a duration in milliseconds (0.25 s – 5 s). "
+                        + "Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(intV1Dominant) ? string.Empty : "Observed: " + intV1Dominant + ".")
+                };
+                return true;
+            }
+
+            // INTERRUPT FlagsRaw: 70 non-zero, 9 distinct values (1, 27, 29, 31, 32, 47, 51, 63, 127) — CrowdControlTypes bitmask.
+            // 1=Snare, 27=Knockdown+Silence+Root+Snare, 29=Knockdown+Silence+Disarm+Snare,
+            // 31=Knockdown+Silence+Disarm+Root+Snare, 32=Stagger, 47=Stagger+Silence+Disarm+Root+Snare,
+            // 51=Stagger+Knockdown+Root+Snare, 63=Stagger+Knockdown+Silence+Disarm+Root+Snare,
+            // 127=bit6+Stagger+Knockdown+Silence+Disarm+Root+Snare.
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                string intFrDominant = BuildDominantRawValueSummary(observations, 9);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "INTERRUPT FlagsRaw — CrowdControlTypes bitmask gate (9 distinct values, all confirmed as CC bit combinations).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw is non-zero in 70 INTERRUPT records with 9 distinct values. "
+                        + "All values decode as CrowdControlTypes bit combinations: "
+                        + "1=Snare, 32=Stagger, 27=Knockdown+Silence+Root+Snare, 29=Knockdown+Silence+Disarm+Snare, "
+                        + "31=Knockdown+Silence+Disarm+Root+Snare, 47=Stagger+Silence+Disarm+Root+Snare, "
+                        + "51=Stagger+Knockdown+Root+Snare, 63=Stagger+Knockdown+Silence+Disarm+Root+Snare, "
+                        + "127=bit6+Stagger+Knockdown+Silence+Disarm+Root+Snare. "
+                        + "Mirrors the CC gate pattern in DAMAGE Value15 and BTA Value15. "
+                        + (string.IsNullOrWhiteSpace(intFrDominant) ? string.Empty : "Observed: " + intFrDominant + ".")
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildRankChangeStructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 37 || observations == null || observations.Count == 0)
+                return false;
+
+            // RANK_CHANGE Value[1]: 6 non-zero, 5 distinct (8, 9, 10, 11, 12) — sequential rank levels, secondary threshold.
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                string rcV1Dominant = BuildDominantRawValueSummary(observations, 5);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "RANK_CHANGE Value[1] — secondary rank level threshold (6 non-zero records, 5 distinct sequential values: 8–12).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[1] has 5 sequential distinct values (8, 9, 10, 11, 12) — a contiguous rank range within WAR career levels. "
+                        + "Likely encodes a secondary rank threshold or sub-range modifier. Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(rcV1Dominant) ? string.Empty : "Observed: " + rcV1Dominant + ".")
+                };
+                return true;
+            }
+
+            // RANK_CHANGE Value[0]: 22 non-zero, 12 distinct values (8, 11, 15, 23, 26, 39, 40, 41, 42, 43, 44, 45) — rank level threshold.
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                string rcV0Dominant = BuildDominantRawValueSummary(observations, 12);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "RANK_CHANGE Value[0] — rank level threshold or target rank (22 non-zero records, 12 distinct values: 8, 11, 15, 23, 26, 39–45).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[0] has 12 distinct values in the range 8–45. "
+                        + "These values align with WAR career rank levels (1–40) and renown rank thresholds. "
+                        + "Likely encodes the target rank, minimum rank threshold, or rank-change delta for this component. "
+                        + "Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(rcV0Dominant) ? string.Empty : "Observed: " + rcV0Dominant + ".")
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildUnknownOp32StructuralInference(uint operationId, string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (operationId != 32 || observations == null || observations.Count == 0)
+                return false;
+
+            // Unknown op 32 Value[1]: 4 non-zero, 2 distinct (65, 100) — sparse percentage-like values.
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "Unknown op 32 Value[1] — sparse percentage-like parameter (4 non-zero records; values 65 and 100).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[1] has 2 distinct values (65, 100) in 4 op-32 records. "
+                        + "Both values are percentage-like (65% and 100% = baseline). Operation 32 has no confirmed retail name."
+                };
+                return true;
+            }
+
+            // Unknown op 32 Value[0]: 15 non-zero, 13 distinct — high-range ID values (5424–10020). Likely ID reference.
+            if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
+            {
+                string op32V0Dominant = BuildDominantRawValueSummary(observations, 12);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "Unknown op 32 Value[0] — ID reference (15 non-zero records, 13 distinct high-range values: 5424–10020).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[0] has 13 distinct values in the high-ID range 5424–10020. "
+                        + "High-cardinality values in this range are consistent with an ability, effect, or resource ID reference. "
+                        + "Operation 32 itself has no confirmed retail name; the field role is inferred from the ID-range pattern. "
+                        + (string.IsNullOrWhiteSpace(op32V0Dominant) ? string.Empty : "Observed: " + op32V0Dominant + ".")
                 };
                 return true;
             }
@@ -1951,6 +3668,32 @@ namespace ClientDataMatrix.Services
                 return true;
             }
 
+            // DISPEL_BUFF Value08: 6 non-zero, single value = 1. Binary activation flag.
+            if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "DISPEL_BUFF Value08 — binary activation flag (value=1 in 6 records; only one distinct non-zero value).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value08 has exactly one non-zero value (1) across all DISPEL_BUFF records where it appears. "
+                        + "Functions as a binary toggle or mode flag, consistent with the Value08=1 pattern across operations. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // DISPEL_BUFF Value15: 12 non-zero, 2 distinct (1=Snare, 4=Disarm). CrowdControlTypes bits.
+            if (string.Equals(fieldKey, "Value15", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "DISPEL_BUFF Value15 — CrowdControlTypes gate flag (2 distinct values: 1=Snare, 4=Disarm).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value15 uses CrowdControlTypes bit encoding: 1=Snare(bit0), 4=Disarm(bit2). "
+                        + "Only 12 DISPEL_BUFF records have non-zero Value15. 0 = no CC gate."
+                };
+                return true;
+            }
+
             return false;
         }
 
@@ -1959,6 +3702,94 @@ namespace ClientDataMatrix.Services
             inference = null;
             if (operationId != 3 || observations == null || observations.Count == 0)
                 return false;
+
+            // HEAL Value15: 269 non-zero, 3 distinct values (1=Snare, 4=Disarm, 5=Snare+Disarm). CrowdControlTypes bits.
+            if (string.Equals(fieldKey, "Value15", StringComparison.OrdinalIgnoreCase))
+            {
+                string healV15Dominant = BuildDominantRawValueSummary(observations, 4);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "HEAL Value15 — CrowdControlTypes gate flag (3 distinct values: 1=Snare, 4=Disarm, 5=Snare+Disarm).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value15 uses CrowdControlTypes bit encoding to gate or condition the heal effect. "
+                        + "Observed: 1=Snare(bit0), 4=Disarm(bit2), 5=Snare+Disarm(bits0+2). 0 = no CC gate. "
+                        + (string.IsNullOrWhiteSpace(healV15Dominant) ? string.Empty : "Observed: " + healV15Dominant + ".")
+                };
+                return true;
+            }
+
+            // HEAL Value08: 10 non-zero, single value = 1. Binary activation flag.
+            if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "HEAL Value08 — binary activation flag (value=1 in 10 records; only one distinct non-zero value).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value08 has exactly one non-zero value (1) across all HEAL records where it appears. "
+                        + "Consistent with the Value08=1 binary-flag pattern across operations. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // HEAL Multiplier[N]: 750 non-zero, 77 distinct — varied percentage multiplier (same role as DAMAGE/STAT_CHANGE Multiplier[N]).
+            {
+                int multiplierIndex;
+                if (TryParseIndexedField(fieldKey, "Multiplier[", out multiplierIndex))
+                {
+                    string healMulDominant = BuildDominantRawValueSummary(observations, 8);
+                    inference = new FieldObservationInference
+                    {
+                        SemanticSummary = "HEAL " + fieldKey + " — percentage scaling multiplier for this heal component (100 = no change; varied values indicate active heal scaling).",
+                        Confidence = SemanticConfidence.Inferred,
+                        Notes = "HEAL Multiplier[" + multiplierIndex.ToString(CultureInfo.InvariantCulture) + "] is a percentage multiplier applied to the heal formula. "
+                            + "Unlike passive-operation multipliers which are universally 100, HEAL multipliers carry meaningful non-100 values (77 distinct values). "
+                            + "100 = no scaling change; values above/below 100 scale the heal up/down. Retail slot-role name unresolved. "
+                            + (string.IsNullOrWhiteSpace(healMulDominant) ? string.Empty : "Observed: " + healMulDominant + ".")
+                    };
+                    return true;
+                }
+            }
+
+            // HEAL Value[3]: 1 non-zero record, value=100. Near-inactive percentage cap or baseline.
+            if (string.Equals(fieldKey, "Value[3]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "HEAL Value[3] — near-inactive field (1 non-zero record; value = 100).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[3] is non-zero in only 1 HEAL record (value=100). Likely a 100% percentage baseline or cap. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // HEAL Value[7]: 1 non-zero record, value=7. Near-inactive sub-type indicator.
+            if (string.Equals(fieldKey, "Value[7]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "HEAL Value[7] — near-inactive field (1 non-zero record; value = 7).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[7] is non-zero in only 1 HEAL record (value=7). "
+                        + "Value 7 matches the dominant sub-type-7 pattern seen in DAMAGE and STAT_CHANGE. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // HEAL Value[2]: 4 non-zero, 3 distinct (2, 40, 100) — sparse secondary heal parameter.
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+            {
+                string healV2Dominant = BuildDominantRawValueSummary(observations, 4);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "HEAL Value[2] — sparse secondary heal parameter (4 non-zero records; values 2, 40, 100).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[2] is non-zero in only 4 HEAL records with 3 distinct values (2, 40, 100). "
+                        + "Value 100 suggests a percentage cap or scaling constant; 2 and 40 may encode a sub-type or conditional threshold. "
+                        + "Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(healV2Dominant) ? string.Empty : "Observed: " + healV2Dominant + ".")
+                };
+                return true;
+            }
 
             // HEAL FlagsRaw: 335 non-zero, 7 distinct values (1–7 sequential) — heal-type or sub-mode enum.
             if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
@@ -1984,6 +3815,47 @@ namespace ClientDataMatrix.Services
             inference = null;
             if (operationId != 8 || observations == null || observations.Count == 0)
                 return false;
+
+            // VELOCITY Value08: 47 non-zero, single value = 1. Binary activation flag.
+            if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "VELOCITY Value08 — binary activation flag (value=1 in 47 records; only one distinct non-zero value).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value08 has exactly one non-zero value (1) across all VELOCITY records where it appears. "
+                        + "Consistent with the Value08=1 binary-flag pattern across operations. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // VELOCITY Value[1]: 2 non-zero, 2 distinct (-1, 1) — sparse directional or sign flag.
+            if (string.Equals(fieldKey, "Value[1]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "VELOCITY Value[1] — sparse directional or sign flag (2 non-zero records; values -1 and 1).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[1] is non-zero in only 2 VELOCITY records with opposite-sign values (-1, 1). "
+                        + "Likely encodes a directional modifier or sign/polarity flag for the velocity effect. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // VELOCITY Value15: 340 non-zero, 3 distinct values (4=Disarm, 5=Snare+Disarm, 20=Knockdown+Disarm). CrowdControlTypes.
+            if (string.Equals(fieldKey, "Value15", StringComparison.OrdinalIgnoreCase))
+            {
+                string velV15Dominant = BuildDominantRawValueSummary(observations, 4);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "VELOCITY Value15 — CrowdControlTypes gate flag (3 distinct values: 4=Disarm, 5=Snare+Disarm, 20=Knockdown+Disarm).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value15 uses CrowdControlTypes bit encoding: 4=Disarm(bit2), 5=Snare(bit0)+Disarm(bit2), 20=Knockdown(bit4)+Disarm(bit2). "
+                        + "0 = no CC gate (inactive). "
+                        + (string.IsNullOrWhiteSpace(velV15Dominant) ? string.Empty : "Observed: " + velV15Dominant + ".")
+                };
+                return true;
+            }
 
             int slotIndex;
             int valueIndex;
@@ -2058,6 +3930,32 @@ namespace ClientDataMatrix.Services
                 return true;
             }
 
+            // MONSTER_CONTROLLER Value08: 147 non-zero, single value = 1. Binary activation flag.
+            if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "MONSTER_CONTROLLER Value08 — binary activation flag (value=1 in 147 records; only one distinct non-zero value).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value08 has exactly one non-zero value (1) across all MONSTER_CONTROLLER records where it appears. "
+                        + "Consistent with the Value08=1 binary-flag pattern across operations. Retail name unresolved."
+                };
+                return true;
+            }
+
+            // MONSTER_CONTROLLER Value[7]: 6 non-zero, single value = 7. Near-inactive sub-type indicator.
+            if (string.Equals(fieldKey, "Value[7]", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "MONSTER_CONTROLLER Value[7] — near-inactive sub-type field (6 non-zero records; single value = 7).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[7] is non-zero in only 6 MONSTER_CONTROLLER records, all with value=7. "
+                        + "Value 7 matches the sub-type-7 pattern seen across DAMAGE, STAT_CHANGE, and other operations. Retail name unresolved."
+                };
+                return true;
+            }
+
             return false;
         }
 
@@ -2082,6 +3980,37 @@ namespace ClientDataMatrix.Services
                 return true;
             }
 
+            // GRANTED_ABILITY FlagsRaw: 98 non-zero, 2 distinct (2=bit1, 4=bit2) — bit-field modifier flags.
+            if (string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+            {
+                string gaFrDominant = BuildDominantRawValueSummary(observations, 2);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "GRANTED_ABILITY FlagsRaw — bit-field modifier flags (2 distinct values: 2=bit1, 4=bit2).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "FlagsRaw is non-zero in 98 GRANTED_ABILITY records with 2 distinct values: 2(bit1) and 4(bit2). "
+                        + "Likely encodes granted-ability delivery mode or activation flags. Retail bit names unresolved. "
+                        + (string.IsNullOrWhiteSpace(gaFrDominant) ? string.Empty : "Observed: " + gaFrDominant + ".")
+                };
+                return true;
+            }
+
+            // GRANTED_ABILITY Value[2]: 60 non-zero, 2 distinct (2=target, 3=tertiary scope) — application scope selector.
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+            {
+                string gaV2Dominant = BuildDominantRawValueSummary(observations, 3);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "GRANTED_ABILITY Value[2] — application scope selector (60 non-zero records; 2=target, 3=tertiary scope).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[2] has 2 distinct values: 2 (target/enemy scope) and 3 (tertiary scope variant). "
+                        + "Both values align with the universal Val1 scope encoding pattern seen across operations. "
+                        + "Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(gaV2Dominant) ? string.Empty : "Observed: " + gaV2Dominant + ".")
+                };
+                return true;
+            }
+
             return false;
         }
 
@@ -2090,6 +4019,19 @@ namespace ClientDataMatrix.Services
             inference = null;
             if (operationId != 35 || observations == null || observations.Count == 0)
                 return false;
+
+            // SUMMON_MOUNT Value08: 231 non-zero, single value = 1. Binary activation flag.
+            if (string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+            {
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "SUMMON_MOUNT Value08 — binary activation flag (value=1 in 231 records; only one distinct non-zero value).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value08 has exactly one non-zero value (1) across almost all SUMMON_MOUNT records. "
+                        + "Functions as a binary toggle or mode flag, consistent with the Value08=1 pattern across operations. Retail name unresolved."
+                };
+                return true;
+            }
 
             // SUMMON_MOUNT Value[0]: 232 non-zero records, 186 distinct values — referenced mount/creature ID.
             if (string.Equals(fieldKey, "Value[0]", StringComparison.OrdinalIgnoreCase))
@@ -2102,6 +4044,21 @@ namespace ClientDataMatrix.Services
                     Notes = "Value[0] holds the mount or creature ID summoned by this SUMMON_MOUNT component. "
                         + "High distinct-value count (186) relative to record count (232) indicates a direct ID reference, not an enum. "
                         + (string.IsNullOrWhiteSpace(smV0Dominant) ? string.Empty : "Sample values: " + smV0Dominant + ".")
+                };
+                return true;
+            }
+
+            // SUMMON_MOUNT Value[2]: 77 non-zero, 4 distinct (3192, 7449, 7666, 7667) — secondary entity/resource ID reference.
+            if (string.Equals(fieldKey, "Value[2]", StringComparison.OrdinalIgnoreCase))
+            {
+                string smV2Dominant = BuildDominantRawValueSummary(observations, 4);
+                inference = new FieldObservationInference
+                {
+                    SemanticSummary = "SUMMON_MOUNT Value[2] — secondary entity or resource ID reference (77 non-zero records, 4 distinct values: 3192, 7449, 7666, 7667).",
+                    Confidence = SemanticConfidence.Inferred,
+                    Notes = "Value[2] has 77 non-zero records with only 4 distinct high-range IDs, indicating an ID reference rather than an enum or percentage. "
+                        + "May encode a companion appearance, alternate form, or overlay entity ID. Retail name unresolved. "
+                        + (string.IsNullOrWhiteSpace(smV2Dominant) ? string.Empty : "Observed: " + smV2Dominant + ".")
                 };
                 return true;
             }
@@ -2388,6 +4345,129 @@ namespace ClientDataMatrix.Services
                     + "bit 0=Snare(1), bit 1=Root(2), bit 2=Disarm(4), bit 3=Silence(8), bit 4=Knockdown(16), bit 5=Stagger(32), bit 7=Grapple(128). "
                     + "Common non-zero: 16=Knockdown-gate, 1=Snare-gate, 4=Disarm-gate, 7=MoveImpedance. "
                     + (string.IsNullOrWhiteSpace(dominantValues) ? string.Empty : "Observed values: " + dominantValues + ".")
+            };
+            return true;
+        }
+
+        // Maximum valid CrowdControlTypes bitmask: 1+2+4+8+16+32+64+128+2048 = 2303.
+        private const long CcBitsMask = 2303L;
+
+        // Generic catch-all: Value08 with a single distinct non-zero value of 1 → binary activation flag.
+        // Fires for any operation that doesn't have a dedicated Value08 handler.
+        private static bool TryBuildGenericValue08BinaryInference(string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (!string.Equals(fieldKey, "Value08", StringComparison.OrdinalIgnoreCase))
+                return false;
+            if (observations == null || observations.Count == 0)
+                return false;
+
+            // Check that every non-zero observation is exactly 1.
+            bool hasAny = false;
+            foreach (FieldObservation obs in observations)
+            {
+                long num;
+                if (!long.TryParse(obs.RawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out num))
+                    return false;
+                if (num != 0 && num != 1)
+                    return false;
+                if (num == 1) hasAny = true;
+            }
+            if (!hasAny)
+                return false;
+
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = "Value08 — binary activation flag (all non-zero values = 1; single-bit toggle pattern seen across operations).",
+                Confidence = SemanticConfidence.Inferred,
+                Notes = "Value08 has exactly one distinct non-zero value (1) in " + observations.Count.ToString(CultureInfo.InvariantCulture) + " observed records. "
+                    + "This binary-flag pattern (Value08=1) is consistent across DAMAGE, STAT_CHANGE, BTA, VELOCITY, HEAL, SUMMON_MOUNT, MONSTER_CONTROLLER, and many other operations. "
+                    + "Retail name unresolved."
+            };
+            return true;
+        }
+
+        // Generic catch-all: Value15 where all non-zero distinct values are valid CrowdControlTypes bit combinations.
+        // Fires for any operation that doesn't have a dedicated Value15 handler.
+        private static bool TryBuildGenericValue15CcGateInference(string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (!string.Equals(fieldKey, "Value15", StringComparison.OrdinalIgnoreCase))
+                return false;
+            if (observations == null || observations.Count == 0)
+                return false;
+
+            HashSet<long> distinctNonZero = new HashSet<long>();
+            foreach (FieldObservation obs in observations)
+            {
+                long num;
+                if (!long.TryParse(obs.RawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out num))
+                    return false;
+                if (num == 0) continue;
+                if (num < 0 || (num & ~CcBitsMask) != 0)
+                    return false; // value has bits outside CC mask
+                distinctNonZero.Add(num);
+            }
+            if (distinctNonZero.Count == 0)
+                return false;
+
+            string dominant = BuildDominantRawValueSummary(observations, 8);
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = "Value15 — CrowdControlTypes gate flag (" + distinctNonZero.Count.ToString(CultureInfo.InvariantCulture) + " distinct non-zero values, all valid CC bit combinations).",
+                Confidence = SemanticConfidence.Inferred,
+                Notes = "Value15 uses CrowdControlTypes bit encoding: 1=Snare, 2=Root, 4=Disarm, 8=Silence, 16=Knockdown, 32=Stagger, 64=bit6, 128=Grapple. "
+                    + "All " + distinctNonZero.Count.ToString(CultureInfo.InvariantCulture) + " distinct non-zero values decompose entirely into known CC bits. "
+                    + "0 = no CC gate (inactive). This CC-gate pattern appears across many operations. Retail name unresolved. "
+                    + (string.IsNullOrWhiteSpace(dominant) ? string.Empty : "Observed: " + dominant + ".")
+            };
+            return true;
+        }
+
+        // Generic catch-all: FlagsRaw with a single distinct non-zero power-of-two value → single-bit binary flag.
+        // Fires before TryBuildGenericFlagsRawInference to promote single-bit fields from Structural to Inferred.
+        private static bool TryBuildGenericSingleBitFlagsRawInference(string fieldKey, List<FieldObservation> observations, out FieldObservationInference inference)
+        {
+            inference = null;
+            if (!string.Equals(fieldKey, "FlagsRaw", StringComparison.OrdinalIgnoreCase))
+                return false;
+            if (observations == null || observations.Count == 0)
+                return false;
+
+            long distinctValue = 0;
+            bool hasAny = false;
+            foreach (FieldObservation obs in observations)
+            {
+                long num;
+                if (!long.TryParse(obs.RawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out num))
+                    return false;
+                if (num == 0) continue;
+                if (!hasAny)
+                {
+                    distinctValue = num;
+                    hasAny = true;
+                }
+                else if (num != distinctValue)
+                    return false; // more than one distinct non-zero value
+            }
+            if (!hasAny)
+                return false;
+            // Require exactly one bit set (power of 2) or a very small integer (1, 2, 3, 4).
+            if (distinctValue <= 0)
+                return false;
+            bool isPowerOfTwo = (distinctValue & (distinctValue - 1)) == 0;
+            if (!isPowerOfTwo && distinctValue > 4)
+                return false;
+
+            string bitDesc = isPowerOfTwo
+                ? "bit" + (long)(System.Math.Log(distinctValue, 2)) + " (value=" + distinctValue.ToString(CultureInfo.InvariantCulture) + ")"
+                : "value=" + distinctValue.ToString(CultureInfo.InvariantCulture);
+            inference = new FieldObservationInference
+            {
+                SemanticSummary = "FlagsRaw — single-bit activation flag (" + observations.Count.ToString(CultureInfo.InvariantCulture) + " non-zero records; single value = " + distinctValue.ToString(CultureInfo.InvariantCulture) + ").",
+                Confidence = SemanticConfidence.Inferred,
+                Notes = "FlagsRaw has exactly one distinct non-zero value (" + bitDesc + ") across all observed records. "
+                    + "Functions as a binary on/off flag. Retail bit name unresolved."
             };
             return true;
         }
@@ -4339,6 +6419,38 @@ namespace ClientDataMatrix.Services
                     return true;
                 }
 
+                if (string.Equals(fieldKey, "Value[4]", StringComparison.OrdinalIgnoreCase))
+                {
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = "DAMAGE Value[4] — sparse sub-type or variant selector (4 non-zero records; values 3 and 6).",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "DAMAGE Value[4] pattern analysis",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = "Value[4] is non-zero in only 4 DAMAGE records (values 3 and 6). Retail name unresolved. Current value: " + (rawValue ?? "0") + "."
+                    };
+                    return true;
+                }
+
+                if (string.Equals(fieldKey, "Value[5]", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(fieldKey, "Value[6]", StringComparison.OrdinalIgnoreCase))
+                {
+                    semantic = new ComponentFieldSemantic
+                    {
+                        DomainKey = BuildOperationFieldDomainKey(operationId, fieldKey),
+                        Meaning = "DAMAGE " + fieldKey + " — near-inactive modifier field (4 non-zero records; single value = 90).",
+                        Confidence = SemanticConfidence.Inferred,
+                        Source = "DAMAGE " + fieldKey + " pattern analysis",
+                        SourcePath = string.Empty,
+                        SourceLocation = string.Empty,
+                        Notes = fieldKey + " is non-zero in only 4 DAMAGE records (all value=90). Likely a 90% percentage modifier. "
+                            + "Retail name unresolved. Current value: " + (rawValue ?? "0") + "."
+                    };
+                    return true;
+                }
+
                 if (string.Equals(fieldKey, "Value[7]", StringComparison.OrdinalIgnoreCase))
                 {
                     semantic = new ComponentFieldSemantic
@@ -5579,6 +7691,99 @@ namespace ClientDataMatrix.Services
             if (TryBuildThreeWayScopeVal1Inference(operationId, fieldKey, observations, out structuralInference))
                 return structuralInference;
 
+            if (TryBuildStatChangeStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildDiskUpdateStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildDefensiveStatChangeStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildServerCommandStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildInterruptStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildRankChangeStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildUnknownOp32StructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildArmorChangeStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildCatapultStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildMoraleRegenChangeStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildApChangeStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildUpdateCounterStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildRecoverStandardStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildUnknownOp29StructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildStealthStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildUnknownOp47StructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildUnknownOp51StructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildHateStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildMonsterForceTargetStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildApRegenChangeStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildDefensiveStatChangeValue1Inference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildMoraleChangeStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildHealValue1Inference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildAutoAttackAdjustStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildUnknownOp41StructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildUnknownOp40StructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildUnknownOp43StructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildUnknownOp30StructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildRessurrectStructuralInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildCooldownChangeValue1Inference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildMoraleRegenChangeFlagsRawInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
             if (TryBuildCcStructuralInference(operationId, fieldKey, observations, out structuralInference))
                 return structuralInference;
 
@@ -5592,6 +7797,17 @@ namespace ClientDataMatrix.Services
                 return structuralInference;
 
             if (TryBuildApplyAbilityFlagsRawInference(operationId, fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            // Generic catch-alls: promote Value08=1 binary flags and Value15=CC-bits gates from Unknown→Inferred
+            // for any operation that doesn't have a dedicated handler above.
+            if (TryBuildGenericValue08BinaryInference(fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildGenericValue15CcGateInference(fieldKey, observations, out structuralInference))
+                return structuralInference;
+
+            if (TryBuildGenericSingleBitFlagsRawInference(fieldKey, observations, out structuralInference))
                 return structuralInference;
 
             if (TryBuildGenericFlagsRawInference(fieldKey, observations, out structuralInference))
