@@ -62,13 +62,13 @@ namespace ClientDataMatrix.Services
 
         private static readonly Dictionary<int, string> AbilityConditionNames = new Dictionary<int, string>
         {
-            { 0, "None" }, { 1, "Equal" }, { 2, "Unk2" }, { 4, "LessThanEqual" },
+            { 0, "None" }, { 1, "Equal" }, { 2, "Unk2" }, { 3, "Unk3" }, { 4, "LessThanEqual" },
             { 5, "GreaterThanEqual" }, { 6, "LessThan" }, { 7, "GreaterThan" }, { 8, "FriendlyTarget" },
         };
 
         private static readonly Dictionary<int, string> AbilityLogicOperatorNames = new Dictionary<int, string>
         {
-            { 0, "None" }, { 8, "And" }, { 9, "Or" }, { 10, "Unk10" },
+            { 0, "None" }, { 8, "And" }, { 9, "Or" }, { 10, "Unk10" }, { 11, "Unk11" }, { 12, "Unk12" },
         };
 
         public RequirementCatalog(AbilityDataset dataset)
