@@ -419,6 +419,7 @@ namespace ClientDataMatrix.Output
             builder.AppendLine("- `PlayableSurface`: " + abilities.Count(row => string.Equals(row.CoverageStatus, "PlayableSurface", StringComparison.OrdinalIgnoreCase)).ToString(CultureInfo.InvariantCulture));
             builder.AppendLine("- `Partial`: " + abilities.Count(row => string.Equals(row.CoverageStatus, "Partial", StringComparison.OrdinalIgnoreCase)).ToString(CultureInfo.InvariantCulture));
             builder.AppendLine("- `StringsOnly`: " + abilities.Count(row => string.Equals(row.CoverageStatus, "StringsOnly", StringComparison.OrdinalIgnoreCase)).ToString(CultureInfo.InvariantCulture));
+            builder.AppendLine("- `BlankSlot`: " + abilities.Count(row => string.Equals(row.CoverageStatus, "BlankSlot", StringComparison.OrdinalIgnoreCase)).ToString(CultureInfo.InvariantCulture) + " (irrecoverable empty string-table slots; excluded from gap count)");
             builder.AppendLine("- `Sparse`: " + abilities.Count(row => string.Equals(row.CoverageStatus, "Sparse", StringComparison.OrdinalIgnoreCase)).ToString(CultureInfo.InvariantCulture));
             builder.AppendLine();
 

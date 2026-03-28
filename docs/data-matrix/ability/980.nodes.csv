@@ -1,0 +1,4 @@
+﻿Id,Kind,Key,Label,Properties
+ability:980,ability,980,Ability 980,
+row:abilitydesc.txt|line=981;EntryId=980,row,abilitydesc.txt|line=981;EntryId=980,abilitydesc.txt line=981;EntryId=980,line_number=981 | source_path=C:\Users\Admin\Downloads\myps\data\strings\english\abilitydesc.txt
+row:abilitynames.txt|line=981;EntryId=980,row,abilitynames.txt|line=981;EntryId=980,abilitynames.txt line=981;EntryId=980,line_number=981 | source_path=C:\Users\Admin\Downloads\myps\data\strings\english\abilitynames.txt

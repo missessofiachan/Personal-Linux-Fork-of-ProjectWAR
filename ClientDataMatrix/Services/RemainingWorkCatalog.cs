@@ -99,7 +99,8 @@ namespace ClientDataMatrix.Services
                 ? new List<CoverageAbilityRecord>()
                 : report.Abilities
                     .Where(row => !string.Equals(row.CoverageStatus, "MappedWithRequirements", StringComparison.OrdinalIgnoreCase)
-                        && !string.Equals(row.CoverageStatus, "Mapped", StringComparison.OrdinalIgnoreCase))
+                        && !string.Equals(row.CoverageStatus, "Mapped", StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(row.CoverageStatus, "BlankSlot", StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
             List<RemainingWorkItemRecord> items = new List<RemainingWorkItemRecord>();
@@ -405,7 +406,8 @@ namespace ClientDataMatrix.Services
                 CriticalCount = items.Count(row => string.Equals(row.PriorityBucket, "Critical", StringComparison.OrdinalIgnoreCase)),
                 HighCount = items.Count(row => string.Equals(row.PriorityBucket, "High", StringComparison.OrdinalIgnoreCase)),
                 CoverageGapAbilityCount = coverageRows.Count(row => !string.Equals(row.CoverageStatus, "MappedWithRequirements", StringComparison.OrdinalIgnoreCase)
-                    && !string.Equals(row.CoverageStatus, "Mapped", StringComparison.OrdinalIgnoreCase)),
+                    && !string.Equals(row.CoverageStatus, "Mapped", StringComparison.OrdinalIgnoreCase)
+                    && !string.Equals(row.CoverageStatus, "BlankSlot", StringComparison.OrdinalIgnoreCase)),
                 HighSignalConflictCount = conflictRows.Count(row => IsHighSignal(row) && string.IsNullOrWhiteSpace(row.CanonicalValue)),
                 UnknownFieldCount = operationFields.Count(row => string.Equals(row.Confidence, SemanticConfidence.Unknown, StringComparison.OrdinalIgnoreCase)),
                 StructuralFieldCount = operationFields.Count(row => string.Equals(row.Confidence, SemanticConfidence.Structural, StringComparison.OrdinalIgnoreCase)),
@@ -575,6 +577,8 @@ namespace ClientDataMatrix.Services
                 return "Backfill the core client contract first: CSV row, BIN row, root effect row, and component linkage.";
             if (string.Equals(status, "StringsOnly", StringComparison.OrdinalIgnoreCase))
                 return "Find the missing BIN, effect, and component evidence so this stops being a text-only ability shell.";
+            if (string.Equals(status, "BlankSlot", StringComparison.OrdinalIgnoreCase))
+                return "These are empty string-table slots with no real ability data. No recovery action needed — they are irrecoverable placeholder IDs.";
             if (string.Equals(status, "PlayableSurface", StringComparison.OrdinalIgnoreCase))
                 return "Close the remaining requirement and component gaps so the ability is fully mapped instead of merely usable on the surface.";
             return "Close the missing extracted-client pieces called out in the pattern list before spending time on deeper semantic decoding.";
@@ -639,6 +643,8 @@ namespace ClientDataMatrix.Services
                 return 145;
             if (string.Equals(status, "PlayableSurface", StringComparison.OrdinalIgnoreCase))
                 return 110;
+            if (string.Equals(status, "BlankSlot", StringComparison.OrdinalIgnoreCase))
+                return 0;
             return 80;
         }
 

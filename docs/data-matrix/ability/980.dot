@@ -1,0 +1,8 @@
+﻿digraph ClientDataMatrix {
+  rankdir=LR;
+  "ability:980" [label="Ability 980\nability"];
+  "row:abilitydesc.txt|line=981;EntryId=980" [label="abilitydesc.txt line=981;EntryId=980\nrow"];
+  "row:abilitynames.txt|line=981;EntryId=980" [label="abilitynames.txt line=981;EntryId=980\nrow"];
+  "ability:980" -> "row:abilitydesc.txt|line=981;EntryId=980" [label="localized_description abilitydesc.txt"];
+  "ability:980" -> "row:abilitynames.txt|line=981;EntryId=980" [label="localized_name abilitynames.txt"];
+}

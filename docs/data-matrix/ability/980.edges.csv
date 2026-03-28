@@ -1,0 +1,3 @@
+﻿Id,Kind,FromNodeId,ToNodeId,Label,ClaimId
+edge:2,localized_description,ability:980,row:abilitydesc.txt|line=981;EntryId=980,abilitydesc.txt,claim:2
+edge:1,localized_name,ability:980,row:abilitynames.txt|line=981;EntryId=980,abilitynames.txt,claim:1

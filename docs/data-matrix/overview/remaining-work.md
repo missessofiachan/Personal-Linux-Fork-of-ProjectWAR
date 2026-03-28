@@ -1,6 +1,6 @@
 ﻿# Remaining Work
 
-Generated UTC: `2026-03-28T07:01:42.9293787Z`
+Generated UTC: `2026-03-28T07:41:39.2265876Z`
 
 Extracted root: `C:\Users\Admin\Downloads\myps`
 
@@ -10,7 +10,7 @@ Extracted root: `C:\Users\Admin\Downloads\myps`
 - Items: 15
 - Critical: 6
 - High: 5
-- Coverage gaps: 26627
+- Coverage gaps: 12664
 - High-signal conflicts: 0
 - Unknown fields: 0
 - Structural fields: 0
@@ -25,7 +25,7 @@ Extracted root: `C:\Users\Admin\Downloads\myps`
 
 | Global | Area | Priority | Score | Title | Subject | Action | ExampleAbilityId |
 | --- | --- | --- | --- | --- | --- | --- | ---: |
-| 1 | Coverage Gaps | Critical | 190 | Common missing pattern: csv, bin, effect-text, effect-row, components | csv, bin, effect-text, effect-row, components | Resolve the missing root effect link so ability flow can be traced through the client effect chain. |  |
+| 1 | Coverage Gaps | Critical | 190 | Common missing pattern: csv, bin, effect-text, effect-row, components | csv, bin, effect-text, effect-row, components | Resolve the missing root effect link so ability flow can be traced through the client effect chain. | 986 |
 | 2 | Coverage Gaps | Critical | 175 | Common missing pattern: bin, effect-text, components | bin, effect-text, components | Recover the missing component linkage before trying to interpret operation semantics. | 4 |
 | 3 | Coverage Gaps | Critical | 175 | Common missing pattern: bin, effect-text, effect-row, components | bin, effect-text, effect-row, components | Resolve the missing root effect link so ability flow can be traced through the client effect chain. | 209 |
 | 4 | Coverage Gaps | Critical | 175 | Common missing pattern: csv, effect-text | csv, effect-text | Backfill the missing localized strings so reports stop depending on internal-only labels. | 564 |
@@ -33,7 +33,7 @@ Extracted root: `C:\Users\Admin\Downloads\myps`
 | 6 | Coverage Gaps | Critical | 175 | Common missing pattern: effect-text, effect-row | effect-text, effect-row | Resolve the missing root effect link so ability flow can be traced through the client effect chain. | 153 |
 | 7 | Coverage Gaps | High | 167 | Common missing pattern: csv, effect-text, effect-row, components | csv, effect-text, effect-row, components | Resolve the missing root effect link so ability flow can be traced through the client effect chain. | 5979 |
 | 8 | Identity Domain Risks | High | 165 | Career Name Entry IDs | CareerName.EntryId | Keep this numeric domain isolated until extracted-client evidence proves a stronger canonical identity mapping. |  |
-| 9 | Coverage Gaps | High | 160 | StringsOnly ability bucket | StringsOnly | Find the missing BIN, effect, and component evidence so this stops being a text-only ability shell. |  |
+| 9 | Coverage Gaps | High | 160 | StringsOnly ability bucket | StringsOnly | Find the missing BIN, effect, and component evidence so this stops being a text-only ability shell. | 986 |
 | 10 | Coverage Gaps | High | 154 | Common missing pattern: bin, components | bin, components | Recover the missing component linkage before trying to interpret operation semantics. | 20 |
 | 11 | Coverage Gaps | High | 145 | Partial ability bucket | Partial | Close the missing extracted-client pieces called out in the pattern list before spending time on deeper semantic decoding. | 4 |
 
@@ -41,7 +41,7 @@ Extracted root: `C:\Users\Admin\Downloads\myps`
 
 | Area | Items | Critical | High | Peak | Bucket | Summary | Next Step |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Coverage Gaps | 10 | 6 | 4 | 190 | Critical | 26627 abilities remain below `Mapped`; the largest buckets are StringsOnly, Partial. | Push the largest shared missing-pattern buckets first so ability reports move from sparse or string-only states into repeatable mapped states. |
+| Coverage Gaps | 10 | 6 | 4 | 190 | Critical | 12664 abilities remain below `Mapped`; the largest buckets are Partial, StringsOnly. | Push the largest shared missing-pattern buckets first so ability reports move from sparse or string-only states into repeatable mapped states. |
 | Conflict Hotspots | 4 | 0 | 0 | 110 | Medium | 0 high-signal conflicts remain after noise suppression; the biggest groups are StringMismatch (AbilityDescription), StringMismatch (AbilityName), StringMismatch (EffectName). | Close the highest-signal conflict groups by codifying source precedence instead of treating every disagreement as equally actionable. |
 | Unknown Field Hotspots | 0 | 0 | 0 | 0 | Low | No unknown or structural component fields are currently outstanding. | Use the unknown-triage evidence to turn structural layout roles into stable named semantics before widening emulator-side enums. |
 | Requirement Semantics | 0 | 0 | 0 | 0 | Low | No requirement rows currently have unresolved field semantics. | Focus on requirement rows with direct ability usage and child links so later linkage work stays evidence-based. |
@@ -52,14 +52,14 @@ Extracted root: `C:\Users\Admin\Downloads\myps`
 
 | Rank | Global | Priority | Score | Title | Subject | Summary | Evidence | Action | ExampleAbilityId |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | ---: |
-| 1 | 1 | Critical | 190 | Common missing pattern: csv, bin, effect-text, effect-row, components | csv, bin, effect-text, effect-row, components | 14987 abilities still share this extracted-client gap pattern. | Statuses: StringsOnly. Samples: 980, 981, 982, 983, 984, 985, 986, 1113, 1114, 1250, 1855. | Resolve the missing root effect link so ability flow can be traced through the client effect chain. |  |
+| 1 | 1 | Critical | 190 | Common missing pattern: csv, bin, effect-text, effect-row, components | csv, bin, effect-text, effect-row, components | 1028 abilities still share this extracted-client gap pattern. | Statuses: StringsOnly. Samples: 986, 1855, 5295, 5296, 5297, 5298, 5299, 5377, 5384, 5395, 5396, 5397. | Resolve the missing root effect link so ability flow can be traced through the client effect chain. | 986 |
 | 2 | 2 | Critical | 175 | Common missing pattern: bin, effect-text, components | bin, effect-text, components | 2137 abilities still share this extracted-client gap pattern. | Statuses: Partial. Samples: 4, 36, 39, 40, 50, 51, 52, 53, 62, 63, 64, 69. | Recover the missing component linkage before trying to interpret operation semantics. | 4 |
 | 3 | 3 | Critical | 175 | Common missing pattern: bin, effect-text, effect-row, components | bin, effect-text, effect-row, components | 128 abilities still share this extracted-client gap pattern. | Statuses: Partial. Samples: 209, 229, 286, 358, 455, 456, 457, 458, 459, 603, 604, 626. | Resolve the missing root effect link so ability flow can be traced through the client effect chain. | 209 |
 | 4 | 4 | Critical | 175 | Common missing pattern: csv, effect-text | csv, effect-text | 7133 abilities still share this extracted-client gap pattern. | Statuses: Partial. Samples: 564, 1727, 1830, 1851, 1852, 1853, 1854, 1856, 1857, 1858, 1859, 1860. | Backfill the missing localized strings so reports stop depending on internal-only labels. | 564 |
 | 5 | 5 | Critical | 175 | Common missing pattern: csv, effect-text, effect-row | csv, effect-text, effect-row | 1633 abilities still share this extracted-client gap pattern. | Statuses: Partial. Samples: 987, 988, 989, 990, 991, 5240, 5250, 5264, 5281, 5294, 5300, 5325. | Resolve the missing root effect link so ability flow can be traced through the client effect chain. | 987 |
 | 6 | 6 | Critical | 175 | Common missing pattern: effect-text, effect-row | effect-text, effect-row | 561 abilities still share this extracted-client gap pattern. | Statuses: Partial. Samples: 153, 156, 168, 169, 175, 177, 188, 189, 196, 197, 208, 216. | Resolve the missing root effect link so ability flow can be traced through the client effect chain. | 153 |
 | 7 | 7 | High | 167 | Common missing pattern: csv, effect-text, effect-row, components | csv, effect-text, effect-row, components | 22 abilities still share this extracted-client gap pattern. | Statuses: Partial. Samples: 5979, 14059, 23500, 23639, 23689, 23690, 23691, 23692, 23693, 23696, 24598, 24855. | Resolve the missing root effect link so ability flow can be traced through the client effect chain. | 5979 |
-| 8 | 9 | High | 160 | StringsOnly ability bucket | StringsOnly | 14992 abilities still sit in `StringsOnly` coverage instead of a fully mapped state. | Samples: 980, 981, 982, 983, 984, 985, 986, 995, 996, 997, 998. Common missing pieces: csv, bin, effect-text, effect-row, components, csv, bin, effect-row, components. | Find the missing BIN, effect, and component evidence so this stops being a text-only ability shell. |  |
+| 8 | 9 | High | 160 | StringsOnly ability bucket | StringsOnly | 1029 abilities still sit in `StringsOnly` coverage instead of a fully mapped state. | Samples: 986, 999, 1855, 5295, 5296, 5297, 5298, 5299, 5377, 5384, 5395, 5396. Common missing pieces: csv, bin, effect-text, effect-row, components, csv, bin, effect-row, components. | Find the missing BIN, effect, and component evidence so this stops being a text-only ability shell. | 986 |
 | 9 | 10 | High | 154 | Common missing pattern: bin, components | bin, components | 9 abilities still share this extracted-client gap pattern. | Statuses: Partial. Samples: 20, 121, 126, 1000, 1003, 1016, 1017, 1018, 1019. | Recover the missing component linkage before trying to interpret operation semantics. | 20 |
 | 10 | 11 | High | 145 | Partial ability bucket | Partial | 11635 abilities still sit in `Partial` coverage instead of a fully mapped state. | Samples: 4, 20, 36, 39, 40, 50, 51, 52, 53, 62, 63, 64. Common missing pieces: bin, effect-text, components, bin, components, effect-text, effect-row. | Close the missing extracted-client pieces called out in the pattern list before spending time on deeper semantic decoding. | 4 |
 

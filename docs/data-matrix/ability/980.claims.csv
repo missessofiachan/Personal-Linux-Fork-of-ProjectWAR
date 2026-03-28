@@ -1,0 +1,3 @@
+﻿Id,SubjectKey,FactName,Domain,ValueKey,RawValue,NormalizedValue,SourceFamily,TableName,SourcePath,RowKey,LineNumber,ByteOffset,FieldName,Confidence,Notes
+claim:2,Ability:980,Description,AbilityDescription,,,,client_strings,abilitydesc.txt,C:\Users\Admin\Downloads\myps\data\strings\english\abilitydesc.txt,line=981;EntryId=980,981,0,value,localized_string,abilitydesc.txt
+claim:1,Ability:980,Name,AbilityName,,,,client_strings,abilitynames.txt,C:\Users\Admin\Downloads\myps\data\strings\english\abilitynames.txt,line=981;EntryId=980,981,0,value,localized_string,abilitynames.txt

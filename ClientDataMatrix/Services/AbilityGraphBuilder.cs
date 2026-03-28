@@ -955,6 +955,8 @@ namespace ClientDataMatrix.Services
                 bool hasClientBin = binRows.Count > 0;
                 bool hasLocalizedName = nameRows.Count > 0 || clientRows.Any(row => !string.IsNullOrWhiteSpace(row.Name));
                 bool hasDescriptionText = descriptionRows.Count > 0;
+                bool hasNonBlankName = nameRows.Any(row => !string.IsNullOrWhiteSpace(row.NormalizedValue)) || clientRows.Any(row => !string.IsNullOrWhiteSpace(row.Name));
+                bool hasNonBlankDescription = descriptionRows.Any(row => !string.IsNullOrWhiteSpace(row.NormalizedValue));
                 bool hasEffectText = effectTextRows.Count > 0;
                 bool hasRootEffectRow = preferredEffectId > 0 && _effectsById.ContainsKey((uint)preferredEffectId);
 
@@ -974,7 +976,7 @@ namespace ClientDataMatrix.Services
                     RequirementLinkCount = requirementReferences.Count,
                     RequirementRowCount = relatedRequirementIds.Count,
                     HasPregameReference = pregameRows.Count > 0,
-                    CoverageStatus = DetermineCoverageStatus(hasClientCsv, hasClientBin, hasLocalizedName, hasDescriptionText, hasRootEffectRow, relatedComponentIds.Count, requirementReferences.Count),
+                    CoverageStatus = DetermineCoverageStatus(hasClientCsv, hasClientBin, hasLocalizedName, hasDescriptionText, hasNonBlankName, hasNonBlankDescription, hasRootEffectRow, relatedComponentIds.Count, requirementReferences.Count),
                     MissingText = BuildCoverageMissingText(hasClientCsv, hasClientBin, hasLocalizedName, hasDescriptionText, hasEffectText, hasRootEffectRow, relatedComponentIds.Count),
                     SourcesText = BuildCoverageSourcesText(hasClientCsv, hasClientBin, hasLocalizedName || hasDescriptionText || hasEffectText, pregameRows.Count > 0, requirementReferences.Count > 0)
                 });
@@ -1031,7 +1033,7 @@ namespace ClientDataMatrix.Services
             return binRow == null ? 0 : binRow.EffectId;
         }
 
-        private static string DetermineCoverageStatus(bool hasClientCsv, bool hasClientBin, bool hasLocalizedName, bool hasDescriptionText, bool hasRootEffectRow, int componentCount, int requirementLinkCount)
+        private static string DetermineCoverageStatus(bool hasClientCsv, bool hasClientBin, bool hasLocalizedName, bool hasDescriptionText, bool hasNonBlankName, bool hasNonBlankDescription, bool hasRootEffectRow, int componentCount, int requirementLinkCount)
         {
             if (hasClientCsv && hasClientBin && hasLocalizedName && hasDescriptionText && hasRootEffectRow && componentCount > 0 && requirementLinkCount > 0)
                 return "MappedWithRequirements";
@@ -1041,8 +1043,10 @@ namespace ClientDataMatrix.Services
                 return "PlayableSurface";
             if (hasClientCsv || hasClientBin)
                 return "Partial";
-            if (hasLocalizedName || hasDescriptionText)
+            if (hasNonBlankName || hasNonBlankDescription)
                 return "StringsOnly";
+            if (hasLocalizedName || hasDescriptionText)
+                return "BlankSlot";
             return "Sparse";
         }
 
