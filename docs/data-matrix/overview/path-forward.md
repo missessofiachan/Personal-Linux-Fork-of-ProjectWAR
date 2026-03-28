@@ -52,35 +52,38 @@ Once each (FlagsRaw, Value[2]) combination is semantically labeled, extend `TryB
 
 ---
 
-## Area 4: Coverage Gaps — 26,627 abilities below Mapped (High)
+## Area 4: Coverage Gaps — 12,664 abilities below Mapped (High)
 
-### What is unresolved
+### Findings from investigation (commit fbb2a83d)
 
-26,627 of ~40,000+ abilities are in `StringsOnly` or `Partial` coverage state. They lack one or more of: BIN row, effect text, effect row, component linkage.
+The string files (`abilitynames.txt`, `abilitydesc.txt`) contain 29,001 sequential indexed entries, most of which are blank placeholders. These were inflating the gap count. Fixed by adding a new `BlankSlot` coverage status — fires when an ability's only source data is blank string-table entries. BlankSlot abilities (13,963) are excluded from coverage gap counts as irrecoverable empty placeholder IDs.
 
-Top gap patterns:
+True coverage gap is now **12,664** abilities:
+
+| Status | Count | Description |
+|---|---|---|
+| `Partial` | 11,635 | Have BIN or CSV but missing some pieces |
+| `StringsOnly` | 1,029 | Have actual named strings but no BIN/CSV/effect/component |
+
+Top gap patterns (post-BlankSlot fix):
 | Pattern | Count | Missing |
 |---|---|---|
-| csv + bin + effect-text + effect-row + components | 14,987 | Everything except strings |
-| csv + effect-text | 7,133 | Localized strings only |
-| bin + effect-text + components | 2,137 | BIN row + components |
-| csv + effect-text + effect-row | 1,633 | Strings + effect row |
+| bin + effect-text + components | ~2,137 | BIN row but broken effect/component chain |
+| csv + effect-text | ~7,133 | Has abilities.csv but no BIN row |
+| csv + effect-text + effect-row + components | ~1,633 | Has CSV but no BIN/effect chain |
 
-The 14,987 `StringsOnly` abilities with all extracted-client data missing are likely abilities that were removed or are internal-only (monster abilities, scripted abilities, developer test abilities) and genuinely have no BIN/effect data in the extracted client. These may be irrecoverable from current extraction.
+Extraction is complete — `C:\Users\Admin\Downloads\myps` has all expected files (abilityexport.bin with 11,736 rows, abilitycomponentexport.bin with 18,526 rows, effects.csv with 4,445 rows).
 
-### Approach
+### Remaining approach
 
-**Step 1 — Verify extraction completeness.**
-Before assuming data is missing, verify that all relevant MYP archives were extracted. Check `C:\Users\Admin\Music\Warhammer` for any unextracted archives. The 14,987-ability `StringsOnly` bucket may reduce significantly if the gamedata MYP was not fully extracted.
+**Partial/bin-missing (2,137 abilities with `bin + effect-text + components`):**
+These have a BIN row but no component linkage. The effect chain from `EffectId → effects.csv → ComponentId → abilitycomponentexport.bin` is broken. Investigation needed: check if the `EffectId` in `abilityexport.bin` for these abilities links to an effects.csv row that lacks a component chain.
 
-**Step 2 — Prioritize the 2,137 `bin + effect-text + components` partial abilities.**
-These have a BIN row but no component linkage. The component linkage typically flows through `EffectId → effects.csv → ComponentId → abilitycomponentexport.bin`. For these abilities, the effect chain is broken. Check if the `EffectId` in `abilityexport.bin` for these abilities points to rows that exist in `abilitycomponentexport.bin` under a different key path.
+**Partial/csv-missing (~7,133 abilities with `csv + effect-text`):**
+Have a BIN row but no abilities.csv row and no effect text. These may be NPC/monster abilities that aren't in the player-facing CSV. Not urgent — the BIN data is the authoritative source.
 
-**Step 3 — Resolve the `csv + effect-text` gap (7,133 abilities).**
-These have no `abilities.csv` row and no effect text. They may be pre-game or template abilities. The `pregame_chars.xml` file likely contains ability IDs for pre-game entities — check if the missing abilities are referenced there.
-
-**Step 4 — Codify irrecoverable vs recoverable.**
-After Steps 1–3, reclassify remaining `StringsOnly` abilities as `Irrecoverable` if they have no client BIN evidence at all. This prevents them from polluting coverage metrics indefinitely.
+**StringsOnly (1,029 abilities):**
+Have actual non-blank names/descriptions in string files but no BIN/CSV/effect/component. These are likely removed or renamed abilities from a different game version. Low recovery probability.
 
 ---
 
@@ -151,7 +154,7 @@ Once the canonical CareerId domain is established from BIN evidence, update the 
 | ~~Requirement semantics (558 rows)~~ | **RESOLVED** | — | — | — |
 | ~~DAMAGE Value[1] / FlagsRaw~~ | **RESOLVED** | — | — | — |
 | ~~EffectId conflicts (2,897)~~ | **RESOLVED** | — | — | — |
-| Coverage gaps (26k abilities) | Open | **High** | Ability reports below Mapped status | Verify MYP extraction completeness |
+| Coverage gaps (12,664 abilities) | Open | **High** | Ability reports below Mapped status | Investigate broken effect chains in Partial bucket |
 | SERVER_COMMAND Value[2] | Open | **High** | Full SERVER_COMMAND semantic decode | WorldServer op=36 handler + RE toolkit |
 | Unknown op names (8 ops) | Open | **Medium** | Named operation dispatch in emulator | RE toolkit ComponentOperation enum |
 | CareerName identity domain | Open | **Low-Medium** | CareerId canonical mapping | BIN CareerLine field cross-reference |
