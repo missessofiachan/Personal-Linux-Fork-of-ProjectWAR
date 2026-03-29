@@ -29,7 +29,15 @@ namespace WorldServer.Managers
                 return;
 
             _started = true;
-            Log.Info("DynamicBotManager", "Started bot monitoring service on server up.");
+            Log.Info("DynamicBotManager", "Bot monitoring service started. Running initial battlefield scan.");
+            try
+            {
+                ProcessBattlefields();
+            }
+            catch (Exception ex)
+            {
+                Log.Error("DynamicBotManager", $"Initial battlefield scan failed: {ex.Message}\n{ex.StackTrace}");
+            }
         }
 
         public void Update(object state)
@@ -84,7 +92,10 @@ namespace WorldServer.Managers
         private void MonitorCampaign(Campaign campaign)
         {
             if (!TryGetCampaignZoneId(campaign, out ushort zoneId))
+            {
+                Log.Error("DynamicBotManager", $"Could not resolve active zone for campaign tier {campaign?.Tier}; skipping bot spawn.");
                 return;
+            }
 
             int tier = campaign.Tier;
 
@@ -92,14 +103,25 @@ namespace WorldServer.Managers
             string destroPrefix = $"Bot_T{tier}_D_{zoneId}";
 
             var players = Player.GetPlayersSnapshot();
+
             if (!HasCompleteBotGroup(orderPrefix, players))
             {
-                BotManager.Instance.SpawnBotGroup(Realms.REALMS_REALM_ORDER, tier, 40, orderPrefix, zoneId);
+                Log.Info("DynamicBotManager", $"Spawning Order bot group '{orderPrefix}' in zone {zoneId}.");
+                var grp = BotManager.Instance.SpawnBotGroup(Realms.REALMS_REALM_ORDER, tier, 40, orderPrefix, zoneId);
+                if (grp == null)
+                    Log.Error("DynamicBotManager", $"SpawnBotGroup returned null for {orderPrefix} in zone {zoneId}.");
+                else
+                    Log.Info("DynamicBotManager", $"Order bot group '{orderPrefix}' spawned ({grp.Members.Count} members).");
             }
 
             if (!HasCompleteBotGroup(destroPrefix, players))
             {
-                BotManager.Instance.SpawnBotGroup(Realms.REALMS_REALM_DESTRUCTION, tier, 40, destroPrefix, zoneId);
+                Log.Info("DynamicBotManager", $"Spawning Destruction bot group '{destroPrefix}' in zone {zoneId}.");
+                var grp = BotManager.Instance.SpawnBotGroup(Realms.REALMS_REALM_DESTRUCTION, tier, 40, destroPrefix, zoneId);
+                if (grp == null)
+                    Log.Error("DynamicBotManager", $"SpawnBotGroup returned null for {destroPrefix} in zone {zoneId}.");
+                else
+                    Log.Info("DynamicBotManager", $"Destruction bot group '{destroPrefix}' spawned ({grp.Members.Count} members).");
             }
         }
 

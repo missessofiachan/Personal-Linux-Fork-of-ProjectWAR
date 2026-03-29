@@ -108,13 +108,18 @@ namespace WorldServer.Services.World
 
         public static bool CanRealmAccessLotd(Realms realm)
         {
-            // For now, always return true to resolve LOTD access issues reported by the user.
-            // The expedition tracker state in the DB may be out of sync or not properly implemented yet.
-            return true;
+            if (_tracker == null)
+                return false;
 
-            // if (_tracker == null || (LotdTrackerState)_tracker.State != LotdTrackerState.Paused)
-            //    return false;
-            // return _tracker.OwningRealm == (byte)realm;
+            // Access is open only during the Paused window when a realm has won the expedition.
+            if ((LotdTrackerState)_tracker.State != LotdTrackerState.Paused)
+                return false;
+
+            // Owning realm has access; neutral means nobody won yet.
+            if (_tracker.OwningRealm == (byte)Realms.REALMS_REALM_NEUTRAL)
+                return false;
+
+            return _tracker.OwningRealm == (byte)realm;
         }
 
         public static void TryAwardBattlefrontLock(RVRProgression battlefront, Realms lockingRealm)
@@ -415,22 +420,20 @@ namespace WorldServer.Services.World
 
         private static byte BuildHeaderRealmValue(Player player)
         {
+            // When LotD is locked (Paused state) a specific realm won access — show them as the owner.
             if ((LotdTrackerState)_tracker.State == LotdTrackerState.Paused &&
                 _tracker.OwningRealm != (byte)Realms.REALMS_REALM_NEUTRAL)
             {
                 return _tracker.OwningRealm;
             }
 
-            if (player != null &&
-                (player.Realm == Realms.REALMS_REALM_ORDER || player.Realm == Realms.REALMS_REALM_DESTRUCTION))
-            {
-                return (byte)player.Realm;
-            }
-
+            // When LotD is still being contested (Active state), nobody owns it yet.
+            // Show whichever realm is currently leading so both factions see the same value.
+            // Never return the *viewing player's* realm — that made every player think they owned LotD.
             if (_tracker.LastScoringRealm != (byte)Realms.REALMS_REALM_NEUTRAL)
                 return _tracker.LastScoringRealm;
 
-            return (byte)Realms.REALMS_REALM_ORDER;
+            return (byte)Realms.REALMS_REALM_NEUTRAL;
         }
 
         private static void WriteRealmProgress(PacketOut packet, byte realm, int score)

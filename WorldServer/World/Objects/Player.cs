@@ -800,7 +800,7 @@ namespace WorldServer.World.Objects
 
                 if (Info.FirstConnect && GmLevel == 1)
                 {
-                    Info.FirstConnect = false;
+                    bool guildHandled = false;
 
                     if (!GldInterface.IsInGuild() && !_Value.LeftSystemGuild)
                     {
@@ -809,16 +809,34 @@ namespace WorldServer.World.Objects
                         if (systemGuild != null)
                         {
                             systemGuild.JoinGuild(this);
+                            guildHandled = true;
+                        }
+                        else
+                        {
+                            // System guild not in memory yet — leave FirstConnect set so the
+                            // join is retried on the player's next login rather than silently lost.
+                            Log.Error("Player.EndInit", $"System guild '{systemGuildName}' not found for {Name}; will retry on next login.");
                         }
                     }
-
-                    if (!IsBanned)
+                    else
                     {
-                        if (WorldServer.World.Scripting.CareerPackages.Intros.TryGetValue(Info.Career, out var intro))
+                        // Already in a guild or opted out — still done.
+                        guildHandled = true;
+                    }
+
+                    if (guildHandled)
+                    {
+                        Info.FirstConnect = false;
+                        CharMgr.Database.SaveObject(Info);
+
+                        if (!IsBanned)
                         {
-                            PacketOut Out = new PacketOut(intro.Opcode);
-                            Out.Write(intro.Data, 3, intro.Data.Length - 3);
-                            SendPacket(Out);
+                            if (WorldServer.World.Scripting.CareerPackages.Intros.TryGetValue(Info.Career, out var intro))
+                            {
+                                PacketOut Out = new PacketOut(intro.Opcode);
+                                Out.Write(intro.Data, 3, intro.Data.Length - 3);
+                                SendPacket(Out);
+                            }
                         }
                     }
                 }
@@ -940,6 +958,10 @@ namespace WorldServer.World.Objects
             PendingDumpStatic = false;
             CrrInterface.NotifyClientLoaded();
             LotdService.SendResourceTracker(this);
+
+            // Push the current state of all BattlefieldObjectives to the client immediately
+            // so the zone map shows owner and capture status without requiring physical proximity.
+            Region?.Campaign?.SendObjectives(this);
         }
 
         private void RestoreBotPositionFromValue()
