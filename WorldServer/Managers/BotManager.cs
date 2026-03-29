@@ -210,7 +210,7 @@ namespace WorldServer.Managers
             return new Point3D((zoneInfo.OffX + 4) << 12, (zoneInfo.OffY + 4) << 12, 0);
         }
 
-        public Group SpawnBotGroup(Realms realm, int tier, int rr, string groupPrefix, ushort zoneId)
+        public Group SpawnBotGroup(Realms realm, int tier, int rr, string groupPrefix, ushort zoneId, Point3D spawnOverride = null)
         {
             Zone_Info zoneInfo = ZoneService.GetZone_Info(zoneId);
             if (zoneInfo == null)
@@ -226,7 +226,7 @@ namespace WorldServer.Managers
                 return null;
             }
 
-            Point3D worldSpawn = ResolveSpawnPoint(zoneId, realm, zoneInfo);
+            Point3D worldSpawn = spawnOverride ?? ResolveSpawnPoint(zoneId, realm, zoneInfo);
             BotFaction[] factions = realm == Realms.REALMS_REALM_ORDER ? OrderFactions : DestroFactions;
             BotFaction faction = factions[RandomMgr.Next(factions.Length)];
 

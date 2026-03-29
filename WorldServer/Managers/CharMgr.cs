@@ -863,6 +863,7 @@ namespace WorldServer.Managers
                     Chars.Remove(characterId);
                     RemoveItemsFromCharacterId(characterId);
                     DeleteChar(Char);
+                    Database.ForceSave();
 
                     Program.AcctMgr.UpdateRealmCharacters(Program.Rm.RealmId, (uint)Database.GetObjectCount<Character>(" Realm=1"), (uint)Database.GetObjectCount<Character>(" Realm=2"));
                 }
@@ -892,6 +893,7 @@ namespace WorldServer.Managers
                     Chars.Remove(characterId);
                     RemoveItemsFromCharacterId(characterId);
                     DeleteChar(Char);
+                    Database.ForceSave();
 
                     Program.AcctMgr.UpdateRealmCharacters(Program.Rm.RealmId, (uint)Database.GetObjectCount<Character>(" Realm=1"), (uint)Database.GetObjectCount<Character>(" Realm=2"));
                 }

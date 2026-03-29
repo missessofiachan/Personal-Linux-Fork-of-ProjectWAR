@@ -103,11 +103,12 @@ namespace WorldServer.Managers
             string destroPrefix = $"Bot_T{tier}_D_{zoneId}";
 
             var players = Player.GetPlayersSnapshot();
+            Point3D boSpawn = ResolveBoSpawnPoint(campaign, zoneId);
 
             if (!HasCompleteBotGroup(orderPrefix, players))
             {
                 Log.Info("DynamicBotManager", $"Spawning Order bot group '{orderPrefix}' in zone {zoneId}.");
-                var grp = BotManager.Instance.SpawnBotGroup(Realms.REALMS_REALM_ORDER, tier, 40, orderPrefix, zoneId);
+                var grp = BotManager.Instance.SpawnBotGroup(Realms.REALMS_REALM_ORDER, tier, 40, orderPrefix, zoneId, boSpawn);
                 if (grp == null)
                     Log.Error("DynamicBotManager", $"SpawnBotGroup returned null for {orderPrefix} in zone {zoneId}.");
                 else
@@ -117,12 +118,34 @@ namespace WorldServer.Managers
             if (!HasCompleteBotGroup(destroPrefix, players))
             {
                 Log.Info("DynamicBotManager", $"Spawning Destruction bot group '{destroPrefix}' in zone {zoneId}.");
-                var grp = BotManager.Instance.SpawnBotGroup(Realms.REALMS_REALM_DESTRUCTION, tier, 40, destroPrefix, zoneId);
+                var grp = BotManager.Instance.SpawnBotGroup(Realms.REALMS_REALM_DESTRUCTION, tier, 40, destroPrefix, zoneId, boSpawn);
                 if (grp == null)
                     Log.Error("DynamicBotManager", $"SpawnBotGroup returned null for {destroPrefix} in zone {zoneId}.");
                 else
                     Log.Info("DynamicBotManager", $"Destruction bot group '{destroPrefix}' spawned ({grp.Members.Count} members).");
             }
+        }
+
+        /// <summary>
+        /// Resolves the world position of the primary BO in the active zone so bots spawn
+        /// directly at the objective rather than at a warcamp or respawn point.
+        /// Returns null to fall back to default spawn logic if no BO data is found.
+        /// </summary>
+        private static Point3D ResolveBoSpawnPoint(Campaign campaign, ushort zoneId)
+        {
+            Zone_Info zoneInfo = ZoneService.GetZone_Info(zoneId);
+            if (zoneInfo == null)
+                return null;
+
+            var objectives = BattleFrontService.GetBattleFrontObjectives(zoneInfo.Region);
+            if (objectives == null)
+                return null;
+
+            var bo = objectives.FirstOrDefault(o => o.ZoneId == zoneId && !o.KeepSpawn);
+            if (bo == null)
+                return null;
+
+            return new Point3D(bo.X, bo.Y, bo.Z);
         }
 
         private void ProcessScenarios(long tick)

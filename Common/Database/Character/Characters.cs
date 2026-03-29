@@ -24,7 +24,7 @@ namespace Common
         private byte _race;
         private byte[] _traits;
         private byte _sex;
-        public bool FirstConnect;
+        private bool _firstConnect;
         private bool _anonymous;
         private bool _hidden;
         private string _oldName;
@@ -133,6 +133,13 @@ namespace Common
         {
             get { return _sex; }
             set { _sex = value; Dirty = true; }
+        }
+
+        [DataElement(AllowDbNull = false)]
+        public bool FirstConnect
+        {
+            get { return _firstConnect; }
+            set { _firstConnect = value; Dirty = true; }
         }
 
         [DataElement(AllowDbNull = false)]

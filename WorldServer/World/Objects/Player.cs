@@ -81,7 +81,10 @@ namespace WorldServer.World.Objects
                 {
                     Found = true;
                     _Players.Add(newPlayer);
-                    PlayersByCharId.Add(newPlayer.Info.CharacterId, newPlayer);
+                    if (!PlayersByCharId.ContainsKey(newPlayer.Info.CharacterId))
+                        PlayersByCharId.Add(newPlayer.Info.CharacterId, newPlayer);
+                    else
+                        Log.Error("AddPlayer", $"Duplicate CharacterId {newPlayer.Info.CharacterId} for player '{newPlayer.Name}' — bot double-spawn race condition detected.");
                     if (newPlayer.Realm == Realms.REALMS_REALM_ORDER)
                         ++OrderCount;
                     else
@@ -798,7 +801,7 @@ namespace WorldServer.World.Objects
                     }
                 }
 
-                if (Info.FirstConnect && GmLevel == 1)
+                if (Info.FirstConnect && GmLevel >= 0)
                 {
                     bool guildHandled = false;
 

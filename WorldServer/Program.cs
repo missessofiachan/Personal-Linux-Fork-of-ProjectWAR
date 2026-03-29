@@ -232,7 +232,7 @@ namespace WorldServer
             Log.Info("Bot Manager", "Initializing Bot Management Services", ConsoleColor.Cyan);
             BotManager.Instance.Initialize();
             DynamicBotManager.Instance.Start();
-            _botTimer = new Timer(DynamicBotManager.Instance.Update, null, 0, 60000);
+            _botTimer = new Timer(DynamicBotManager.Instance.Update, null, 120000, 60000);
 
             ConsoleMgr.Start();
         }
