@@ -276,7 +276,7 @@ namespace WorldServer.Managers
             }
 
             Point3D worldSpawn = spawnOverride ?? ResolveSpawnPoint(zoneId, realm, zoneInfo);
-            BotFaction faction = ResolveFactionForZone(realm, zoneInfo);
+            BotFaction faction = ResolveDeterministicFaction(realm, tier);
 
             List<Player> bots = new List<Player>();
             byte[] careers = faction.Careers;
@@ -322,16 +322,63 @@ namespace WorldServer.Managers
 
             AssignToGuild(bots, faction.Name);
 
+            int botIndex = 0;
             foreach (var bot in bots)
             {
-                StageBotSpawn(bot, zoneInfo, worldSpawn);
+                double angle = botIndex * (Math.PI * 2 / bots.Count);
+                int offsetDistance = 150; // 150 units offset
+                int xOffset = (int)(Math.Cos(angle) * offsetDistance);
+                int yOffset = (int)(Math.Sin(angle) * offsetDistance);
+                
+                Point3D spreadSpawn = new Point3D(worldSpawn.X + xOffset, worldSpawn.Y + yOffset, worldSpawn.Z);
+
+                StageBotSpawn(bot, zoneInfo, spreadSpawn);
                 ApplyLoadout(bot, tier, rr);
                 region.AddObject(bot, zoneId);
+                botIndex++;
             }
 
             CharMgr.Database.ForceSave();
 
             return group;
+        }
+
+        public void TeleportBotGroup(Group group, ushort zoneId, Point3D spawnOverride = null)
+        {
+            if (group == null || group.Members == null)
+                return;
+
+            Zone_Info zoneInfo = ZoneService.GetZone_Info(zoneId);
+            if (zoneInfo == null)
+                return;
+                
+            var region = WorldMgr.GetRegion(zoneInfo.Region, true);
+            if (region == null)
+                return;
+
+            // We assume Realm from the leader
+            Player leader = group.Members.FirstOrDefault();
+            if (leader == null) return;
+
+            Point3D worldSpawn = spawnOverride ?? ResolveSpawnPoint(zoneId, leader.Realm, zoneInfo);
+
+            int botIndex = 0;
+            foreach (var bot in group.Members)
+            {
+                if (bot == null) continue;
+
+                double angle = botIndex * (Math.PI * 2 / group.Members.Count);
+                int offsetDistance = 150; 
+                int xOffset = (int)(Math.Cos(angle) * offsetDistance);
+                int yOffset = (int)(Math.Sin(angle) * offsetDistance);
+
+                uint targetX = (uint)Math.Max(0, worldSpawn.X + xOffset);
+                uint targetY = (uint)Math.Max(0, worldSpawn.Y + yOffset);
+                ushort targetZ = (ushort)Math.Max(0, worldSpawn.Z);
+
+                bot.Teleport(region, zoneId, targetX, targetY, targetZ, 0);
+                botIndex++;
+            }
         }
 
         private void AssignToGuild(List<Player> bots, string guildName)
@@ -632,33 +679,11 @@ namespace WorldServer.Managers
                 player.CbtInterface.IsPvp = true;
         }
 
-        private static BotFaction ResolveFactionForZone(Realms realm, Zone_Info zoneInfo)
+        private static BotFaction ResolveDeterministicFaction(Realms realm, int tier)
         {
-            string preferredName = null;
-
-            switch ((Pairing)zoneInfo.Pairing)
-            {
-                case Pairing.PAIRING_GREENSKIN_DWARVES:
-                    preferredName = realm == Realms.REALMS_REALM_ORDER ? "Dwarfs" : "Greenskins";
-                    break;
-                case Pairing.PAIRING_EMPIRE_CHAOS:
-                    preferredName = realm == Realms.REALMS_REALM_ORDER ? "Empire" : "Chaos";
-                    break;
-                case Pairing.PAIRING_ELVES_DARKELVES:
-                    preferredName = realm == Realms.REALMS_REALM_ORDER ? "High Elves" : "Dark Elves";
-                    break;
-            }
-
             BotFaction[] factions = realm == Realms.REALMS_REALM_ORDER ? OrderFactions : DestroFactions;
-
-            if (!string.IsNullOrEmpty(preferredName))
-            {
-                BotFaction preferredFaction = factions.FirstOrDefault(faction => faction.Name == preferredName);
-                if (preferredFaction != null)
-                    return preferredFaction;
-            }
-
-            return factions[RandomMgr.Next(factions.Length)];
+            int index = tier % factions.Length;
+            return factions[index];
         }
 
         private static bool TryResolveBotAppearance(byte careerLine, out BotAppearance appearance)

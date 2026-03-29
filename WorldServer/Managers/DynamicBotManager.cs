@@ -99,30 +99,57 @@ namespace WorldServer.Managers
 
             int tier = campaign.Tier;
 
-            string orderPrefix = $"Bot_T{tier}_O_{zoneId}";
-            string destroPrefix = $"Bot_T{tier}_D_{zoneId}";
+            string orderPrefix = $"Bot_T{tier}_O";
+            string destroPrefix = $"Bot_T{tier}_D";
 
             var players = Player.GetPlayersSnapshot();
             Point3D boSpawn = ResolveBoSpawnPoint(campaign, zoneId);
 
-            if (!HasCompleteBotGroup(orderPrefix, players))
-            {
-                Log.Info("DynamicBotManager", $"Spawning Order bot group '{orderPrefix}' in zone {zoneId}.");
-                var grp = BotManager.Instance.SpawnBotGroup(Realms.REALMS_REALM_ORDER, tier, 40, orderPrefix, zoneId, boSpawn);
-                if (grp == null)
-                    Log.Error("DynamicBotManager", $"SpawnBotGroup returned null for {orderPrefix} in zone {zoneId}.");
-                else
-                    Log.Info("DynamicBotManager", $"Order bot group '{orderPrefix}' spawned ({grp.Members.Count} members).");
-            }
+            ManageCampaignGroup(Realms.REALMS_REALM_ORDER, tier, 40, orderPrefix, zoneId, boSpawn, players);
+            ManageCampaignGroup(Realms.REALMS_REALM_DESTRUCTION, tier, 40, destroPrefix, zoneId, boSpawn, players);
+        }
 
-            if (!HasCompleteBotGroup(destroPrefix, players))
+        private void ManageCampaignGroup(Realms realm, int tier, int rr, string prefix, ushort zoneId, Point3D boSpawn, List<Player> players)
+        {
+            var group = GetCompleteBotGroup(prefix, players);
+
+            if (group == null)
             {
-                Log.Info("DynamicBotManager", $"Spawning Destruction bot group '{destroPrefix}' in zone {zoneId}.");
-                var grp = BotManager.Instance.SpawnBotGroup(Realms.REALMS_REALM_DESTRUCTION, tier, 40, destroPrefix, zoneId, boSpawn);
-                if (grp == null)
-                    Log.Error("DynamicBotManager", $"SpawnBotGroup returned null for {destroPrefix} in zone {zoneId}.");
+                Log.Info("DynamicBotManager", $"Spawning {realm} bot group '{prefix}' in zone {zoneId}.");
+                var newGrp = BotManager.Instance.SpawnBotGroup(realm, tier, rr, prefix, zoneId, boSpawn);
+                if (newGrp == null)
+                    Log.Error("DynamicBotManager", $"SpawnBotGroup returned null for {prefix} in zone {zoneId}.");
                 else
-                    Log.Info("DynamicBotManager", $"Destruction bot group '{destroPrefix}' spawned ({grp.Members.Count} members).");
+                    Log.Info("DynamicBotManager", $"{realm} bot group '{prefix}' spawned ({newGrp.Members.Count} members).");
+            }
+            else
+            {
+                // Teleport the group if they are not in the active zone or too far from the BO
+                bool needsTeleport = false;
+                foreach (var member in group.Members)
+                {
+                    if (member.ZoneId != zoneId)
+                    {
+                        needsTeleport = true;
+                        break;
+                    }
+
+                    if (boSpawn != null)
+                    {
+                        float dist = member.GetDistanceTo(new Point3D(boSpawn.X, boSpawn.Y, boSpawn.Z));
+                        if (dist > 15000) // 15000 units is a reasonable distance to consider them "far"
+                        {
+                            needsTeleport = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (needsTeleport)
+                {
+                    Log.Info("DynamicBotManager", $"Teleporting {realm} bot group '{prefix}' to active zone {zoneId}.");
+                    BotManager.Instance.TeleportBotGroup(group, zoneId, boSpawn);
+                }
             }
         }
 
