@@ -233,6 +233,8 @@ namespace FrameWork
             try
             {
                 baseClient = (BaseClient)ar.AsyncState;
+                if (baseClient == null || baseClient.Socket == null)
+                    return;
                 int numBytes = baseClient.Socket.EndReceive(ar);
 
                 if (numBytes > 0 || (numBytes <=0 && DisconnectOnNullByte == false))

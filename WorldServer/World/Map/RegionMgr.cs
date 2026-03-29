@@ -35,8 +35,6 @@ namespace WorldServer.World.Map
         /// <summary>Races associated with the pairing, may be null</summary>
         private readonly Races[] _races;
 
-        private readonly Thread _updater;
-
         private long _lastRegionUpdate = TCPManager.GetTimeStampMS();
         private bool _running = true;
         public BountyManager BountyManager;
@@ -86,10 +84,17 @@ namespace WorldServer.World.Map
                 throw;
             }
 
+            RegionCreatures = GetObjects<Creature>().ToList();
+        }
+
+        private Thread _updater;
+        public void StartUpdateThread()
+        {
+            if (_updater != null)
+                return;
+
             _updater = new Thread(Update);
             _updater.Start();
-
-            RegionCreatures = GetObjects<Creature>().ToList();
         }
 
         public IBattlefrontCommunications BattlefrontCommunications { get; set; }

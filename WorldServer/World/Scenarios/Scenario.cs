@@ -151,7 +151,7 @@ namespace WorldServer.World.Scenarios
 
         public int Tier;
         protected EventInterface EvtInterface;
-        protected RegionMgr Region;
+        public RegionMgr Region;
 
         protected Point3D[] RespawnLocations = new Point3D[2];
         protected ushort[] RespawnHeadings = new ushort[2];

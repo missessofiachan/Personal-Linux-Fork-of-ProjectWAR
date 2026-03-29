@@ -55,6 +55,11 @@ namespace WorldServer.World.Abilities
             return _abilityProcessor;
         }
 
+        public List<AbilityInfo> GetAbilities()
+        {
+            return _abilities;
+        }
+
         #region Init/Storage
 
         public override void SetOwner(Object owner)

@@ -1468,10 +1468,10 @@ namespace WorldServer.Managers
 
 
                     //checks for guild leader id player not found guildleader banned or guild leader inactive is so tryes to set a new guild leader if no guildleader can be found guild is set to inactive
-                    if (isSystemGuild && guild.LeaderId == 0 && guild.Members.Count == 0)
+                    // System guilds (Forces of Order / Forces of Destruction) use LeaderId=0 (no real character leader).
+                    // Skip leader validation for them regardless of member count.
+                    if (isSystemGuild && guild.LeaderId == 0)
                     {
-                        Guild.GetGuild(guild.Name).Inactive = true;
-
                         if (guild.GuildId > Guild.MaxGuildGUID)
                             Guild.MaxGuildGUID = (int)guild.GuildId;
 

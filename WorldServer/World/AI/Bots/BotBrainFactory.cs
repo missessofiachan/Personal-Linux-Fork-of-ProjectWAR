@@ -12,7 +12,7 @@ namespace WorldServer.World.AI.Bots
             {
                 case CareerLine.CAREERLINE_IRON_BREAKER: return new IronBreakerBotBrain(player);
                 case CareerLine.CAREERLINE_SLAYER: return new SlayerBotBrain(player);
-                case CareerLine.CAREERLINE_RUNE_PRIEST: return new RunePriestBotBrain(player);
+                case CareerLine.CAREERLINE_RUNE_PRIEST: return new RunepriestBotBrain(player);
                 case CareerLine.CAREERLINE_ENGINEER: return new EngineerBotBrain(player);
                 case CareerLine.CAREERLINE_BLACK_ORC: return new BlackOrcBotBrain(player);
                 case CareerLine.CAREERLINE_CHOPPA: return new ChoppaBotBrain(player);

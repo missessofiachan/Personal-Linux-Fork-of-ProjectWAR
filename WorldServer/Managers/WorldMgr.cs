@@ -1852,14 +1852,14 @@ namespace WorldServer.Managers
                 {
                     case 1: // t1 dw/gs
                         regionMgr.Campaign = new Campaign(regionMgr, objectiveList, new HashSet<Player>(), WorldMgr.LowerTierCampaignManager, new BattlefrontCommunications());
-                        break;
-                    case 3: // t1 he/de
+                        regionMgr.StartUpdateThread();
+                        break;                    case 3: // t1 he/de
                         regionMgr.Campaign = new Campaign(regionMgr, objectiveList, new HashSet<Player>(), WorldMgr.LowerTierCampaignManager, new BattlefrontCommunications());
                         break;
                     case 8: // t1 em/ch
                         regionMgr.Campaign = new Campaign(regionMgr, objectiveList, new HashSet<Player>(), WorldMgr.LowerTierCampaignManager, new BattlefrontCommunications());
-                        break;
-                    // Tier 4
+                        regionMgr.StartUpdateThread();
+                        break;                    // Tier 4
                     case 11:
                         regionMgr.Campaign = new Campaign(regionMgr, objectiveList, new HashSet<Player>(), WorldMgr.UpperTierCampaignManager, new BattlefrontCommunications());
                         break;

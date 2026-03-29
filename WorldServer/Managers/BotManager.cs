@@ -50,6 +50,7 @@ namespace WorldServer.Managers
 
         public void Initialize()
         {
+            BotLoadoutManager.Initialize();
             _botAccount = Program.AcctMgr.GetAccount(BOT_ACCOUNT_NAME);
             if (_botAccount == null)
             {
@@ -493,7 +494,7 @@ namespace WorldServer.Managers
                 return;
 
             BotLoadoutManager.BotTier bTier = GetBotTier(tier, rr);
-            var loadout = BotLoadoutManager.GetLoadout(bTier, (byte)bot.Info.CareerLine);
+            var loadout = BotLoadoutManager.GetLoadout(bTier, (byte)bot.Info.CareerLine, bot.Role);
             if (loadout == null) return;
 
             List<CharacterItem> existingItems = CharMgr.GetItemsForCharacter(bot.Info) ?? new List<CharacterItem>();

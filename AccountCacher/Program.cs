@@ -41,7 +41,15 @@ namespace AccountCacher
             AcctMgr = Server.GetLocalObject<AccountMgr>();
             AcctMgr.LoadRealms();
 
-            ConsoleMgr.Start();
+            if (Environment.UserInteractive)
+            {
+                ConsoleMgr.Start();
+            }
+            else
+            {
+                Log.Info("Program", "Running in non-interactive mode, blocking with ManualResetEvent");
+                new System.Threading.ManualResetEvent(false).WaitOne();
+            }
         }
 
         static void onError(object sender, UnhandledExceptionEventArgs e)

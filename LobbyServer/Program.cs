@@ -47,7 +47,15 @@ namespace LobbyServer
             Log.Debug($"LobbyServer", $"RpcClient Connect (Start) to {Config.RpcInfo.RpcServerIp}:{ Config.RpcInfo.RpcServerPort}");
             Log.Debug($"LobbyServer", $"TcpServer on Port {Config.ClientPort}");
 
-            ConsoleMgr.Start();
+            if (Environment.UserInteractive)
+            {
+                ConsoleMgr.Start();
+            }
+            else
+            {
+                Log.Info("Program", "Running in non-interactive mode, blocking with ManualResetEvent");
+                new System.Threading.ManualResetEvent(false).WaitOne();
+            }
         }
 
         static void onError(object sender, UnhandledExceptionEventArgs e)
