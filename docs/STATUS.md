@@ -143,3 +143,25 @@ Zone 191 (Land of the Dead) had two data defects that prevented the flight-maste
 ### Career Vendor Ability Purchase Fixed
 
 The trainer packet handler has been updated to correctly map the 1-based index from the client to the list of unpurchased career abilities sorted by rank and name. Players now purchase the correct ability from vendors.
+
+### System Guild Leader Validation Fixed (2026-03-29)
+
+`CharMgr.LoadGuilds` logged `ERROR Missing Guild Leader Guild Leader 0` on every startup because the early-exit guard (`isSystemGuild && LeaderId == 0 && Members.Count == 0`) only bypassed leader validation when the guild had no members. Once players or bots joined the Forces of Order / Forces of Destruction guilds the guard no longer fired, triggering a spurious error. The condition now skips leader validation for any system guild with `LeaderId == 0` regardless of member count.
+
+### BaseClient Shutdown NullReferenceException Fixed (2026-03-29)
+
+`BaseClient.OnReceiveHandler` threw `System.NullReferenceException` on every clean shutdown. When `CloseConnections()` sets `_socket = null`, a pending async receive callback can fire before the socket reference is cleared, causing `baseClient.Socket.EndReceive(ar)` to dereference null. A null guard (`if (baseClient == null || baseClient.Socket == null) return;`) before the `EndReceive` call eliminates the race.
+
+### rvr_player_contribution AUTO_INCREMENT Missing (2026-03-29)
+
+The `rvr_player_contribution` table was created with `Id int NOT NULL PRIMARY KEY` but without `AUTO_INCREMENT`. The C# model has `[PrimaryKey(AutoIncrement = true)]`, so the ORM always inserts with `Id = 0`. The first insert per session succeeded (creating the Id=0 row), but every subsequent `SavePlayerContribution` call hit `MySqlException: Duplicate entry '0' for key PRIMARY`. Fixed with `ALTER TABLE rvr_player_contribution MODIFY Id int NOT NULL AUTO_INCREMENT`. If the database is re-imported from a dump, rerun this ALTER.
+
+### Bot AI Performance Optimizations (2026-03-29)
+
+`BotBrain` contained several hot-path inefficiencies identified by static analysis:
+
+- **`UpdateScenarioObjective`**: was scanning `scenario.Region.Objects` (all region objects, potentially large) every 2 seconds for every group-anchor bot. Now maintains a `_cachedScenarioObjectives` list populated once per scenario instance, with incremental disposal pruning on subsequent ticks. Full region scan replaced by a tight foreach loop using squared distance (no `Math.Sqrt`).
+- **`SelectCombatTarget`**: was making three separate LINQ `OrderBy(p => player.GetDistanceTo(p))` passes over `RangedEnemies`, each invoking `Math.Sqrt` per element. Replaced with a single pass tracking best healer, best ranged DPS, and best fallback simultaneously using inline squared-distance comparisons.
+- **`UpdateObjectiveGoal`**: replaced `OrderBy(o => player.GetDistanceTo(o))` with a single-pass squared-distance loop.
+- **`CheckForDeadGroupMembers`**: was calling `GetDistanceTo` twice per dead member (once in `Where`, once in `OrderBy`). Replaced with a single-pass loop computing distance once.
+- **`GetLowestHealthAlly`**: replaced `Where(m => GetDistanceTo(m) <= range)` (sqrt per member) with `IsWithinRadiusFeet` (squared comparison, no sqrt) as the range pre-filter.
