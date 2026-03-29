@@ -44,7 +44,7 @@ namespace WorldServer.World.Interfaces
 
         public override void Update(long tick)
         {
-            if (_unit is Player)
+            if (_unit is Player plr && !plr.IsBot)
                 return;
 
             /*
@@ -311,8 +311,12 @@ namespace WorldServer.World.Interfaces
             if (destZone == null)
                 return;
 
-            ushort pinX = _unit.Zone.CalculPin(newWorldPosX, true);
-            ushort pinY = _unit.Zone.CalculPin(newWorldPosY, false);
+            // Use destZone (not _unit.Zone) for pin calculation so that cross-zone
+            // movement produces pin coords relative to the zone the bot is entering,
+            // not the zone it is leaving. Using the wrong zone causes incorrect pin
+            // values that snap the bot back to spawn when crossing zone boundaries.
+            ushort pinX = destZone.CalculPin(newWorldPosX, true);
+            ushort pinY = destZone.CalculPin(newWorldPosY, false);
             ushort pinZ = (ushort)Point2D.Lerp(_startWorldPos.Z, _destWorldPos.Z, GetMoveFactor(deltaMs));
 
             _unit.SetPosition(pinX, pinY, pinZ, _unit.Heading, destZone.ZoneId);

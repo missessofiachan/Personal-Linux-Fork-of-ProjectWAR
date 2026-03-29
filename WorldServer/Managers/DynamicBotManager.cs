@@ -104,13 +104,24 @@ namespace WorldServer.Managers
             Point3D destroSpawn = ResolveWarcampSpawnPoint(zoneId, Realms.REALMS_REALM_DESTRUCTION);
 
             string[] colors = { "Red", "Green", "Blue", "Yellow" };
-            foreach (var color in colors)
+            const int groupSpread = 600; // distance between group spawn clusters
+            for (int ci = 0; ci < colors.Length; ci++)
             {
+                string color = colors[ci];
+                double angle = ci * (Math.PI * 2 / colors.Length);
+                int dx = (int)(Math.Cos(angle) * groupSpread);
+                int dy = (int)(Math.Sin(angle) * groupSpread);
+
+                Point3D orderGroupSpawn = orderSpawn == null ? null
+                    : new Point3D(orderSpawn.X + dx, orderSpawn.Y + dy, orderSpawn.Z);
+                Point3D destroGroupSpawn = destroSpawn == null ? null
+                    : new Point3D(destroSpawn.X + dx, destroSpawn.Y + dy, destroSpawn.Z);
+
                 string orderPrefix = $"Bot_T{tier}_O_{color}";
                 string destroPrefix = $"Bot_T{tier}_D_{color}";
 
-                ManageCampaignGroup(Realms.REALMS_REALM_ORDER, tier, 40, orderPrefix, zoneId, orderSpawn, players);
-                ManageCampaignGroup(Realms.REALMS_REALM_DESTRUCTION, tier, 40, destroPrefix, zoneId, destroSpawn, players);
+                ManageCampaignGroup(Realms.REALMS_REALM_ORDER, tier, 40, orderPrefix, zoneId, orderGroupSpawn, players);
+                ManageCampaignGroup(Realms.REALMS_REALM_DESTRUCTION, tier, 40, destroPrefix, zoneId, destroGroupSpawn, players);
             }
         }
 

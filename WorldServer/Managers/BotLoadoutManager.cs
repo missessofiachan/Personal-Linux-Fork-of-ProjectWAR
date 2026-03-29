@@ -1,5 +1,6 @@
 using Common;
 using GameData;
+using System;
 using System.Collections.Generic;
 using WorldServer.Services.World;
 using System.Linq;
@@ -90,12 +91,22 @@ namespace WorldServer.Managers
                 string setName = setNames[i];
                 BotTier tier = tiers[i];
 
-                var items = ItemService._Item_Info.Values.Where(x => x.Name != null && x.Name.Contains(setName)).ToList();
+                var items = ItemService._Item_Info.Values
+                    .Where(x => x.Name != null
+                             && x.Name.Contains(setName)
+                             && x.Rarity >= 2  // exclude grey/white junk and debug items
+                             && x.Name.IndexOf("debug", StringComparison.OrdinalIgnoreCase) < 0
+                             && x.Name.IndexOf("test",  StringComparison.OrdinalIgnoreCase) < 0
+                             && x.Name.IndexOf("_gm_",  StringComparison.OrdinalIgnoreCase) < 0)
+                    .ToList();
 
                 for (byte career = 1; career <= 24; career++)
                 {
                     long careerMask = 1L << (career - 1);
-                    var careerItems = items.Where(x => x.Career == 0 || (x.Career & careerMask) > 0).ToList();
+                    // Careers 1-12 are Order (Realm 1), 13-24 are Destruction (Realm 2).
+                    byte realmByte = career <= 12 ? (byte)1 : (byte)2;
+                    var careerItems = items.Where(x => (x.Career == 0 || (x.Career & careerMask) > 0)
+                                                    && (x.Realm == 0 || x.Realm == realmByte)).ToList();
 
                     foreach (BotRole role in System.Enum.GetValues(typeof(BotRole)))
                     {
@@ -110,9 +121,15 @@ namespace WorldServer.Managers
                         };
 
                         Loadout loadout = new Loadout();
+                        byte minRank = GetMinRankForTier(tier);
+                        byte maxRank = GetMaxRankForTier(tier);
+                        byte maxRenown = GetMaxRenownForTier(tier);
 
                         // Gear sets
-                        var groupedBySlot = careerItems.GroupBy(x => x.SlotId);
+                        var groupedBySlot = careerItems
+                            .Where(x => x.MinRank >= minRank && x.MinRank <= maxRank
+                                     && (maxRenown == 0 || x.MinRenown <= maxRenown))
+                            .GroupBy(x => x.SlotId);
                         foreach (var group in groupedBySlot)
                         {
                             var bestItem = group.OrderByDescending(x => GetItemScore(x, gearType)).FirstOrDefault();
@@ -121,16 +138,21 @@ namespace WorldServer.Managers
                         }
 
                         // Weapons
-                        byte minRank = GetMinRankForTier(tier);
-                        byte maxRank = GetMaxRankForTier(tier);
 
                         var weapons = ItemService._Item_Info.Values
                             .Where(x => x.SlotId == 10 || x.SlotId == 11 || x.SlotId == 12)
                             .Where(x => x.MinRank >= minRank && x.MinRank <= maxRank)
+                            .Where(x => maxRenown == 0 || x.MinRenown <= maxRenown)
                             .Where(x => x.Career == 0 || (x.Career & careerMask) > 0)
+                            .Where(x => x.Realm == 0 || x.Realm == realmByte)
+                            .Where(x => x.Rarity >= 2)
+                            .Where(x => x.Name == null
+                                     || (x.Name.IndexOf("debug", StringComparison.OrdinalIgnoreCase) < 0
+                                      && x.Name.IndexOf("test",  StringComparison.OrdinalIgnoreCase) < 0
+                                      && x.Name.IndexOf("_gm_",  StringComparison.OrdinalIgnoreCase) < 0))
                             .OrderByDescending(x => GetItemScore(x, gearType))
                             .ThenByDescending(x => x.MinRank)
-                            .ThenByDescending(x => x.MinRenown)
+                            .ThenByDescending(x => x.Rarity)
                             .ToList();
 
                         if (role == BotRole.MainTank_Shield)
@@ -170,10 +192,17 @@ namespace WorldServer.Managers
                         var accessories = ItemService._Item_Info.Values
                             .Where(x => (x.SlotId >= 25 && x.SlotId <= 27) || (x.SlotId >= 31 && x.SlotId <= 34))
                             .Where(x => x.MinRank >= minRank && x.MinRank <= maxRank)
+                            .Where(x => maxRenown == 0 || x.MinRenown <= maxRenown)
                             .Where(x => x.Career == 0 || (x.Career & careerMask) > 0)
+                            .Where(x => x.Realm == 0 || x.Realm == realmByte)
+                            .Where(x => x.Rarity >= 2)
+                            .Where(x => x.Name == null
+                                     || (x.Name.IndexOf("debug", StringComparison.OrdinalIgnoreCase) < 0
+                                      && x.Name.IndexOf("test",  StringComparison.OrdinalIgnoreCase) < 0
+                                      && x.Name.IndexOf("_gm_",  StringComparison.OrdinalIgnoreCase) < 0))
                             .OrderByDescending(x => GetItemScore(x, gearType))
                             .ThenByDescending(x => x.MinRank)
-                            .ThenByDescending(x => x.MinRenown)
+                            .ThenByDescending(x => x.Rarity)
                             .ToList();
 
                         var cloaks = accessories.Where(x => x.SlotId == 27).ToList();
@@ -221,6 +250,23 @@ namespace WorldServer.Managers
         private static byte GetMaxRankForTier(BotTier tier)
         {
             return tier switch { BotTier.T1 => 11, BotTier.T2 => 21, BotTier.T3 => 31, _ => 40 };
+        }
+
+        /// <summary>
+        /// Returns the maximum MinRenown an item may require for bots of this tier.
+        /// Returns 0 for tiers where renown is not yet relevant (T1-T3), meaning no cap.
+        /// </summary>
+        private static byte GetMaxRenownForTier(BotTier tier)
+        {
+            return tier switch
+            {
+                BotTier.T4_RR40  => 40,
+                BotTier.T4_RR70  => 70,
+                BotTier.T4_RR80  => 80,
+                BotTier.T4_RR90  => 90,
+                BotTier.T4_RR100 => 100,
+                _                => 0   // T1/T2/T3: no renown restriction
+            };
         }
 
         private static void AddLoadout(BotTier tier, byte career, BotRole role, Loadout loadout)

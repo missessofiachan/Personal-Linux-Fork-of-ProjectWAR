@@ -87,6 +87,7 @@ namespace WorldServer.Managers
                 RegionsRWLock.EnterWriteLock();
                 _Regions.Add(Mgr);
                 RegionsRWLock.ExitWriteLock();
+                Mgr.StartUpdateThread();
             }
 
             return Mgr;
@@ -1852,14 +1853,14 @@ namespace WorldServer.Managers
                 {
                     case 1: // t1 dw/gs
                         regionMgr.Campaign = new Campaign(regionMgr, objectiveList, new HashSet<Player>(), WorldMgr.LowerTierCampaignManager, new BattlefrontCommunications());
-                        regionMgr.StartUpdateThread();
-                        break;                    case 3: // t1 he/de
+                        break;
+                    case 3: // t1 he/de
                         regionMgr.Campaign = new Campaign(regionMgr, objectiveList, new HashSet<Player>(), WorldMgr.LowerTierCampaignManager, new BattlefrontCommunications());
                         break;
                     case 8: // t1 em/ch
                         regionMgr.Campaign = new Campaign(regionMgr, objectiveList, new HashSet<Player>(), WorldMgr.LowerTierCampaignManager, new BattlefrontCommunications());
-                        regionMgr.StartUpdateThread();
-                        break;                    // Tier 4
+                        break;
+                    // Tier 4
                     case 11:
                         regionMgr.Campaign = new Campaign(regionMgr, objectiveList, new HashSet<Player>(), WorldMgr.UpperTierCampaignManager, new BattlefrontCommunications());
                         break;
@@ -1870,9 +1871,10 @@ namespace WorldServer.Managers
                         regionMgr.Campaign = new Campaign(regionMgr, objectiveList, new HashSet<Player>(), WorldMgr.UpperTierCampaignManager, new BattlefrontCommunications());
                         break;
 
-                    default: // Everything else...
+                    default:
                         break;
                 }
+                regionMgr.StartUpdateThread();
             }
         }
 

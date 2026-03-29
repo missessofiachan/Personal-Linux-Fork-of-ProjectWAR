@@ -756,6 +756,7 @@
     <Compile Include="Managers\Commands\BotCommands.cs" />
     <Compile Include="Managers\BotManager.cs" />
     <Compile Include="Managers\BotLoadoutManager.cs" />
+    <Compile Include="Managers\BotPathfinder.cs" />
     <Compile Include="World\Objects\BotRole.cs" />
     <Compile Include="NetWork\BotClient.cs" />
     <Compile Include="World\Objects\PublicQuests\PublicQuest.cs" />

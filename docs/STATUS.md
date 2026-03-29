@@ -116,13 +116,45 @@ See `docs/data-matrix/overview/path-forward.md` for full roadmap and source-sear
 
 ## Bot System
 
-A fully integrated, player-like Bot System is now implemented to populate the world with autonomous entities. They participate in RvR and Scenarios, running with zero network overhead. Bots are automatically assigned to permanent race-specific faction guilds (e.g., Empire, Greenskins) and operate cohesively in tactical groups. See `BOT_SYSTEM.md` for detailed information on architecture, logic, and GM commands.
+A fully integrated, player-like Bot System populates the world with autonomous entities. They participate in RvR and Scenarios with zero network overhead, follow waypoint-guided routes through campaign zones, and equip only career-appropriate, faction-correct, renown-gated gear. See `BOT_SYSTEM.md` for full architecture details and GM commands.
 
 ## System Guilds
 
 A new automated guild system provides "Forces of Order" and "Forces of Destruction" as starter guilds for all new players. These guilds are automatically maintained at level 40. Players who leave are tracked to prevent re-entry via regular invites. See `docs/SYSTEM_GUILDS.md` for full details.
 
 ## Recently Resolved Issues
+
+### Bot Cross-Zone Movement Snap-Back Fixed (2026-03-29)
+
+`MovementInterface.UpdateMove()` was computing zone-pin coordinates with
+`_unit.Zone.CalculPin()`. When a bot's interpolated position crossed into a new
+zone, the source zone's pin offset was applied to destination-zone coordinates,
+producing nonsensical values and snapping bots back to spawn after ~5 seconds
+of movement. Fixed by using `destZone.CalculPin()` — the zone that owns the
+current interpolated world position.
+
+### Bot Item Equipping Restrictions Added (2026-03-29)
+
+`BotLoadoutManager` lacked two item filters:
+
+- **Realm** — Order bots (careers 1–12) were equipping Destruction-only items
+  and vice versa. All item queries now include `Realm == 0 || Realm == realmByte`.
+- **MinRenown cap** — RR40 bots were equipping Sovereign/Warpforged gear.
+  New `GetMaxRenownForTier()` returns 40/70/80/90/100 for T4 sub-tiers (0 = no
+  cap for T1–T3). All item queries filter `MinRenown <= maxRenown`.
+- Sorting also corrected: `ThenByDescending(MinRenown)` was actively preferring
+  the highest-renown item; replaced with `ThenByDescending(Rarity)`.
+
+### Waypoint-Guided Bot Navigation Added (2026-03-29)
+
+New `BotPathfinder` samples `WaypointService.TableWaypoints` (NPC patrol data
+already in memory) to build intermediate waypoint lists between warcamp and
+battlefield objectives. `BotBrain.MarchAlongPath()` replaces all direct
+`Move(objectivePosition)` calls so bots follow existing NPC road waypoints
+instead of walking straight through terrain. Falls back to direct movement
+when the zone has no suitable patrol data.
+
+
 
 ### LOTD Flight Node and Taxi Coordinates Fixed
 

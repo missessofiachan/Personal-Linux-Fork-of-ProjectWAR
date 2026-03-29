@@ -1,5 +1,6 @@
 using Common;
 using GameData;
+using WorldServer.Managers;
 using WorldServer.World.AI;
 using WorldServer.World.Objects;
 using WorldServer.World.Interfaces;
@@ -31,6 +32,11 @@ namespace WorldServer.World.AI
         private List<Object> _cachedScenarioObjectives;
         private Scenario _lastCachedScenario;
 
+        // Waypoint path state — rebuilt whenever CurrentTargetObjective changes.
+        private List<Point3D> _currentPath;
+        private int _pathIndex;
+        private BattlefieldObjective _pathBuiltFor;
+
         private CombatInterface_Player PlayerCombat => _unit?.CbtInterface as CombatInterface_Player;
 
         /// <summary>Distance in feet at which a bot will attempt to interact with a flag.</summary>
@@ -46,10 +52,13 @@ namespace WorldServer.World.AI
 
         public BotBrain(Unit unit) : base(unit)
         {
-            // Unique formation offset per bot so the group doesn't stack on one tile.
-            Random rand = new Random(unit.Oid);
-            _formationOffset.X = rand.Next(-8, 8);
-            _formationOffset.Y = rand.Next(-8, 8);
+            // Spread bots in a circle around their target so the group doesn't stack.
+            // 12 evenly-spaced slots; radius 80 raw units (~6.7 ft) keeps every bot
+            // inside INTERACT_RANGE_FT (13 ft = 156 raw units) of the flag centre.
+            double angle = (unit.Oid % 12) * (Math.PI * 2 / 12);
+            const int radius = 80;
+            _formationOffset.X = (int)(Math.Cos(angle) * radius);
+            _formationOffset.Y = (int)(Math.Sin(angle) * radius);
         }
 
         public override bool StartCombat(Unit fighter)
@@ -191,7 +200,20 @@ namespace WorldServer.World.AI
                             player.AiInterface.ProcessCombatStart(maTarget);
                     }
 
-                    // Follow anchor if the group has spread too far apart.
+                    // Non-MA bots march directly toward the MA's current objective
+                    // (with their own formation offset) rather than chasing the MA's
+                    // position. This avoids the oscillation where a bot alternately
+                    // follows the MA and sprints toward the flag — each iteration
+                    // placing it outside MAX_FOLLOW_DISTANCE_FT on the next tick.
+                    BotBrain maBrain = ma.AiInterface?.CurrentBrain as BotBrain;
+                    BattlefieldObjective maObj = maBrain?.CurrentTargetObjective;
+                    if (!player.CbtInterface.IsInCombat && maObj != null && !maObj.IsDisposed)
+                    {
+                        MarchAlongPath(player, maObj);
+                        return;
+                    }
+
+                    // Fallback: close the gap to the MA when no objective is available.
                     if (player.GetDistanceTo(ma) > MAX_FOLLOW_DISTANCE_FT)
                     {
                         player.MvtInterface.Move(new Point3D(
@@ -254,12 +276,70 @@ namespace WorldServer.World.AI
             }
             else
             {
-                // Still marching toward the flag.
-                player.MvtInterface.Move(new Point3D(
-                    CurrentTargetObjective.WorldPosition.X + _formationOffset.X,
-                    CurrentTargetObjective.WorldPosition.Y + _formationOffset.Y,
-                    CurrentTargetObjective.WorldPosition.Z));
+                // Still marching toward the flag — follow the waypoint path.
+                MarchAlongPath(player, CurrentTargetObjective);
             }
+        }
+
+        // ── Waypoint path following ───────────────────────────────────────────
+
+        /// <summary>
+        /// Moves the bot toward <paramref name="objective"/> via the waypoint path
+        /// built by <see cref="BotPathfinder"/>.  Formation offset is applied only
+        /// to the final destination so intermediate waypoints are shared walk-through
+        /// points; all bots in the group therefore follow the same road but arrive
+        /// spread around the flag.
+        ///
+        /// Path is rebuilt automatically whenever the target objective changes.
+        /// If the path runs dry before the bot reaches interact range the bot falls
+        /// back to a direct move (handles edge case where no waypoints were found).
+        /// </summary>
+        private void MarchAlongPath(Player player, BattlefieldObjective objective)
+        {
+            // Rebuild path when the target objective changes.
+            if (_pathBuiltFor != objective || _currentPath == null)
+            {
+                Point3D finalDest = new Point3D(
+                    objective.WorldPosition.X + _formationOffset.X,
+                    objective.WorldPosition.Y + _formationOffset.Y,
+                    objective.WorldPosition.Z);
+
+                _currentPath = BotPathfinder.BuildPath(player.WorldPosition, objective.WorldPosition);
+
+                // Replace the raw destination appended by BuildPath with the
+                // formation-offset version so bots spread around the flag on arrival.
+                if (_currentPath.Count > 0)
+                    _currentPath[_currentPath.Count - 1] = finalDest;
+                else
+                    _currentPath.Add(finalDest);
+
+                _pathIndex  = 0;
+                _pathBuiltFor = objective;
+            }
+
+            // Advance past waypoints the bot has already reached.
+            while (_pathIndex < _currentPath.Count - 1)
+            {
+                Point3D wp = _currentPath[_pathIndex];
+                long dx = player.WorldPosition.X - wp.X;
+                long dy = player.WorldPosition.Y - wp.Y;
+                if (dx * dx + dy * dy <= (long)BotPathfinder.ARRIVAL_THRESHOLD_RAW * BotPathfinder.ARRIVAL_THRESHOLD_RAW)
+                    _pathIndex++;
+                else
+                    break;
+            }
+
+            if (_pathIndex >= _currentPath.Count)
+            {
+                // Fallback: direct move to formation position around the flag.
+                player.MvtInterface.Move(new Point3D(
+                    objective.WorldPosition.X + _formationOffset.X,
+                    objective.WorldPosition.Y + _formationOffset.Y,
+                    objective.WorldPosition.Z));
+                return;
+            }
+
+            player.MvtInterface.Move(_currentPath[_pathIndex]);
         }
 
         // ── Objective selection ───────────────────────────────────────────────
@@ -283,21 +363,34 @@ namespace WorldServer.World.AI
             var objectives = player.Region.Campaign.Objectives;
             if (objectives == null || objectives.Count == 0) return;
 
-            // Target the nearest objective the bot's realm doesn't own.
-            // Use squared distance to avoid Math.Sqrt.
-            BattlefieldObjective best = null;
-            double bestSq = double.MaxValue;
-            float px = player.X, py = player.Y, pz = player.Z;
             Realms realm = (Realms)player.Realm;
+
+            // Collect unowned objectives sorted by distance so that close BOs
+            // are preferred but different groups can be spread across them.
+            float px = player.X, py = player.Y, pz = player.Z;
+            var unowned = new List<BattlefieldObjective>();
             foreach (var o in objectives)
             {
-                if (o.OwningRealm == realm) continue;
-                double dx = px - o.X, dy = py - o.Y, dz = pz - o.Z;
-                double dsq = dx * dx + dy * dy + dz * dz;
-                if (dsq < bestSq) { bestSq = dsq; best = o; }
+                if (o.OwningRealm != realm)
+                    unowned.Add(o);
             }
 
-            CurrentTargetObjective = best;
+            if (unowned.Count == 0) { CurrentTargetObjective = null; return; }
+
+            // Sort ascending by squared distance from this bot.
+            unowned.Sort((a, b) =>
+            {
+                double dax = px - a.X, day = py - a.Y;
+                double dbx = px - b.X, dby = py - b.Y;
+                return (dax * dax + day * day).CompareTo(dbx * dbx + dby * dby);
+            });
+
+            // Each group's MA picks a different slot in the sorted list so that
+            // bot groups spread across multiple BOs instead of all converging on
+            // the single nearest one. The slot is derived from the MA's OID so
+            // it is stable across ticks but unique per group.
+            int slot = (int)(player.Oid % (uint)unowned.Count);
+            CurrentTargetObjective = unowned[slot];
         }
 
         private bool CheckForDeadGroupMembers(Player player)
