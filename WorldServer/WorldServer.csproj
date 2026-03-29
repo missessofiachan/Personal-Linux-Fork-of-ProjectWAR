@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<?xml version='1.0' encoding='utf-8'?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0" DefaultTargets="Build">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
@@ -413,7 +413,6 @@
     <Compile Include="Managers\CommandMgr.cs" />
     <Compile Include="Managers\Commands\BaseCommands.cs" />
     <Compile Include="Managers\LootsMgr.cs" />
-
     <Compile Include="NetWork\Handler\AckHandlers.cs" />
     <Compile Include="NetWork\Handler\AuctionHandlers.cs" />
     <Compile Include="NetWork\Handler\AuthentificationHandlers.cs" />
@@ -795,7 +794,7 @@
     <Compile Include="World\Scripting\Items\PotionScript.cs" />
     <Compile Include="World\Scripting\CareerPackages.cs" />
     <Compile Include="World\WorldSettings\WorldSettingsMgr.cs" />
-  </ItemGroup>
+  <Compile Include="World\AI\Bots\IronBreakerBotBrain.cs" /><Compile Include="World\AI\Bots\SlayerBotBrain.cs" /><Compile Include="World\AI\Bots\RunePriestBotBrain.cs" /><Compile Include="World\AI\Bots\EngineerBotBrain.cs" /><Compile Include="World\AI\Bots\BlackOrcBotBrain.cs" /><Compile Include="World\AI\Bots\ChoppaBotBrain.cs" /><Compile Include="World\AI\Bots\ShamanBotBrain.cs" /><Compile Include="World\AI\Bots\SquigHerderBotBrain.cs" /><Compile Include="World\AI\Bots\WitchHunterBotBrain.cs" /><Compile Include="World\AI\Bots\KnightOfTheBlazingSunBotBrain.cs" /><Compile Include="World\AI\Bots\BrightWizardBotBrain.cs" /><Compile Include="World\AI\Bots\WarriorPriestBotBrain.cs" /><Compile Include="World\AI\Bots\ChosenBotBrain.cs" /><Compile Include="World\AI\Bots\MarauderBotBrain.cs" /><Compile Include="World\AI\Bots\ZealotBotBrain.cs" /><Compile Include="World\AI\Bots\MagusBotBrain.cs" /><Compile Include="World\AI\Bots\SwordmasterBotBrain.cs" /><Compile Include="World\AI\Bots\ShadowWarriorBotBrain.cs" /><Compile Include="World\AI\Bots\WhiteLionBotBrain.cs" /><Compile Include="World\AI\Bots\ArchmageBotBrain.cs" /><Compile Include="World\AI\Bots\BlackGuardBotBrain.cs" /><Compile Include="World\AI\Bots\WitchElfBotBrain.cs" /><Compile Include="World\AI\Bots\DiscipleOfKhaineBotBrain.cs" /><Compile Include="World\AI\Bots\SorcererBotBrain.cs" /><Compile Include="World\AI\Bots\BotBrainFactory.cs" /></ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
       <Visible>False</Visible>
@@ -855,28 +854,19 @@ if not exist $(TargetDir)\TempFilesDirectory mkdir $(TargetDir)\TempFilesDirecto
     <ItemGroup>
       <LocalDevelopmentConfigs Include="$(ProjectDir)Configs\LocalDevelopment\*.xml" />
       <DepsZonesFiles Include="$(ProjectDir)..\deps\zones\**\*.*" />
-      <DepsLosFiles Include="$(ProjectDir)..\deps\los\**\*.*"
-                    Condition="'$(ProjectWarGenerateLos)' != '1' And '$(ProjectWarGenerateLos)' != 'true' And '$(ProjectWarGenerateLos)' != 'True'" />
+      <DepsLosFiles Include="$(ProjectDir)..\deps\los\**\*.*" Condition="'$(ProjectWarGenerateLos)' != '1' And '$(ProjectWarGenerateLos)' != 'true' And '$(ProjectWarGenerateLos)' != 'True'" />
     </ItemGroup>
     <MakeDir Directories="$(TargetDir)Configs" />
     <MakeDir Directories="$(TargetDir)zones" />
-    <Copy SourceFiles="@(LocalDevelopmentConfigs)" DestinationFiles="@(LocalDevelopmentConfigs->'$(TargetDir)Configs\%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(LocalDevelopmentConfigs)" DestinationFiles="@(LocalDevelopmentConfigs-&gt;'$(TargetDir)Configs\%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(DepsZonesFiles)" DestinationFolder="$(TargetDir)zones\%(RecursiveDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(DepsLosFiles)" DestinationFolder="$(TargetDir)los\%(RecursiveDir)" SkipUnchangedFiles="true" />
-    <Error Condition="('$(ProjectWarGenerateLos)' == '1' Or '$(ProjectWarGenerateLos)' == 'true' Or '$(ProjectWarGenerateLos)' == 'True') And '$(ProjectWarLosInputRoot)' == ''"
-           Text="Native LOS generation requires ProjectWarLosInputRoot or PROJECTWAR_EXTRACTED_ROOT." />
-    <Error Condition="('$(ProjectWarGenerateLos)' == '1' Or '$(ProjectWarGenerateLos)' == 'true' Or '$(ProjectWarGenerateLos)' == 'True') And !Exists('$(ProjectWarLosInputRoot)')"
-           Text="Native LOS generation input root does not exist: $(ProjectWarLosInputRoot)" />
-    <MSBuild Projects="$(ProjectDir)..\LosBuilder\LosBuilder.csproj"
-             Targets="Build"
-             Properties="Configuration=$(Configuration);Platform=$(Platform)"
-             Condition="'$(ProjectWarGenerateLos)' == '1' Or '$(ProjectWarGenerateLos)' == 'true' Or '$(ProjectWarGenerateLos)' == 'True'" />
-    <RemoveDir Directories="$(ProjectWarLosOutputRoot)"
-               Condition="('$(ProjectWarGenerateLos)' == '1' Or '$(ProjectWarGenerateLos)' == 'true' Or '$(ProjectWarGenerateLos)' == 'True') And Exists('$(ProjectWarLosOutputRoot)')" />
-    <MakeDir Directories="$(ProjectWarLosOutputRoot)"
-             Condition="'$(ProjectWarGenerateLos)' == '1' Or '$(ProjectWarGenerateLos)' == 'true' Or '$(ProjectWarGenerateLos)' == 'True'" />
-    <Exec Command="&quot;$(ProjectDir)..\bin\$(Configuration)\LosBuilder.exe&quot; generate --input-root &quot;$(ProjectWarLosInputRoot)&quot; $(ProjectWarLosZoneArgs) --output-root &quot;$(ProjectWarLosOutputRoot)&quot;"
-          Condition="'$(ProjectWarGenerateLos)' == '1' Or '$(ProjectWarGenerateLos)' == 'true' Or '$(ProjectWarGenerateLos)' == 'True'" />
+    <Error Condition="('$(ProjectWarGenerateLos)' == '1' Or '$(ProjectWarGenerateLos)' == 'true' Or '$(ProjectWarGenerateLos)' == 'True') And '$(ProjectWarLosInputRoot)' == ''" Text="Native LOS generation requires ProjectWarLosInputRoot or PROJECTWAR_EXTRACTED_ROOT." />
+    <Error Condition="('$(ProjectWarGenerateLos)' == '1' Or '$(ProjectWarGenerateLos)' == 'true' Or '$(ProjectWarGenerateLos)' == 'True') And !Exists('$(ProjectWarLosInputRoot)')" Text="Native LOS generation input root does not exist: $(ProjectWarLosInputRoot)" />
+    <MSBuild Projects="$(ProjectDir)..\LosBuilder\LosBuilder.csproj" Targets="Build" Properties="Configuration=$(Configuration);Platform=$(Platform)" Condition="'$(ProjectWarGenerateLos)' == '1' Or '$(ProjectWarGenerateLos)' == 'true' Or '$(ProjectWarGenerateLos)' == 'True'" />
+    <RemoveDir Directories="$(ProjectWarLosOutputRoot)" Condition="('$(ProjectWarGenerateLos)' == '1' Or '$(ProjectWarGenerateLos)' == 'true' Or '$(ProjectWarGenerateLos)' == 'True') And Exists('$(ProjectWarLosOutputRoot)')" />
+    <MakeDir Directories="$(ProjectWarLosOutputRoot)" Condition="'$(ProjectWarGenerateLos)' == '1' Or '$(ProjectWarGenerateLos)' == 'true' Or '$(ProjectWarGenerateLos)' == 'True'" />
+    <Exec Command="&quot;$(ProjectDir)..\bin\$(Configuration)\LosBuilder.exe&quot; generate --input-root &quot;$(ProjectWarLosInputRoot)&quot; $(ProjectWarLosZoneArgs) --output-root &quot;$(ProjectWarLosOutputRoot)&quot;" Condition="'$(ProjectWarGenerateLos)' == '1' Or '$(ProjectWarGenerateLos)' == 'true' Or '$(ProjectWarGenerateLos)' == 'True'" />
   </Target>
   <Import Project="..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets" Condition="Exists('..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

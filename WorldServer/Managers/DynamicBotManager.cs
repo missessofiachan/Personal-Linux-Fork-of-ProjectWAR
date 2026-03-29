@@ -99,24 +99,29 @@ namespace WorldServer.Managers
 
             int tier = campaign.Tier;
 
-            string orderPrefix = $"Bot_T{tier}_O";
-            string destroPrefix = $"Bot_T{tier}_D";
-
             var players = Player.GetPlayersSnapshot();
-            Point3D boSpawn = ResolveBoSpawnPoint(campaign, zoneId);
+            Point3D orderSpawn = ResolveWarcampSpawnPoint(zoneId, Realms.REALMS_REALM_ORDER);
+            Point3D destroSpawn = ResolveWarcampSpawnPoint(zoneId, Realms.REALMS_REALM_DESTRUCTION);
 
-            ManageCampaignGroup(Realms.REALMS_REALM_ORDER, tier, 40, orderPrefix, zoneId, boSpawn, players);
-            ManageCampaignGroup(Realms.REALMS_REALM_DESTRUCTION, tier, 40, destroPrefix, zoneId, boSpawn, players);
+            string[] colors = { "Red", "Green", "Blue", "Yellow" };
+            foreach (var color in colors)
+            {
+                string orderPrefix = $"Bot_T{tier}_O_{color}";
+                string destroPrefix = $"Bot_T{tier}_D_{color}";
+
+                ManageCampaignGroup(Realms.REALMS_REALM_ORDER, tier, 40, orderPrefix, zoneId, orderSpawn, players);
+                ManageCampaignGroup(Realms.REALMS_REALM_DESTRUCTION, tier, 40, destroPrefix, zoneId, destroSpawn, players);
+            }
         }
 
-        private void ManageCampaignGroup(Realms realm, int tier, int rr, string prefix, ushort zoneId, Point3D boSpawn, List<Player> players)
+        private void ManageCampaignGroup(Realms realm, int tier, int rr, string prefix, ushort zoneId, Point3D targetSpawn, List<Player> players)
         {
             var group = GetCompleteBotGroup(prefix, players);
 
             if (group == null)
             {
                 Log.Info("DynamicBotManager", $"Spawning {realm} bot group '{prefix}' in zone {zoneId}.");
-                var newGrp = BotManager.Instance.SpawnBotGroup(realm, tier, rr, prefix, zoneId, boSpawn);
+                var newGrp = BotManager.Instance.SpawnBotGroup(realm, tier, rr, prefix, zoneId, targetSpawn);
                 if (newGrp == null)
                     Log.Error("DynamicBotManager", $"SpawnBotGroup returned null for {prefix} in zone {zoneId}.");
                 else
@@ -124,7 +129,7 @@ namespace WorldServer.Managers
             }
             else
             {
-                // Teleport the group if they are not in the active zone or too far from the BO
+                // Teleport the group if they are not in the active zone or too far from the spawn point
                 bool needsTeleport = false;
                 foreach (var member in group.Members)
                 {
@@ -134,9 +139,9 @@ namespace WorldServer.Managers
                         break;
                     }
 
-                    if (boSpawn != null)
+                    if (targetSpawn != null)
                     {
-                        float dist = member.GetDistanceTo(new Point3D(boSpawn.X, boSpawn.Y, boSpawn.Z));
+                        float dist = member.GetDistanceTo(new Point3D(targetSpawn.X, targetSpawn.Y, targetSpawn.Z));
                         if (dist > 15000) // 15000 units is a reasonable distance to consider them "far"
                         {
                             needsTeleport = true;
@@ -148,31 +153,23 @@ namespace WorldServer.Managers
                 if (needsTeleport)
                 {
                     Log.Info("DynamicBotManager", $"Teleporting {realm} bot group '{prefix}' to active zone {zoneId}.");
-                    BotManager.Instance.TeleportBotGroup(group, zoneId, boSpawn);
+                    BotManager.Instance.TeleportBotGroup(group, zoneId, targetSpawn);
                 }
             }
         }
 
         /// <summary>
-        /// Resolves the world position of the primary BO in the active zone so bots spawn
-        /// directly at the objective rather than at a warcamp or respawn point.
-        /// Returns null to fall back to default spawn logic if no BO data is found.
+        /// Resolves the world position of the warcamp in the active zone so bots spawn
+        /// directly at the warcamp of their tier.
+        /// Returns null to fall back to default spawn logic if no warcamp data is found.
         /// </summary>
-        private static Point3D ResolveBoSpawnPoint(Campaign campaign, ushort zoneId)
+        private static Point3D ResolveWarcampSpawnPoint(ushort zoneId, Realms realm)
         {
             Zone_Info zoneInfo = ZoneService.GetZone_Info(zoneId);
             if (zoneInfo == null)
                 return null;
 
-            var objectives = BattleFrontService.GetBattleFrontObjectives(zoneInfo.Region);
-            if (objectives == null)
-                return null;
-
-            var bo = objectives.FirstOrDefault(o => o.ZoneId == zoneId && !o.KeepSpawn);
-            if (bo == null)
-                return null;
-
-            return new Point3D(bo.X, bo.Y, bo.Z);
+            return BattleFrontService.GetWarcampEntrance(zoneId, realm);
         }
 
         private void ProcessScenarios(long tick)
@@ -181,14 +178,17 @@ namespace WorldServer.Managers
             _nextScenarioQueueCheck = tick + 30000; // Check every 30s
 
             // Spawn and queue scenario bots
-            // We want at least one group per realm queued for scenarios
-            string orderScenPrefix = "Bot_Scen_O";
-            string destroScenPrefix = "Bot_Scen_D";
-
             var players = Player.GetPlayersSnapshot();
-            
-            EnsureScenarioGroup(Realms.REALMS_REALM_ORDER, orderScenPrefix, players);
-            EnsureScenarioGroup(Realms.REALMS_REALM_DESTRUCTION, destroScenPrefix, players);
+
+            string[] colors = { "Red", "Green", "Blue", "Yellow" };
+            foreach (var color in colors)
+            {
+                string orderScenPrefix = $"Bot_Scen_O_{color}";
+                string destroScenPrefix = $"Bot_Scen_D_{color}";
+
+                EnsureScenarioGroup(Realms.REALMS_REALM_ORDER, orderScenPrefix, players);
+                EnsureScenarioGroup(Realms.REALMS_REALM_DESTRUCTION, destroScenPrefix, players);
+            }
         }
 
         private void EnsureScenarioGroup(Realms realm, string prefix, List<Player> players)

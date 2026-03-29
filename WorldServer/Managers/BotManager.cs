@@ -322,6 +322,14 @@ namespace WorldServer.Managers
 
             AssignToGuild(bots, faction.Name);
 
+            ushort primaryDye = 0;
+            ushort secondaryDye = 0;
+
+            if (groupPrefix.Contains("Red")) { primaryDye = 338; secondaryDye = 338; } // Mechrite Red
+            else if (groupPrefix.Contains("Green")) { primaryDye = 336; secondaryDye = 336; } // Knarloc Green
+            else if (groupPrefix.Contains("Blue")) { primaryDye = 314; secondaryDye = 314; } // Ice Blue
+            else if (groupPrefix.Contains("Yellow")) { primaryDye = 309; secondaryDye = 309; } // Desert Yellow
+
             int botIndex = 0;
             foreach (var bot in bots)
             {
@@ -333,7 +341,7 @@ namespace WorldServer.Managers
                 Point3D spreadSpawn = new Point3D(worldSpawn.X + xOffset, worldSpawn.Y + yOffset, worldSpawn.Z);
 
                 StageBotSpawn(bot, zoneInfo, spreadSpawn);
-                ApplyLoadout(bot, tier, rr);
+                ApplyLoadout(bot, tier, rr, primaryDye, secondaryDye);
                 region.AddObject(bot, zoneId);
                 botIndex++;
             }
@@ -479,7 +487,7 @@ namespace WorldServer.Managers
             }
         }
 
-        private void ApplyLoadout(Player bot, int tier, int rr)
+        private void ApplyLoadout(Player bot, int tier, int rr, ushort primaryDye = 0, ushort secondaryDye = 0)
         {
             if (bot?.Info == null)
                 return;
@@ -511,13 +519,20 @@ namespace WorldServer.Managers
                         ModelId = itemInfo.ModelId,
                         SlotId = slotId,
                         Counts = 1,
-                        PrimaryDye = 0,
-                        SecondaryDye = 0,
+                        PrimaryDye = primaryDye,
+                        SecondaryDye = secondaryDye,
                         BoundtoPlayer = false
                     };
 
                     CharMgr.CreateItem(existing);
                     existingItems.Add(existing);
+                }
+                else if (primaryDye != 0 && (existing.PrimaryDye != primaryDye || existing.SecondaryDye != secondaryDye))
+                {
+                    existing.PrimaryDye = primaryDye;
+                    existing.SecondaryDye = secondaryDye;
+                    CharMgr.Database.SaveObject(existing);
+                    liveItemsChanged = true;
                 }
 
                 if (EnsureLiveLoadoutItem(bot, existing))

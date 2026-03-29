@@ -589,7 +589,7 @@ namespace WorldServer.World.Objects
 
             if (IsBot)
             {
-                AiInterface.SetBrain(new World.AI.BotBrain(this));
+                AiInterface.SetBrain(World.AI.Bots.BotBrainFactory.CreateBotBrain(this));
             }
 
             // Handle temporary Exile (warned while offline)
@@ -766,7 +766,7 @@ namespace WorldServer.World.Objects
 
             if (IsBot)
             {
-                AiInterface.SetBrain(new World.AI.BotBrain(this));
+                AiInterface.SetBrain(World.AI.Bots.BotBrainFactory.CreateBotBrain(this));
             }
 
                 _isCriticallyWounded = false;

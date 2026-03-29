@@ -207,20 +207,11 @@ namespace WorldServer.World.AI
             var objectives = player.Region.Campaign.Objectives;
             if (objectives == null || objectives.Count == 0) return;
 
-            // Prefer unguarded objectives the bot's realm doesn't own.
+            // Target the nearest objective the bot's realm doesn't own.
             BattlefieldObjective best = objectives
-                .Where(o => o.OwningRealm != (Realms)player.Realm && !o.HasLiveGuardsNearby())
+                .Where(o => o.OwningRealm != (Realms)player.Realm)
                 .OrderBy(o => player.GetDistanceTo(o))
                 .FirstOrDefault();
-
-            // Fall back to any unowned objective (even guarded) if nothing unguarded exists.
-            if (best == null)
-            {
-                best = objectives
-                    .Where(o => o.OwningRealm != (Realms)player.Realm)
-                    .OrderBy(o => player.GetDistanceTo(o))
-                    .FirstOrDefault();
-            }
 
             CurrentTargetObjective = best;
         }
