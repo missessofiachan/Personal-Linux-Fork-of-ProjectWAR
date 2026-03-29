@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using WorldServer.NetWork;
+using WorldServer.World.Interfaces;
 using WorldServer.World.Objects;
 using WorldServer.World.Positions;
 using WorldServer.Services.World;
@@ -19,6 +20,13 @@ namespace WorldServer.Managers
 
     public class BotManager
     {
+        private struct BotAppearance
+        {
+            public byte Sex;
+            public byte ModelId;
+            public byte[] Traits;
+        }
+
         private static BotManager _instance;
         public static BotManager Instance => _instance ??= new BotManager();
 
@@ -69,6 +77,8 @@ namespace WorldServer.Managers
                 Program.AcctMgr.UpdateAccount(_botAccount);
                 Log.Info("BotManager", "BotAccount locked against player login (GmLevel set to system sentinel).");
             }
+
+            RepairPersistedBotAppearances();
         }
 
         public Player CreateOrLoadBot(string name, byte career, byte level, byte renownRank, Realms realm, BotRole role)
@@ -80,6 +90,9 @@ namespace WorldServer.Managers
             }
 
             if (!TryGetBotTemplate(career, out CharacterInfo template, out CharacterIdentityRecord identity))
+                return null;
+
+            if (!TryResolveBotAppearance(career, out BotAppearance appearance))
                 return null;
 
             Character character = CharMgr.GetCharacter(name);
@@ -101,11 +114,11 @@ namespace WorldServer.Managers
                     CareerLine = career,
                     Realm = identity.Realm,
                     Race = identity.Race,
-                    ModelId = 0,
-                    Sex = 0,
+                    ModelId = appearance.ModelId,
+                    Sex = appearance.Sex,
                     Hidden = false,
                     PetModel = 0,
-                    bTraits = new byte[8],
+                    bTraits = appearance.Traits.ToArray(),
                     FirstConnect = false
                 };
 
@@ -128,7 +141,7 @@ namespace WorldServer.Managers
                 if (character.ClientData == null)
                     character.ClientData = CharMgr.Database.SelectObject<CharacterClientData>("CharacterId=" + character.CharacterId);
 
-                saveCharacter = RepairBotCharacter(character, template, identity);
+                saveCharacter = RepairBotCharacter(character, template, identity, appearance);
 
                 if (character.Value == null)
                 {
@@ -161,7 +174,7 @@ namespace WorldServer.Managers
             {
                 existingPlayer.IsBot = true;
                 existingPlayer.Role = role;
-                existingPlayer.CbtInterface.IsPvp = true;
+                EnsureBotPvpEnabled(existingPlayer);
                 existingPlayer.Info.FirstConnect = false;
                 if (existingPlayer.MaxActionPoints < 250)
                     existingPlayer.MaxActionPoints = 250;
@@ -183,7 +196,7 @@ namespace WorldServer.Managers
 
             player.IsBot = true;
             player.Role = role;
-            player.CbtInterface.IsPvp = true;
+            EnsureBotPvpEnabled(player);
             player.Info.FirstConnect = false;
             if (player.MaxActionPoints < 250)
                 player.MaxActionPoints = 250;
@@ -210,6 +223,42 @@ namespace WorldServer.Managers
             return new Point3D((zoneInfo.OffX + 4) << 12, (zoneInfo.OffY + 4) << 12, 0);
         }
 
+        private void RepairPersistedBotAppearances()
+        {
+            if (_botAccount == null)
+                return;
+
+            IList<Character> botCharacters = CharMgr.Database.SelectObjects<Character>($"AccountId={_botAccount.AccountId}");
+            if (botCharacters == null || botCharacters.Count == 0)
+                return;
+
+            int repairedCount = 0;
+
+            foreach (Character character in botCharacters)
+            {
+                if (character == null || !character.Name.StartsWith("Bot_", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                if (!TryGetBotTemplate(character.CareerLine, out CharacterInfo template, out CharacterIdentityRecord identity))
+                    continue;
+
+                if (!TryResolveBotAppearance(character.CareerLine, out BotAppearance appearance))
+                    continue;
+
+                if (!RepairBotCharacter(character, template, identity, appearance))
+                    continue;
+
+                CharMgr.Database.SaveObject(character);
+                ++repairedCount;
+            }
+
+            if (repairedCount == 0)
+                return;
+
+            CharMgr.Database.ForceSave();
+            Log.Info("BotManager", $"Queued persisted appearance repairs for {repairedCount} bot characters.");
+        }
+
         public Group SpawnBotGroup(Realms realm, int tier, int rr, string groupPrefix, ushort zoneId, Point3D spawnOverride = null)
         {
             Zone_Info zoneInfo = ZoneService.GetZone_Info(zoneId);
@@ -227,8 +276,7 @@ namespace WorldServer.Managers
             }
 
             Point3D worldSpawn = spawnOverride ?? ResolveSpawnPoint(zoneId, realm, zoneInfo);
-            BotFaction[] factions = realm == Realms.REALMS_REALM_ORDER ? OrderFactions : DestroFactions;
-            BotFaction faction = factions[RandomMgr.Next(factions.Length)];
+            BotFaction faction = ResolveFactionForZone(realm, zoneInfo);
 
             List<Player> bots = new List<Player>();
             byte[] careers = faction.Careers;
@@ -394,14 +442,11 @@ namespace WorldServer.Managers
             if (loadout == null) return;
 
             List<CharacterItem> existingItems = CharMgr.GetItemsForCharacter(bot.Info) ?? new List<CharacterItem>();
+            bool liveItemsChanged = false;
 
             foreach (KeyValuePair<ushort, uint> itemEntry in loadout.SlotItems)
             {
                 ushort slotId = itemEntry.Key;
-                CharacterItem existing = existingItems.FirstOrDefault(item => item.SlotId == slotId);
-                if (existing != null)
-                    continue;
-
                 Item_Info itemInfo = ItemService.GetItem_Info(itemEntry.Value);
                 if (itemInfo == null)
                 {
@@ -409,21 +454,31 @@ namespace WorldServer.Managers
                     continue;
                 }
 
-                CharacterItem item = new CharacterItem
+                CharacterItem existing = existingItems.FirstOrDefault(item => item.SlotId == slotId);
+                if (existing == null)
                 {
-                    CharacterId = bot.CharacterId,
-                    Entry = itemEntry.Value,
-                    ModelId = itemInfo.ModelId,
-                    SlotId = slotId,
-                    Counts = 1,
-                    PrimaryDye = 0,
-                    SecondaryDye = 0,
-                    BoundtoPlayer = false
-                };
+                    existing = new CharacterItem
+                    {
+                        CharacterId = bot.CharacterId,
+                        Entry = itemEntry.Value,
+                        ModelId = itemInfo.ModelId,
+                        SlotId = slotId,
+                        Counts = 1,
+                        PrimaryDye = 0,
+                        SecondaryDye = 0,
+                        BoundtoPlayer = false
+                    };
 
-                CharMgr.CreateItem(item);
-                existingItems.Add(item);
+                    CharMgr.CreateItem(existing);
+                    existingItems.Add(existing);
+                }
+
+                if (EnsureLiveLoadoutItem(bot, existing))
+                    liveItemsChanged = true;
             }
+
+            if (liveItemsChanged && bot.IsInWorld())
+                bot.ItmInterface.SendEquipped(null);
         }
 
         private BotLoadoutManager.BotTier GetBotTier(int tier, int rr)
@@ -466,7 +521,7 @@ namespace WorldServer.Managers
             return true;
         }
 
-        private bool RepairBotCharacter(Character character, CharacterInfo template, CharacterIdentityRecord identity)
+        private bool RepairBotCharacter(Character character, CharacterInfo template, CharacterIdentityRecord identity, BotAppearance appearance)
         {
             bool dirty = false;
 
@@ -506,9 +561,15 @@ namespace WorldServer.Managers
                 dirty = true;
             }
 
-            if (character.bTraits == null || character.bTraits.Length < 8)
+            if (character.ModelId != appearance.ModelId)
             {
-                character.bTraits = new byte[8];
+                character.ModelId = appearance.ModelId;
+                dirty = true;
+            }
+
+            if (!TraitsEqual(character.bTraits, appearance.Traits))
+            {
+                character.bTraits = appearance.Traits.ToArray();
                 dirty = true;
             }
 
@@ -530,9 +591,9 @@ namespace WorldServer.Managers
                 dirty = true;
             }
 
-            if (character.Sex > 1)
+            if (character.Sex != appearance.Sex)
             {
-                character.Sex = 0;
+                character.Sex = appearance.Sex;
                 dirty = true;
             }
 
@@ -550,6 +611,197 @@ namespace WorldServer.Managers
 
             character.FirstConnect = false;
             return dirty;
+        }
+
+        private static void EnsureBotPvpEnabled(Player player)
+        {
+            if (player == null)
+                return;
+
+            if (player.CbtInterface is CombatInterface_Player playerCombat)
+            {
+                if (!playerCombat.IsPvp)
+                    playerCombat.EnablePvp();
+                else
+                {
+                    playerCombat.NextAllowedDisable = 0;
+                    player.SetPVPFlag(true);
+                }
+            }
+            else
+                player.CbtInterface.IsPvp = true;
+        }
+
+        private static BotFaction ResolveFactionForZone(Realms realm, Zone_Info zoneInfo)
+        {
+            string preferredName = null;
+
+            switch ((Pairing)zoneInfo.Pairing)
+            {
+                case Pairing.PAIRING_GREENSKIN_DWARVES:
+                    preferredName = realm == Realms.REALMS_REALM_ORDER ? "Dwarfs" : "Greenskins";
+                    break;
+                case Pairing.PAIRING_EMPIRE_CHAOS:
+                    preferredName = realm == Realms.REALMS_REALM_ORDER ? "Empire" : "Chaos";
+                    break;
+                case Pairing.PAIRING_ELVES_DARKELVES:
+                    preferredName = realm == Realms.REALMS_REALM_ORDER ? "High Elves" : "Dark Elves";
+                    break;
+            }
+
+            BotFaction[] factions = realm == Realms.REALMS_REALM_ORDER ? OrderFactions : DestroFactions;
+
+            if (!string.IsNullOrEmpty(preferredName))
+            {
+                BotFaction preferredFaction = factions.FirstOrDefault(faction => faction.Name == preferredName);
+                if (preferredFaction != null)
+                    return preferredFaction;
+            }
+
+            return factions[RandomMgr.Next(factions.Length)];
+        }
+
+        private static bool TryResolveBotAppearance(byte careerLine, out BotAppearance appearance)
+        {
+            // These model ids mirror the 1.4.8 client character creation defaults
+            // in interface/interfacecore/source/characterselectwindow.lua.
+            appearance = default;
+
+            switch ((CareerLine)careerLine)
+            {
+                case CareerLine.CAREERLINE_IRON_BREAKER:
+                    appearance = new BotAppearance { Sex = 0, ModelId = 16, Traits = GetDefaultTraits((byte)Races.RACES_DWARF, 0) };
+                    return true;
+                case CareerLine.CAREERLINE_SLAYER:
+                    appearance = new BotAppearance { Sex = 0, ModelId = 18, Traits = GetDefaultTraits((byte)Races.RACES_DWARF, 0) };
+                    return true;
+                case CareerLine.CAREERLINE_RUNE_PRIEST:
+                    appearance = new BotAppearance { Sex = 0, ModelId = 22, Traits = GetDefaultTraits((byte)Races.RACES_DWARF, 0) };
+                    return true;
+                case CareerLine.CAREERLINE_ENGINEER:
+                    appearance = new BotAppearance { Sex = 0, ModelId = 20, Traits = GetDefaultTraits((byte)Races.RACES_DWARF, 0) };
+                    return true;
+                case CareerLine.CAREERLINE_BLACK_ORC:
+                    appearance = new BotAppearance { Sex = 0, ModelId = 12, Traits = GetDefaultTraits((byte)Races.RACES_ORC, 0) };
+                    return true;
+                case CareerLine.CAREERLINE_CHOPPA:
+                    appearance = new BotAppearance { Sex = 0, ModelId = 13, Traits = GetDefaultTraits((byte)Races.RACES_ORC, 0) };
+                    return true;
+                case CareerLine.CAREERLINE_SHAMAN:
+                    appearance = new BotAppearance { Sex = 0, ModelId = 14, Traits = GetDefaultTraits((byte)Races.RACES_GOBLIN, 0) };
+                    return true;
+                case CareerLine.CAREERLINE_SQUIG_HERDER:
+                    appearance = new BotAppearance { Sex = 0, ModelId = 15, Traits = GetDefaultTraits((byte)Races.RACES_GOBLIN, 0) };
+                    return true;
+                case CareerLine.CAREERLINE_WITCH_HUNTER:
+                    appearance = new BotAppearance { Sex = 0, ModelId = 34, Traits = GetDefaultTraits((byte)Races.RACES_EMPIRE, 0) };
+                    return true;
+                case CareerLine.CAREERLINE_KNIGHT_OF_THE_BLAZING_SUN:
+                    appearance = new BotAppearance { Sex = 0, ModelId = 30, Traits = GetDefaultTraits((byte)Races.RACES_EMPIRE, 0) };
+                    return true;
+                case CareerLine.CAREERLINE_BRIGHT_WIZARD:
+                    appearance = new BotAppearance { Sex = 0, ModelId = 32, Traits = GetDefaultTraits((byte)Races.RACES_EMPIRE, 0) };
+                    return true;
+                case CareerLine.CAREERLINE_WARRIOR_PRIEST:
+                    appearance = new BotAppearance { Sex = 0, ModelId = 36, Traits = GetDefaultTraits((byte)Races.RACES_EMPIRE, 0) };
+                    return true;
+                case CareerLine.CAREERLINE_CHOSEN:
+                    appearance = new BotAppearance { Sex = 0, ModelId = 24, Traits = GetDefaultTraits((byte)Races.RACES_CHAOS, 0) };
+                    return true;
+                case CareerLine.CAREERLINE_MARAUDER:
+                    appearance = new BotAppearance { Sex = 0, ModelId = 25, Traits = GetDefaultTraits((byte)Races.RACES_CHAOS, 0) };
+                    return true;
+                case CareerLine.CAREERLINE_ZEALOT:
+                    appearance = new BotAppearance { Sex = 0, ModelId = 26, Traits = GetDefaultTraits((byte)Races.RACES_CHAOS, 0) };
+                    return true;
+                case CareerLine.CAREERLINE_MAGUS:
+                    appearance = new BotAppearance { Sex = 0, ModelId = 28, Traits = GetDefaultTraits((byte)Races.RACES_CHAOS, 0) };
+                    return true;
+                case CareerLine.CAREERLINE_SWORDMASTER:
+                    appearance = new BotAppearance { Sex = 0, ModelId = 48, Traits = GetDefaultTraits((byte)Races.RACES_HIGH_ELF, 0) };
+                    return true;
+                case CareerLine.CAREERLINE_SHADOW_WARRIOR:
+                    appearance = new BotAppearance { Sex = 0, ModelId = 50, Traits = GetDefaultTraits((byte)Races.RACES_HIGH_ELF, 0) };
+                    return true;
+                case CareerLine.CAREERLINE_WHITE_LION:
+                    appearance = new BotAppearance { Sex = 0, ModelId = 46, Traits = GetDefaultTraits((byte)Races.RACES_HIGH_ELF, 0) };
+                    return true;
+                case CareerLine.CAREERLINE_ARCHMAGE:
+                    appearance = new BotAppearance { Sex = 0, ModelId = 44, Traits = GetDefaultTraits((byte)Races.RACES_HIGH_ELF, 0) };
+                    return true;
+                case CareerLine.CAREERLINE_BLACK_GUARD:
+                    appearance = new BotAppearance { Sex = 0, ModelId = 39, Traits = GetDefaultTraits((byte)Races.RACES_DARK_ELF, 0) };
+                    return true;
+                case CareerLine.CAREERLINE_WITCH_ELF:
+                    appearance = new BotAppearance { Sex = 1, ModelId = 43, Traits = GetDefaultTraits((byte)Races.RACES_DARK_ELF, 1) };
+                    return true;
+                case CareerLine.CAREERLINE_DISCIPLE_OF_KHAINE:
+                    appearance = new BotAppearance { Sex = 0, ModelId = 38, Traits = GetDefaultTraits((byte)Races.RACES_DARK_ELF, 0) };
+                    return true;
+                case CareerLine.CAREERLINE_SORCERER:
+                    appearance = new BotAppearance { Sex = 0, ModelId = 41, Traits = GetDefaultTraits((byte)Races.RACES_DARK_ELF, 0) };
+                    return true;
+                default:
+                    Log.Error("BotManager", $"No client model mapping found for bot career line {careerLine}");
+                    return false;
+            }
+        }
+
+        private static byte[] GetDefaultTraits(byte race, byte sex)
+        {
+            // Known-good live character payloads from this server. Prefer validated race/sex
+            // combinations over guessed defaults because malformed trait bytes can make the
+            // client fail to render the player body.
+            if (race == (byte)Races.RACES_DWARF && sex == 0)
+                return new byte[] { 5, 2, 6, 2, 5, 5, 3, 0 };
+
+            if (race == (byte)Races.RACES_EMPIRE && sex == 0)
+                return new byte[] { 1, 9, 4, 8, 3, 1, 9, 3 };
+
+            if (race == (byte)Races.RACES_CHAOS && sex == 0)
+                return new byte[] { 8, 13, 5, 6, 6, 2, 3, 0 };
+
+            if (race == (byte)Races.RACES_DARK_ELF && sex == 1)
+                return new byte[] { 5, 3, 0, 7, 0, 1, 4, 1 };
+
+            return new byte[] { 1, 1, 1, 1, 1, 1, 1, 0 };
+        }
+
+        private static bool TraitsEqual(byte[] current, byte[] expected)
+        {
+            if (current == null || expected == null || current.Length != expected.Length)
+                return false;
+
+            for (int i = 0; i < current.Length; ++i)
+            {
+                if (current[i] != expected[i])
+                    return false;
+            }
+
+            return true;
+        }
+
+        private static bool EnsureLiveLoadoutItem(Player bot, CharacterItem item)
+        {
+            if (bot?.ItmInterface?.Items == null || item == null || item.SlotId >= bot.ItmInterface.Items.Length)
+                return false;
+
+            if (bot.ItmInterface.GetItemInSlot(item.SlotId) != null)
+                return false;
+
+            WorldServer.World.Objects.Item liveItem = new WorldServer.World.Objects.Item(bot);
+            if (!liveItem.Load(item))
+            {
+                Log.Error("BotManager", $"Failed to hydrate live loadout item {item.Entry} for bot {bot.Name}");
+                return false;
+            }
+
+            bot.ItmInterface.Items[item.SlotId] = liveItem;
+
+            if (item.SlotId < ItemsInterface.MAX_EQUIPMENT_SLOT)
+                bot.ItmInterface.EquipItem(liveItem);
+
+            return true;
         }
 
         private static Character_value CreateBotCharacterValue(Character character, CharacterInfo template, byte level, byte renownRank, Realms realm)

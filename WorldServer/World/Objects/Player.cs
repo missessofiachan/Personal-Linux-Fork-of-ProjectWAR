@@ -947,6 +947,9 @@ namespace WorldServer.World.Objects
 
                 //Log.info(Name, "EndInit: Oid " + Oid);
                 _initialized = true;
+
+                if (IsBot)
+                    ActivateBotAfterInit();
             }
             catch (Exception ex)
             {
@@ -954,6 +957,16 @@ namespace WorldServer.World.Objects
                 // init failed!
                 _initialized = false;
             }
+        }
+
+        private void ActivateBotAfterInit()
+        {
+            PendingDumpStatic = false;
+
+            if (!IsActive)
+                IsActive = true;
+
+            OnClientLoaded();
         }
 
         public void OnClientLoaded()
@@ -4028,6 +4041,9 @@ namespace WorldServer.World.Objects
             }
             DeathLogger.Trace($"Victim : {Name} calling AutomaticRespawnPlayer ");
             EvtInterface.AddEvent(AutomaticRespawnPlayer, RespawnTime * 1000, 1); // If the player don't resurrect. autoresurrect in 10 Minutes.
+
+            if (IsBot)
+                PreRespawnPlayer();
 
             BuffInterface.NotifyCombatEvent((byte)BuffCombatEvents.OnDie, null, killer);
 

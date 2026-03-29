@@ -1,56 +1,66 @@
-﻿# Player-Like Bot System Documentation
+# Player-Like Bot System Documentation
 
 ## Overview
-The Bot System is designed to populate the world with autonomous, player-like entities that participate in the RvR campaign and Scenarios. These bots are real characters in the database but run with zero network overhead.
+The bot system creates persisted `Player` characters that behave like server-controlled realm players in RvR and scenarios. Bots live on the shared `BotAccount` (account id `9999`), use real character records in the database, and run through the normal world, range, combat, and group systems.
+
+Bots do not need separate accounts to be visible. Their synthetic `BotClient` only swallows packets sent to the bot itself; real players still receive the normal create/state/inventory packets when the bot is properly activated in the world.
 
 ## Core Components
 
-### 1. Networking (BotClient.cs)
-- **Inheritance**: Inherits from GameClient.
-- **Optimization**: Overrides SendPacket and buffer allocation to perform no-op operations. This allows the server to treat them as connected players without any TCP or serialization cost.
+### 1. Networking (`BotClient.cs`)
+- `BotClient` inherits from `GameClient` and starts in the `Playing` state.
+- `SendPacket`, `SendPacketNoBlock`, and `SendPacketsNoBlock` are no-ops, so bots have no real TCP session cost.
+- Account `9999` is exempt from the one-session-per-account guard so many bots can share the same account safely.
 
-### 2. Management & Persistence (BotManager.cs & BotLoadoutManager.cs)
-- **Account**: All bots are linked to Account ID 9999 ("BotAccount").
-- **Persistence**: Bots are saved in the characters table. If a bot group is requested and characters don't exist, they are generated natively.
-- **Faction Integration**: Bots are organized into exact race-matched sub-factions (e.g. Empire, Dwarfs, High Elves for Order; Chaos, Greenskins, Dark Elves for Destruction).
-- **Permanent Guilds**: Groups are automatically assigned to permanent guilds bearing their faction's name, identical to player-created guilds in the database, complete with all ranks and full persistence.
-- **Gear Discovery**: BotLoadoutManager automatically scans the ItemService on startup to find and equip sets like Annihilator, Warlord, and Sovereign based on the bot's tier and renown rank.
+### 2. Management and Persistence (`BotManager.cs`, `BotLoadoutManager.cs`)
+- Bots are created or loaded from the normal `characters` tables.
+- Legacy bot records are repaired on startup by `RepairPersistedBotAppearances()`, which fixes invalid model ids, sex, and trait bytes.
+- `Database/update_010_repair_bot_appearance.sql` exists for environments that still hold pre-fix bot rows.
+- Faction selection is resolved from the active zone pairing, not random race choice, so zone-specific bot factions stay lore-correct.
+- Bot groups are assigned to persistent guilds and use normal group membership.
+- Gear is discovered and equipped from the normal item data through `BotLoadoutManager`.
 
-### 3. Intelligence (BotBrain.cs)
-- **Assist Train**: Non-MA bots in a group automatically target and attack whatever the Main Assist (MA) is targeting.
-- **Formation**: Bots use unique offsets to prevent "stacking" on a single coordinate, ensuring they occupy physical space at choke points.
-- **RvR Logic**: Groups spawn at Warcamps and march to neutral/enemy Battlefield Objectives to capture them.
-- **Scenario Logic**: Dedicated groups queue for Scenarios, auto-accept invites, and play objectives (carrying flags/balls).
+### 3. Intelligence and Combat (`BotBrain.cs`, `Player.cs`)
+- Bots form standard 6-man groups with `_H`, `_R`, `_MT`, `_OT`, `_M1`, and `_M2` suffix roles.
+- Non-main-assist bots follow the main assist target.
+- Bots now acquire nearby hostile targets before resuming battlefield-objective movement.
+- PvP is enabled through the normal player PvP path via `EnsureBotPvpEnabled()`, not by only setting a raw flag.
+- On death, bots use the short respawn path (`PreRespawnPlayer()`) instead of waiting on the generic long fallback timer.
 
-### 4. Dynamic Deployment (DynamicBotManager.cs)
-- **Automatic Monitoring**: A background service that runs every 60 seconds.
-- **Reinforcement**: Monitors population (AAO) and zone push status to spawn or upgrade bot groups (RR40 -> RR100) as needed.
+### 4. Dynamic Deployment (`DynamicBotManager.cs`)
+- `DynamicBotManager.Start()` performs the initial battlefield scan immediately during startup.
+- The recurring bot timer starts `120` seconds later and then runs every `60` seconds. This prevents the old double-spawn race during server boot.
+- Active campaign zones spawn one Order and one Destruction 6-man group when a complete group is missing.
+- When battlefield objective data is available, campaign bots spawn directly at the primary BO through `ResolveBoSpawnPoint()`.
+- If no BO anchor is available, spawn resolution falls back to warcamp entrance, then zone respawn, then zone center.
+- Scenario bots are checked every `30` seconds and queued once a full initialized group is available.
 
-## Key Modifications to Core Engine
-- **TCPServer.cs**: Exempted Account 9999 from the "one session per account" check to allow 50+ bots on one account.
-- **Player.cs**: Added IsBot flag. Modified SendPacket to exit early if IsBot is true, saving massive CPU cycles.
-- **Group.cs**: Exposed MainAssist for AI targeting.
-- **Program.cs**: Added initialization hooks for the Bot services.
+## Visibility and Client Loading
+Bot visibility depends on the same post-load activation path that human players use after the client finishes entering the world.
 
-## Automatic Deployment
+- `Player.EndInit()` now calls `ActivateBotAfterInit()` for bots.
+- `ActivateBotAfterInit()` sets `IsActive = true` and runs `OnClientLoaded()`.
+- Without that activation step, bots can exist server-side, move, and interact with objectives while remaining invisible to human clients because inactive players are filtered out of range visibility.
 
-`DynamicBotManager` runs every 60 seconds (initial delay: 10 seconds after server start). It:
-1. Queries the active campaign from `WorldMgr.UpperTierCampaignManager` and `WorldMgr.LowerTierCampaignManager`.
-2. For each campaign zone, checks that warcamp entrance data exists in `BattleFrontObjects` for both realms.
-3. If a complete 6-man bot group (suffix pattern `_H _R _MT _OT _M1 _M2`) is not already online, calls `BotManager.SpawnBotGroup`.
-4. Scenario bots are checked every 30 seconds and queued into active scenarios.
+This was the root cause of the "teleport to bot works but the bot is invisible" bug.
 
-Bot group names follow the pattern `Bot_T{tier}_{O|D}_{zoneId}` for RvR and `Bot_Scen_{O|D}` for scenarios.
+## Automatic Deployment Summary
+`DynamicBotManager` currently does the following:
+1. Reads the active upper-tier and lower-tier campaigns.
+2. Resolves the active zone for each campaign.
+3. Checks whether the expected 6-man bot groups already exist.
+4. Spawns missing campaign groups, preferring direct BO placement.
+5. Checks scenario groups every `30` seconds and queues them when idle.
 
-## Startup Dependency
+Campaign bot names use `Bot_T{tier}_{O|D}_{zoneId}`.
+Scenario bot names use `Bot_Scen_{O|D}`.
 
-Bots require the WorldServer to complete its full startup (campaign, region, and zone loading) before the 10-second initial timer fires. If the server crashed at startup, no bots will have spawned. Verify the server started cleanly before investigating bot absence.
+## Operational Notes
+- A full restart is recommended after appearance or activation changes so persisted bots respawn from corrected records.
+- Shared-account architecture is intentional and is not a visibility blocker.
+- If a bot exists in the database but is not visible in-world, check activation and range visibility before changing appearance data again.
 
-## Prerequisite: Warcamp Entrance Data
-
-`DynamicBotManager` will skip a campaign zone and log an error if `BattleFrontObjects` has no warcamp entrance entry (`Type = WARCAMP_ENTRANCE`) for either realm in that zone. Bots for that zone are silently skipped until data is present.
-
-## Usage (GM Commands)
-- .bot spawn <realm> <tier> <rr> <namePrefix>
-  - Spawns a full 6-man tactical group at the current zone's Warcamp.
-  - Realms: 1 (Order), 2 (Destruction).
+## Usage
+- `.bot spawn <realm> <tier> <rr> <namePrefix>`
+  - Spawns a full 6-man group in the current zone using normal bot creation and fallback spawn resolution.
+  - Realms: `1` = Order, `2` = Destruction.

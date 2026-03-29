@@ -12,6 +12,7 @@ namespace WorldServer.Services.World
     {
         public static List<Scenario_Info> Scenarios;
         public static List<Scenario_Info> ActiveScenarios;
+        private static HashSet<ushort> _scenarioMapIds = new HashSet<ushort>();
 
         [LoadingFunction(true)]
         public static void LoadScenarioInfo()
@@ -22,6 +23,7 @@ namespace WorldServer.Services.World
             IList<Scenario_Info> infos = Database.SelectAllObjects<Scenario_Info>();
             if (infos != null)
                 Scenarios.AddRange(infos);
+            _scenarioMapIds = new HashSet<ushort>(Scenarios.Where(info => info != null).Select(info => info.MapId));
 
             ActiveScenarios = new List<Scenario_Info>();
 
@@ -46,6 +48,11 @@ namespace WorldServer.Services.World
                 if (scenario != null && scenario.ScenarioId == ScenarioId)
                     return scenario;
             return null;
+        }
+
+        public static bool IsScenarioZone(ushort zoneId)
+        {
+            return _scenarioMapIds != null && _scenarioMapIds.Contains(zoneId);
         }
 
     }

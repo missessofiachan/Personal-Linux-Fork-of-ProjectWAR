@@ -132,6 +132,13 @@ namespace WorldServer.World.AI
 
             if (player.CbtInterface.IsInCombat) return;
 
+            Unit nearbyTarget = player.AiInterface.GetAttackableUnit();
+            if (nearbyTarget != null)
+            {
+                player.AiInterface.ProcessCombatStart(nearbyTarget);
+                return;
+            }
+
             // ── 3. Scenario objective ─────────────────────────────────────────
             if (player.ScnInterface.Scenario != null)
             {
