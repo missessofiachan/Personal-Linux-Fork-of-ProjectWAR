@@ -11,8 +11,13 @@ movement snap-back, incorrect item equipping, and structured waypoint navigation
 When a bot's interpolated world position crossed into a new zone mid-movement,
 `_unit.Zone` was still the source zone, so the pin values were relative to the
 wrong origin. `SetPosition` then placed the bot at a nonsensical location, causing
-it to snap back to spawn. Fixed by using `destZone.CalculPin()` — the zone that
-owns the current interpolated position.
+it to snap back to spawn.
+
+Fixed by calling `ZoneService.CalculPin(destZone, (int)worldPos, axis)` — the static
+utility on `ZoneService`, using the zone that owns the current interpolated position.
+`CalculPin` is not an instance method on `Zone_Info`; the earlier description was
+incorrect (calling it as `destZone.CalculPin()` produced CS1061 at compile time).
+Added `using WorldServer.Services.World;` to the file's imports.
 
 ### 2. Wrong-faction and over-renown items (`BotLoadoutManager.cs`)
 Three filters added to every item query (gear set armor, weapons, accessories):
@@ -56,7 +61,8 @@ entries). Added `<Compile Include="Managers\BotPathfinder.cs" />`.
 
 ## Build Status
 `WorldServer.csproj` builds cleanly to `bin/Release/WorldServer.exe` — zero
-errors, zero warnings after fix.
+errors, zero warnings after the `ZoneService.CalculPin` compile fix was applied
+in the follow-up session (2026-03-29).
 
 ## Remaining Follow-Up Areas
 - Verify bots successfully traverse warcamp → RvR zone boundary under live conditions.

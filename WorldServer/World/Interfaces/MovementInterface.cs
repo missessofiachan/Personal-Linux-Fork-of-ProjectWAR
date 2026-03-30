@@ -2,6 +2,7 @@
 using Common;
 using FrameWork;
 using WorldServer.Managers;
+using WorldServer.Services.World;
 using WorldServer.World.Abilities.Objects;
 using WorldServer.World.Objects;
 using WorldServer.World.Positions;
@@ -315,8 +316,8 @@ namespace WorldServer.World.Interfaces
             // movement produces pin coords relative to the zone the bot is entering,
             // not the zone it is leaving. Using the wrong zone causes incorrect pin
             // values that snap the bot back to spawn when crossing zone boundaries.
-            ushort pinX = destZone.CalculPin(newWorldPosX, true);
-            ushort pinY = destZone.CalculPin(newWorldPosY, false);
+            ushort pinX = ZoneService.CalculPin(destZone, (int)newWorldPosX, true);
+            ushort pinY = ZoneService.CalculPin(destZone, (int)newWorldPosY, false);
             ushort pinZ = (ushort)Point2D.Lerp(_startWorldPos.Z, _destWorldPos.Z, GetMoveFactor(deltaMs));
 
             _unit.SetPosition(pinX, pinY, pinZ, _unit.Heading, destZone.ZoneId);
