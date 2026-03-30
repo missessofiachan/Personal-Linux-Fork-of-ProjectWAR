@@ -130,6 +130,14 @@ A new automated guild system provides "Forces of Order" and "Forces of Destructi
 
 ## Recently Resolved Issues
 
+### Deadlock and Performance Pass (2026-03-30)
+
+- **Region Update Loop**: `RegionMgr.UpdateActors` optimized to use a dense `HashSet<Object>` for active objects. This eliminates the 65,000-slot sparse array scan performed every 50ms, significantly reducing CPU overhead in empty or low-population zones.
+- **Networking Deadlocks**: Replaced `lock(this)` with private `_syncLock` objects in `GameClient`, `LobbyClient`, `LauncherClient`, and `CellMgr`. This removes a widespread architectural risk where external callers could inadvertently cause deadlocks by locking on the public client objects.
+- **NPC Waypoint System**: Fixed a critical 5-second stall in the waypoint system by removing a `Thread.Sleep(5000)` call from `AIInterface.AddWaypoint`. Waypoint ID generation migrated from synchronous DB `MAX(GUID)` queries to a thread-safe static counter in `WaypointService`.
+- **Database Optimization**: Audited and removed redundant `ForceSave()` calls in hot paths (e.g., waypoint creation) to prevent synchronous game-thread stalls.
+- **Internal Bug Tracker**: Established `docs/INTERNAL_BUG_TRACKER.md` as the central ledger for tracking known issues, including the Invader ward unlock bug and RvR zone transition crashes.
+
 ### Bot Cross-Zone Movement Snap-Back Fixed (2026-03-29)
 
 `MovementInterface.UpdateMove()` was computing zone-pin coordinates with

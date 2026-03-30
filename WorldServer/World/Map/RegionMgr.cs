@@ -264,6 +264,7 @@ namespace WorldServer.World.Map
                                 obj.Obj.Region.RemoveObject(obj.Obj);
 
                             GenerateOid(obj.Obj);
+                            _activeObjects.Add(obj.Obj);
 
                             if (plr != null)
                             {
@@ -316,6 +317,8 @@ namespace WorldServer.World.Map
                             removeInfo.Zone.RemoveObject(removeInfo.Obj);
 
                         if (removeInfo.Oid != 0)
+                        {
+                            _activeObjects.Remove(removeInfo.Obj);
                             if (Objects[removeInfo.Oid] != null && Objects[removeInfo.Oid] == removeInfo.Obj)
                             {
                                 Objects[removeInfo.Oid] = null;
@@ -328,6 +331,7 @@ namespace WorldServer.World.Map
                                 if (removeInfo.Obj.Oid == removeInfo.Oid && removeInfo.Zone == removeInfo.Obj.Zone)
                                     removeInfo.Obj.ZeroOid(removeInfo.Oid);
                             }
+                        }
 
                         if (removeInfo.Obj is Player)
                             Players.Remove((Player) removeInfo.Obj);
@@ -344,9 +348,8 @@ namespace WorldServer.World.Map
 
         private void UpdateActors(long start)
         {
-            for (var i = 0; i < Objects.Length; ++i)
+            foreach (var obj in _activeObjects)
             {
-                var obj = Objects[i];
                 if (obj == null || obj.Region != this)
                     continue;
 
@@ -403,10 +406,8 @@ namespace WorldServer.World.Map
         {
             RemoveOldObjects();
 
-            for (var i = 0; i < Objects.Length; ++i)
+            foreach (var obj in _activeObjects)
             {
-                var obj = Objects[i];
-
                 if (obj == null || obj.Region != this)
                     continue;
 
@@ -438,7 +439,7 @@ namespace WorldServer.World.Map
         {
             var objectCounts = new Dictionary<string, int>();
 
-            foreach (var obj in Objects)
+            foreach (var obj in _activeObjects)
             {
                 if (obj == null)
                     continue;
@@ -615,6 +616,7 @@ namespace WorldServer.World.Map
         public static ushort MaxObjects = 65000;
         public static ushort MaxOid = 2;
         public Object[] Objects = new Object[MaxObjects];
+        private readonly HashSet<Object> _activeObjects = new HashSet<Object>();
         public Dictionary<uint, PublicQuest> PublicQuests = new Dictionary<uint, PublicQuest>();
         private readonly List<ObjectAdd> _objectsToAdd = new List<ObjectAdd>();
         private readonly List<ObjectRemove> _objectsToRemove = new List<ObjectRemove>();
@@ -737,12 +739,12 @@ namespace WorldServer.World.Map
 
         public ushort GetObjects()
         {
-            return (ushort) Objects.Count(obj => obj != null);
+            return (ushort) _activeObjects.Count;
         }
 
         public List<T> GetObjects<T>() where T : Object
         {
-            return Objects.Where(obj => obj != null && obj is T).Select(e => (T) e).ToList();
+            return _activeObjects.OfType<T>().ToList();
         }
 
         #endregion

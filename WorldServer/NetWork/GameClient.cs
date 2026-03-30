@@ -24,6 +24,7 @@ namespace WorldServer.NetWork
 
     public class GameClient : BaseClient
     {
+        private readonly object _syncLock = new object();
         public Account _Account = null;
         public Player Plr = null;
         private Thread _logThread = null;
@@ -255,7 +256,7 @@ namespace WorldServer.NetWork
             Log.Debug("HandlePacket", $"Packet...{packetBuffer.Length}");
             PacketIn inStream = new PacketIn(packetBuffer, 0, packetBuffer.Length, true, true);
 
-            lock (this)
+            lock (_syncLock)
             {
                 long bufferLength = inStream.Length;
 

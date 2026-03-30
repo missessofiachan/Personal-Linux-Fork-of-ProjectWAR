@@ -9,19 +9,34 @@ namespace WorldServer.Services.World
     [Service]
     public class WaypointService : ServiceBase
     {
+        private static readonly object _idLock = new object();
+        private static uint _nextWaypointId;
         public static Lookup<uint, Waypoint> LookupWaypoints;
-        public static IList<Waypoint> TableWaypoints;
+        public static List<Waypoint> TableWaypoints;
 
        [LoadingFunction(true)]
         public static void LoadNpcWaypoints()
         {
             Log.Debug("WorldMgr", "Loading Npc Waypoints...");
 
-            TableWaypoints = Database.SelectAllObjects<Waypoint>();
+            TableWaypoints = Database.SelectAllObjects<Waypoint>().ToList();
             LookupWaypoints = (Lookup<uint, Waypoint>)TableWaypoints.ToLookup(W => W.GUID, W => W);
+
+            lock (_idLock)
+            {
+                _nextWaypointId = TableWaypoints.Count > 0 ? TableWaypoints.Max(w => w.GUID) + 1 : 1;
+            }
 
             if (TableWaypoints != null)
                 Log.Success("LoadNpcWaypoints", "Loaded " + TableWaypoints.Count + " Waypoints");
+        }
+
+        public static uint GetNextWaypointId()
+        {
+            lock (_idLock)
+            {
+                return _nextWaypointId++;
+            }
         }
 
         public static List<Waypoint> GetNextWayPoint(uint first, List<Waypoint> matchingList)
@@ -63,18 +78,24 @@ namespace WorldServer.Services.World
         {
             Database.AddObject(AddWp);
             Database.ForceSave();
+            lock (_idLock)
+            {
+                TableWaypoints.Add(AddWp);
+            }
         }
 
         public static void DatabaseSaveWaypoint(Waypoint SaveWp)
         {
             Database.SaveObject(SaveWp);
-            Database.ForceSave();
         }
 
         public static void DatabaseDeleteWaypoint(Waypoint DeleteWp)
         {
             Database.DeleteObject(DeleteWp);
-            Database.ForceSave();
+            lock (_idLock)
+            {
+                TableWaypoints.Remove(DeleteWp);
+            }
         }
 
 		/// <summary>

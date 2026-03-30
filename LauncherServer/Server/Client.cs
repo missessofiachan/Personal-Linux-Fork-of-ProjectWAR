@@ -12,6 +12,7 @@ namespace AuthenticationServer.Server
 {
     public class Client : BaseClient
     {
+        private readonly object _syncLock = new object();
         public long LastInfoRequest = 0;
         private Account _account;
         private string _sessionToken;
@@ -46,7 +47,7 @@ namespace AuthenticationServer.Server
         }
         protected override void OnReceive(byte[] packetBuffer)
         {
-            lock (this)
+            lock (_syncLock)
             {
                 int offset = 0;
                 while (offset < packetBuffer.Length)

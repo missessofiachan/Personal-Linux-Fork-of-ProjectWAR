@@ -243,7 +243,15 @@ For contributors and AI agents, please refer to the following architectural docu
 
 - **[System Guilds](docs/SYSTEM_GUILDS.md)**: Details the automated guild experience for new players.
 - **[Bot System](BOT_SYSTEM.md)**: Details the architecture, logic, and GM commands for the integrated player-like Bot System.
+- **[Internal Bug Tracker](docs/INTERNAL_BUG_TRACKER.md)**: Live ledger of known issues and regressions.
 - **[AI Agent Rules](AGENTS.md)**: Single source of truth for repository-specific AI instructions.
+
+## Recent Optimizations & Fixes (2026-03-30)
+
+- **Performance**: `RegionMgr` update loop optimized using a dense `HashSet` for active objects, eliminating the 65k sparse array scan per tick.
+- **Concurrency**: `lock(this)` deadlocks resolved in all networking clients and `CellMgr` using private sync objects.
+- **NPC Waypoints**: Critical `Thread.Sleep(5000)` removed from waypoint creation; implemented thread-safe static ID generation.
+- **Database**: Synchronous `ForceSave()` calls audited and reduced to prevent game-thread stalls.
 
 ## Development Resources
 

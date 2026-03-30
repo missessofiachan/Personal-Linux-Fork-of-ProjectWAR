@@ -1544,7 +1544,7 @@ namespace WorldServer.World.Objects
             SendPacket(channelPacket);
         }
 
-        private static string _motd = "\nWelcome to WAR: Apocalypse\n"
+        private static string _motd = "\nWelcome to WAR\n"
             + "Rank Cap is: " + Program.Config.RankCap
             + "\nRenown Cap is: " + Program.Config.RenownCap
             + "\nThe server rules are available in-game by entering the command '.rules'.";

@@ -11,6 +11,7 @@ namespace LobbyServer
 {
     public class Client : BaseClient
     {
+        private readonly object _syncLock = new object();
         public string Username = "";
         public string Token = "";
 
@@ -36,7 +37,7 @@ namespace LobbyServer
 
         protected override void OnReceive(byte[] packetBuffer)
         {
-            lock (this)
+            lock (_syncLock)
             {
                 PacketIn packet = new PacketIn(packetBuffer, 0, packetBuffer.Length);
                 long bytesLeft = packet.Length;

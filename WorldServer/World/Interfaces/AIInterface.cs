@@ -596,12 +596,10 @@ namespace WorldServer.World.Interfaces
 
                     lock (WaypointsTableLock)
                     {
-                        StartWp.GUID = Convert.ToUInt32(GenerateRandomUint());
+                        StartWp.GUID = WaypointService.GetNextWaypointId();
                         Waypoints.Add(StartWp);
                         WaypointService.DatabaseAddWaypoint(StartWp);
-                        Thread.Sleep(5000);
                     }
-                    // lock (WaypointsTableLock)
                 }
 
                 // Create the next waypoint.
@@ -609,7 +607,7 @@ namespace WorldServer.World.Interfaces
                 AddWp.GameObjectSpawnGUID = _Owner.Oid;
                 lock (WaypointsTableLock)
                 {
-                    AddWp.GUID = Convert.ToUInt32(GenerateRandomUint());
+                    AddWp.GUID = WaypointService.GetNextWaypointId();
                     Waypoints.Add(AddWp);
                     WaypointService.DatabaseAddWaypoint(AddWp);
                 }
@@ -638,22 +636,8 @@ namespace WorldServer.World.Interfaces
                     var toSave = (_Owner as KeepCreature).FlagGuard.Info;
                     toSave.Dirty = true;
                     WorldMgr.Database.SaveObject(toSave);
-                    WorldMgr.Database.ForceSave();
                 }
             }
-        }
-
-        private long GenerateRandomUint()
-        {
-            var max = WorldMgr.Database.ExecuteQueryInt("SELECT MAX(GUID) as MAXGUID FROM war_world.waypoints");
-            return max + 1;
-
-
-            // return Convert.ToInt64(DateTime.Now.ToString("yyMMddHHmmssmmm"));
-            //uint thirtyBits = (uint)StaticRandom.Instance.Next(1 << 30);
-            //uint twoBits = (uint)StaticRandom.Instance.Next(1 << 2);
-            //uint fullRange = (thirtyBits << 2) | twoBits;
-            //return fullRange;
         }
 
         public void SaveWaypoint(Waypoint SaveWp)

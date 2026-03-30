@@ -11,6 +11,7 @@ namespace WorldServer.World.Map
 {
     public class CellMgr
     {
+        private readonly object _syncLock = new object();
         public RegionMgr Region;
         public ushort X;
         public ushort Y;
@@ -61,7 +62,7 @@ namespace WorldServer.World.Map
         public bool Loaded;
         public void Load()
         {
-            lock (this)
+            lock (_syncLock)
             {
                 if (Loaded)
                     return;

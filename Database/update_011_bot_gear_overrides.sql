@@ -1,6 +1,0 @@
-CREATE TABLE IF NOT EXISTS `bot_gear_overrides` (
-  `CharacterId` INT UNSIGNED NOT NULL,
-  `SlotId` SMALLINT UNSIGNED NOT NULL,
-  `ItemEntry` INT UNSIGNED NOT NULL,
-  PRIMARY KEY (`CharacterId`, `SlotId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
