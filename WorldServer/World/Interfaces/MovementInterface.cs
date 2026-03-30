@@ -560,8 +560,8 @@ namespace WorldServer.World.Interfaces
             if (destZone == null)
                 return;
 
-            ushort pinX = _unit.Zone.CalculPin(newWorldPosX, true);
-            ushort pinY = _unit.Zone.CalculPin(newWorldPosY, false);
+            ushort pinX = ZoneService.CalculPin(destZone, (int)newWorldPosX, true);
+            ushort pinY = ZoneService.CalculPin(destZone, (int)newWorldPosY, false);
             ushort pinZ = (ushort)Point2D.Lerp(_unit.WorldPosition.Z, FollowTarget.WorldPosition.Z, GetMoveFactor(deltaMs));
 
             _unit.SetPosition(pinX, pinY, pinZ, _unit.Heading, destZone.ZoneId);
@@ -578,8 +578,8 @@ namespace WorldServer.World.Interfaces
             if (destZone == null)
                 return;
 
-            ushort pinX = _unit.Zone.CalculPin((uint)destWorldPos.X, true);
-            ushort pinY = _unit.Zone.CalculPin((uint)destWorldPos.Y, false);
+            ushort pinX = ZoneService.CalculPin(destZone, destWorldPos.X, true);
+            ushort pinY = ZoneService.CalculPin(destZone, destWorldPos.Y, false);
             ushort pinZ = (ushort)destWorldPos.Z;
 
             _destWorldPos.SetCoordsFrom(destWorldPos);

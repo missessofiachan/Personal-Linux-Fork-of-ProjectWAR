@@ -1,9 +1,11 @@
 using Common;
+using FrameWork;
 using GameData;
 using System;
 using System.Collections.Generic;
-using WorldServer.Services.World;
 using System.Linq;
+using WorldServer.Services.World;
+using WorldServer.World.Interfaces;
 using WorldServer.World.Objects;
 
 namespace WorldServer.Managers
@@ -12,284 +14,483 @@ namespace WorldServer.Managers
     {
         public enum BotTier
         {
-            T1, T2, T3, T4_RR40, T4_RR70, T4_RR80, T4_RR90, T4_RR100
+            T1,
+            T2,
+            T3,
+            T4_RR40,
+            T4_RR70,
+            T4_RR80,
+            T4_RR90,
+            T4_RR100
         }
 
         public class Loadout
         {
-            public Dictionary<ushort, uint> SlotItems = new Dictionary<ushort, uint>();
+            public Dictionary<ushort, uint> SlotItems { get; } = new Dictionary<ushort, uint>();
+
+            public Loadout Clone()
+            {
+                Loadout clone = new Loadout();
+                foreach (KeyValuePair<ushort, uint> entry in SlotItems)
+                    clone.SlotItems[entry.Key] = entry.Value;
+
+                return clone;
+            }
         }
 
-        private static Dictionary<BotTier, Dictionary<byte, Dictionary<BotRole, Loadout>>> _loadouts = new Dictionary<BotTier, Dictionary<byte, Dictionary<BotRole, Loadout>>>();
+        private static readonly BotTier[] SharedT4Tiers =
+        {
+            BotTier.T4_RR40,
+            BotTier.T4_RR70,
+            BotTier.T4_RR80,
+            BotTier.T4_RR90,
+            BotTier.T4_RR100
+        };
+
+        private static readonly ushort[] _managedEquipmentSlots =
+        {
+            (ushort)EquipSlot.MAIN_HAND,
+            (ushort)EquipSlot.OFF_HAND,
+            (ushort)EquipSlot.RANGED_WEAPON,
+            (ushort)EquipSlot.BODY,
+            (ushort)EquipSlot.GLOVES,
+            (ushort)EquipSlot.BOOTS,
+            (ushort)EquipSlot.HELM,
+            (ushort)EquipSlot.SHOULDER,
+            (ushort)EquipSlot.POCKET_1,
+            (ushort)EquipSlot.POCKET_2,
+            (ushort)EquipSlot.BACK,
+            (ushort)EquipSlot.BELT,
+            (ushort)EquipSlot.JEWELLERY_1,
+            (ushort)EquipSlot.JEWELLERY_2,
+            (ushort)EquipSlot.JEWELLERY_3,
+            (ushort)EquipSlot.JEWELLERY_4
+        };
+
+        private static readonly Dictionary<TemplateKey, Loadout> _templates = new Dictionary<TemplateKey, Loadout>();
+
+        public static IReadOnlyList<ushort> ManagedEquipmentSlots => _managedEquipmentSlots;
 
         public static void Initialize()
         {
-            SetupLoadouts();
+            _templates.Clear();
+            RegisterSharedT4Templates();
         }
 
-        public enum GearType
+        public static Loadout GetLoadout(Player bot, BotTier tier, BotRole role)
         {
-            Defensive,
-            Offensive,
-            Healer
+            if (bot?.Info == null)
+                return null;
+
+            Character_value value = bot.Info.Value ?? bot._Value;
+            if (value == null)
+                return GetBaseLoadout(bot.Info.CareerLine, tier, role);
+
+            return GetLoadout(bot.CharacterId, bot.Info.CareerLine, bot.Info.Race, value.Skills, value.Level, value.RenownRank, tier, role);
         }
 
-        private static float GetItemScore(Item_Info item, GearType type)
+        public static Loadout GetLoadout(uint characterId, byte careerLine, byte race, long playerSkills, byte level, byte renownRank, BotTier tier, BotRole role)
         {
-            float score = 0;
-            var stats = item.GetStats();
-
-            ushort GetStat(Stats stat)
+            Loadout baseLoadout = GetBaseLoadout(careerLine, tier, role);
+            if (baseLoadout == null)
             {
-                return stats.TryGetValue((byte)stat, out ushort val) ? val : (ushort)0;
+                Log.Error("BotLoadoutManager", $"No explicit template or starter fallback found for CharacterId {characterId} ({careerLine}/{role}/{tier}).");
+                return null;
             }
 
-            switch (type)
-            {
-                case GearType.Defensive:
-                    score += GetStat(Stats.Toughness) * 1.0f;
-                    score += GetStat(Stats.Wounds) * 1.0f;
-                    score += GetStat(Stats.Armor) * 0.1f;
-                    score += GetStat(Stats.Initiative) * 0.5f;
-                    score += GetStat(Stats.Block) * 10.0f;
-                    score += GetStat(Stats.Parry) * 5.0f;
-                    score += GetStat(Stats.Evade) * 5.0f;
-                    score += GetStat(Stats.Disrupt) * 5.0f;
-                    break;
-
-                case GearType.Offensive:
-                    score += GetStat(Stats.Strength) * 1.0f;
-                    score += GetStat(Stats.BallisticSkill) * 1.0f;
-                    score += GetStat(Stats.Intelligence) * 1.0f;
-                    score += GetStat(Stats.WeaponSkill) * 0.5f;
-                    score += GetStat(Stats.MeleePower) * 0.1f;
-                    score += GetStat(Stats.RangedPower) * 0.1f;
-                    score += GetStat(Stats.MagicPower) * 0.1f;
-                    score += GetStat(Stats.MeleeCritRate) * 5.0f;
-                    score += GetStat(Stats.RangedCritRate) * 5.0f;
-                    score += GetStat(Stats.MagicCritRate) * 5.0f;
-                    break;
-
-                case GearType.Healer:
-                    score += GetStat(Stats.Willpower) * 1.0f;
-                    score += GetStat(Stats.HealingPower) * 0.1f;
-                    score += GetStat(Stats.HealCritRate) * 5.0f;
-                    score += GetStat(Stats.Wounds) * 0.5f;
-                    break;
-            }
-
-            return score;
+            Loadout effectiveLoadout = baseLoadout.Clone();
+            ApplyOverrides(effectiveLoadout, characterId, careerLine, race, playerSkills, level, renownRank);
+            return effectiveLoadout;
         }
 
-        public static void SetupLoadouts()
+        public static Loadout GetBaseLoadout(byte careerLine, BotTier tier, BotRole role)
         {
-            string[] setNames = { "Decimator", "Obliterator", "Devastator", "Conqueror", "Warlord", "Sovereign", "Doomflayer", "Warpforged" };
-            BotTier[] tiers = { BotTier.T1, BotTier.T2, BotTier.T3, BotTier.T4_RR40, BotTier.T4_RR70, BotTier.T4_RR80, BotTier.T4_RR90, BotTier.T4_RR100 };
+            TemplateKey key = new TemplateKey(tier, careerLine, role);
+            if (_templates.TryGetValue(key, out Loadout template))
+                return template;
 
-            for (int i = 0; i < setNames.Length; i++)
+            return BuildStartingLoadout(careerLine);
+        }
+
+        public static bool IsManagedEquipmentSlot(ushort slotId)
+        {
+            return _managedEquipmentSlots.Contains(slotId);
+        }
+
+        public static bool IsManagedItemInfo(Item_Info info)
+        {
+            return info != null && IsManagedSlotCandidate(info.SlotId);
+        }
+
+        private static bool IsManagedSlotCandidate(ushort slotId)
+        {
+            if (slotId == (ushort)EquipSlot.EITHER_HAND)
+                return true;
+
+            return _managedEquipmentSlots.Contains(slotId);
+        }
+
+        public static bool CanOccupySlot(Item_Info item, ushort slotId)
+        {
+            if (item == null)
+                return false;
+
+            EquipSlot itemSlot = (EquipSlot)item.SlotId;
+            EquipSlot equipSlot = (EquipSlot)slotId;
+
+            if (slotId == item.SlotId)
+                return true;
+
+            if (itemSlot == EquipSlot.EITHER_HAND && (equipSlot == EquipSlot.MAIN_HAND || equipSlot == EquipSlot.OFF_HAND))
+                return true;
+
+            if ((itemSlot == EquipSlot.POCKET_1 || itemSlot == EquipSlot.POCKET_2) && (equipSlot == EquipSlot.POCKET_1 || equipSlot == EquipSlot.POCKET_2))
+                return true;
+
+            if (itemSlot >= EquipSlot.JEWELLERY_1 && itemSlot <= EquipSlot.JEWELLERY_4
+                && equipSlot >= EquipSlot.JEWELLERY_1 && equipSlot <= EquipSlot.JEWELLERY_4)
+                return true;
+
+            return false;
+        }
+
+        public static bool CanUseItemInLoadout(byte careerLine, byte race, long playerSkills, byte level, byte renownRank, ushort slotId, Item_Info item, ISet<uint> uniqueEquipped = null)
+        {
+            if (item == null || !IsManagedItemInfo(item))
+                return false;
+
+            if (!CanOccupySlot(item, slotId))
+                return false;
+
+            if (!ItemsInterface.CanUseForCharacter(item, careerLine, race, playerSkills, level, renownRank))
+                return false;
+
+            return ItemsInterface.CanUseItemTypeForCareer(item, careerLine, race, playerSkills, slotId, uniqueEquipped);
+        }
+
+        private static Loadout BuildStartingLoadout(byte careerLine)
+        {
+            Loadout loadout = new Loadout();
+
+            foreach (CharacterInfo_item templateItem in CharMgr.GetCharacterInfoItem(careerLine))
             {
-                string setName = setNames[i];
-                BotTier tier = tiers[i];
+                Item_Info info = ItemService.GetItem_Info(templateItem.Entry);
+                if (!IsManagedItemInfo(info))
+                    continue;
 
-                var items = ItemService._Item_Info.Values
-                    .Where(x => x.Name != null
-                             && x.Name.Contains(setName)
-                             && x.Rarity >= 2  // exclude grey/white junk and debug items
-                             && x.Name.IndexOf("debug", StringComparison.OrdinalIgnoreCase) < 0
-                             && x.Name.IndexOf("test",  StringComparison.OrdinalIgnoreCase) < 0
-                             && x.Name.IndexOf("_gm_",  StringComparison.OrdinalIgnoreCase) < 0)
-                    .ToList();
+                ushort slotId = IsManagedEquipmentSlot(templateItem.SlotId) ? templateItem.SlotId : info.SlotId;
+                if (!CanOccupySlot(info, slotId))
+                    continue;
 
-                for (byte career = 1; career <= 24; career++)
+                loadout.SlotItems[slotId] = templateItem.Entry;
+            }
+
+            return loadout.SlotItems.Count > 0 ? loadout : null;
+        }
+
+        private static void ApplyOverrides(Loadout loadout, uint characterId, byte careerLine, byte race, long playerSkills, byte level, byte renownRank)
+        {
+            Dictionary<ushort, uint> overrides = BotGearOverrideService.GetOverrideEntries(characterId);
+            if (overrides.Count == 0)
+                return;
+
+            HashSet<uint> uniqueEquipped = BuildUniqueEntrySet(loadout);
+            foreach (KeyValuePair<ushort, uint> overrideEntry in overrides.OrderBy(entry => entry.Key))
+            {
+                ushort slotId = overrideEntry.Key;
+                if (!IsManagedEquipmentSlot(slotId))
                 {
-                    long careerMask = 1L << (career - 1);
-                    // Careers 1-12 are Order (Realm 1), 13-24 are Destruction (Realm 2).
-                    byte realmByte = career <= 12 ? (byte)1 : (byte)2;
-                    var careerItems = items.Where(x => (x.Career == 0 || (x.Career & careerMask) > 0)
-                                                    && (x.Realm == 0 || x.Realm == realmByte)).ToList();
+                    Log.Error("BotLoadoutManager", $"Ignoring bot gear override for CharacterId {characterId}: slot {slotId} is not managed.");
+                    continue;
+                }
 
-                    foreach (BotRole role in System.Enum.GetValues(typeof(BotRole)))
-                    {
-                        GearType gearType = role switch
-                        {
-                            BotRole.MainTank_Shield => GearType.Defensive,
-                            BotRole.OffTank_2H => GearType.Offensive,
-                            BotRole.Healer => GearType.Healer,
-                            BotRole.MeleeDPS => GearType.Offensive,
-                            BotRole.RangedDPS => GearType.Defensive, // Requested by user: Ranged bots to use DEF gear
-                            _ => GearType.Offensive
-                        };
+                uint previousEntry = 0;
+                Item_Info previousInfo = null;
+                if (loadout.SlotItems.TryGetValue(slotId, out previousEntry))
+                {
+                    previousInfo = ItemService.GetItem_Info(previousEntry);
+                    if (previousInfo?.UniqueEquiped == 1)
+                        uniqueEquipped.Remove(previousEntry);
+                }
 
-                        Loadout loadout = new Loadout();
-                        byte minRank = GetMinRankForTier(tier);
-                        byte maxRank = GetMaxRankForTier(tier);
-                        byte maxRenown = GetMaxRenownForTier(tier);
+                Item_Info itemInfo = ItemService.GetItem_Info(overrideEntry.Value);
+                if (!CanUseItemInLoadout(careerLine, race, playerSkills, level, renownRank, slotId, itemInfo, uniqueEquipped))
+                {
+                    Log.Error("BotLoadoutManager", $"Ignoring invalid bot gear override for CharacterId {characterId}: item {overrideEntry.Value} in slot {slotId}.");
+                    if (previousInfo?.UniqueEquiped == 1)
+                        uniqueEquipped.Add(previousEntry);
+                    continue;
+                }
 
-                        // Gear sets
-                        var groupedBySlot = careerItems
-                            .Where(x => x.MinRank >= minRank && x.MinRank <= maxRank
-                                     && (maxRenown == 0 || x.MinRenown <= maxRenown))
-                            .GroupBy(x => x.SlotId);
-                        foreach (var group in groupedBySlot)
-                        {
-                            var bestItem = group.OrderByDescending(x => GetItemScore(x, gearType)).FirstOrDefault();
-                            if (bestItem != null)
-                                loadout.SlotItems[group.Key] = bestItem.Entry;
-                        }
+                loadout.SlotItems[slotId] = overrideEntry.Value;
+                if (itemInfo.UniqueEquiped == 1)
+                    uniqueEquipped.Add(itemInfo.Entry);
+            }
+        }
 
-                        // Weapons
+        private static HashSet<uint> BuildUniqueEntrySet(Loadout loadout)
+        {
+            HashSet<uint> uniqueEquipped = new HashSet<uint>();
+            foreach (uint itemEntry in loadout.SlotItems.Values)
+            {
+                Item_Info info = ItemService.GetItem_Info(itemEntry);
+                if (info?.UniqueEquiped == 1)
+                    uniqueEquipped.Add(itemEntry);
+            }
 
-                        var weapons = ItemService._Item_Info.Values
-                            .Where(x => x.SlotId == 10 || x.SlotId == 11 || x.SlotId == 12)
-                            .Where(x => x.MinRank >= minRank && x.MinRank <= maxRank)
-                            .Where(x => maxRenown == 0 || x.MinRenown <= maxRenown)
-                            .Where(x => x.Career == 0 || (x.Career & careerMask) > 0)
-                            .Where(x => x.Realm == 0 || x.Realm == realmByte)
-                            .Where(x => x.Rarity >= 2)
-                            .Where(x => x.Name == null
-                                     || (x.Name.IndexOf("debug", StringComparison.OrdinalIgnoreCase) < 0
-                                      && x.Name.IndexOf("test",  StringComparison.OrdinalIgnoreCase) < 0
-                                      && x.Name.IndexOf("_gm_",  StringComparison.OrdinalIgnoreCase) < 0))
-                            .OrderByDescending(x => GetItemScore(x, gearType))
-                            .ThenByDescending(x => x.MinRank)
-                            .ThenByDescending(x => x.Rarity)
-                            .ToList();
+            return uniqueEquipped;
+        }
 
-                        if (role == BotRole.MainTank_Shield)
-                        {
-                            var mainHand = weapons.FirstOrDefault(x => x.SlotId == 10 && !x.TwoHanded);
-                            if (mainHand != null) loadout.SlotItems[10] = mainHand.Entry;
+        private static void RegisterSharedT4Templates()
+        {
+            RegisterSharedT4Template((byte)CareerLine.CAREERLINE_RUNE_PRIEST, BotRole.Healer,
+                Entry(EquipSlot.BODY, 129838067),
+                Entry(EquipSlot.HELM, 129838068),
+                Entry(EquipSlot.SHOULDER, 129838069),
+                Entry(EquipSlot.GLOVES, 129838070),
+                Entry(EquipSlot.BOOTS, 129838071),
+                Entry(EquipSlot.BELT, 5850423),
+                Entry(EquipSlot.BACK, 473671),
+                Entry(EquipSlot.POCKET_1, 129838806),
+                Entry(EquipSlot.POCKET_2, 129838811),
+                Entry(EquipSlot.JEWELLERY_1, 129838516),
+                Entry(EquipSlot.JEWELLERY_2, 129838623),
+                Entry(EquipSlot.JEWELLERY_3, 129838737),
+                Entry(EquipSlot.JEWELLERY_4, 5850421),
+                Entry(EquipSlot.MAIN_HAND, 2000157));
 
-                            var shield = weapons.FirstOrDefault(x => x.SlotId == 11 && x.Type == 4); // Type 4 is usually Shield
-                            if (shield != null) loadout.SlotItems[11] = shield.Entry;
-                        }
-                        else if (role == BotRole.OffTank_2H)
-                        {
-                            var twoHanded = weapons.FirstOrDefault(x => x.SlotId == 10 && x.TwoHanded);
-                            if (twoHanded != null) loadout.SlotItems[10] = twoHanded.Entry;
-                            else
-                            {
-                                // Fallback to 1H + Offhand if no 2H found
-                                var mainHand = weapons.FirstOrDefault(x => x.SlotId == 10);
-                                if (mainHand != null) loadout.SlotItems[10] = mainHand.Entry;
-                                var offHand = weapons.FirstOrDefault(x => x.SlotId == 11);
-                                if (offHand != null) loadout.SlotItems[11] = offHand.Entry;
-                            }
-                        }
-                        else
-                        {
-                            var mainHand = weapons.FirstOrDefault(x => x.SlotId == 10);
-                            if (mainHand != null) loadout.SlotItems[10] = mainHand.Entry;
+            RegisterSharedT4Template((byte)CareerLine.CAREERLINE_ENGINEER, BotRole.RangedDPS,
+                Entry(EquipSlot.BODY, 475376),
+                Entry(EquipSlot.HELM, 472976),
+                Entry(EquipSlot.SHOULDER, 477008),
+                Entry(EquipSlot.GLOVES, 2017018),
+                Entry(EquipSlot.BOOTS, 434219),
+                Entry(EquipSlot.BELT, 476936),
+                Entry(EquipSlot.BACK, 473648),
+                Entry(EquipSlot.POCKET_1, 129838806),
+                Entry(EquipSlot.POCKET_2, 129838811),
+                Entry(EquipSlot.JEWELLERY_1, 129838623),
+                Entry(EquipSlot.JEWELLERY_2, 129838516),
+                Entry(EquipSlot.JEWELLERY_3, 129838737),
+                Entry(EquipSlot.JEWELLERY_4, 5850417),
+                Entry(EquipSlot.MAIN_HAND, 2000112),
+                Entry(EquipSlot.RANGED_WEAPON, 2000165));
 
-                            var offHand = weapons.FirstOrDefault(x => x.SlotId == 11);
-                            if (offHand != null) loadout.SlotItems[11] = offHand.Entry;
+            RegisterSharedT4Template((byte)CareerLine.CAREERLINE_IRON_BREAKER, BotRole.MainTank_Shield,
+                Entry(EquipSlot.BODY, 435680),
+                Entry(EquipSlot.HELM, 435704),
+                Entry(EquipSlot.SHOULDER, 435692),
+                Entry(EquipSlot.GLOVES, 435728),
+                Entry(EquipSlot.BOOTS, 435716),
+                Entry(EquipSlot.BELT, 435740),
+                Entry(EquipSlot.BACK, 473669),
+                Entry(EquipSlot.POCKET_1, 129838806),
+                Entry(EquipSlot.POCKET_2, 129838811),
+                Entry(EquipSlot.JEWELLERY_1, 129838623),
+                Entry(EquipSlot.JEWELLERY_2, 129838516),
+                Entry(EquipSlot.JEWELLERY_3, 129838737),
+                Entry(EquipSlot.JEWELLERY_4, 129838781),
+                Entry(EquipSlot.MAIN_HAND, 475085),
+                Entry(EquipSlot.OFF_HAND, 472901));
 
-                            var ranged = weapons.FirstOrDefault(x => x.SlotId == 12);
-                            if (ranged != null) loadout.SlotItems[12] = ranged.Entry;
-                        }
+            RegisterSharedT4Template((byte)CareerLine.CAREERLINE_IRON_BREAKER, BotRole.OffTank_2H,
+                Entry(EquipSlot.BODY, 435680),
+                Entry(EquipSlot.HELM, 472973),
+                Entry(EquipSlot.SHOULDER, 435692),
+                Entry(EquipSlot.GLOVES, 435728),
+                Entry(EquipSlot.BOOTS, 435716),
+                Entry(EquipSlot.BELT, 435740),
+                Entry(EquipSlot.BACK, 473645),
+                Entry(EquipSlot.POCKET_1, 129838806),
+                Entry(EquipSlot.POCKET_2, 129838811),
+                Entry(EquipSlot.JEWELLERY_1, 129838623),
+                Entry(EquipSlot.JEWELLERY_2, 129838516),
+                Entry(EquipSlot.JEWELLERY_3, 129838737),
+                Entry(EquipSlot.JEWELLERY_4, 472877),
+                Entry(EquipSlot.MAIN_HAND, 2000149));
 
-                        // Add Accessories (Gems, Cloak, Jewellery)
-                        var accessories = ItemService._Item_Info.Values
-                            .Where(x => (x.SlotId >= 25 && x.SlotId <= 27) || (x.SlotId >= 31 && x.SlotId <= 34))
-                            .Where(x => x.MinRank >= minRank && x.MinRank <= maxRank)
-                            .Where(x => maxRenown == 0 || x.MinRenown <= maxRenown)
-                            .Where(x => x.Career == 0 || (x.Career & careerMask) > 0)
-                            .Where(x => x.Realm == 0 || x.Realm == realmByte)
-                            .Where(x => x.Rarity >= 2)
-                            .Where(x => x.Name == null
-                                     || (x.Name.IndexOf("debug", StringComparison.OrdinalIgnoreCase) < 0
-                                      && x.Name.IndexOf("test",  StringComparison.OrdinalIgnoreCase) < 0
-                                      && x.Name.IndexOf("_gm_",  StringComparison.OrdinalIgnoreCase) < 0))
-                            .OrderByDescending(x => GetItemScore(x, gearType))
-                            .ThenByDescending(x => x.MinRank)
-                            .ThenByDescending(x => x.Rarity)
-                            .ToList();
+            RegisterSharedT4Template((byte)CareerLine.CAREERLINE_SLAYER, BotRole.MeleeDPS,
+                Entry(EquipSlot.BODY, 475374),
+                Entry(EquipSlot.HELM, 472974),
+                Entry(EquipSlot.SHOULDER, 477006),
+                Entry(EquipSlot.GLOVES, 435729),
+                Entry(EquipSlot.BOOTS, 434217),
+                Entry(EquipSlot.BELT, 435741),
+                Entry(EquipSlot.BACK, 473646),
+                Entry(EquipSlot.POCKET_1, 129838806),
+                Entry(EquipSlot.POCKET_2, 129838811),
+                Entry(EquipSlot.JEWELLERY_1, 129838623),
+                Entry(EquipSlot.JEWELLERY_2, 129838516),
+                Entry(EquipSlot.JEWELLERY_3, 129838737),
+                Entry(EquipSlot.JEWELLERY_4, 472878),
+                Entry(EquipSlot.MAIN_HAND, 2000149));
 
-                        var cloaks = accessories.Where(x => x.SlotId == 27).ToList();
-                        if (cloaks.Any() && !loadout.SlotItems.ContainsKey(27))
-                            loadout.SlotItems[27] = cloaks[0].Entry;
+            RegisterSharedT4Template((byte)CareerLine.CAREERLINE_SHAMAN, BotRole.Healer,
+                Entry(EquipSlot.BODY, 2017032),
+                Entry(EquipSlot.HELM, 2017030),
+                Entry(EquipSlot.SHOULDER, 2017031),
+                Entry(EquipSlot.GLOVES, 2017033),
+                Entry(EquipSlot.BOOTS, 2017034),
+                Entry(EquipSlot.BELT, 5850423),
+                Entry(EquipSlot.BACK, 473719),
+                Entry(EquipSlot.POCKET_1, 129838806),
+                Entry(EquipSlot.POCKET_2, 129838811),
+                Entry(EquipSlot.JEWELLERY_1, 129838516),
+                Entry(EquipSlot.JEWELLERY_2, 129838623),
+                Entry(EquipSlot.JEWELLERY_3, 129838737),
+                Entry(EquipSlot.JEWELLERY_4, 5850421),
+                Entry(EquipSlot.MAIN_HAND, 2000157));
 
-                        var gems = accessories.Where(x => x.SlotId == 25 || x.SlotId == 26).ToList();
-                        if (gems.Count > 0 && !loadout.SlotItems.ContainsKey(25))
-                            loadout.SlotItems[25] = gems[0].Entry;
-                        if (gems.Count > 1 && !loadout.SlotItems.ContainsKey(26))
-                            loadout.SlotItems[26] = gems[1].Entry;
-                        else if (gems.Count > 0 && !loadout.SlotItems.ContainsKey(26))
-                            loadout.SlotItems[26] = gems[0].Entry;
+            RegisterSharedT4Template((byte)CareerLine.CAREERLINE_SQUIG_HERDER, BotRole.RangedDPS,
+                Entry(EquipSlot.BODY, 475424),
+                Entry(EquipSlot.HELM, 473024),
+                Entry(EquipSlot.SHOULDER, 477056),
+                Entry(EquipSlot.GLOVES, 418471),
+                Entry(EquipSlot.BOOTS, 434291),
+                Entry(EquipSlot.BELT, 476984),
+                Entry(EquipSlot.BACK, 473696),
+                Entry(EquipSlot.POCKET_1, 129838806),
+                Entry(EquipSlot.POCKET_2, 129838811),
+                Entry(EquipSlot.JEWELLERY_1, 129838623),
+                Entry(EquipSlot.JEWELLERY_2, 129838516),
+                Entry(EquipSlot.JEWELLERY_3, 129838737),
+                Entry(EquipSlot.JEWELLERY_4, 5850417),
+                Entry(EquipSlot.MAIN_HAND, 2000155),
+                Entry(EquipSlot.OFF_HAND, 129838247),
+                Entry(EquipSlot.RANGED_WEAPON, 2000164));
 
-                        var jewellery = accessories.Where(x => x.SlotId >= 31 && x.SlotId <= 34).ToList();
-                        ushort[] jSlots = { 31, 32, 33, 34 };
-                        int jIndex = 0;
-                        foreach (var jSlot in jSlots)
-                        {
-                            if (!loadout.SlotItems.ContainsKey(jSlot))
-                            {
-                                if (jIndex < jewellery.Count)
-                                {
-                                    loadout.SlotItems[jSlot] = jewellery[jIndex].Entry;
-                                    jIndex++;
-                                }
-                                else if (jewellery.Count > 0)
-                                {
-                                    loadout.SlotItems[jSlot] = jewellery[0].Entry;
-                                }
-                            }
-                        }
+            RegisterSharedT4Template((byte)CareerLine.CAREERLINE_BLACK_ORC, BotRole.MainTank_Shield,
+                Entry(EquipSlot.BODY, 435752),
+                Entry(EquipSlot.HELM, 435776),
+                Entry(EquipSlot.SHOULDER, 435764),
+                Entry(EquipSlot.GLOVES, 435800),
+                Entry(EquipSlot.BOOTS, 435788),
+                Entry(EquipSlot.BELT, 435812),
+                Entry(EquipSlot.BACK, 473717),
+                Entry(EquipSlot.POCKET_1, 129838806),
+                Entry(EquipSlot.POCKET_2, 129838811),
+                Entry(EquipSlot.JEWELLERY_1, 129838623),
+                Entry(EquipSlot.JEWELLERY_2, 129838516),
+                Entry(EquipSlot.JEWELLERY_3, 129838737),
+                Entry(EquipSlot.JEWELLERY_4, 129838781),
+                Entry(EquipSlot.MAIN_HAND, 475133),
+                Entry(EquipSlot.OFF_HAND, 472949));
 
-                        AddLoadout(tier, career, role, loadout);
-                    }
+            RegisterSharedT4Template((byte)CareerLine.CAREERLINE_BLACK_ORC, BotRole.OffTank_2H,
+                Entry(EquipSlot.BODY, 435752),
+                Entry(EquipSlot.HELM, 473021),
+                Entry(EquipSlot.SHOULDER, 435764),
+                Entry(EquipSlot.GLOVES, 435800),
+                Entry(EquipSlot.BOOTS, 435788),
+                Entry(EquipSlot.BELT, 435812),
+                Entry(EquipSlot.BACK, 473693),
+                Entry(EquipSlot.POCKET_1, 129838806),
+                Entry(EquipSlot.POCKET_2, 129838811),
+                Entry(EquipSlot.JEWELLERY_1, 129838623),
+                Entry(EquipSlot.JEWELLERY_2, 129838516),
+                Entry(EquipSlot.JEWELLERY_3, 129838737),
+                Entry(EquipSlot.JEWELLERY_4, 472925),
+                Entry(EquipSlot.MAIN_HAND, 2000144));
+
+            RegisterSharedT4Template((byte)CareerLine.CAREERLINE_CHOPPA, BotRole.MeleeDPS,
+                Entry(EquipSlot.BODY, 2017027),
+                Entry(EquipSlot.HELM, 2017025),
+                Entry(EquipSlot.SHOULDER, 2017026),
+                Entry(EquipSlot.GLOVES, 2017028),
+                Entry(EquipSlot.BOOTS, 2017029),
+                Entry(EquipSlot.BELT, 476982),
+                Entry(EquipSlot.BACK, 473694),
+                Entry(EquipSlot.POCKET_1, 129838806),
+                Entry(EquipSlot.POCKET_2, 129838811),
+                Entry(EquipSlot.JEWELLERY_1, 129838623),
+                Entry(EquipSlot.JEWELLERY_2, 129838516),
+                Entry(EquipSlot.JEWELLERY_3, 129838737),
+                Entry(EquipSlot.JEWELLERY_4, 472926),
+                Entry(EquipSlot.MAIN_HAND, 2000144));
+        }
+
+        private static void RegisterSharedT4Template(byte careerLine, BotRole role, params SlotEntry[] entries)
+        {
+            Loadout loadout = CreateLoadout(entries);
+            foreach (BotTier tier in SharedT4Tiers)
+                _templates[new TemplateKey(tier, careerLine, role)] = loadout;
+        }
+
+        private static Loadout CreateLoadout(IEnumerable<SlotEntry> entries)
+        {
+            Loadout loadout = new Loadout();
+
+            foreach (SlotEntry entry in entries)
+            {
+                Item_Info itemInfo = ItemService.GetItem_Info(entry.Entry);
+                if (itemInfo == null)
+                {
+                    Log.Error("BotLoadoutManager", $"Template item {entry.Entry} is missing from item_infos.");
+                    continue;
+                }
+
+                if (!CanOccupySlot(itemInfo, entry.SlotId))
+                {
+                    Log.Error("BotLoadoutManager", $"Template item {entry.Entry} cannot occupy slot {entry.SlotId}.");
+                    continue;
+                }
+
+                loadout.SlotItems[entry.SlotId] = entry.Entry;
+            }
+
+            return loadout;
+        }
+
+        private static SlotEntry Entry(EquipSlot slot, uint entry)
+        {
+            return new SlotEntry((ushort)slot, entry);
+        }
+
+        private readonly struct SlotEntry
+        {
+            public SlotEntry(ushort slotId, uint entry)
+            {
+                SlotId = slotId;
+                Entry = entry;
+            }
+
+            public ushort SlotId { get; }
+            public uint Entry { get; }
+        }
+
+        private readonly struct TemplateKey : IEquatable<TemplateKey>
+        {
+            public TemplateKey(BotTier tier, byte careerLine, BotRole role)
+            {
+                Tier = tier;
+                CareerLine = careerLine;
+                Role = role;
+            }
+
+            public BotTier Tier { get; }
+            public byte CareerLine { get; }
+            public BotRole Role { get; }
+
+            public bool Equals(TemplateKey other)
+            {
+                return Tier == other.Tier && CareerLine == other.CareerLine && Role == other.Role;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is TemplateKey other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int hashCode = (int)Tier;
+                    hashCode = (hashCode * 397) ^ CareerLine;
+                    hashCode = (hashCode * 397) ^ (int)Role;
+                    return hashCode;
                 }
             }
-        }
-
-        private static byte GetMinRankForTier(BotTier tier)
-        {
-            return tier switch { BotTier.T1 => 1, BotTier.T2 => 12, BotTier.T3 => 22, _ => 32 };
-        }
-
-        private static byte GetMaxRankForTier(BotTier tier)
-        {
-            return tier switch { BotTier.T1 => 11, BotTier.T2 => 21, BotTier.T3 => 31, _ => 40 };
-        }
-
-        /// <summary>
-        /// Returns the maximum MinRenown an item may require for bots of this tier.
-        /// Returns 0 for tiers where renown is not yet relevant (T1-T3), meaning no cap.
-        /// </summary>
-        private static byte GetMaxRenownForTier(BotTier tier)
-        {
-            return tier switch
-            {
-                BotTier.T4_RR40  => 40,
-                BotTier.T4_RR70  => 70,
-                BotTier.T4_RR80  => 80,
-                BotTier.T4_RR90  => 90,
-                BotTier.T4_RR100 => 100,
-                _                => 0   // T1/T2/T3: no renown restriction
-            };
-        }
-
-        private static void AddLoadout(BotTier tier, byte career, BotRole role, Loadout loadout)
-        {
-            if (!_loadouts.ContainsKey(tier))
-                _loadouts[tier] = new Dictionary<byte, Dictionary<BotRole, Loadout>>();
-            if (!_loadouts[tier].ContainsKey(career))
-                _loadouts[tier][career] = new Dictionary<BotRole, Loadout>();
-
-            _loadouts[tier][career][role] = loadout;
-        }
-
-        public static Loadout GetLoadout(BotTier tier, byte career, BotRole role)
-        {
-            if (_loadouts.TryGetValue(tier, out var careerLoadouts))
-            {
-                if (careerLoadouts.TryGetValue(career, out var roleLoadouts))
-                {
-                    if (roleLoadouts.TryGetValue(role, out var loadout))
-                        return loadout;
-                }
-            }
-            return null;
         }
     }
 }

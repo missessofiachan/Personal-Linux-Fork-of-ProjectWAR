@@ -111,6 +111,7 @@
     <Compile Include="Database\Patch\Launcher_myps.cs" />
     <Compile Include="Database\Character\Auction.cs" />
     <Compile Include="Database\Character\BannedNameRecord.cs" />
+    <Compile Include="Database\Character\BotGearOverride.cs" />
     <Compile Include="Database\Character\Bug_report.cs" />
     <Compile Include="Database\Character\CharacterDeletionRecord.cs" />
     <Compile Include="Database\Character\Characters.cs" />

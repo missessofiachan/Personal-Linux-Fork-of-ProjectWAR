@@ -29,6 +29,7 @@ namespace WorldServer
         public static Realm Rm;
         private static Timer _timer;
         private static Timer _botTimer;
+        private static API.BotEditorHttpServer _botEditorApi;
 
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         private static extern bool SetDllDirectory(string lpPathName);
@@ -231,8 +232,26 @@ namespace WorldServer
 
             Log.Info("Bot Manager", "Initializing Bot Management Services", ConsoleColor.Cyan);
             BotManager.Instance.Initialize();
-            DynamicBotManager.Instance.Start();
-            _botTimer = new Timer(DynamicBotManager.Instance.Update, null, 120000, 60000);
+            if (DynamicBotManager.AutoManagementEnabled)
+            {
+                DynamicBotManager.Instance.Start();
+                _botTimer = new Timer(DynamicBotManager.Instance.Update, null, 120000, 60000);
+            }
+            else
+                Log.Info("Bot Manager", "Dynamic bot auto-management disabled for manual bot validation.", ConsoleColor.Cyan);
+
+            if (Config.EnableBotEditorAPI)
+            {
+                try
+                {
+                    _botEditorApi = new API.BotEditorHttpServer(Config.BotEditorAPIAddress, Config.BotEditorAPIPort);
+                    _botEditorApi.Start();
+                }
+                catch (Exception e)
+                {
+                    Log.Error("BotEditorAPI", "Unable to start bot editor API: " + e.Message);
+                }
+            }
 
             if (Environment.UserInteractive)
             {
@@ -254,6 +273,7 @@ namespace WorldServer
         {
             Log.Info("Closing", "Closing the server");
 
+            _botEditorApi?.Stop();
             SaveRuntimeState();
             WorldMgr.Stop();
             Player.Stop();

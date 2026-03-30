@@ -293,17 +293,20 @@ namespace WorldServer.World.Interfaces
 
         #region Stats
 
-        public bool CanUseItemType(Item_Info item, ushort slotId = 0, byte career = 0)
+        public static bool CanUseItemTypeForCareer(Item_Info item, byte career, byte race, long playerSkills, ushort slotId = 0, ISet<uint> uniqueEquipped = null)
         {
+            if (item == null || career == 0)
+                return false;
+
             // Career restrictions.
-            if (item.Career != 0 && (item.Career & (1 << _playerOwner.Info.CareerLine - 1)) == 0)
+            if (item.Career != 0 && (item.Career & (1 << career - 1)) == 0)
                 return false;
 
             // Race restrictions. 
-            if (item.Race != 0 && (item.Race & (1 << _playerOwner.Info.Race - 1)) == 0)
+            if (item.Race != 0 && race != 0 && (item.Race & (1 << race - 1)) == 0)
                 return false;
 
-            if (item.UniqueEquiped == 1 && _uniqueEquipped.Contains(item.Entry))
+            if (item.UniqueEquiped == 1 && uniqueEquipped != null && uniqueEquipped.Contains(item.Entry))
                 return false;
 
             //check profession 
@@ -316,15 +319,8 @@ namespace WorldServer.World.Interfaces
             if (item.Type == 0 || item.Type == 21 || item.Type > 23)
                 return true;
 
-            if (career == 0 && _playerOwner != null)
-                career = _playerOwner.Info.CareerLine;
-
             uint skills = item.Skills << 1;
-            long playerSkill = 0;
-            if (_playerOwner != null)
-                playerSkill = _playerOwner._Value.Skills;
-
-            if (skills != 0 && (playerSkill & skills) != skills)
+            if (skills != 0 && (playerSkills & skills) != skills)
                 return false;
 
             // FIXME replace with check on Skills
@@ -477,6 +473,49 @@ namespace WorldServer.World.Interfaces
                     break;
             }
             return false;
+        }
+
+        public static bool CanUseForCharacter(Item_Info info, byte career, byte race, long playerSkills, byte level, byte renownRank)
+        {
+            if (info == null)
+                return false;
+
+            uint skills = info.Skills << 1;
+            if (skills != 0 && (playerSkills & skills) != skills)
+                return false;
+
+            if (info.Career != 0)
+            {
+                int playerCareer = 1 << (career - 1);
+                if ((info.Career & playerCareer) == 0)
+                    return false;
+            }
+
+            if (info.Race != 0)
+            {
+                int playerRace = 1 << (race - 1);
+                if ((info.Race & playerRace) == 0)
+                    return false;
+            }
+
+            if (level < info.MinRank)
+                return false;
+
+            if (renownRank < info.MinRenown)
+                return false;
+
+            return true;
+        }
+
+        public bool CanUseItemType(Item_Info item, ushort slotId = 0, byte career = 0)
+        {
+            if (item == null || _playerOwner?.Info == null || _playerOwner._Value == null)
+                return false;
+
+            if (career == 0)
+                career = _playerOwner.Info.CareerLine;
+
+            return CanUseItemTypeForCareer(item, career, _playerOwner.Info.Race, _playerOwner._Value.Skills, slotId, _uniqueEquipped);
         }
 
         public void OpenBox(ushort slot, Item item)

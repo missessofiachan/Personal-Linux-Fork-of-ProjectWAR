@@ -46,6 +46,9 @@ namespace WorldServer.Configs
         public bool EnableAPI = true;
         public string APIAddress = "127.0.0.1";
         public int APIPort = 51932;
+        public bool EnableBotEditorAPI = true;
+        public string BotEditorAPIAddress = "127.0.0.1";
+        public int BotEditorAPIPort = 51933;
 
         // Networking
         public int PacketCollateLength = 0;

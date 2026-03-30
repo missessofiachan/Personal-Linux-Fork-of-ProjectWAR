@@ -26,8 +26,23 @@ namespace WorldServer.Managers.Commands
                 int rr = int.Parse(GetString(ref values));
                 string prefix = GetTotalString(ref values);
 
-                BotManager.Instance.SpawnBotGroup(realm, tier, rr, prefix, player.Zone?.ZoneId ?? 0);
-                player.SendClientMessage($"Spawned bot group {prefix} for realm {realm} at Warcamp in zone {player.Zone?.ZoneId ?? 0}");
+                if (BotManager.Instance.TryGetLoadedBotGroup(prefix) != null)
+                {
+                    player.SendClientMessage($"Bot group {prefix} is already active. Duplicate live spawns are blocked.");
+                    return true;
+                }
+
+                if (BotManager.Instance.HasLoadedBotsWithPrefix(prefix))
+                {
+                    player.SendClientMessage($"Bot prefix {prefix} is partially active already. Clean up the existing bots before respawning.");
+                    return true;
+                }
+
+                var group = BotManager.Instance.SpawnBotGroup(realm, tier, rr, prefix, player.Zone?.ZoneId ?? 0);
+                if (group == null)
+                    player.SendClientMessage($"Bot group {prefix} was not spawned. Check the WorldServer log for details.");
+                else
+                    player.SendClientMessage($"Spawned bot group {prefix} for realm {realm} at Warcamp in zone {player.Zone?.ZoneId ?? 0}");
             }
             catch (Exception ex)
             {

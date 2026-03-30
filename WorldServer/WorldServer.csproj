@@ -312,6 +312,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="API\ApiPacket.cs" />
+    <Compile Include="API\BotEditorHttpServer.cs" />
     <Compile Include="API\CircularBuffer.cs" />
     <Compile Include="API\Client.cs" />
     <Compile Include="API\Opcodes.cs" />
@@ -754,6 +755,7 @@
     <Compile Include="World\AI\BotBrain.cs" />
     <Compile Include="Managers\DynamicBotManager.cs" />
     <Compile Include="Managers\Commands\BotCommands.cs" />
+    <Compile Include="Managers\BotGearOverrideService.cs" />
     <Compile Include="Managers\BotManager.cs" />
     <Compile Include="Managers\BotLoadoutManager.cs" />
     <Compile Include="Managers\BotPathfinder.cs" />

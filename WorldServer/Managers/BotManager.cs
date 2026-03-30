@@ -33,6 +33,7 @@ namespace WorldServer.Managers
         private Account _botAccount;
         private const string BOT_ACCOUNT_NAME = "BotAccount";
         private const int BOT_ACCOUNT_ID = 9999;
+        private static readonly string[] BotGroupSuffixes = { "_H", "_R", "_MT", "_OT", "_M1", "_M2" };
 
         private static readonly BotFaction[] OrderFactions = new BotFaction[]
         {
@@ -80,6 +81,107 @@ namespace WorldServer.Managers
             }
 
             RepairPersistedBotAppearances();
+        }
+
+        public IReadOnlyList<Character> GetAllBotCharacters()
+        {
+            if (_botAccount == null)
+                return new List<Character>();
+
+            if (Program.Config != null && !Program.Config.PreloadAllCharacters)
+            {
+                return (CharMgr.Database.SelectObjects<Character>($"AccountId={_botAccount.AccountId} AND Name LIKE 'Bot_%'") ?? new List<Character>())
+                    .Where(character => character != null)
+                    .OrderBy(character => character.Name)
+                    .ToList();
+            }
+
+            lock (CharMgr.Chars)
+            {
+                return CharMgr.Chars.Values
+                    .Where(character => character != null
+                        && character.AccountId == _botAccount.AccountId
+                        && character.Name.StartsWith("Bot_", StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(character => character.Name)
+                    .ToList();
+            }
+        }
+
+        public IReadOnlyList<Player> GetLoadedBots()
+        {
+            return Player.GetPlayersSnapshot()
+                .Where(player => player != null && player.IsBot && !player.IsDisposed && !player.PendingDisposal)
+                .OrderBy(player => player.Name)
+                .ToList();
+        }
+
+        public Player GetLoadedBot(uint characterId)
+        {
+            return GetLoadedBots().FirstOrDefault(player => player.CharacterId == characterId);
+        }
+
+        public bool TryReapplyBotLoadout(uint characterId)
+        {
+            Player bot = GetLoadedBot(characterId);
+            if (bot?.Info?.Value == null)
+                return false;
+
+            ResolveLoadoutDyes(bot.Name, out ushort primaryDye, out ushort secondaryDye);
+            ApplyLoadout(bot, GetTierFromLevel(bot.Info.Value.Level), bot.Info.Value.RenownRank, primaryDye, secondaryDye);
+            return true;
+        }
+
+        public static bool TryGetRoleFromBotName(string name, out BotRole role)
+        {
+            role = BotRole.MeleeDPS;
+            if (string.IsNullOrWhiteSpace(name))
+                return false;
+
+            if (name.EndsWith("_H", StringComparison.OrdinalIgnoreCase))
+            {
+                role = BotRole.Healer;
+                return true;
+            }
+
+            if (name.EndsWith("_R", StringComparison.OrdinalIgnoreCase))
+            {
+                role = BotRole.RangedDPS;
+                return true;
+            }
+
+            if (name.EndsWith("_MT", StringComparison.OrdinalIgnoreCase))
+            {
+                role = BotRole.MainTank_Shield;
+                return true;
+            }
+
+            if (name.EndsWith("_OT", StringComparison.OrdinalIgnoreCase))
+            {
+                role = BotRole.OffTank_2H;
+                return true;
+            }
+
+            if (name.EndsWith("_M1", StringComparison.OrdinalIgnoreCase) || name.EndsWith("_M2", StringComparison.OrdinalIgnoreCase))
+            {
+                role = BotRole.MeleeDPS;
+                return true;
+            }
+
+            return false;
+        }
+
+        public static string GetGroupPrefixFromBotName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return string.Empty;
+
+            foreach (string suffix in BotGroupSuffixes)
+            {
+                if (name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                    return name.Substring(0, name.Length - suffix.Length);
+            }
+
+            return name;
         }
 
         public Player CreateOrLoadBot(string name, byte career, byte level, byte renownRank, Realms realm, BotRole role)
@@ -276,6 +378,19 @@ namespace WorldServer.Managers
                 return null;
             }
 
+            Group existingGroup = GetLoadedBotGroup(groupPrefix);
+            if (existingGroup != null)
+            {
+                Log.Info("BotManager", $"Bot group '{groupPrefix}' is already active. Refusing to spawn duplicate live bots.");
+                return existingGroup;
+            }
+
+            if (HasAnyLoadedBotsWithPrefix(groupPrefix))
+            {
+                Log.Error("BotManager", $"Live bot prefix '{groupPrefix}' is already partially present. Refusing to spawn duplicates until the existing bots are cleaned up.");
+                return null;
+            }
+
             Point3D worldSpawn = spawnOverride ?? ResolveSpawnPoint(zoneId, realm, zoneInfo);
             BotFaction faction = ResolveDeterministicFaction(realm, tier);
 
@@ -323,13 +438,7 @@ namespace WorldServer.Managers
 
             AssignToGuild(bots, faction.Name);
 
-            ushort primaryDye = 0;
-            ushort secondaryDye = 0;
-
-            if (groupPrefix.Contains("Red")) { primaryDye = 338; secondaryDye = 338; } // Mechrite Red
-            else if (groupPrefix.Contains("Green")) { primaryDye = 336; secondaryDye = 336; } // Knarloc Green
-            else if (groupPrefix.Contains("Blue")) { primaryDye = 314; secondaryDye = 314; } // Ice Blue
-            else if (groupPrefix.Contains("Yellow")) { primaryDye = 309; secondaryDye = 309; } // Desert Yellow
+            ResolveLoadoutDyes(groupPrefix, out ushort primaryDye, out ushort secondaryDye);
 
             int botIndex = 0;
             foreach (var bot in bots)
@@ -388,6 +497,16 @@ namespace WorldServer.Managers
                 bot.Teleport(region, zoneId, targetX, targetY, targetZ, 0);
                 botIndex++;
             }
+        }
+
+        public Group TryGetLoadedBotGroup(string prefix)
+        {
+            return GetLoadedBotGroup(prefix);
+        }
+
+        public bool HasLoadedBotsWithPrefix(string prefix)
+        {
+            return HasAnyLoadedBotsWithPrefix(prefix);
         }
 
         private void AssignToGuild(List<Player> bots, string guildName)
@@ -494,54 +613,15 @@ namespace WorldServer.Managers
                 return;
 
             BotLoadoutManager.BotTier bTier = GetBotTier(tier, rr);
-            var loadout = BotLoadoutManager.GetLoadout(bTier, (byte)bot.Info.CareerLine, bot.Role);
-            if (loadout == null) return;
+            BotLoadoutManager.Loadout loadout = BotLoadoutManager.GetLoadout(bot, bTier, bot.Role);
+            if (loadout == null)
+                return;
 
             List<CharacterItem> existingItems = CharMgr.GetItemsForCharacter(bot.Info) ?? new List<CharacterItem>();
-            bool liveItemsChanged = false;
-
-            foreach (KeyValuePair<ushort, uint> itemEntry in loadout.SlotItems)
-            {
-                ushort slotId = itemEntry.Key;
-                Item_Info itemInfo = ItemService.GetItem_Info(itemEntry.Value);
-                if (itemInfo == null)
-                {
-                    Log.Error("BotManager", $"Missing loadout item {itemEntry.Value} for {bot.Name}");
-                    continue;
-                }
-
-                CharacterItem existing = existingItems.FirstOrDefault(item => item.SlotId == slotId);
-                if (existing == null)
-                {
-                    existing = new CharacterItem
-                    {
-                        CharacterId = bot.CharacterId,
-                        Entry = itemEntry.Value,
-                        ModelId = itemInfo.ModelId,
-                        SlotId = slotId,
-                        Counts = 1,
-                        PrimaryDye = primaryDye,
-                        SecondaryDye = secondaryDye,
-                        BoundtoPlayer = false
-                    };
-
-                    CharMgr.CreateItem(existing);
-                    existingItems.Add(existing);
-                }
-                else if (primaryDye != 0 && (existing.PrimaryDye != primaryDye || existing.SecondaryDye != secondaryDye))
-                {
-                    existing.PrimaryDye = primaryDye;
-                    existing.SecondaryDye = secondaryDye;
-                    CharMgr.Database.SaveObject(existing);
-                    liveItemsChanged = true;
-                }
-
-                if (EnsureLiveLoadoutItem(bot, existing))
-                    liveItemsChanged = true;
-            }
-
-            if (liveItemsChanged && bot.IsInWorld())
-                bot.ItmInterface.SendEquipped(null);
+            if (bot.Loaded && bot.ItmInterface != null && bot.ItmInterface.IsLoad)
+                ApplyLoadedBotLoadout(bot, loadout, primaryDye, secondaryDye);
+            else
+                ApplyPersistedBotLoadout(bot, loadout, existingItems, primaryDye, secondaryDye);
         }
 
         private BotLoadoutManager.BotTier GetBotTier(int tier, int rr)
@@ -560,6 +640,48 @@ namespace WorldServer.Managers
         private byte GetMaxLevel(int tier)
         {
             return tier switch { 1 => 11, 2 => 21, 3 => 31, 4 => 40, _ => 40 };
+        }
+
+        private int GetTierFromLevel(byte level)
+        {
+            if (level <= 11)
+                return 1;
+            if (level <= 21)
+                return 2;
+            if (level <= 31)
+                return 3;
+
+            return 4;
+        }
+
+        private static void ResolveLoadoutDyes(string loadoutKey, out ushort primaryDye, out ushort secondaryDye)
+        {
+            primaryDye = 0;
+            secondaryDye = 0;
+
+            if (string.IsNullOrWhiteSpace(loadoutKey))
+                return;
+
+            if (loadoutKey.IndexOf("Red", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                primaryDye = 338;
+                secondaryDye = 338;
+            }
+            else if (loadoutKey.IndexOf("Green", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                primaryDye = 336;
+                secondaryDye = 336;
+            }
+            else if (loadoutKey.IndexOf("Blue", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                primaryDye = 314;
+                secondaryDye = 314;
+            }
+            else if (loadoutKey.IndexOf("Yellow", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                primaryDye = 309;
+                secondaryDye = 309;
+            }
         }
 
         private bool TryGetBotTemplate(byte careerLine, out CharacterInfo template, out CharacterIdentityRecord identity)
@@ -822,27 +944,110 @@ namespace WorldServer.Managers
             return true;
         }
 
-        private static bool EnsureLiveLoadoutItem(Player bot, CharacterItem item)
+        private static void ApplyPersistedBotLoadout(Player bot, BotLoadoutManager.Loadout loadout, List<CharacterItem> existingItems, ushort primaryDye, ushort secondaryDye)
         {
-            if (bot?.ItmInterface?.Items == null || item == null || item.SlotId >= bot.ItmInterface.Items.Length)
-                return false;
+            RemoveManagedPersistedBotGear(existingItems);
 
-            if (bot.ItmInterface.GetItemInSlot(item.SlotId) != null)
-                return false;
-
-            WorldServer.World.Objects.Item liveItem = new WorldServer.World.Objects.Item(bot);
-            if (!liveItem.Load(item))
+            foreach (KeyValuePair<ushort, uint> entry in loadout.SlotItems)
             {
-                Log.Error("BotManager", $"Failed to hydrate live loadout item {item.Entry} for bot {bot.Name}");
-                return false;
+                Item_Info itemInfo = ItemService.GetItem_Info(entry.Value);
+                if (itemInfo == null)
+                {
+                    Log.Error("BotManager", $"Missing persisted loadout item {entry.Value} for bot {bot.Name}");
+                    continue;
+                }
+
+                CharacterItem newItem = new CharacterItem
+                {
+                    CharacterId = bot.CharacterId,
+                    Entry = entry.Value,
+                    ModelId = itemInfo.ModelId,
+                    SlotId = entry.Key,
+                    Counts = 1,
+                    PrimaryDye = primaryDye,
+                    SecondaryDye = secondaryDye,
+                    BoundtoPlayer = false
+                };
+
+                CharMgr.CreateItem(newItem);
+                existingItems.Add(newItem);
+            }
+        }
+
+        private static void ApplyLoadedBotLoadout(Player bot, BotLoadoutManager.Loadout loadout, ushort primaryDye, ushort secondaryDye)
+        {
+            RemoveManagedLiveBotGear(bot);
+
+            foreach (KeyValuePair<ushort, uint> entry in loadout.SlotItems)
+            {
+                Item_Info itemInfo = ItemService.GetItem_Info(entry.Value);
+                if (itemInfo == null)
+                {
+                    Log.Error("BotManager", $"Missing live loadout item {entry.Value} for bot {bot.Name}");
+                    continue;
+                }
+
+                ushort bagSlot = bot.ItmInterface.GetFreeInventorySlot(itemInfo);
+                if (bagSlot == 0)
+                {
+                    Log.Error("BotManager", $"No free inventory slot while equipping {itemInfo.Name} for bot {bot.Name}");
+                    continue;
+                }
+
+                ItemResult createResult = bot.ItmInterface.CreateItem(itemInfo, 1, new List<Talisman>(), primaryDye, secondaryDye, false, bagSlot);
+                if (createResult != ItemResult.RESULT_OK)
+                {
+                    Log.Error("BotManager", $"CreateItem failed for bot {bot.Name} item {itemInfo.Entry} result {createResult}");
+                    continue;
+                }
+
+                if (!bot.ItmInterface.MoveSlot(bagSlot, entry.Key, 1))
+                {
+                    Log.Error("BotManager", $"MoveSlot failed for bot {bot.Name} item {itemInfo.Entry} to slot {entry.Key}");
+                    bot.ItmInterface.DeleteItem(bagSlot);
+                }
             }
 
-            bot.ItmInterface.Items[item.SlotId] = liveItem;
+            if (bot.IsInWorld())
+                bot.ItmInterface.SendEquipped(null);
+        }
 
-            if (item.SlotId < ItemsInterface.MAX_EQUIPMENT_SLOT)
-                bot.ItmInterface.EquipItem(liveItem);
+        private static void RemoveManagedPersistedBotGear(List<CharacterItem> existingItems)
+        {
+            foreach (CharacterItem existing in existingItems.ToList())
+            {
+                Item_Info existingInfo = ItemService.GetItem_Info(existing.Entry);
+                bool managedSlot = BotLoadoutManager.IsManagedEquipmentSlot(existing.SlotId);
+                bool managedItem = BotLoadoutManager.IsManagedItemInfo(existingInfo);
+                if (!managedSlot && !managedItem)
+                    continue;
 
-            return true;
+                CharMgr.DeleteItem(existing);
+                existingItems.Remove(existing);
+            }
+        }
+
+        private static void RemoveManagedLiveBotGear(Player bot)
+        {
+            if (bot?.ItmInterface?.Items == null)
+                return;
+
+            List<ushort> slotsToDelete = new List<ushort>();
+
+            for (ushort slotId = 0; slotId < bot.ItmInterface.Items.Length; ++slotId)
+            {
+                WorldServer.World.Objects.Item item = bot.ItmInterface.Items[slotId];
+                if (item?.Info == null)
+                    continue;
+
+                bool managedSlot = BotLoadoutManager.IsManagedEquipmentSlot(slotId);
+                bool managedItem = BotLoadoutManager.IsManagedItemInfo(item.Info);
+                if (managedSlot || managedItem)
+                    slotsToDelete.Add(slotId);
+            }
+
+            foreach (ushort slotId in slotsToDelete)
+                bot.ItmInterface.DeleteItem(slotId);
         }
 
         private static Character_value CreateBotCharacterValue(Character character, CharacterInfo template, byte level, byte renownRank, Realms realm)
@@ -1020,6 +1225,31 @@ namespace WorldServer.Managers
             bot.Info.Value.WorldZ = worldSpawn.Z;
             bot.Info.Value.WorldO = 0;
             bot.Info.Value.LeftSystemGuild = true;
+        }
+
+        private static List<Player> GetLiveBotsForPrefix(string prefix)
+        {
+            return Player.GetPlayersSnapshot()
+                .Where(player => player != null
+                    && player.IsBot
+                    && !player.IsDisposed
+                    && !player.PendingDisposal
+                    && player.Name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        private static bool HasAnyLoadedBotsWithPrefix(string prefix)
+        {
+            return GetLiveBotsForPrefix(prefix).Count > 0;
+        }
+
+        private static Group GetLoadedBotGroup(string prefix)
+        {
+            List<Player> liveBots = GetLiveBotsForPrefix(prefix);
+            if (!BotGroupSuffixes.All(suffix => liveBots.Any(player => player.Name.Equals(prefix + suffix, StringComparison.OrdinalIgnoreCase))))
+                return null;
+
+            return liveBots.FirstOrDefault(player => player.PriorityGroup != null)?.PriorityGroup;
         }
 
         private static void RemoveBotFromOtherGuilds(Player bot, World.Guild.Guild targetGuild)

@@ -14,6 +14,7 @@ namespace WorldServer.Managers
 {
     public class DynamicBotManager
     {
+        public static bool AutoManagementEnabled => false;
         private static readonly string[] ExpectedBotSuffixes = { "_H", "_R", "_MT", "_OT", "_M1", "_M2" };
         private static DynamicBotManager _instance;
         public static DynamicBotManager Instance => _instance ??= new DynamicBotManager();
@@ -25,6 +26,12 @@ namespace WorldServer.Managers
 
         public void Start()
         {
+            if (!AutoManagementEnabled)
+            {
+                Log.Info("DynamicBotManager", "Dynamic bot auto-management is disabled during bot spawn/equipment reset.");
+                return;
+            }
+
             if (_started)
                 return;
 
@@ -42,6 +49,9 @@ namespace WorldServer.Managers
 
         public void Update(object state)
         {
+            if (!AutoManagementEnabled)
+                return;
+
             try
             {
                 long tick = TCPManager.GetTimeStampMS();

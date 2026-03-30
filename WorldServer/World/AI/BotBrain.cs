@@ -49,6 +49,10 @@ namespace WorldServer.World.AI
         private const int MAX_FOLLOW_DISTANCE_FT = 30;
         /// <summary>Maximum distance (feet) a healer bot will travel to resurrect a group member.</summary>
         private const int MAX_REZZ_DISTANCE_FT = 100;
+        /// <summary>
+        /// Temporary reset flag: use direct movement until bot movement is re-validated.
+        /// </summary>
+        private static readonly bool UseWaypointNavigation = false;
 
         public BotBrain(Unit unit) : base(unit)
         {
@@ -296,6 +300,18 @@ namespace WorldServer.World.AI
         /// </summary>
         private void MarchAlongPath(Player player, BattlefieldObjective objective)
         {
+            if (!UseWaypointNavigation)
+            {
+                _currentPath = null;
+                _pathIndex = 0;
+                _pathBuiltFor = null;
+                player.MvtInterface.Move(new Point3D(
+                    objective.WorldPosition.X + _formationOffset.X,
+                    objective.WorldPosition.Y + _formationOffset.Y,
+                    objective.WorldPosition.Z));
+                return;
+            }
+
             // Rebuild path when the target objective changes.
             if (_pathBuiltFor != objective || _currentPath == null)
             {

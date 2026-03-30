@@ -116,7 +116,13 @@ See `docs/data-matrix/overview/path-forward.md` for full roadmap and source-sear
 
 ## Bot System
 
-A fully integrated, player-like Bot System populates the world with autonomous entities. They participate in RvR and Scenarios with zero network overhead, follow waypoint-guided routes through campaign zones, and equip only career-appropriate, faction-correct, renown-gated gear. See `BOT_SYSTEM.md` for full architecture details and GM commands.
+A fully integrated, player-like Bot System populates the world with autonomous entities. They participate in RvR and Scenarios with zero network overhead and use player-style character, stat, and item systems. Bot gear is currently template-driven with per-bot override support. Bot movement and pathing are under active rework; the current build uses direct movement fallback rather than the earlier waypoint-guided route path. See `BOT_SYSTEM.md` for full architecture details and GM commands.
+
+### Bot Editor API and Toolkit Integration (2026-03-30)
+
+`WorldServer` now exposes a local HTTP JSON bot editor surface for external UI tooling. The endpoint serves bot summaries, full bot sheets, valid slot-scoped item search, and persisted gear override updates. Per-bot edits are stored in the new `war_characters.bot_gear_overrides` table and can be reapplied live to loaded bots.
+
+`WAR-RE-Toolkit` now contains the first consumer for this API: a typed client in `apps/warclient` and an embedded `Bot Editor` view in `tools/ToolkitControlCenter/WarToolkitHub`. The toolkit can connect to the local API, list bots, inspect their loadouts, search valid replacement items, and apply or clear persisted overrides. Current remaining gap: the client and server builds are verified, but end-to-end runtime validation against a live `WorldServer` instance is still pending. See `docs/bot-editor-api.md` for the full route contract and integration notes.
 
 ## System Guilds
 
