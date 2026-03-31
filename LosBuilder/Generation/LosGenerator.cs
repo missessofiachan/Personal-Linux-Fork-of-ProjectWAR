@@ -45,6 +45,13 @@ namespace LosBuilder.Generation
 
             foreach (int zoneId in targetZones)
             {
+                string zoneFolder = Path.Combine(zonesRoot, "zone" + zoneId.ToString("D3"));
+                if (options.GenerateAllZones && !Directory.Exists(zoneFolder))
+                {
+                    _info("Skipping zone " + zoneId + ": missing source folder " + zoneFolder);
+                    continue;
+                }
+
                 if (!TryGenerateZone(zoneId, zonesRoot, options.OutputRoot, figleaf, assetIndex, meshCache))
                     failures.Add(zoneId);
             }
@@ -89,7 +96,7 @@ namespace LosBuilder.Generation
                 List<WaterBodySource> waterBodies = WaterXmlReader.Load(zoneFolder);
 
                 GeometryChunkData collision = BuildCollisionGeometry(zoneId, zoneNifs, fixtures, figleaf, assetIndex, meshCache);
-                GeometryChunkData water = BuildWaterGeometry(waterBodies);
+                GeometryChunkData water = BuildWaterGeometry(zoneId, waterBodies);
 
                 string outputPath = Path.Combine(outputRoot, zoneId + ".bin");
                 OccWriter.Write(outputPath, metadata, terrain, collision, water, zoneNifs.Count, fixtures.Count);
@@ -196,8 +203,31 @@ namespace LosBuilder.Generation
             return geometry;
         }
 
-        private static GeometryChunkData BuildWaterGeometry(List<WaterBodySource> waterBodies)
+        private static GeometryChunkData BuildWaterGeometry(int zoneId, List<WaterBodySource> waterBodies)
         {
+            if (waterBodies.Count == 0)
+            {
+                string oldBinPath = Path.Combine("deps", "los", $"{zoneId}.bin");
+                if (File.Exists(oldBinPath))
+                {
+                    try
+                    {
+                        var oldOcc = OccReader.Read(oldBinPath);
+                        if (oldOcc.Water != null)
+                        {
+                            GeometryChunkData oldWater = new GeometryChunkData();
+                            oldWater.FixtureCount = oldOcc.Water.DeclaredFixtureCount;
+                            if (oldOcc.Water.Vertices != null)
+                                oldWater.Vertices.AddRange(oldOcc.Water.Vertices);
+                            if (oldOcc.Water.Triangles != null)
+                                oldWater.Triangles.AddRange(oldOcc.Water.Triangles);
+                            return oldWater;
+                        }
+                    }
+                    catch (Exception) { }
+                }
+            }
+
             GeometryChunkData geometry = new GeometryChunkData();
             int fixtureCount = 0;
 

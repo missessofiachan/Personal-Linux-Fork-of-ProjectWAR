@@ -518,12 +518,17 @@ namespace WorldServer.World.Battlefronts.Apocalypse
         {
             try
             {
-                return BattleFrontStatuses.Single(x => x.BattleFrontId == battleFrontId);
+                var status = BattleFrontStatuses.SingleOrDefault(x => x.BattleFrontId == battleFrontId);
+                if (status == null)
+                {
+                    return new BattleFrontStatus(this.ImpactMatrixManagerInstance, battleFrontId);
+                }
+                return status;
             }
             catch (Exception e)
             {
                 ProgressionLogger.Warn($"Battlefront Id : {battleFrontId} Exception : {e.Message} ");
-                throw;
+                return new BattleFrontStatus(this.ImpactMatrixManagerInstance, battleFrontId);
             }
         }
 
@@ -611,3 +616,4 @@ namespace WorldServer.World.Battlefronts.Apocalypse
         }
     }
 }
+

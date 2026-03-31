@@ -184,7 +184,12 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
         public BattleFrontStatus GetBattleFrontStatus(int battleFrontId)
         {
-			return this.BattleFrontStatuses.Single(x => x.BattleFrontId == battleFrontId);
+            var status = this.BattleFrontStatuses.SingleOrDefault(x => x.BattleFrontId == battleFrontId);
+            if (status == null)
+            {
+                return new BattleFrontStatus(this.ImpactMatrixManagerInstance, battleFrontId);
+            }
+            return status;
         }
 
         public void LockBattleFrontStatus(int battleFrontId, Realms lockingRealm, VictoryPointProgress vpp)

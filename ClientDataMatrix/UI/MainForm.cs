@@ -21,6 +21,7 @@ namespace ClientDataMatrix.UI
         private Button _generateAllButton;
         private Button _cleanWorkspaceButton;
         private TextBox _abilitySearchTextBox;
+        private CheckBox _hidePartialAbilitiesCheckBox;
         private Label _abilityCatalogStatusLabel;
         private DataGridView _abilityGrid;
         private TextBox _abilityIdTextBox;
@@ -234,6 +235,10 @@ namespace ClientDataMatrix.UI
             _abilitySearchTextBox = new TextBox { Width = 320 };
             _abilitySearchTextBox.TextChanged += (sender, args) => ApplyAbilityFilter();
             search.Controls.Add(_abilitySearchTextBox);
+
+            _hidePartialAbilitiesCheckBox = new CheckBox { Text = "Hide Partial/StringsOnly", AutoSize = true, Margin = new Padding(8, 6, 0, 0), Checked = true };
+            _hidePartialAbilitiesCheckBox.CheckedChanged += (sender, args) => ApplyAbilityFilter();
+            search.Controls.Add(_hidePartialAbilitiesCheckBox);
 
             _abilityCatalogStatusLabel = new Label { AutoSize = true, Margin = new Padding(0, 0, 0, 8), Text = "Load the extracted dataset to populate the catalog." };
             _abilityGrid = CreateReadOnlyGrid();
@@ -1711,9 +1716,22 @@ namespace ClientDataMatrix.UI
         private void ApplyAbilityFilter()
         {
             string filter = (_abilitySearchTextBox.Text ?? string.Empty).Trim().ToLowerInvariant();
-            List<AbilityCatalogEntry> filtered = string.IsNullOrWhiteSpace(filter)
-                ? _abilityCatalog.OrderBy(x => x.AbilityId).ToList()
-                : _abilityCatalog.Where(x => x.SearchText.Contains(filter)).OrderBy(x => x.AbilityId).ToList();
+            bool hidePartial = _hidePartialAbilitiesCheckBox != null && _hidePartialAbilitiesCheckBox.Checked;
+            
+            var query = _abilityCatalog.AsEnumerable();
+            
+            if (hidePartial)
+            {
+                query = query.Where(x => x.HasClientCsv && x.HasClientBin);
+            }
+            
+            if (!string.IsNullOrWhiteSpace(filter))
+            {
+                query = query.Where(x => x.SearchText.Contains(filter));
+            }
+            
+            List<AbilityCatalogEntry> filtered = query.OrderBy(x => x.AbilityId).ToList();
+            
             _abilityGrid.DataSource = filtered;
             _abilityCatalogStatusLabel.Text = filtered.Count.ToString(CultureInfo.InvariantCulture) + " abilities shown out of " + _abilityCatalog.Count.ToString(CultureInfo.InvariantCulture) + ".";
             SelectFirstRow(_abilityGrid);

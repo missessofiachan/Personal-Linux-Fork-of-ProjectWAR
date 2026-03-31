@@ -2,6 +2,7 @@
 using System;
 using System.Configuration;
 using System.Diagnostics;
+using System.Drawing;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -18,9 +19,11 @@ namespace Launcher
     {
         private const int WindowHitTestMessage = 0x84;
         private const int WindowCaptionResult = 0x2;
+        private static readonly Size FixedClientSize = new Size(1280, 720);
 
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private Patcher _patcher;
+        private bool _fixed720pLayoutApplied;
 
         /// <summary>
         /// Gets the active launcher form instance so static networking callbacks can update the UI.
@@ -58,6 +61,7 @@ namespace Launcher
             LaunchLocalServer = ReadOptionalBooleanSetting("LaunchLocal", false);
 
             InitializeComponent();
+            ApplyFixed720pLayout();
             Instance = this;
 
             bnConnectLocal.Visible = LaunchLocalServer;
@@ -94,6 +98,157 @@ namespace Launcher
         {
             string settingValue = ConfigurationManager.AppSettings[keyName];
             return bool.TryParse(settingValue, out bool parsedValue) ? parsedValue : defaultValue;
+        }
+
+        /// <summary>
+        /// Applies the fixed 1280x720 launcher layout and places every interactive control inside that window.
+        /// </summary>
+        private void ApplyFixed720pLayout()
+        {
+            if (_fixed720pLayoutApplied)
+                return;
+
+            _fixed720pLayoutApplied = true;
+
+            SuspendLayout();
+
+            AutoScaleMode = AutoScaleMode.None;
+            BackgroundImageLayout = ImageLayout.Zoom;
+            ClientSize = FixedClientSize;
+            MinimumSize = FixedClientSize;
+            MaximumSize = FixedClientSize;
+
+            ConfigureFixedControlBehavior();
+            ConfigureWindowChrome();
+            ConfigureMainControls();
+            ConfigureCreateAccountPanel();
+
+            ResumeLayout(true);
+            CenterToScreen();
+        }
+
+        /// <summary>
+        /// Disables designer anchor behavior so the fixed 720p positions do not drift after layout.
+        /// </summary>
+        private void ConfigureFixedControlBehavior()
+        {
+            ApplyFixedBehavior(this);
+        }
+
+        /// <summary>
+        /// Recursively clears anchor and dock behavior for a fixed-position layout.
+        /// </summary>
+        /// <param name="parent">The control subtree to normalize.</param>
+        private static void ApplyFixedBehavior(Control parent)
+        {
+            foreach (Control control in parent.Controls)
+            {
+                control.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+                control.Dock = DockStyle.None;
+
+                if (control.Controls.Count > 0)
+                    ApplyFixedBehavior(control);
+            }
+        }
+
+        /// <summary>
+        /// Positions the window controls along the top edge of the fixed 720p canvas.
+        /// </summary>
+        private void ConfigureWindowChrome()
+        {
+            buttonPanelCreateAccount.Bounds = new Rectangle(986, 18, 180, 30);
+            buttonPanelCreateAccount.Font = new Font("Microsoft Sans Serif", 11F, FontStyle.Bold, GraphicsUnit.Pixel);
+
+            bnMinimise.Bounds = new Rectangle(1178, 18, 40, 30);
+            bnMinimise.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Regular, GraphicsUnit.Pixel);
+
+            bnClose.Bounds = new Rectangle(1224, 18, 40, 30);
+            bnClose.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Regular, GraphicsUnit.Pixel);
+        }
+
+        /// <summary>
+        /// Positions the login controls and status text inside the fixed 720p window.
+        /// </summary>
+        private void ConfigureMainControls()
+        {
+            const int groupLeft = 860;
+            const int labelWidth = 120;
+            const int fieldWidth = 250;
+            const int rowGap = 14;
+            const int fieldX = groupLeft + labelWidth + 12;
+
+            lblDownloading.AutoSize = false;
+            lblDownloading.Bounds = new Rectangle(groupLeft, 484, 390, 20);
+            lblDownloading.Font = new Font("Microsoft Sans Serif", 9F, FontStyle.Regular, GraphicsUnit.Pixel);
+            lblDownloading.TextAlign = ContentAlignment.MiddleLeft;
+
+            lblConnection.AutoSize = false;
+            lblConnection.Bounds = new Rectangle(groupLeft, 506, 390, 20);
+            lblConnection.Font = new Font("Microsoft Sans Serif", 9F, FontStyle.Regular, GraphicsUnit.Pixel);
+            lblConnection.TextAlign = ContentAlignment.MiddleLeft;
+
+            label4.AutoSize = false;
+            label4.Bounds = new Rectangle(groupLeft, 536, labelWidth, 30);
+            label4.TextAlign = ContentAlignment.MiddleRight;
+            label4.Font = new Font("Microsoft Sans Serif", 14F, FontStyle.Regular, GraphicsUnit.Pixel);
+
+            T_username.Multiline = false;
+            T_username.Bounds = new Rectangle(fieldX, 534, fieldWidth, 32);
+            T_username.Font = new Font("Microsoft Sans Serif", 14F, FontStyle.Bold, GraphicsUnit.Pixel);
+
+            label8.AutoSize = false;
+            label8.Bounds = new Rectangle(groupLeft, 536 + 32 + rowGap, labelWidth, 30);
+            label8.TextAlign = ContentAlignment.MiddleRight;
+            label8.Font = new Font("Microsoft Sans Serif", 14F, FontStyle.Regular, GraphicsUnit.Pixel);
+
+            T_password.Bounds = new Rectangle(fieldX, 534 + 32 + rowGap, fieldWidth, 32);
+            T_password.Font = new Font("Microsoft Sans Serif", 14F, FontStyle.Bold, GraphicsUnit.Pixel);
+
+            bnConnectToServer.Bounds = new Rectangle(fieldX, 534 + ((32 + rowGap) * 2), fieldWidth, 40);
+            bnConnectToServer.Font = new Font("Microsoft Sans Serif", 14F, FontStyle.Regular, GraphicsUnit.Pixel);
+
+            lblVersion.AutoSize = true;
+            lblVersion.Location = new Point(16, 694);
+            lblVersion.Font = new Font("Microsoft Sans Serif", 9F, FontStyle.Regular, GraphicsUnit.Pixel);
+
+            bnConnectLocal.Bounds = new Rectangle(fieldX + fieldWidth - 120, 650, 120, 26);
+            bnConnectLocal.Font = new Font("Microsoft Sans Serif", 9F, FontStyle.Regular, GraphicsUnit.Pixel);
+        }
+
+        /// <summary>
+        /// Centers the create-account panel and arranges its fields inside the fixed 720p window.
+        /// </summary>
+        private void ConfigureCreateAccountPanel()
+        {
+            panelCreateAccount.Size = new Size(590, 300);
+            panelCreateAccount.Location = new Point((ClientSize.Width - panelCreateAccount.Width) / 2, (ClientSize.Height - panelCreateAccount.Height) / 2);
+            panelCreateAccount.BackgroundImageLayout = ImageLayout.Center;
+
+            label1.Bounds = new Rectangle(20, 18, 550, 30);
+            label1.Font = new Font("Microsoft Sans Serif", 16F, FontStyle.Regular, GraphicsUnit.Pixel);
+
+            buttonAccountClose.Bounds = new Rectangle(542, 8, 38, 34);
+            buttonAccountClose.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Regular, GraphicsUnit.Pixel);
+
+            label2.Bounds = new Rectangle(32, 76, 140, 30);
+            label2.Font = new Font("Microsoft Sans Serif", 14F, FontStyle.Regular, GraphicsUnit.Pixel);
+
+            textBoxUsername.Multiline = false;
+            textBoxUsername.Bounds = new Rectangle(184, 74, 374, 34);
+            textBoxUsername.Font = new Font("Microsoft Sans Serif", 14F, FontStyle.Bold, GraphicsUnit.Pixel);
+
+            label3.Bounds = new Rectangle(32, 122, 140, 30);
+            label3.Font = new Font("Microsoft Sans Serif", 14F, FontStyle.Regular, GraphicsUnit.Pixel);
+
+            textBoxPassword.Multiline = false;
+            textBoxPassword.Bounds = new Rectangle(184, 120, 374, 34);
+            textBoxPassword.Font = new Font("Microsoft Sans Serif", 14F, FontStyle.Bold, GraphicsUnit.Pixel);
+
+            buttonCreate.Bounds = new Rectangle(184, 176, 374, 42);
+            buttonCreate.Font = new Font("Microsoft Sans Serif", 16F, FontStyle.Regular, GraphicsUnit.Pixel);
+
+            bnCreateLocal.Bounds = new Rectangle(442, 230, 116, 28);
+            bnCreateLocal.Font = new Font("Microsoft Sans Serif", 10F, FontStyle.Regular, GraphicsUnit.Pixel);
         }
 
         /// <summary>

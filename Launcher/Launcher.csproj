@@ -1,6 +1,7 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
+    <GenerateResourceUsePreserializedResources>false</GenerateResourceUsePreserializedResources>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -38,6 +39,7 @@
     <TargetFrameworkProfile />
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
     <BaseOutputPath>..\bin\</BaseOutputPath>
     <OutputPath>..\bin\$(Configuration)\Launcher\</OutputPath>
   </PropertyGroup>
@@ -117,6 +119,10 @@
     <Reference Include="WarhammerOnlineHash, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\deps\EasyMyp\WarhammerOnlineHash.dll</HintPath>
     </Reference>
+    <Reference Include="System.Resources.Extensions">
+      <HintPath>..\packages\System.Resources.Extensions.4.6.0\lib\netstandard2.0\System.Resources.Extensions.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="HttpUtil.cs" />
@@ -148,6 +154,7 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <None Include="app.config" />
+    <None Include="app.manifest" />
     <None Include="mythloginserviceconfig.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -192,12 +199,8 @@
   <ItemGroup>
     <Content Include="Artwork\background.png" />
     <Content Include="Artwork\button.png" />
-    <Content Include="Artwork\final1.png" />
     <Content Include="Artwork\final2.png" />
-    <Content Include="Artwork\final3.png" />
-    <Content Include="Artwork\final4.png" />
     <Content Include="Artwork\final5.png" />
-    <None Include="Artwork\logo-2_yellow.png" />
     <Content Include="Artwork\WAR.ico" />
     <Content Include="Artwork\WAR.png" />
     <None Include="Resources\M55rLv3.jpg" />
@@ -207,7 +210,6 @@
     <PackageReference Include="nlog">
       <Version>4.6.3</Version>
     </PackageReference>
-    <PackageReference Include="System.Resources.Extensions" Version="4.6.0" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
@@ -222,4 +224,14 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <!-- Force classic ResourceReader format: VS2022/MSBuild18 ignores GenerateResourceUsePreserializedResources=false
+       for old-style csproj, so we pre-compile with the .NET 4.8 resgen before CoreResGen runs. -->
+  <Target Name="CompileResourcesWithClassicResgen" BeforeTargets="CoreResGen">
+    <PropertyGroup>
+      <ClassicResgen>C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\resgen.exe</ClassicResgen>
+      <ResOutDir>$(IntermediateOutputPath)</ResOutDir>
+    </PropertyGroup>
+    <Exec Command="&quot;$(ClassicResgen)&quot; /useSourcePath /r:&quot;$(OutputPath)..\Common.dll&quot; /r:&quot;$(OutputPath)..\FrameWork.dll&quot; /r:&quot;C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.Drawing.dll&quot; /r:&quot;C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.Windows.Forms.dll&quot; &quot;$(MSBuildProjectDirectory)\LauncherForm.resx&quot; &quot;$(ResOutDir)Launcher.LauncherForm.resources&quot;" />
+    <Exec Command="&quot;$(ClassicResgen)&quot; /useSourcePath /r:&quot;C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.Drawing.dll&quot; /r:&quot;C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.Windows.Forms.dll&quot; &quot;$(MSBuildProjectDirectory)\Properties\Resources.resx&quot; &quot;$(ResOutDir)Launcher.Properties.Resources.resources&quot;" />
+  </Target>
 </Project>

@@ -116,6 +116,19 @@ namespace WorldServer.World.Objects
             }
 
 
+            var zoneInfoForZ = ZoneService.GetZone_Info(zoneId);
+            if (zoneInfoForZ != null)
+            {
+                int localX = spawn.WorldX - (zoneInfoForZ.OffX << 12);
+                int localY = spawn.WorldY - (zoneInfoForZ.OffY << 12);
+                if (localX >= 0 && localX <= ushort.MaxValue && localY >= 0 && localY <= ushort.MaxValue)
+                {
+                    int terrainZ = ClientFileMgr.GetHeight(zoneInfoForZ.ZoneId, localX, localY);
+                    if (terrainZ >= 0)
+                        spawn.WorldZ = terrainZ;
+                }
+            }
+
             spawn.BuildFromProto(proto);
             var chest = region.CreateLootChest(spawn);
             if (chest == null)

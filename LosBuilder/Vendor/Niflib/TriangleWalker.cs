@@ -242,9 +242,8 @@ namespace Niflib.Extensions
 			while (current != null)
 			{
 				// Append Transformation To Matrix
-				Matrix intermediate;
-
 #if SharpDX
+				Matrix intermediate;
 				Matrix.Multiply(ref worldMatrix, ref current.Rotation, out intermediate);
 				worldMatrix = intermediate;
 				
@@ -256,6 +255,7 @@ namespace Niflib.Extensions
 				Matrix.Multiply(ref worldMatrix, ref translate, out intermediate);
 				worldMatrix = intermediate;
 #elif MonoGame
+				Matrix intermediate;
 				Matrix.Multiply(ref worldMatrix, ref current.Rotation, out intermediate);
 				worldMatrix = intermediate;
 				
@@ -267,17 +267,11 @@ namespace Niflib.Extensions
 				Matrix.Multiply(ref worldMatrix, ref translate, out intermediate);
 				worldMatrix = intermediate;
 #else
-                intermediate = Matrix.Multiply(worldMatrix, current.Rotation);
-				worldMatrix = intermediate;
-				
-				var scale = Matrix.CreateScale(current.Scale);
-                intermediate = Matrix.Multiply(worldMatrix, scale);
-				worldMatrix = intermediate;
-				
-				var translate = Matrix.CreateTranslation(current.Translation.X, current.Translation.Y, current.Translation.Z);
-                intermediate = Matrix.Multiply(worldMatrix, translate);
-				worldMatrix = intermediate;
-				#endif
+                var scale = Matrix.CreateScale(current.Scale);
+                var translate = Matrix.CreateTranslation(current.Translation.X, current.Translation.Y, current.Translation.Z);
+                var localMatrix = Matrix.Multiply(Matrix.Multiply(scale, current.Rotation), translate);
+                worldMatrix = Matrix.Multiply(localMatrix, worldMatrix);
+#endif
 				
 				current = current.Parent;
 			}

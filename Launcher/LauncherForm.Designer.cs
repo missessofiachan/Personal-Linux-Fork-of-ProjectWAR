@@ -252,6 +252,7 @@ namespace Launcher
             this.panelCreateAccount.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.panelCreateAccount.BackColor = System.Drawing.Color.Transparent;
             this.panelCreateAccount.BackgroundImage = global::Launcher.Properties.Resources.background;
+            this.panelCreateAccount.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.panelCreateAccount.Controls.Add(this.bnCreateLocal);
             this.panelCreateAccount.Controls.Add(this.buttonAccountClose);
             this.panelCreateAccount.Controls.Add(this.buttonCreate);
@@ -496,11 +497,11 @@ namespace Launcher
             // LauncherForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(11F, 24F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.BackColor = System.Drawing.Color.Black;
             this.BackgroundImage = global::Launcher.Properties.Resources.M55rLv3;
-            this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.ClientSize = new System.Drawing.Size(2347, 1329);
+            this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            this.ClientSize = new System.Drawing.Size(1280, 720);
             this.Controls.Add(this.bnMinimise);
             this.Controls.Add(this.label8);
             this.Controls.Add(this.label4);

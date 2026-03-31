@@ -2,5 +2,6 @@
   <PropertyGroup>
     <!-- Suppress NuGet XML documentation files from output directories. Default is ".pdb;.xml;.pri" -->
     <AllowedReferenceRelatedFileExtensions>.pdb;.pri</AllowedReferenceRelatedFileExtensions>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
   </PropertyGroup>
 </Project>

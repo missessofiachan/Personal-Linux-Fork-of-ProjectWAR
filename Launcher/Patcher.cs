@@ -56,6 +56,7 @@ namespace Launcher
         public async Task PatchAsync(string patchDirectory)
         {
             string temporaryFilePath = string.Empty;
+            string patchRoot = ResolvePatchRoot(patchDirectory);
 
             try
             {
@@ -80,7 +81,7 @@ namespace Launcher
                 }
 
                 _logger.Info($"Processing update files. {manifest.Files.Count} files");
-                BuildDownloadQueue(manifest.Files, patchDirectory);
+                BuildDownloadQueue(manifest.Files, patchRoot);
 
                 TotalDownloadSize = _neededAssets.Sum(asset => asset.Size);
                 if (TotalDownloadSize > 0)
@@ -89,7 +90,11 @@ namespace Launcher
                 foreach (FileManifestItem file in _neededAssets.ToList())
                 {
                     CurrentState = State.Downloading;
-                    string destinationPath = Path.Combine(Application.StartupPath + patchDirectory, file.Name);
+                    string destinationPath = ResolveDestinationPath(patchRoot, file.Name);
+                    string destinationDirectory = Path.GetDirectoryName(destinationPath);
+
+                    if (!string.IsNullOrEmpty(destinationDirectory))
+                        Directory.CreateDirectory(destinationDirectory);
 
                     if (File.Exists(destinationPath))
                         File.Delete(destinationPath);
@@ -149,14 +154,14 @@ namespace Launcher
         /// Compares local files against the manifest and records every file that must be downloaded.
         /// </summary>
         /// <param name="manifestFiles">The files advertised by the patch server.</param>
-        /// <param name="patchDirectory">The relative output directory for patched files.</param>
-        private void BuildDownloadQueue(IEnumerable<FileManifestItem> manifestFiles, string patchDirectory)
+        /// <param name="patchRoot">The resolved output directory for patched files.</param>
+        private void BuildDownloadQueue(IEnumerable<FileManifestItem> manifestFiles, string patchRoot)
         {
             lock (_neededAssets)
             {
                 foreach (FileManifestItem file in manifestFiles)
                 {
-                    string path = Path.Combine(Application.StartupPath + patchDirectory, file.Name);
+                    string path = ResolveDestinationPath(patchRoot, file.Name);
                     if (!File.Exists(path))
                     {
                         _logger.Info($"Adding file (Id:{file.Id} Name:{file.Name})");
@@ -172,6 +177,34 @@ namespace Launcher
                     _neededAssets.Add(file);
                 }
             }
+        }
+
+        /// <summary>
+        /// Resolves the configured patch directory relative to the launcher directory.
+        /// </summary>
+        /// <param name="patchDirectory">The configured patch directory.</param>
+        /// <returns>The absolute patch root path.</returns>
+        private static string ResolvePatchRoot(string patchDirectory)
+        {
+            string relativeDirectory = string.IsNullOrWhiteSpace(patchDirectory) ? "." : patchDirectory;
+            return Path.GetFullPath(Path.Combine(Application.StartupPath, relativeDirectory));
+        }
+
+        /// <summary>
+        /// Resolves a manifest file path and rejects entries that escape the patch root.
+        /// </summary>
+        /// <param name="patchRoot">The resolved patch root.</param>
+        /// <param name="relativePath">The manifest-relative file path.</param>
+        /// <returns>The absolute destination path inside the patch root.</returns>
+        private static string ResolveDestinationPath(string patchRoot, string relativePath)
+        {
+            string fullPatchRoot = Path.GetFullPath(patchRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar);
+            string destinationPath = Path.GetFullPath(Path.Combine(fullPatchRoot, relativePath));
+
+            if (!destinationPath.StartsWith(fullPatchRoot, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException($"Patch asset '{relativePath}' resolves outside the patch root '{fullPatchRoot}'.");
+
+            return destinationPath;
         }
 
         /// <summary>

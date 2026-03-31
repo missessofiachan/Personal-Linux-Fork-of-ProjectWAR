@@ -292,6 +292,7 @@ namespace ClientDataMatrix.Services
         public bool HasClientBin { get; set; }
         public bool HasLocalizedName { get; set; }
         public string SearchText { get; set; }
+        public string CoverageStatus { get; set; }
 
         public string EffectIdText
         {

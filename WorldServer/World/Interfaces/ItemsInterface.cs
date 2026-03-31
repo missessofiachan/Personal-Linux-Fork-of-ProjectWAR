@@ -2252,10 +2252,15 @@ namespace WorldServer.World.Interfaces
                             moveSuccess = true;
                             SendEquipped(null, destinationSlot, sourceSlot);
 
-                            if (_playerOwner != null && IsEquipmentSlot(destinationSlot) && sourceItem.Info.TokUnlock > 0)
-                                // the 2nd value here is true because this is item we currently equipped and this might trigger 
-                                // set unlock
-                                _playerOwner.TokInterface.AddTok(sourceItem.Info.TokUnlock, true);
+                            if (_playerOwner != null && IsEquipmentSlot(destinationSlot))
+                            {
+                                if (sourceItem.Info.TokUnlock > 0)
+                                    // the 2nd value here is true because this is item we currently equipped and this might trigger 
+                                    // set unlock
+                                    _playerOwner.TokInterface.AddTok(sourceItem.Info.TokUnlock, true);
+                                if (sourceItem.Info.TokUnlock3 > 0)
+                                    _playerOwner.TokInterface.AddTok(sourceItem.Info.TokUnlock3, true);
+                            }
                         }
 
                         else

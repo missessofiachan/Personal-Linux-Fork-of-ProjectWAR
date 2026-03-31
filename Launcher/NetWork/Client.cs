@@ -119,6 +119,47 @@ namespace Launcher
         }
 
         /// <summary>
+        /// Gets the launcher directory that contains the configuration file.
+        /// </summary>
+        /// <returns>The absolute launcher directory path.</returns>
+        private static string GetLauncherDirectory()
+        {
+            return Application.StartupPath;
+        }
+
+        /// <summary>
+        /// Gets the WAR client root directory that contains <c>WAR.exe</c> and the archive files.
+        /// </summary>
+        /// <returns>The WAR client root directory.</returns>
+        private static DirectoryInfo GetWarDirectory()
+        {
+            return Directory.GetParent(GetLauncherDirectory());
+        }
+
+        /// <summary>
+        /// Combines a file name with the WAR client root.
+        /// </summary>
+        /// <param name="warDirectory">The WAR client root directory.</param>
+        /// <param name="fileName">The file name to locate.</param>
+        /// <returns>The absolute file path.</returns>
+        private static string GetWarFilePath(DirectoryInfo warDirectory, string fileName)
+        {
+            if (warDirectory == null)
+                throw new DirectoryNotFoundException("Unable to determine the WAR client root directory from the launcher location.");
+
+            return Path.Combine(warDirectory.FullName, fileName);
+        }
+
+        /// <summary>
+        /// Gets the path to the launcher's login configuration file.
+        /// </summary>
+        /// <returns>The absolute launcher configuration path.</returns>
+        private static string GetLoginConfigPath()
+        {
+            return Path.Combine(GetLauncherDirectory(), "mythloginserviceconfig.xml");
+        }
+
+        /// <summary>
         /// Updates the user's client language identifier inside <c>UserSettings.xml</c>.
         /// </summary>
         public static void UpdateLanguage()
@@ -127,13 +168,11 @@ namespace Launcher
                 return;
 
             int languageId = GetLanguageId(Language);
-            string currentDirectory = Directory.GetCurrentDirectory();
+            string userSettingsPath = Path.Combine(GetWarFilePath(GetWarDirectory(), "user"), "UserSettings.xml");
 
             try
             {
-                Directory.SetCurrentDirectory(currentDirectory + "\\..\\user\\");
-
-                using (StreamReader reader = new StreamReader("UserSettings.xml"))
+                using (StreamReader reader = new StreamReader(userSettingsPath))
                 {
                     string line;
                     StringBuilder totalStream = new StringBuilder();
@@ -152,7 +191,7 @@ namespace Launcher
                         totalStream.AppendLine(line);
                     }
 
-                    File.WriteAllText("UserSettings.xml", totalStream.ToString());
+                    File.WriteAllText(userSettingsPath, totalStream.ToString());
                 }
             }
             catch (Exception exception)
@@ -311,7 +350,7 @@ namespace Launcher
             PacketOut packet = new PacketOut((byte)Opcodes.CL_CHECK);
             packet.WriteUInt32((uint)Version);
 
-            FileInfo configurationFile = new FileInfo("mythloginserviceconfig.xml");
+            FileInfo configurationFile = new FileInfo(GetLoginConfigPath());
             if (configurationFile.Exists)
             {
                 packet.WriteByte(1);
@@ -328,7 +367,8 @@ namespace Launcher
         /// <summary>
         /// Applies the executable patch required for private server connectivity.
         /// </summary>
-        public static void PatchWarExecutable()
+        /// <param name="warDirectory">The WAR client root directory.</param>
+        public static void PatchWarExecutable(DirectoryInfo warDirectory)
         {
             if (!LauncherForm.Instance.AllowServerPatch)
             {
@@ -336,8 +376,9 @@ namespace Launcher
                 return;
             }
 
+            string warExecutablePath = GetWarFilePath(warDirectory, "WAR.exe");
             Logger.Info("Patching WAR.exe");
-            using (Stream stream = new FileStream(Directory.GetCurrentDirectory() + "\\..\\WAR.exe", FileMode.OpenOrCreate))
+            using (Stream stream = new FileStream(warExecutablePath, FileMode.Open, FileAccess.ReadWrite, FileShare.Read))
             {
                 int encryptAddress = (0x00957FBE + 3) - 0x00400000;
                 stream.Seek(encryptAddress, SeekOrigin.Begin);
@@ -360,9 +401,10 @@ namespace Launcher
         /// <summary>
         /// Replaces the launcher config inside <c>data.myp</c> so the client connects to the selected server.
         /// </summary>
-        public static void UpdateWarArchiveData()
+        /// <param name="warDirectory">The WAR client root directory.</param>
+        public static void UpdateWarArchiveData(DirectoryInfo warDirectory)
         {
-            if (!LauncherForm.Instance.AllowServerPatch)
+            if (!LauncherForm.Instance.AllowMythicArchivePatch)
             {
                 Logger.Info("Not patching data.myp");
                 return;
@@ -371,13 +413,14 @@ namespace Launcher
             try
             {
                 Logger.Info("Updating mythloginserviceconfig.xml and data.myp");
-                using (FileStream fileStream = new FileStream(Application.StartupPath + "\\mythloginserviceconfig.xml", FileMode.Open, FileAccess.Read))
-                {
-                    Directory.SetCurrentDirectory(Directory.GetCurrentDirectory() + "\\..\\");
+                string loginConfigPath = GetLoginConfigPath();
+                string archivePath = GetWarFilePath(warDirectory, "data.myp");
 
+                using (FileStream fileStream = new FileStream(loginConfigPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
                     HashDictionary hashDictionary = new HashDictionary();
                     hashDictionary.AddHash(0x3FE03665, 0x349E2A8C, "mythloginserviceconfig.xml", 0);
-                    MYPHandler.MYPHandler mypHandler = new MYPHandler.MYPHandler("data.myp", null, null, hashDictionary);
+                    MYPHandler.MYPHandler mypHandler = new MYPHandler.MYPHandler(archivePath, null, null, hashDictionary);
                     mypHandler.GetFileTable();
 
                     FileInArchive archiveFile = mypHandler.SearchForFile("mythloginserviceconfig.xml");
@@ -387,7 +430,7 @@ namespace Launcher
                         return;
                     }
 
-                    if (!File.Exists(Application.StartupPath + "\\mythloginserviceconfig.xml"))
+                    if (!File.Exists(loginConfigPath))
                     {
                         Logger.Error("Missing file : mythloginserviceconfig.xml");
                         return;
@@ -656,14 +699,14 @@ namespace Launcher
 
             try
             {
-                DirectoryInfo warDirectory = Directory.GetParent(Application.StartupPath);
-                LauncherForm.Instance.UpdateConnectionStatus("Patching...");
-                PatchWarExecutable();
-                UpdateWarArchiveData();
-                LauncherForm.Instance.UpdateConnectionStatus("Patched. Starting WAR.exe");
-
+                DirectoryInfo warDirectory = GetWarDirectory();
                 if (!ValidateClientStartupFiles(warDirectory))
                     return;
+
+                LauncherForm.Instance.UpdateConnectionStatus("Patching...");
+                PatchWarExecutable(warDirectory);
+                UpdateWarArchiveData(warDirectory);
+                LauncherForm.Instance.UpdateConnectionStatus(LauncherForm.Instance.AllowWarClientLaunch ? "Patched. Starting WAR.exe" : "Patched.");
 
                 Logger.Info($"Starting Client {warDirectory.FullName}\\WAR.exe");
                 if (LauncherForm.Instance.AllowWarClientLaunch)
@@ -681,7 +724,6 @@ namespace Launcher
 
                     Logger.Info($"Starting process WAR.exe (in {warDirectory})");
                     process.Start();
-                    Directory.SetCurrentDirectory(warDirectory.FullName);
                 }
                 else
                 {
@@ -732,7 +774,7 @@ namespace Launcher
         private static void SaveConfigFile(string fileContents)
         {
             byte[] bytes = Encoding.ASCII.GetBytes(fileContents);
-            using (FileStream stream = new FileInfo("mythloginserviceconfig.xml").Create())
+            using (FileStream stream = new FileInfo(GetLoginConfigPath()).Create())
                 stream.Write(bytes, 0, bytes.Length);
         }
 
@@ -744,7 +786,7 @@ namespace Launcher
         private static bool ValidateClientStartupFiles(DirectoryInfo warDirectory)
         {
             Logger.Info("Double checking mythlogin file exists.");
-            string loginConfigPath = Application.StartupPath + "\\mythloginserviceconfig.xml";
+            string loginConfigPath = GetLoginConfigPath();
             if (!File.Exists(loginConfigPath))
             {
                 Logger.Warn($"{loginConfigPath} does not exist.");
@@ -752,12 +794,30 @@ namespace Launcher
                 return false;
             }
 
-            string worldArchivePath = warDirectory.FullName + "\\world.myp";
-            if (!File.Exists(worldArchivePath))
+            if (warDirectory == null || !warDirectory.Exists)
             {
-                Logger.Warn($"{worldArchivePath} does not exist.");
+                Logger.Warn("Unable to resolve WAR client root from the launcher path.");
                 LauncherForm.Instance.UpdateConnectionStatus("Is your launcher in the Launcher folder?");
                 return false;
+            }
+
+            string warExecutablePath = GetWarFilePath(warDirectory, "WAR.exe");
+            if (LauncherForm.Instance.AllowWarClientLaunch && !File.Exists(warExecutablePath))
+            {
+                Logger.Warn($"{warExecutablePath} does not exist.");
+                LauncherForm.Instance.UpdateConnectionStatus("Cannot locate WAR.exe");
+                return false;
+            }
+
+            if (LauncherForm.Instance.AllowMythicArchivePatch)
+            {
+                string archivePath = GetWarFilePath(warDirectory, "data.myp");
+                if (!File.Exists(archivePath))
+                {
+                    Logger.Warn($"{archivePath} does not exist.");
+                    LauncherForm.Instance.UpdateConnectionStatus("Cannot locate data.myp");
+                    return false;
+                }
             }
 
             return true;
