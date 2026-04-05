@@ -9,6 +9,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
+using System.Xml;
 using WorldServer.Managers;
 using WorldServer.Services.World;
 using WorldServer.World.Objects;
@@ -22,6 +23,11 @@ namespace WorldServer.API
         {
             NullValueHandling = NullValueHandling.Ignore
         };
+
+        // Icon data — loaded once from icons.xml + itemdata.csv on Start()
+        private static readonly string _iconBaseDir = @"C:\Users\Admin\Downloads\myps\interface\default\eatemplate_icons";
+        private static readonly Dictionary<uint, ushort> _itemIconIds = new Dictionary<uint, ushort>();
+        private static readonly Dictionary<ushort, string> _iconFileNames = new Dictionary<ushort, string>();
 
         private readonly HttpListener _listener = new HttpListener();
         private readonly string _prefix;
@@ -38,6 +44,8 @@ namespace WorldServer.API
             if (_running)
                 return;
 
+            LoadIconData();
+
             _listener.Prefixes.Add(_prefix);
             _listener.Start();
             _running = true;
@@ -50,6 +58,72 @@ namespace WorldServer.API
             _listenerThread.Start();
 
             Log.Success("BotEditorAPI", "Bot editor API started " + _prefix);
+        }
+
+        private static void LoadIconData()
+        {
+            _itemIconIds.Clear();
+            _iconFileNames.Clear();
+
+            // 1. Parse icons.xml: iconId → texture filename (strip "Textures/" prefix, keep basename)
+            string iconsXml = Path.Combine(_iconBaseDir, "source", "icons.xml");
+            try
+            {
+                if (File.Exists(iconsXml))
+                {
+                    XmlDocument doc = new XmlDocument();
+                    doc.Load(iconsXml);
+                    foreach (XmlNode node in doc.SelectNodes("/Interface/Assets/Icon"))
+                    {
+                        string idStr = node.Attributes?["id"]?.Value;
+                        string tex = node.Attributes?["texture"]?.Value;
+                        if (idStr == null || tex == null) continue;
+                        if (!ushort.TryParse(idStr, out ushort iconId)) continue;
+                        // texture is like "Textures/Itm_ge_something.dds" — keep only filename
+                        string fileName = Path.GetFileName(tex);
+                        if (!string.IsNullOrEmpty(fileName))
+                            _iconFileNames[iconId] = fileName;
+                    }
+                    Log.Success("BotEditorAPI", $"Loaded {_iconFileNames.Count} icon filename mappings from icons.xml.");
+                }
+                else
+                {
+                    Log.Notice("BotEditorAPI", $"icons.xml not found at {iconsXml}");
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error("BotEditorAPI", $"Failed to load icons.xml: {e.Message}");
+            }
+
+            // 2. Parse itemdata.csv: item entry → iconId (covers vanilla entries ~1-65604)
+            string csvPath = Path.Combine(_iconBaseDir, "..", "..", "..", "data", "gamedata", "itemdata.csv");
+            try
+            {
+                csvPath = Path.GetFullPath(csvPath);
+                if (File.Exists(csvPath))
+                {
+                    bool header = true;
+                    foreach (string line in File.ReadLines(csvPath))
+                    {
+                        if (header) { header = false; continue; }
+                        string[] parts = line.Split(',');
+                        if (parts.Length < 2) continue;
+                        if (!uint.TryParse(parts[0], out uint entry)) continue;
+                        if (!ushort.TryParse(parts[1], out ushort iconId)) continue;
+                        _itemIconIds[entry] = iconId;
+                    }
+                    Log.Success("BotEditorAPI", $"Loaded {_itemIconIds.Count} item icon IDs from itemdata.csv.");
+                }
+                else
+                {
+                    Log.Notice("BotEditorAPI", $"itemdata.csv not found at {csvPath}");
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error("BotEditorAPI", $"Failed to load itemdata.csv: {e.Message}");
+            }
         }
 
         public void Stop()
@@ -135,6 +209,32 @@ namespace WorldServer.API
                     return;
                 }
 
+                if (segments[2].Equals("items", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!string.Equals(context.Request.HttpMethod, "GET", StringComparison.OrdinalIgnoreCase))
+                    { WriteError(response, HttpStatusCode.MethodNotAllowed, "Only GET is supported."); return; }
+                    if (segments.Length < 4 || !uint.TryParse(segments[3], out uint itemEntry))
+                    { WriteError(response, HttpStatusCode.BadRequest, "Item entry id is required."); return; }
+                    HandleGetItemDetail(response, itemEntry);
+                    return;
+                }
+
+                if (segments[2].Equals("icons", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!string.Equals(context.Request.HttpMethod, "GET", StringComparison.OrdinalIgnoreCase))
+                    { WriteError(response, HttpStatusCode.MethodNotAllowed, "Only GET is supported."); return; }
+                    if (segments.Length < 4 || !ushort.TryParse(segments[3], out ushort iconId))
+                    { WriteError(response, HttpStatusCode.BadRequest, "Icon id is required."); return; }
+                    HandleGetIcon(response, iconId);
+                    return;
+                }
+
+                if (segments[2].Equals("career-templates", StringComparison.OrdinalIgnoreCase))
+                {
+                    HandleCareerTemplatesRoute(context.Request, response, segments);
+                    return;
+                }
+
                 if (!segments[2].Equals("bots", StringComparison.OrdinalIgnoreCase))
                 {
                     WriteError(response, HttpStatusCode.NotFound, "Route not found.");
@@ -204,6 +304,18 @@ namespace WorldServer.API
                     }
 
                     HandleItemSearch(context.Request, response, bot);
+                    return;
+                }
+
+                if (segments.Length == 5 && segments[4].Equals("template", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!string.Equals(context.Request.HttpMethod, "PATCH", StringComparison.OrdinalIgnoreCase))
+                    {
+                        WriteError(response, HttpStatusCode.MethodNotAllowed, "Only PATCH is supported for this route.");
+                        return;
+                    }
+
+                    HandlePatchTemplate(context.Request, response, bot);
                     return;
                 }
 
@@ -523,6 +635,8 @@ namespace WorldServer.API
                 if (info == null)
                     continue;
 
+                _itemIconIds.TryGetValue(info.Entry, out ushort iconId);
+
                 gear.Add(new GearSlotResponse
                 {
                     SlotId = entry.Key,
@@ -533,7 +647,8 @@ namespace WorldServer.API
                     ObjectLevel = info.ObjectLevel,
                     MinRank = info.MinRank,
                     MinRenown = info.MinRenown,
-                    Rarity = info.Rarity
+                    Rarity = info.Rarity,
+                    IconId = iconId
                 });
             }
 
@@ -589,8 +704,114 @@ namespace WorldServer.API
             return uniqueEntries;
         }
 
+        private static void HandleGetItemDetail(HttpListenerResponse response, uint itemEntry)
+        {
+            Item_Info info = ItemService.GetItem_Info(itemEntry);
+            if (info == null)
+            {
+                WriteError(response, HttpStatusCode.NotFound, $"Item {itemEntry} not found.");
+                return;
+            }
+
+            _itemIconIds.TryGetValue(info.Entry, out ushort iconId);
+
+            Dictionary<string, int> stats = new Dictionary<string, int>();
+            foreach (KeyValuePair<byte, ushort> stat in info._Stats)
+            {
+                string statName = Enum.IsDefined(typeof(Stats), (int)stat.Key)
+                    ? FormatEnumName(((Stats)stat.Key).ToString())
+                    : $"Stat{stat.Key}";
+                stats[statName] = stat.Value;
+            }
+
+            WriteJson(response, HttpStatusCode.OK, new ItemDetailResponse
+            {
+                Entry = info.Entry,
+                Name = info.Name,
+                Description = info.Description,
+                Type = info.Type,
+                SlotId = info.SlotId,
+                SlotName = GetSlotName(info.SlotId),
+                Armor = info.Armor,
+                Dps = info.Dps,
+                Speed = info.Speed,
+                MinRank = info.MinRank,
+                MinRenown = info.MinRenown,
+                ObjectLevel = info.ObjectLevel,
+                Rarity = info.Rarity,
+                Career = info.Career,
+                TwoHanded = info.TwoHanded,
+                Bind = info.Bind,
+                TalismanSlots = info.TalismanSlots,
+                UniqueEquiped = info.UniqueEquiped,
+                ItemSet = info.ItemSet,
+                ModelId = info.ModelId,
+                IconId = iconId,
+                Stats = stats,
+                Effects = info.EffectsList
+            });
+        }
+
+        private static void HandleGetIcon(HttpListenerResponse response, ushort iconId)
+        {
+            string texturesDir = Path.Combine(_iconBaseDir, "textures");
+            if (!Directory.Exists(texturesDir))
+            {
+                WriteError(response, HttpStatusCode.ServiceUnavailable, "Icon texture directory not found.");
+                return;
+            }
+
+            if (!_iconFileNames.TryGetValue(iconId, out string fileName))
+            {
+                response.StatusCode = (int)HttpStatusCode.NotFound;
+                return;
+            }
+
+            string ddsPath = Path.Combine(texturesDir, fileName);
+            if (!File.Exists(ddsPath))
+            {
+                // Try case-insensitive match (Windows FS is case-insensitive but let's be safe)
+                string[] matches = Directory.GetFiles(texturesDir, fileName, SearchOption.TopDirectoryOnly);
+                if (matches.Length == 0) { response.StatusCode = (int)HttpStatusCode.NotFound; return; }
+                ddsPath = matches[0];
+            }
+
+            byte[] data = File.ReadAllBytes(ddsPath);
+            response.StatusCode = (int)HttpStatusCode.OK;
+            response.ContentType = "image/vnd.ms-dds";
+            response.ContentLength64 = data.LongLength;
+            response.OutputStream.Write(data, 0, data.Length);
+        }
+
+        private static void HandlePatchTemplate(HttpListenerRequest request, HttpListenerResponse response, ResolvedBot bot)
+        {
+            GearUpdateRequest body = ReadRequestBody<GearUpdateRequest>(request);
+            if (body?.Slots == null || body.Slots.Count == 0)
+            {
+                WriteError(response, HttpStatusCode.BadRequest, "Request body must contain at least one slot update.");
+                return;
+            }
+
+            Dictionary<ushort, uint> updates = new Dictionary<ushort, uint>();
+            foreach (GearSlotUpdate slot in body.Slots)
+            {
+                if (slot.ItemEntry.HasValue)
+                    updates[slot.SlotId] = slot.ItemEntry.Value;
+                else
+                    updates[slot.SlotId] = 0;
+            }
+
+            BotLoadoutManager.PatchTemplate(bot.Character.CareerLine, bot.Tier, bot.Role, updates);
+
+            if (body.Reapply && bot.LoadedPlayer != null)
+                BotManager.Instance.TryReapplyBotLoadout(bot.Character.CharacterId);
+
+            WriteJson(response, HttpStatusCode.OK, BuildBotSheet(RefreshResolvedBot(bot)));
+        }
+
         private static ItemSearchResultResponse BuildItemSearchResult(Item_Info item)
         {
+            _itemIconIds.TryGetValue(item.Entry, out ushort iconId);
             return new ItemSearchResultResponse
             {
                 ItemEntry = item.Entry,
@@ -601,8 +822,222 @@ namespace WorldServer.API
                 ObjectLevel = item.ObjectLevel,
                 MinRank = item.MinRank,
                 MinRenown = item.MinRenown,
-                Rarity = item.Rarity
+                Rarity = item.Rarity,
+                IconId = iconId
             };
+        }
+
+        // ---- Career template routes ----
+
+        private static void HandleCareerTemplatesRoute(HttpListenerRequest request, HttpListenerResponse response, string[] segments)
+        {
+            // GET /api/bot-editor/career-templates
+            if (segments.Length == 3)
+            {
+                if (!string.Equals(request.HttpMethod, "GET", StringComparison.OrdinalIgnoreCase))
+                { WriteError(response, HttpStatusCode.MethodNotAllowed, "Only GET is supported."); return; }
+                HandleGetCareerTemplates(response);
+                return;
+            }
+
+            // Remaining routes: /career-templates/{careerLine}/{tier}/{variantIndex}[/items]
+            if (segments.Length < 6
+                || !byte.TryParse(segments[3], out byte careerLine)
+                || !TryParseTier(segments[4], out BotLoadoutManager.BotTier tier)
+                || !byte.TryParse(segments[5], out byte variantIndex))
+            {
+                WriteError(response, HttpStatusCode.BadRequest,
+                    "Expected /career-templates/{careerLine}/{tier}/{variantIndex}[/items]  (tier = T1|T2|T3|T4|SC)");
+                return;
+            }
+
+            // GET /…/{careerLine}/{tier}/{variantIndex}/items
+            if (segments.Length == 7 && segments[6].Equals("items", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!string.Equals(request.HttpMethod, "GET", StringComparison.OrdinalIgnoreCase))
+                { WriteError(response, HttpStatusCode.MethodNotAllowed, "Only GET is supported."); return; }
+                HandleCareerTemplateItemSearch(request, response, careerLine, tier, variantIndex);
+                return;
+            }
+
+            // PATCH /…/{careerLine}/{tier}/{variantIndex}
+            if (segments.Length == 6 && string.Equals(request.HttpMethod, "PATCH", StringComparison.OrdinalIgnoreCase))
+            {
+                HandlePatchCareerTemplate(request, response, careerLine, tier, variantIndex);
+                return;
+            }
+
+            WriteError(response, HttpStatusCode.NotFound, "Route not found.");
+        }
+
+        private static void HandleGetCareerTemplates(HttpListenerResponse response)
+        {
+            IReadOnlyList<(byte CareerLine, BotLoadoutManager.BotTier Tier, byte VariantIndex, BotLoadoutManager.Loadout Loadout)> all
+                = BotLoadoutManager.GetAllTemplates();
+
+            // Group: career → tier → variants
+            Dictionary<byte, CareerTemplateResponse> byCareer = new Dictionary<byte, CareerTemplateResponse>();
+
+            foreach ((byte careerLine, BotLoadoutManager.BotTier tier, byte variantIndex, BotLoadoutManager.Loadout loadout) in all)
+            {
+                if (!byCareer.TryGetValue(careerLine, out CareerTemplateResponse ct))
+                {
+                    byte realm = ResolveCareerRealm(careerLine);
+                    ct = new CareerTemplateResponse
+                    {
+                        CareerLine = careerLine,
+                        CareerName = FormatEnumName(((CareerLine)careerLine).ToString()),
+                        Realm = realm,
+                        RealmName = FormatEnumName(((Realms)realm).ToString()),
+                        Tiers = new List<CareerTemplateTierResponse>()
+                    };
+                    byCareer[careerLine] = ct;
+                }
+
+                CareerTemplateTierResponse tierEntry = ct.Tiers.FirstOrDefault(t => t.TierName == TierName(tier));
+                if (tierEntry == null)
+                {
+                    tierEntry = new CareerTemplateTierResponse
+                    {
+                        TierName = TierName(tier),
+                        Variants = new List<CareerTemplateVariantResponse>()
+                    };
+                    ct.Tiers.Add(tierEntry);
+                }
+
+                tierEntry.Variants.Add(new CareerTemplateVariantResponse
+                {
+                    VariantIndex = variantIndex,
+                    Label = variantIndex == 0 ? "Template A" : "Template B",
+                    Gear = BuildGearSlots(loadout.SlotItems)
+                });
+            }
+
+            List<CareerTemplateResponse> result = byCareer.Values
+                .OrderBy(ct => ct.Realm)
+                .ThenBy(ct => ct.CareerLine)
+                .ToList();
+
+            WriteJson(response, HttpStatusCode.OK, result);
+        }
+
+        private static void HandleCareerTemplateItemSearch(HttpListenerRequest request, HttpListenerResponse response,
+            byte careerLine, BotLoadoutManager.BotTier tier, byte variantIndex)
+        {
+            string query = request.QueryString["q"]?.Trim();
+            if (string.IsNullOrWhiteSpace(query))
+            { WriteError(response, HttpStatusCode.BadRequest, "Query parameter 'q' is required."); return; }
+
+            if (!ushort.TryParse(request.QueryString["slotId"], out ushort slotId))
+            { WriteError(response, HttpStatusCode.BadRequest, "Query parameter 'slotId' is required."); return; }
+
+            if (!BotLoadoutManager.IsManagedEquipmentSlot(slotId))
+            { WriteError(response, HttpStatusCode.BadRequest, $"Slot {slotId} is not a managed bot equipment slot."); return; }
+
+            int limit = 50;
+            if (int.TryParse(request.QueryString["limit"], out int parsedLimit))
+                limit = Math.Max(1, Math.Min(200, parsedLimit));
+
+            // Use a representative character of this career for race/skills filtering.
+            byte race = 0;
+            long skills = long.MaxValue;
+            byte level = tier == BotLoadoutManager.BotTier.T1 ? (byte)11
+                       : tier == BotLoadoutManager.BotTier.T2 ? (byte)21
+                       : tier == BotLoadoutManager.BotTier.T3 ? (byte)31 : (byte)40;
+            byte renownRank = tier == BotLoadoutManager.BotTier.T4 || tier == BotLoadoutManager.BotTier.SC ? (byte)80 : (byte)0;
+
+            Character repChar = BotManager.Instance.GetAllBotCharacters()
+                .FirstOrDefault(c => c.CareerLine == careerLine);
+            if (repChar?.Value != null)
+            {
+                race = repChar.Race;
+                skills = repChar.Value.Skills;
+            }
+
+            BotLoadoutManager.Loadout template = BotLoadoutManager.GetBaseLoadout(careerLine, tier, variantIndex);
+            HashSet<uint> uniqueEquipped = new HashSet<uint>();
+            if (template != null)
+            {
+                foreach (KeyValuePair<ushort, uint> kv in template.SlotItems)
+                {
+                    if (kv.Key == slotId) continue;
+                    Item_Info info = ItemService.GetItem_Info(kv.Value);
+                    if (info?.UniqueEquiped == 1)
+                        uniqueEquipped.Add(info.Entry);
+                }
+            }
+
+            bool exactEntry = uint.TryParse(query, out uint entryQuery);
+
+            List<ItemSearchResultResponse> results = ItemService._Item_Info.Values
+                .Where(item => MatchesItemQuery(item, query, exactEntry, entryQuery))
+                .Where(item => BotLoadoutManager.CanUseItemInLoadout(careerLine, race, skills, level, renownRank, slotId, item, uniqueEquipped))
+                .OrderBy(item => exactEntry && item.Entry == entryQuery ? 0 : 1)
+                .ThenBy(item => item.Name.StartsWith(query, StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                .ThenByDescending(item => item.ObjectLevel)
+                .ThenBy(item => item.Name)
+                .Take(limit)
+                .Select(BuildItemSearchResult)
+                .ToList();
+
+            WriteJson(response, HttpStatusCode.OK, results);
+        }
+
+        private static void HandlePatchCareerTemplate(HttpListenerRequest request, HttpListenerResponse response,
+            byte careerLine, BotLoadoutManager.BotTier tier, byte variantIndex)
+        {
+            GearUpdateRequest body = ReadRequestBody<GearUpdateRequest>(request);
+            if (body?.Slots == null || body.Slots.Count == 0)
+            { WriteError(response, HttpStatusCode.BadRequest, "Request body must contain at least one slot update."); return; }
+
+            Dictionary<ushort, uint> updates = new Dictionary<ushort, uint>();
+            foreach (GearSlotUpdate slot in body.Slots)
+                updates[slot.SlotId] = slot.ItemEntry ?? 0;
+
+            BotLoadoutManager.PatchTemplate(careerLine, tier, variantIndex, updates);
+
+            if (body.Reapply && (tier == BotLoadoutManager.BotTier.T4 || tier == BotLoadoutManager.BotTier.SC))
+            {
+                foreach (Character botChar in BotManager.Instance.GetAllBotCharacters()
+                    .Where(c => c.CareerLine == careerLine))
+                {
+                    BotManager.Instance.TryReapplyBotLoadout(botChar.CharacterId);
+                }
+            }
+
+            BotLoadoutManager.Loadout updated = BotLoadoutManager.GetTemplate(careerLine, tier, variantIndex);
+            CareerTemplateVariantResponse result = new CareerTemplateVariantResponse
+            {
+                VariantIndex = variantIndex,
+                Label = variantIndex == 0 ? "Template A" : "Template B",
+                Gear = BuildGearSlots(updated?.SlotItems ?? new Dictionary<ushort, uint>())
+            };
+
+            WriteJson(response, HttpStatusCode.OK, result);
+        }
+
+        private static byte ResolveCareerRealm(byte careerLine)
+        {
+            // Try to infer from a live bot character.
+            Character c = BotManager.Instance.GetAllBotCharacters()
+                .FirstOrDefault(ch => ch.CareerLine == careerLine);
+            if (c != null)
+                return c.Realm;
+
+            // Fallback: Destruction careers are Choppa (25), Black Orc (23), Squig Herder (22), Shaman (21).
+            // Order careers are Slayer (7), Iron Breaker (5), Engineer (4), Rune Priest (3).
+            // Use CareerLine enum to determine realm via known destruction careers.
+            CareerLine cl = (CareerLine)careerLine;
+            switch (cl)
+            {
+                case CareerLine.CAREERLINE_SHAMAN:
+                case CareerLine.CAREERLINE_SQUIG_HERDER:
+                case CareerLine.CAREERLINE_BLACK_ORC:
+                case CareerLine.CAREERLINE_CHOPPA:
+                    return (byte)Realms.REALMS_REALM_DESTRUCTION;
+                default:
+                    return (byte)Realms.REALMS_REALM_ORDER;
+            }
         }
 
         private static bool MatchesItemQuery(Item_Info item, string query, bool exactEntry, uint entryQuery)
@@ -618,24 +1053,26 @@ namespace WorldServer.API
 
         private static BotLoadoutManager.BotTier ResolveBotTier(byte level, byte renownRank)
         {
-            if (level <= 11)
-                return BotLoadoutManager.BotTier.T1;
-            if (level <= 21)
-                return BotLoadoutManager.BotTier.T2;
-            if (level <= 31)
-                return BotLoadoutManager.BotTier.T3;
-
-            if (renownRank >= 100)
-                return BotLoadoutManager.BotTier.T4_RR100;
-            if (renownRank >= 90)
-                return BotLoadoutManager.BotTier.T4_RR90;
-            if (renownRank >= 80)
-                return BotLoadoutManager.BotTier.T4_RR80;
-            if (renownRank >= 70)
-                return BotLoadoutManager.BotTier.T4_RR70;
-
-            return BotLoadoutManager.BotTier.T4_RR40;
+            if (level <= 11) return BotLoadoutManager.BotTier.T1;
+            if (level <= 21) return BotLoadoutManager.BotTier.T2;
+            if (level <= 31) return BotLoadoutManager.BotTier.T3;
+            return BotLoadoutManager.BotTier.T4;
         }
+
+        private static bool TryParseTier(string s, out BotLoadoutManager.BotTier tier)
+        {
+            switch (s?.ToUpperInvariant())
+            {
+                case "T1": tier = BotLoadoutManager.BotTier.T1; return true;
+                case "T2": tier = BotLoadoutManager.BotTier.T2; return true;
+                case "T3": tier = BotLoadoutManager.BotTier.T3; return true;
+                case "T4": tier = BotLoadoutManager.BotTier.T4; return true;
+                case "SC": tier = BotLoadoutManager.BotTier.SC; return true;
+                default: tier = default; return false;
+            }
+        }
+
+        private static string TierName(BotLoadoutManager.BotTier tier) => tier.ToString();
 
         private static string GetSlotName(ushort slotId)
         {
@@ -662,7 +1099,7 @@ namespace WorldServer.API
         private static void AddCorsHeaders(HttpListenerResponse response)
         {
             response.Headers["Access-Control-Allow-Origin"] = "*";
-            response.Headers["Access-Control-Allow-Methods"] = "GET,PUT,DELETE,OPTIONS";
+            response.Headers["Access-Control-Allow-Methods"] = "GET,PUT,PATCH,DELETE,OPTIONS";
             response.Headers["Access-Control-Allow-Headers"] = "Content-Type";
         }
 
@@ -817,6 +1254,7 @@ namespace WorldServer.API
             public byte MinRank { get; set; }
             public byte MinRenown { get; set; }
             public byte Rarity { get; set; }
+            public ushort IconId { get; set; }
             public ushort PrimaryDye { get; set; }
             public ushort SecondaryDye { get; set; }
         }
@@ -824,6 +1262,13 @@ namespace WorldServer.API
         private sealed class UpdateBotGearRequest
         {
             public bool ReplaceOverrides { get; set; } = true;
+            public bool Reapply { get; set; } = true;
+            public List<GearSlotUpdate> Slots { get; set; }
+        }
+
+        private sealed class GearUpdateRequest
+        {
+            public bool ReplaceOverrides { get; set; } = false;
             public bool Reapply { get; set; } = true;
             public List<GearSlotUpdate> Slots { get; set; }
         }
@@ -845,6 +1290,56 @@ namespace WorldServer.API
             public byte MinRank { get; set; }
             public byte MinRenown { get; set; }
             public byte Rarity { get; set; }
+            public ushort IconId { get; set; }
+        }
+
+        private sealed class ItemDetailResponse
+        {
+            public uint Entry { get; set; }
+            public string Name { get; set; }
+            public string Description { get; set; }
+            public byte Type { get; set; }
+            public ushort SlotId { get; set; }
+            public string SlotName { get; set; }
+            public ushort Armor { get; set; }
+            public ushort Dps { get; set; }
+            public ushort Speed { get; set; }
+            public byte MinRank { get; set; }
+            public byte MinRenown { get; set; }
+            public byte ObjectLevel { get; set; }
+            public byte Rarity { get; set; }
+            public uint Career { get; set; }
+            public bool TwoHanded { get; set; }
+            public byte Bind { get; set; }
+            public byte TalismanSlots { get; set; }
+            public byte UniqueEquiped { get; set; }
+            public uint ItemSet { get; set; }
+            public uint ModelId { get; set; }
+            public ushort IconId { get; set; }
+            public Dictionary<string, int> Stats { get; set; }
+            public List<ushort> Effects { get; set; }
+        }
+
+        private sealed class CareerTemplateResponse
+        {
+            public byte CareerLine { get; set; }
+            public string CareerName { get; set; }
+            public byte Realm { get; set; }
+            public string RealmName { get; set; }
+            public List<CareerTemplateTierResponse> Tiers { get; set; }
+        }
+
+        private sealed class CareerTemplateTierResponse
+        {
+            public string TierName { get; set; }   // "T1" | "T2" | "T3" | "T4" | "SC"
+            public List<CareerTemplateVariantResponse> Variants { get; set; }
+        }
+
+        private sealed class CareerTemplateVariantResponse
+        {
+            public byte VariantIndex { get; set; }
+            public string Label { get; set; }
+            public List<GearSlotResponse> Gear { get; set; }
         }
     }
 }

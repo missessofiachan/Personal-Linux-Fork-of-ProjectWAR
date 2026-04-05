@@ -17,11 +17,8 @@ namespace WorldServer.Managers
             T1,
             T2,
             T3,
-            T4_RR40,
-            T4_RR70,
-            T4_RR80,
-            T4_RR90,
-            T4_RR100
+            T4,
+            SC  // Scenario — falls back to T4 at runtime if no explicit template is set
         }
 
         public class Loadout
@@ -37,15 +34,6 @@ namespace WorldServer.Managers
                 return clone;
             }
         }
-
-        private static readonly BotTier[] SharedT4Tiers =
-        {
-            BotTier.T4_RR40,
-            BotTier.T4_RR70,
-            BotTier.T4_RR80,
-            BotTier.T4_RR90,
-            BotTier.T4_RR100
-        };
 
         private static readonly ushort[] _managedEquipmentSlots =
         {
@@ -67,15 +55,22 @@ namespace WorldServer.Managers
             (ushort)EquipSlot.JEWELLERY_4
         };
 
+        // Templates keyed by (careerLine, tier, variantIndex).
+        // Each career × tier has 2 variants: 0 = A, 1 = B.
         private static readonly Dictionary<TemplateKey, Loadout> _templates = new Dictionary<TemplateKey, Loadout>();
 
         public static IReadOnlyList<ushort> ManagedEquipmentSlots => _managedEquipmentSlots;
 
+        // OffTank_2H bots use variant 1; everything else uses variant 0.
+        private static byte RoleToVariant(BotRole role) => role == BotRole.OffTank_2H ? (byte)1 : (byte)0;
+
         public static void Initialize()
         {
             _templates.Clear();
-            RegisterSharedT4Templates();
+            RegisterAllTemplates();
         }
+
+        // ---- Public read API ----
 
         public static Loadout GetLoadout(Player bot, BotTier tier, BotRole role)
         {
@@ -94,7 +89,7 @@ namespace WorldServer.Managers
             Loadout baseLoadout = GetBaseLoadout(careerLine, tier, role);
             if (baseLoadout == null)
             {
-                Log.Error("BotLoadoutManager", $"No explicit template or starter fallback found for CharacterId {characterId} ({careerLine}/{role}/{tier}).");
+                Log.Error("BotLoadoutManager", $"No explicit template or starter fallback found for CharacterId {characterId} ({careerLine}/{role}).");
                 return null;
             }
 
@@ -103,14 +98,78 @@ namespace WorldServer.Managers
             return effectiveLoadout;
         }
 
+        // Bridge for BotManager: maps (tier, role) → (tier, variantIndex).
         public static Loadout GetBaseLoadout(byte careerLine, BotTier tier, BotRole role)
         {
-            TemplateKey key = new TemplateKey(tier, careerLine, role);
-            if (_templates.TryGetValue(key, out Loadout template))
-                return template;
+            return GetBaseLoadout(careerLine, tier, RoleToVariant(role));
+        }
+
+        public static Loadout GetBaseLoadout(byte careerLine, BotTier tier, byte variantIndex)
+        {
+            // Direct lookup.
+            if (_templates.TryGetValue(new TemplateKey(careerLine, tier, variantIndex), out Loadout t))
+                return t;
+
+            // Try variant 0 for the same tier.
+            if (variantIndex != 0 && _templates.TryGetValue(new TemplateKey(careerLine, tier, 0), out t))
+                return t;
+
+            // SC falls back to T4.
+            if (tier == BotTier.SC)
+            {
+                if (_templates.TryGetValue(new TemplateKey(careerLine, BotTier.T4, variantIndex), out t))
+                    return t;
+                if (variantIndex != 0 && _templates.TryGetValue(new TemplateKey(careerLine, BotTier.T4, 0), out t))
+                    return t;
+            }
 
             return BuildStartingLoadout(careerLine);
         }
+
+        // Returns the explicitly registered template (no fallback); null if not registered.
+        public static Loadout GetTemplate(byte careerLine, BotTier tier, byte variantIndex)
+        {
+            _templates.TryGetValue(new TemplateKey(careerLine, tier, variantIndex), out Loadout loadout);
+            return loadout;
+        }
+
+        public static IReadOnlyList<(byte CareerLine, BotTier Tier, byte VariantIndex, Loadout Loadout)> GetAllTemplates()
+        {
+            return _templates
+                .Select(kv => (kv.Key.CareerLine, kv.Key.Tier, kv.Key.VariantIndex, kv.Value))
+                .OrderBy(t => t.CareerLine)
+                .ThenBy(t => (int)t.Tier)
+                .ThenBy(t => t.VariantIndex)
+                .ToList();
+        }
+
+        // ---- Patch API ----
+
+        // Bridge for the bot-centric patch route: maps role → variantIndex.
+        public static void PatchTemplate(byte careerLine, BotTier tier, BotRole role, Dictionary<ushort, uint> updates)
+        {
+            PatchTemplate(careerLine, tier, RoleToVariant(role), updates);
+        }
+
+        public static void PatchTemplate(byte careerLine, BotTier tier, byte variantIndex, Dictionary<ushort, uint> updates)
+        {
+            TemplateKey key = new TemplateKey(careerLine, tier, variantIndex);
+            if (!_templates.TryGetValue(key, out Loadout template))
+            {
+                template = BuildStartingLoadout(careerLine) ?? new Loadout();
+                _templates[key] = template;
+            }
+
+            foreach (KeyValuePair<ushort, uint> update in updates)
+            {
+                if (update.Value == 0)
+                    template.SlotItems.Remove(update.Key);
+                else
+                    template.SlotItems[update.Key] = update.Value;
+            }
+        }
+
+        // ---- Slot utility ----
 
         public static bool IsManagedEquipmentSlot(ushort slotId)
         {
@@ -167,6 +226,8 @@ namespace WorldServer.Managers
 
             return ItemsInterface.CanUseItemTypeForCareer(item, careerLine, race, playerSkills, slotId, uniqueEquipped);
         }
+
+        // ---- Private helpers ----
 
         private static Loadout BuildStartingLoadout(byte careerLine)
         {
@@ -241,9 +302,16 @@ namespace WorldServer.Managers
             return uniqueEquipped;
         }
 
-        private static void RegisterSharedT4Templates()
+        // ---- Template registration ----
+
+        private static void RegisterAllTemplates()
         {
-            RegisterSharedT4Template((byte)CareerLine.CAREERLINE_RUNE_PRIEST, BotRole.Healer,
+            // All explicit templates are registered under BotTier.T4.
+            // T1/T2/T3 fall back to BuildStartingLoadout at runtime.
+            // SC starts empty — the editor is the intended way to populate it.
+
+            // Rune Priest — Healer A (T4)
+            RegisterTemplate((byte)CareerLine.CAREERLINE_RUNE_PRIEST, BotTier.T4, 0,
                 Entry(EquipSlot.BODY, 129838067),
                 Entry(EquipSlot.HELM, 129838068),
                 Entry(EquipSlot.SHOULDER, 129838069),
@@ -259,7 +327,11 @@ namespace WorldServer.Managers
                 Entry(EquipSlot.JEWELLERY_4, 5850421),
                 Entry(EquipSlot.MAIN_HAND, 2000157));
 
-            RegisterSharedT4Template((byte)CareerLine.CAREERLINE_ENGINEER, BotRole.RangedDPS,
+            // Rune Priest — Healer B (cloned from A; user can customise)
+            CloneTemplate((byte)CareerLine.CAREERLINE_RUNE_PRIEST, BotTier.T4, 0, 1);
+
+            // Engineer — Ranged A (T4)
+            RegisterTemplate((byte)CareerLine.CAREERLINE_ENGINEER, BotTier.T4, 0,
                 Entry(EquipSlot.BODY, 475376),
                 Entry(EquipSlot.HELM, 472976),
                 Entry(EquipSlot.SHOULDER, 477008),
@@ -276,7 +348,11 @@ namespace WorldServer.Managers
                 Entry(EquipSlot.MAIN_HAND, 2000112),
                 Entry(EquipSlot.RANGED_WEAPON, 2000165));
 
-            RegisterSharedT4Template((byte)CareerLine.CAREERLINE_IRON_BREAKER, BotRole.MainTank_Shield,
+            // Engineer — Ranged B (cloned from A)
+            CloneTemplate((byte)CareerLine.CAREERLINE_ENGINEER, BotTier.T4, 0, 1);
+
+            // Iron Breaker — Shield Tank A (T4)
+            RegisterTemplate((byte)CareerLine.CAREERLINE_IRON_BREAKER, BotTier.T4, 0,
                 Entry(EquipSlot.BODY, 435680),
                 Entry(EquipSlot.HELM, 435704),
                 Entry(EquipSlot.SHOULDER, 435692),
@@ -293,7 +369,8 @@ namespace WorldServer.Managers
                 Entry(EquipSlot.MAIN_HAND, 475085),
                 Entry(EquipSlot.OFF_HAND, 472901));
 
-            RegisterSharedT4Template((byte)CareerLine.CAREERLINE_IRON_BREAKER, BotRole.OffTank_2H,
+            // Iron Breaker — 2H DPS B (T4)
+            RegisterTemplate((byte)CareerLine.CAREERLINE_IRON_BREAKER, BotTier.T4, 1,
                 Entry(EquipSlot.BODY, 435680),
                 Entry(EquipSlot.HELM, 472973),
                 Entry(EquipSlot.SHOULDER, 435692),
@@ -309,7 +386,8 @@ namespace WorldServer.Managers
                 Entry(EquipSlot.JEWELLERY_4, 472877),
                 Entry(EquipSlot.MAIN_HAND, 2000149));
 
-            RegisterSharedT4Template((byte)CareerLine.CAREERLINE_SLAYER, BotRole.MeleeDPS,
+            // Slayer — Melee DPS A (T4)
+            RegisterTemplate((byte)CareerLine.CAREERLINE_SLAYER, BotTier.T4, 0,
                 Entry(EquipSlot.BODY, 475374),
                 Entry(EquipSlot.HELM, 472974),
                 Entry(EquipSlot.SHOULDER, 477006),
@@ -325,7 +403,11 @@ namespace WorldServer.Managers
                 Entry(EquipSlot.JEWELLERY_4, 472878),
                 Entry(EquipSlot.MAIN_HAND, 2000149));
 
-            RegisterSharedT4Template((byte)CareerLine.CAREERLINE_SHAMAN, BotRole.Healer,
+            // Slayer — Melee DPS B (cloned from A)
+            CloneTemplate((byte)CareerLine.CAREERLINE_SLAYER, BotTier.T4, 0, 1);
+
+            // Shaman — Healer A (T4)
+            RegisterTemplate((byte)CareerLine.CAREERLINE_SHAMAN, BotTier.T4, 0,
                 Entry(EquipSlot.BODY, 2017032),
                 Entry(EquipSlot.HELM, 2017030),
                 Entry(EquipSlot.SHOULDER, 2017031),
@@ -341,7 +423,11 @@ namespace WorldServer.Managers
                 Entry(EquipSlot.JEWELLERY_4, 5850421),
                 Entry(EquipSlot.MAIN_HAND, 2000157));
 
-            RegisterSharedT4Template((byte)CareerLine.CAREERLINE_SQUIG_HERDER, BotRole.RangedDPS,
+            // Shaman — Healer B (cloned from A)
+            CloneTemplate((byte)CareerLine.CAREERLINE_SHAMAN, BotTier.T4, 0, 1);
+
+            // Squig Herder — Ranged A (T4)
+            RegisterTemplate((byte)CareerLine.CAREERLINE_SQUIG_HERDER, BotTier.T4, 0,
                 Entry(EquipSlot.BODY, 475424),
                 Entry(EquipSlot.HELM, 473024),
                 Entry(EquipSlot.SHOULDER, 477056),
@@ -359,7 +445,11 @@ namespace WorldServer.Managers
                 Entry(EquipSlot.OFF_HAND, 129838247),
                 Entry(EquipSlot.RANGED_WEAPON, 2000164));
 
-            RegisterSharedT4Template((byte)CareerLine.CAREERLINE_BLACK_ORC, BotRole.MainTank_Shield,
+            // Squig Herder — Ranged B (cloned from A)
+            CloneTemplate((byte)CareerLine.CAREERLINE_SQUIG_HERDER, BotTier.T4, 0, 1);
+
+            // Black Orc — Shield Tank A (T4)
+            RegisterTemplate((byte)CareerLine.CAREERLINE_BLACK_ORC, BotTier.T4, 0,
                 Entry(EquipSlot.BODY, 435752),
                 Entry(EquipSlot.HELM, 435776),
                 Entry(EquipSlot.SHOULDER, 435764),
@@ -376,7 +466,8 @@ namespace WorldServer.Managers
                 Entry(EquipSlot.MAIN_HAND, 475133),
                 Entry(EquipSlot.OFF_HAND, 472949));
 
-            RegisterSharedT4Template((byte)CareerLine.CAREERLINE_BLACK_ORC, BotRole.OffTank_2H,
+            // Black Orc — 2H DPS B (T4)
+            RegisterTemplate((byte)CareerLine.CAREERLINE_BLACK_ORC, BotTier.T4, 1,
                 Entry(EquipSlot.BODY, 435752),
                 Entry(EquipSlot.HELM, 473021),
                 Entry(EquipSlot.SHOULDER, 435764),
@@ -392,7 +483,8 @@ namespace WorldServer.Managers
                 Entry(EquipSlot.JEWELLERY_4, 472925),
                 Entry(EquipSlot.MAIN_HAND, 2000144));
 
-            RegisterSharedT4Template((byte)CareerLine.CAREERLINE_CHOPPA, BotRole.MeleeDPS,
+            // Choppa — Melee DPS A (T4)
+            RegisterTemplate((byte)CareerLine.CAREERLINE_CHOPPA, BotTier.T4, 0,
                 Entry(EquipSlot.BODY, 2017027),
                 Entry(EquipSlot.HELM, 2017025),
                 Entry(EquipSlot.SHOULDER, 2017026),
@@ -407,13 +499,21 @@ namespace WorldServer.Managers
                 Entry(EquipSlot.JEWELLERY_3, 129838737),
                 Entry(EquipSlot.JEWELLERY_4, 472926),
                 Entry(EquipSlot.MAIN_HAND, 2000144));
+
+            // Choppa — Melee DPS B (cloned from A)
+            CloneTemplate((byte)CareerLine.CAREERLINE_CHOPPA, BotTier.T4, 0, 1);
         }
 
-        private static void RegisterSharedT4Template(byte careerLine, BotRole role, params SlotEntry[] entries)
+        private static void RegisterTemplate(byte careerLine, BotTier tier, byte variantIndex, params SlotEntry[] entries)
         {
-            Loadout loadout = CreateLoadout(entries);
-            foreach (BotTier tier in SharedT4Tiers)
-                _templates[new TemplateKey(tier, careerLine, role)] = loadout;
+            _templates[new TemplateKey(careerLine, tier, variantIndex)] = CreateLoadout(entries);
+        }
+
+        private static void CloneTemplate(byte careerLine, BotTier tier, byte sourceVariant, byte destVariant)
+        {
+            TemplateKey srcKey = new TemplateKey(careerLine, tier, sourceVariant);
+            if (_templates.TryGetValue(srcKey, out Loadout source))
+                _templates[new TemplateKey(careerLine, tier, destVariant)] = source.Clone();
         }
 
         private static Loadout CreateLoadout(IEnumerable<SlotEntry> entries)
@@ -460,20 +560,20 @@ namespace WorldServer.Managers
 
         private readonly struct TemplateKey : IEquatable<TemplateKey>
         {
-            public TemplateKey(BotTier tier, byte careerLine, BotRole role)
+            public TemplateKey(byte careerLine, BotTier tier, byte variantIndex)
             {
-                Tier = tier;
                 CareerLine = careerLine;
-                Role = role;
+                Tier = tier;
+                VariantIndex = variantIndex;
             }
 
-            public BotTier Tier { get; }
             public byte CareerLine { get; }
-            public BotRole Role { get; }
+            public BotTier Tier { get; }
+            public byte VariantIndex { get; }
 
             public bool Equals(TemplateKey other)
             {
-                return Tier == other.Tier && CareerLine == other.CareerLine && Role == other.Role;
+                return CareerLine == other.CareerLine && Tier == other.Tier && VariantIndex == other.VariantIndex;
             }
 
             public override bool Equals(object obj)
@@ -485,10 +585,9 @@ namespace WorldServer.Managers
             {
                 unchecked
                 {
-                    int hashCode = (int)Tier;
-                    hashCode = (hashCode * 397) ^ CareerLine;
-                    hashCode = (hashCode * 397) ^ (int)Role;
-                    return hashCode;
+                    int h = CareerLine * 397;
+                    h = (h ^ (int)Tier) * 397;
+                    return h ^ VariantIndex;
                 }
             }
         }

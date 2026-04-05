@@ -626,14 +626,12 @@ namespace WorldServer.Managers
 
         private BotLoadoutManager.BotTier GetBotTier(int tier, int rr)
         {
-            if (tier < 4) return tier switch { 1 => BotLoadoutManager.BotTier.T1, 2 => BotLoadoutManager.BotTier.T2, 3 => BotLoadoutManager.BotTier.T3, _ => BotLoadoutManager.BotTier.T1 };
-
-            return rr switch {
-                >= 100 => BotLoadoutManager.BotTier.T4_RR100,
-                >= 90 => BotLoadoutManager.BotTier.T4_RR90,
-                >= 80 => BotLoadoutManager.BotTier.T4_RR80,
-                >= 70 => BotLoadoutManager.BotTier.T4_RR70,
-                _ => BotLoadoutManager.BotTier.T4_RR40
+            return tier switch
+            {
+                1 => BotLoadoutManager.BotTier.T1,
+                2 => BotLoadoutManager.BotTier.T2,
+                3 => BotLoadoutManager.BotTier.T3,
+                _ => BotLoadoutManager.BotTier.T4
             };
         }
 
