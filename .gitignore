@@ -243,3 +243,8 @@ deps/zones/
 
 # Temporary database dumps
 Database/_tmp_worlddump/
+
+# Local dotnet CLI/cache overrides
+.dotnet-cli/
+.dotnet-home/
+

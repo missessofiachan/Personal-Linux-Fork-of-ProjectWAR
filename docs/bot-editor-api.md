@@ -1,24 +1,25 @@
 # Bot Editor API
 
-`WorldServer` now exposes a local HTTP JSON API for inspecting and editing bot gear loadouts from an external UI.
+`WorldServer` now exposes a local HTTP JSON API for both base-template editing and per-bot gear overrides from external tools.
 
-This API is intended to be the integration point for a future bot editor in `WAR-RE-Toolkit`.
+This surface is actively consumed by `WAR-RE-Toolkit` through both the embedded hub editor and the standalone `Bot Template Armory` viewer.
 
 ## Purpose
 
-The bot system now has three distinct layers:
+The bot loadout stack has three live layers:
 
-- Base gear templates in `BotLoadoutManager`
-- Per-bot persisted gear overrides in `bot_gear_overrides`
-- Normal bot loadout application through `BotManager`
+- base gear templates in `BotLoadoutManager`
+- per-bot persisted gear overrides in `bot_gear_overrides`
+- normal bot loadout application through `BotManager`
 
-The HTTP API sits above those layers so an external tool can:
+The HTTP API sits above those layers so external tools can:
 
-- list all bot characters
-- inspect a bot's template gear, custom overrides, effective loadout, and currently equipped items
-- search valid items for a specific slot
-- replace or clear custom per-bot overrides
-- reapply a changed loadout to an already loaded bot
+- list bot characters
+- inspect one bot's base template, bot override set, effective bot result, and currently equipped gear
+- search slot-valid items for one bot or one career-template variant
+- patch a base template slot
+- apply or clear a per-bot override slot
+- reapply the resulting loadout to already loaded bots
 
 ## Server Configuration
 
@@ -30,11 +31,11 @@ Config fields:
 - `BotEditorAPIAddress` default: `127.0.0.1`
 - `BotEditorAPIPort` default: `51933`
 
-Current defaults intentionally keep the service local-only.
+The default binding is intentionally local-only.
 
 ## Persistence Model
 
-Custom bot gear edits are stored in `war_characters.bot_gear_overrides`.
+Per-bot override edits are stored in `war_characters.bot_gear_overrides`.
 
 Schema:
 
@@ -44,13 +45,15 @@ Schema:
 
 The table is created by `Database/update_011_bot_gear_overrides.sql`.
 
+Base templates are still held in `BotLoadoutManager` and are edited in-memory through the patch routes below.
+
 Resolution order for a bot sheet:
 
 1. Determine the base template for `career + tier + role`
 2. Load any per-bot overrides
 3. Validate each override against career, race, skills, rank, renown, slot legality, and unique-equipped restrictions
 4. Merge valid overrides into the effective loadout
-5. If requested, reapply that effective loadout to a loaded bot
+5. Reapply the effective loadout to a loaded bot when requested
 
 ## Routes
 
@@ -60,7 +63,7 @@ Base URL:
 http://127.0.0.1:51933/api/bot-editor/
 ```
 
-Routes:
+### Bot-sheet routes
 
 - `GET health`
 - `GET bots`
@@ -68,15 +71,24 @@ Routes:
 - `GET bots/{characterId}/items?q={query}&slotId={slotId}&limit={limit}`
 - `PUT bots/{characterId}/gear`
 - `DELETE bots/{characterId}/gear?reapply=true`
+- `PATCH bots/{characterId}/template`
+
+### Career-template routes
+
+- `GET career-templates`
+- `GET career-templates/{careerLine}/{tier}/{variantIndex}/items?q={query}&slotId={slotId}&limit={limit}`
+- `PATCH career-templates/{careerLine}/{tier}/{variantIndex}`
 
 The API sends CORS headers for local UI development:
 
 - `Access-Control-Allow-Origin: *`
-- `Access-Control-Allow-Methods: GET,PUT,DELETE,OPTIONS`
+- `Access-Control-Allow-Methods: GET,PUT,DELETE,PATCH,OPTIONS`
 
 ## Response Shapes
 
-`GET bots` returns bot summaries:
+### `GET bots`
+
+Bot summaries contain:
 
 - `characterId`
 - `name`
@@ -92,7 +104,9 @@ The API sends CORS headers for local UI development:
 - `zoneId`
 - `hasGearOverrides`
 
-`GET bots/{characterId}` returns a full bot sheet:
+### `GET bots/{characterId}`
+
+A full bot sheet contains:
 
 - `characterId`
 - `name`
@@ -122,14 +136,38 @@ Each gear list entry contains:
 - `minRank`
 - `minRenown`
 - `rarity`
+- `iconId`
 - `primaryDye`
 - `secondaryDye`
 
-`GET bots/{characterId}/items` returns valid candidate items for one slot only.
+### `GET career-templates`
 
-## Update Contract
+Returns a career-template tree grouped as:
 
-`PUT bots/{characterId}/gear` accepts:
+- `careerLine`
+- `careerName`
+- `realm`
+- `realmName`
+- `tiers[]`
+  - `tierName`
+  - `variants[]`
+    - `variantIndex`
+    - `label`
+    - `gear[]`
+
+### `PATCH career-templates/{careerLine}/{tier}/{variantIndex}`
+
+Returns the updated template variant:
+
+- `variantIndex`
+- `label`
+- `gear[]`
+
+## Update Contracts
+
+### `PUT bots/{characterId}/gear`
+
+Accepts:
 
 ```json
 {
@@ -147,9 +185,21 @@ Rules:
 - `replaceOverrides=true` starts from an empty override set
 - `replaceOverrides=false` modifies the existing override set in place
 - `itemEntry=0` or `null` removes the override for that slot
-- `reapply=true` immediately reapplies the effective loadout if the bot is currently loaded
+- `reapply=true` reapplies the effective bot loadout if the bot is currently loaded
 
-`DELETE bots/{characterId}/gear` clears all custom overrides for that bot.
+### `PATCH bots/{characterId}/template`
+
+Accepts the same body shape, but patches the base template resolved for that bot's `career + tier + role` instead of the selected bot override set.
+
+### `PATCH career-templates/{careerLine}/{tier}/{variantIndex}`
+
+Accepts the same body shape and patches the explicit template variant directly.
+
+When `reapply=true` on a `T4` or `SC` template patch, the server attempts to reapply that template to matching loaded bots of the same career.
+
+### `DELETE bots/{characterId}/gear`
+
+Clears all custom overrides for that bot.
 
 ## Validation Rules
 
@@ -158,43 +208,37 @@ Every override and item-search result is validated with the same bot loadout che
 - slot must be a managed equipment slot
 - item must be allowed in that slot
 - item must be usable by the bot's career, race, skills, level, and renown
-- unique-equipped items cannot duplicate another unique item already present in the effective loadout
+- unique-equipped items cannot duplicate another unique item already present in the resolved loadout
 
 Invalid overrides are rejected by the API or ignored during effective-loadout assembly.
 
 ## Toolkit Integration Status
 
-This API is now consumed by `WAR-RE-Toolkit`.
+This API is consumed by `WAR-RE-Toolkit` through:
 
-Implemented toolkit pieces:
+- `apps/warclient/Services/ServerRPC.cs`
+- `apps/warclient/Services/BotEditorApiClient.cs`
+- `tools/ToolkitControlCenter/WarToolkitHub/Views/BotEditorView.xaml`
+- `apps/bot-template-viewer/MainWindow.xaml`
+- `tools/ToolkitControlCenter/program_ui_profiles.json`
 
-- `apps/warclient/Services/ServerRPC.cs` now supports `GET`, `PUT`, and `DELETE` with correct host, port, and query-string handling
-- `apps/warclient/Services/BotEditorApiClient.cs` provides a typed client for all six bot editor routes
-- `tools/ToolkitControlCenter/WarToolkitHub/Views/BotEditorView.xaml` hosts the embedded bot editor UI
-- `tools/ToolkitControlCenter/program_ui_profiles.json` registers the tool in the hub navigation
+Current toolkit-side behavior:
 
-Current toolkit capabilities:
+- the embedded `Bot Editor` focuses on per-bot override work
+- the standalone `Bot Template Armory` supports the richer paperdoll workflow, filter cascade, and base-template vs bot-result editing split
+- runtime usage has moved beyond the original read-only milestone into active gear-template and per-bot editing
 
-- connect to the local bot editor API
-- list bot characters
-- inspect template gear, overrides, effective loadout, and equipped gear
-- search valid items for a selected slot
-- apply a single-slot override
-- clear a single slot override
-- clear all overrides for a bot
-- request live reapply for already loaded bots
+Current functional gap:
 
-Current limitation:
-
-- the client and server builds are verified, but end-to-end runtime interaction against a live `WorldServer` instance has not yet been validated in this repo
+- tactic-slot editing is not yet exposed
+- mastery-template editing is not yet exposed
 
 ## Operational Notes
 
-- This API does not create or delete bots; it edits the gear state of existing bots
+- This API does not create or delete bots; it edits loadout state for existing bots
 - Existing bots can be edited even when unloaded because overrides persist in `war_characters`
 - Loaded bots can be updated live through `reapply=true`
 - The API is separate from the legacy debug-only binary API in `WorldServer/API/Server.cs`
-- The first supported toolkit host is `WAR-RE-Toolkit/tools/ToolkitControlCenter/WarToolkitHub`
 
 ## Verification
 

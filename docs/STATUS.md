@@ -118,11 +118,11 @@ See `docs/data-matrix/overview/path-forward.md` for full roadmap and source-sear
 
 A fully integrated, player-like Bot System populates the world with autonomous entities. They participate in RvR and Scenarios with zero network overhead and use player-style character, stat, and item systems. Bot gear is currently template-driven with per-bot override support. Bot movement and pathing are under active rework; the current build uses direct movement fallback rather than the earlier waypoint-guided route path. See `BOT_SYSTEM.md` for full architecture details and GM commands.
 
-### Bot Editor API and Toolkit Integration (2026-03-30)
+### Bot Editor API and Toolkit Integration (2026-04-05)
 
-`WorldServer` now exposes a local HTTP JSON bot editor surface for external UI tooling. The endpoint serves bot summaries, full bot sheets, valid slot-scoped item search, and persisted gear override updates. Per-bot edits are stored in the new `war_characters.bot_gear_overrides` table and can be reapplied live to loaded bots.
+`WorldServer` now exposes a template-aware local HTTP JSON bot editor surface for external UI tooling. The API serves bot summaries, full bot sheets, slot-valid item search, direct base-template patching, explicit career-template routes, and persisted per-bot override updates. Per-bot edits remain stored in `war_characters.bot_gear_overrides` and can be reapplied live to loaded bots.
 
-`WAR-RE-Toolkit` now contains the first consumer for this API: a typed client in `apps/warclient` and an embedded `Bot Editor` view in `tools/ToolkitControlCenter/WarToolkitHub`. The toolkit can connect to the local API, list bots, inspect their loadouts, search valid replacement items, and apply or clear persisted overrides. Current remaining gap: the client and server builds are verified, but end-to-end runtime validation against a live `WorldServer` instance is still pending. See `docs/bot-editor-api.md` for the full route contract and integration notes.
+`WAR-RE-Toolkit` now has two active consumers for this surface: the embedded `Bot Editor` in `WarToolkitHub` for direct per-bot override work, and the standalone `Bot Template Armory` viewer for the paperdoll workflow, filter cascade, and base-template versus bot-result editing split. This is no longer just a planned integration milestone; it is the live working gear-edit path for the current toolkit. Remaining gap: tactic-slot and mastery-template editing are still not exposed by the API. See `docs/bot-editor-api.md` for the current route contract and toolkit integration details.
 
 ## System Guilds
 
@@ -211,3 +211,5 @@ The `rvr_player_contribution` table was created with `Id int NOT NULL PRIMARY KE
 - **`UpdateObjectiveGoal`**: replaced `OrderBy(o => player.GetDistanceTo(o))` with a single-pass squared-distance loop.
 - **`CheckForDeadGroupMembers`**: was calling `GetDistanceTo` twice per dead member (once in `Where`, once in `OrderBy`). Replaced with a single-pass loop computing distance once.
 - **`GetLowestHealthAlly`**: replaced `Where(m => GetDistanceTo(m) <= range)` (sqrt per member) with `IsWithinRadiusFeet` (squared comparison, no sqrt) as the range pre-filter.
+
+
