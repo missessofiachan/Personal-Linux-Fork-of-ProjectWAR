@@ -701,11 +701,13 @@ namespace FrameWork
                         bool array = false;
 
                         Type type;
+                        PropertyInfo prop = bind.Member as PropertyInfo;
+                        FieldInfo field = bind.Member as FieldInfo;
 
-                        if (bind.Member is PropertyInfo prop)
+                        if (prop != null)
                             type = prop.PropertyType;
                         else
-                            type = ((FieldInfo)bind.Member).FieldType;
+                            type = field.FieldType;
 
                         if (type.HasElementType)
                         {
@@ -717,11 +719,11 @@ namespace FrameWork
 
                         if (array)
                         {
-                            if (bind.Member is PropertyInfo prop)
+                            if (prop != null)
                             {
                                 val = prop.GetValue(dataObject, null);
                             }
-                            if (bind.Member is FieldInfo field)
+                            if (field != null)
                             {
                                 val = field.GetValue(dataObject);
                             }
@@ -743,9 +745,9 @@ namespace FrameWork
                         }
                         else
                         {
-                            if (bind.Member is PropertyInfo prop)
+                            if (prop != null)
                                 val = prop.GetValue(dataObject, null);
-                            if (bind.Member is FieldInfo field)
+                            if (field != null)
                                 val = field.GetValue(dataObject);
                             if (val is DataObject)
                                 SaveObject(val as DataObject);
@@ -783,11 +785,13 @@ namespace FrameWork
                             bool array = false;
 
                             Type type;
+                            PropertyInfo prop = bind.Member as PropertyInfo;
+                            FieldInfo field = bind.Member as FieldInfo;
 
-                            if (bind.Member is PropertyInfo prop)
+                            if (prop != null)
                                 type = prop.PropertyType;
                             else
-                                type = ((FieldInfo)bind.Member).FieldType;
+                                type = field.FieldType;
 
                             if (type.HasElementType)
                             {
@@ -799,11 +803,11 @@ namespace FrameWork
 
                             if (array)
                             {
-                                if (bind.Member is PropertyInfo prop)
+                                if (prop != null)
                                 {
                                     val = prop.GetValue(dataObject, null);
                                 }
-                                if (bind.Member is FieldInfo field)
+                                if (field != null)
                                 {
                                     val = field.GetValue(dataObject);
                                 }
@@ -825,9 +829,9 @@ namespace FrameWork
                             }
                             else
                             {
-                                if (bind.Member is PropertyInfo prop)
+                                if (prop != null)
                                     val = prop.GetValue(dataObject, null);
-                                if (bind.Member is FieldInfo field)
+                                if (field != null)
                                     val = field.GetValue(dataObject);
                                 if (val != null && val is DataObject)
                                     DeleteObject(val as DataObject);
