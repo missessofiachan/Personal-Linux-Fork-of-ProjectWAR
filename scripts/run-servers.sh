@@ -62,7 +62,11 @@ tmux kill-session -t "$SESSION" 2>/dev/null || true
 # ── helper: start a server in a named tmux window ────────────
 start_server() {
     local window="$1" exe="$2"
-    local cmd="cd $BIN_DIR && mono ${exe}.exe; echo '--- ${exe} exited ---'; read"
+    local prefix=""
+    if [[ -f "/usr/lib/x86_64-linux-gnu/libmimalloc.so" ]]; then
+        prefix="LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libmimalloc.so "
+    fi
+    local cmd="cd $BIN_DIR && ${prefix}mono ${exe}.exe; echo '--- ${exe} exited ---'; read"
     if [[ "$window" == "AccountCacher" ]]; then
         # First window — new session
         tmux new-session  -d -s "$SESSION" -n "$window" "bash -c '$cmd'"

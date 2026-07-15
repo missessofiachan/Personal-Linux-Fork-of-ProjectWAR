@@ -40,6 +40,44 @@ We introduced a dynamic active-object tracking list (`_activeObjects`) to keep r
 
 ---
 
+## 3. Network Packet Serialization Memory Optimization
+
+### Problem ("The Why")
+Writing primitive datatypes (such as `short`, `int`, `long`, and `float`) to output packets via the `PacketOut` class dynamically called `BitConverter.GetBytes(value)` under the hood. 
+Because `BitConverter.GetBytes()` allocates a new heap-allocated `byte[]` on each call, the continuous stream of outgoing game traffic generated immense Garbage Collection (GC) pressure, leading to frequent GC cycles and runtime latency spikes. 
+
+Additionally, a latent bug existed in the `WriteInt16R` method where it wrote loop indexes instead of raw data bytes.
+
+### Solution ("The What")
+- We rewrote the integer writing methods (`WriteInt16`, `WriteInt16R`, `WriteInt32`, `WriteInt32R`, `WriteInt64`, `WriteInt64R`) to serialize values directly into the buffer using zero-allocation bit-shifts.
+- We defined a stack-allocated union `FloatToIntUnion` to map `float` coordinates/vectors directly to integer bits, allowing `WriteFloat` to serialize floating-point values without heap allocations.
+- Fixed the logic in `WriteInt16R` to write actual byte values.
+
+### Files Modified
+* **[PacketOut.cs](file:///run/media/system/NVME_GAME_1/GitHub/ProjectWAR/FrameWork/NetWork/Clients/PacketOut.cs)**:
+  * Replaced `BitConverter.GetBytes()` calls with zero-allocation bit-shifting and union mapping.
+
+---
+
+## 4. Mono Runtime Memory Allocator Preloading (mimalloc)
+
+### Problem ("The Why")
+While managed heap memory is managed by the C# garbage collector, the underlying Mono Virtual Machine (JIT runtime) makes numerous unmanaged C/C++ level allocations (threads, JIT compilation caches, assembly mapping). Utilizing the standard OS memory allocator can result in fragmentation and slower allocation performance under multi-threaded JIT workloads.
+
+### Solution ("The What")
+- Installed Microsoft's high-performance memory allocator `mimalloc` (`libmimalloc2.0` and `libmimalloc-dev`) inside the distrobox container environment.
+- Configured the startup scripts to preload `libmimalloc.so` before executing Mono.
+
+### Files Modified
+* **[container-setup.sh](file:///run/media/system/NVME_GAME_1/GitHub/ProjectWAR/scripts/container-setup.sh)**:
+  * Added `libmimalloc2.0` and `libmimalloc-dev` to the list of packages installed automatically during setup.
+* **[run-servers.sh](file:///run/media/system/NVME_GAME_1/GitHub/ProjectWAR/scripts/run-servers.sh)**:
+  * Configured `start_server` to verify the presence of `libmimalloc.so` and automatically prefix `mono` commands with `LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libmimalloc.so`.
+
+---
+
 ## Summary of Impact
-* **CPU Reduction**: The updater loop overhead drops from scanning 65,000 slots per region tick to iterating only over the exact count of active entities (often $< 100$), drastically lowering baseline server CPU consumption.
+* **CPU Reduction**: The updater loop drops from scanning 65,000 slots per region tick to iterating only over the exact count of active entities (often $< 100$), drastically lowering baseline server CPU consumption.
 * **DB Performance**: Reading and writing records to MySQL is significantly faster and less resource-heavy because metadata mapping bypasses runtime reflection lookups entirely.
+* **GC Allocation Reduction**: Allocations from outgoing packets are completely eliminated for primitive serialization, drastically reducing garbage collector pauses and latency spikes.
+* **VM Memory Optimization**: The Mono VM benefits from high-performance unmanaged allocations via `LD_PRELOAD` of `mimalloc`, reducing unmanaged allocation latency and VM memory fragmentation.

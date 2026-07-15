@@ -1,4 +1,4 @@
-﻿/*
+/*
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -278,20 +278,26 @@ namespace FrameWork
             WriteByte((byte)(val >> 8));
         }
 
+        [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
+        private struct FloatToIntUnion
+        {
+            [System.Runtime.InteropServices.FieldOffset(0)]
+            public float FloatValue;
+
+            [System.Runtime.InteropServices.FieldOffset(0)]
+            public int IntValue;
+        }
+
         public virtual void WriteInt16(short val)
         {
-            byte[] b = BitConverter.GetBytes(val);
-
-            for (int i = b.Length; i > 0; --i)
-                WriteByte(b[i - 1]);
+            WriteByte((byte)(val >> 8));
+            WriteByte((byte)(val & 0xff));
         }
 
         public virtual void WriteInt16R(short val)
         {
-            byte[] b = BitConverter.GetBytes(val);
-
-            for (byte i = 0; i < b.Length; ++i)
-                WriteByte(i);
+            WriteByte((byte)(val & 0xff));
+            WriteByte((byte)(val >> 8));
         }
 
         public virtual void WriteUInt24(uint val)
@@ -326,18 +332,18 @@ namespace FrameWork
 
         public virtual void WriteInt32(int val)
         {
-            byte[] b = BitConverter.GetBytes(val);
-
-            for (int i = 0; i < b.Length; ++i)
-                WriteByte(b[i]);
+            WriteByte((byte)(val & 0xff));
+            WriteByte((byte)((val >> 8) & 0xff));
+            WriteByte((byte)((val >> 16) & 0xff));
+            WriteByte((byte)(val >> 24));
         }
 
         public virtual void WriteInt32R(int val)
         {
-            byte[] b = BitConverter.GetBytes(val);
-
-            for (int i = b.Length; i > 0; --i)
-                WriteByte(b[i - 1]);
+            WriteByte((byte)(val >> 24));
+            WriteByte((byte)((val >> 16) & 0xff));
+            WriteByte((byte)((val >> 8) & 0xff));
+            WriteByte((byte)(val & 0xff));
         }
 
         public virtual void WriteUInt64(ulong val)
@@ -366,24 +372,25 @@ namespace FrameWork
 
         public virtual void WriteInt64(long val)
         {
-            byte[] b = BitConverter.GetBytes(val);
-
-            for (int i = 0; i < b.Length; ++i)
-                WriteByte(b[i]);
+            WriteByte((byte)(val & 0xff));
+            WriteByte((byte)((val >> 8) & 0xff));
+            WriteByte((byte)((val >> 16) & 0xff));
+            WriteByte((byte)((val >> 24) & 0xff));
+            WriteByte((byte)((val >> 32) & 0xff));
+            WriteByte((byte)((val >> 40) & 0xff));
+            WriteByte((byte)((val >> 48) & 0xff));
+            WriteByte((byte)(val >> 56));
         }
 
         public virtual void WriteInt64R(long val)
         {
-            byte[] b = BitConverter.GetBytes(val);
-
-            for (int i = 0; i < b.Length; ++i)
-                WriteByte(b[i]);
+            WriteInt64(val);
         }
 
         public virtual void WriteFloat(float val)
         {
-            foreach (byte b in BitConverter.GetBytes(val))
-                WriteByte(b);
+            FloatToIntUnion union = new FloatToIntUnion { FloatValue = val };
+            WriteInt32(union.IntValue);
         }
 
         public virtual void WriteVarUInt(uint val)

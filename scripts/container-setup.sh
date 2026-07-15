@@ -27,9 +27,9 @@ else
 
     DEBIAN_FRONTEND=noninteractive apt-get update -qq 2>&1 | tail -3
 
-    echo "[setup] Installing mono-complete, msbuild, nuget, tmux …"
+    echo "[setup] Installing mono-complete, msbuild, nuget, tmux, mimalloc …"
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
-        mono-complete msbuild nuget tmux 2>&1 \
+        mono-complete msbuild nuget tmux libmimalloc2.0 libmimalloc-dev 2>&1 \
         | grep -E '(Setting up|E:|error)' || true
 
     # Trust Mono's SSL cert store
