@@ -1,4 +1,4 @@
-﻿using FrameWork.Database;
+using FrameWork.Database;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -82,37 +82,29 @@ namespace FrameWork
             Type myType = dataObject.GetType();
             string id = row[tableName + "_ID"].ToString();
 
-            MemberInfo[] myMembers = myType.GetMembers();
             dataObject.ObjectId = id;
 
-            for (int i = 0; i < myMembers.Length; i++)
-            {
-                object[] myAttributes = GetRelationAttributes(myMembers[i]);
+            BindingInfo[] bindInfos = GetBindingInfo(myType);
 
-                if (myAttributes.Length > 0)
+            for (int i = 0; i < bindInfos.Length; i++)
+            {
+                BindingInfo bind = bindInfos[i];
+                if (bind.HasRelation)
                 {
-                    //if(myAttributes[0] is Attributes.Relation)
-                    //{
                     relation = true;
-                    //}
                 }
-                else
+                else if (bind.PrimaryKey || bind.DataElementAttribute != null)
                 {
-                    object[] keyAttrib = myMembers[i].GetCustomAttributes(typeof(PrimaryKey), true);
-                    myAttributes = myMembers[i].GetCustomAttributes(typeof(DataElement), true);
-                    if (myAttributes.Length > 0 || keyAttrib.Length > 0)
+                    object val = row[bind.Member.Name];
+                    if (val != null && !val.GetType().IsInstanceOfType(DBNull.Value))
                     {
-                        object val = row[myMembers[i].Name];
-                        if (val != null && !val.GetType().IsInstanceOfType(DBNull.Value))
+                        if (bind.Member is PropertyInfo prop)
                         {
-                            if (myMembers[i] is PropertyInfo)
-                            {
-                                ((PropertyInfo)myMembers[i]).SetValue(dataObject, val, null);
-                            }
-                            if (myMembers[i] is FieldInfo)
-                            {
-                                ((FieldInfo)myMembers[i]).SetValue(dataObject, val);
-                            }
+                            prop.SetValue(dataObject, val, null);
+                        }
+                        else if (bind.Member is FieldInfo field)
+                        {
+                            field.SetValue(dataObject, val);
                         }
                     }
                 }
@@ -136,39 +128,32 @@ namespace FrameWork
 
             row[dataObject.TableName + "_ID"] = dataObject.ObjectId;
 
-            MemberInfo[] myMembers = myType.GetMembers();
+            BindingInfo[] bindInfos = GetBindingInfo(myType);
 
-            for (int i = 0; i < myMembers.Length; i++)
+            for (int i = 0; i < bindInfos.Length; i++)
             {
-                object[] myAttributes = GetRelationAttributes(myMembers[i]);
+                BindingInfo bind = bindInfos[i];
                 object val = null;
 
-                if (myAttributes.Length > 0)
+                if (bind.HasRelation)
                 {
                     relation = true;
                 }
-                else
+                else if (bind.PrimaryKey || bind.DataElementAttribute != null)
                 {
-                    myAttributes = myMembers[i].GetCustomAttributes(typeof(DataElement), true);
-                    object[] keyAttrib = myMembers[i].GetCustomAttributes(typeof(PrimaryKey), true);
-
-                    if (myAttributes.Length > 0 || keyAttrib.Length > 0)
+                    if (bind.Member is PropertyInfo prop)
                     {
-                        if (myMembers[i] is PropertyInfo)
-                        {
-                            val = ((PropertyInfo)myMembers[i]).GetValue(dataObject, null);
-                        }
-                        if (myMembers[i] is FieldInfo)
-                        {
-                            val = ((FieldInfo)myMembers[i]).GetValue(dataObject);
-                        }
-                        if (val != null)
-                        {
-                            row[myMembers[i].Name] = val;
-                        }
+                        val = prop.GetValue(dataObject, null);
+                    }
+                    else if (bind.Member is FieldInfo field)
+                    {
+                        val = field.GetValue(dataObject);
+                    }
+                    if (val != null)
+                    {
+                        row[bind.Member.Name] = val;
                     }
                 }
-                //}
             }
 
             if (relation)
@@ -706,21 +691,21 @@ namespace FrameWork
 
                 Type myType = dataObject.GetType();
 
-                MemberInfo[] myMembers = myType.GetMembers();
+                BindingInfo[] bindInfos = GetBindingInfo(myType);
 
-                for (int i = 0; i < myMembers.Length; i++)
+                for (int i = 0; i < bindInfos.Length; i++)
                 {
-                    Relation[] myAttributes = GetRelationAttributes(myMembers[i]);
-                    if (myAttributes.Length > 0)
+                    BindingInfo bind = bindInfos[i];
+                    if (bind.HasRelation)
                     {
                         bool array = false;
 
                         Type type;
 
-                        if (myMembers[i] is PropertyInfo)
-                            type = ((PropertyInfo)myMembers[i]).PropertyType;
+                        if (bind.Member is PropertyInfo prop)
+                            type = prop.PropertyType;
                         else
-                            type = ((FieldInfo)myMembers[i]).FieldType;
+                            type = ((FieldInfo)bind.Member).FieldType;
 
                         if (type.HasElementType)
                         {
@@ -732,13 +717,13 @@ namespace FrameWork
 
                         if (array)
                         {
-                            if (myMembers[i] is PropertyInfo)
+                            if (bind.Member is PropertyInfo prop)
                             {
-                                val = ((PropertyInfo)myMembers[i]).GetValue(dataObject, null);
+                                val = prop.GetValue(dataObject, null);
                             }
-                            if (myMembers[i] is FieldInfo)
+                            if (bind.Member is FieldInfo field)
                             {
-                                val = ((FieldInfo)myMembers[i]).GetValue(dataObject);
+                                val = field.GetValue(dataObject);
                             }
                             if (val is Array)
                             {
@@ -758,10 +743,10 @@ namespace FrameWork
                         }
                         else
                         {
-                            if (myMembers[i] is PropertyInfo)
-                                val = ((PropertyInfo)myMembers[i]).GetValue(dataObject, null);
-                            if (myMembers[i] is FieldInfo)
-                                val = ((FieldInfo)myMembers[i]).GetValue(dataObject);
+                            if (bind.Member is PropertyInfo prop)
+                                val = prop.GetValue(dataObject, null);
+                            if (bind.Member is FieldInfo field)
+                                val = field.GetValue(dataObject);
                             if (val is DataObject)
                                 SaveObject(val as DataObject);
                         }
@@ -782,67 +767,71 @@ namespace FrameWork
 
                 Type myType = dataObject.GetType();
 
-                MemberInfo[] myMembers = myType.GetMembers();
+                BindingInfo[] bindInfos = GetBindingInfo(myType);
 
-                for (int i = 0; i < myMembers.Length; i++)
+                for (int i = 0; i < bindInfos.Length; i++)
                 {
-                    Relation[] myAttributes = GetRelationAttributes(myMembers[i]);
-                    if (myAttributes.Length > 0)
+                    BindingInfo bind = bindInfos[i];
+                    if (bind.HasRelation)
                     {
-                        if (myAttributes[0].AutoDelete == false)
-                            continue;
-
-                        bool array = false;
-
-                        Type type;
-
-                        if (myMembers[i] is PropertyInfo)
-                            type = ((PropertyInfo)myMembers[i]).PropertyType;
-                        else
-                            type = ((FieldInfo)myMembers[i]).FieldType;
-
-                        if (type.HasElementType)
+                        Relation[] myAttributes = GetRelationAttributes(bind.Member);
+                        if (myAttributes.Length > 0)
                         {
-                            type = type.GetElementType();
-                            array = true;
-                        }
+                            if (myAttributes[0].AutoDelete == false)
+                                continue;
 
-                        val = null;
+                            bool array = false;
 
-                        if (array)
-                        {
-                            if (myMembers[i] is PropertyInfo)
+                            Type type;
+
+                            if (bind.Member is PropertyInfo prop)
+                                type = prop.PropertyType;
+                            else
+                                type = ((FieldInfo)bind.Member).FieldType;
+
+                            if (type.HasElementType)
                             {
-                                val = ((PropertyInfo)myMembers[i]).GetValue(dataObject, null);
+                                type = type.GetElementType();
+                                array = true;
                             }
-                            if (myMembers[i] is FieldInfo)
-                            {
-                                val = ((FieldInfo)myMembers[i]).GetValue(dataObject);
-                            }
-                            if (val is Array)
-                            {
-                                var a = val as Array;
 
-                                foreach (object o in a)
+                            val = null;
+
+                            if (array)
+                            {
+                                if (bind.Member is PropertyInfo prop)
                                 {
-                                    if (o is DataObject)
-                                        DeleteObject(o as DataObject);
+                                    val = prop.GetValue(dataObject, null);
+                                }
+                                if (bind.Member is FieldInfo field)
+                                {
+                                    val = field.GetValue(dataObject);
+                                }
+                                if (val is Array)
+                                {
+                                    var a = val as Array;
+
+                                    foreach (object o in a)
+                                    {
+                                        if (o is DataObject)
+                                            DeleteObject(o as DataObject);
+                                    }
+                                }
+                                else
+                                {
+                                    if (val is DataObject)
+                                        DeleteObject(val as DataObject);
                                 }
                             }
                             else
                             {
-                                if (val is DataObject)
+                                if (bind.Member is PropertyInfo prop)
+                                    val = prop.GetValue(dataObject, null);
+                                if (bind.Member is FieldInfo field)
+                                    val = field.GetValue(dataObject);
+                                if (val != null && val is DataObject)
                                     DeleteObject(val as DataObject);
                             }
-                        }
-                        else
-                        {
-                            if (myMembers[i] is PropertyInfo)
-                                val = ((PropertyInfo)myMembers[i]).GetValue(dataObject, null);
-                            if (myMembers[i] is FieldInfo)
-                                val = ((FieldInfo)myMembers[i]).GetValue(dataObject);
-                            if (val != null && val is DataObject)
-                                DeleteObject(val as DataObject);
                         }
                     }
                 }

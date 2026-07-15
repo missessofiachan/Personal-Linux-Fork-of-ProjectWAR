@@ -1,4 +1,4 @@
-﻿//#define NO_CREATURE
+//#define NO_CREATURE
 
 using Common;
 using Common.Database.World.Maps;
@@ -308,6 +308,7 @@ namespace WorldServer.World.Map
                             if (Objects[removeInfo.Oid] != null && Objects[removeInfo.Oid] == removeInfo.Obj)
                             {
                                 Objects[removeInfo.Oid] = null;
+                                _activeObjects.Remove(removeInfo.Obj);
 
                                 /*
                                     Player Oid could previously be zeroed after another region had set it.
@@ -333,9 +334,9 @@ namespace WorldServer.World.Map
 
         private void UpdateActors(long start)
         {
-            for (var i = 0; i < Objects.Length; ++i)
+            for (var i = 0; i < _activeObjects.Count; ++i)
             {
-                var obj = Objects[i];
+                var obj = _activeObjects[i];
                 if (obj == null || obj.Region != this)
                     continue;
 
@@ -391,9 +392,10 @@ namespace WorldServer.World.Map
         {
             RemoveOldObjects();
 
-            for (var i = 0; i < Objects.Length; ++i)
+            var activeList = _activeObjects.ToList();
+            for (var i = 0; i < activeList.Count; ++i)
             {
-                var obj = Objects[i];
+                var obj = activeList[i];
 
                 if (obj == null || obj.Region != this)
                     continue;
@@ -426,7 +428,7 @@ namespace WorldServer.World.Map
         {
             var objectCounts = new Dictionary<string, int>();
 
-            foreach (var obj in Objects)
+            foreach (var obj in _activeObjects)
             {
                 if (obj == null)
                     continue;
@@ -602,6 +604,7 @@ namespace WorldServer.World.Map
         public static ushort MaxObjects = 65000;
         public static ushort MaxOid = 2;
         public Object[] Objects = new Object[MaxObjects];
+        private readonly List<Object> _activeObjects = new List<Object>();
         public Dictionary<uint, PublicQuest> PublicQuests = new Dictionary<uint, PublicQuest>();
         private readonly List<ObjectAdd> _objectsToAdd = new List<ObjectAdd>();
         private readonly List<ObjectRemove> _objectsToRemove = new List<ObjectRemove>();
@@ -613,6 +616,7 @@ namespace WorldServer.World.Map
 
             obj.SetOid(oid);
             obj.Loaded = false;
+            _activeObjects.Add(obj);
         }
 
         public ushort GetOid()
@@ -724,12 +728,12 @@ namespace WorldServer.World.Map
 
         public ushort GetObjects()
         {
-            return (ushort)Objects.Count(obj => obj != null);
+            return (ushort)_activeObjects.Count;
         }
 
         public List<T> GetObjects<T>() where T : Object
         {
-            return Objects.Where(obj => obj != null && obj is T).Select(e => (T)e).ToList();
+            return _activeObjects.OfType<T>().ToList();
         }
 
         #endregion Oid

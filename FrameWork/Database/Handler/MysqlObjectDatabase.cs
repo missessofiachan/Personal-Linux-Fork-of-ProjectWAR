@@ -1,4 +1,4 @@
-﻿using MySql.Data.MySqlClient;
+using MySql.Data.MySqlClient;
 using MySql.Data.Types;
 using System;
 using System.Collections.Generic;
@@ -551,7 +551,6 @@ namespace FrameWork
 
         protected override DataObject FindObjectByKeyImpl(Type objectType, object key)
         {
-            MemberInfo[] members = objectType.GetMembers();
             var ret = Activator.CreateInstance(objectType) as DataObject;
 
             string tableName = ret.TableName;
@@ -568,12 +567,12 @@ namespace FrameWork
             // Escape PK value
             key = Escape(key.ToString());
 
-            for (int i = 0; i < members.Length; i++)
+            BindingInfo[] bindingInfo = GetBindingInfo(objectType);
+            for (int i = 0; i < bindingInfo.Length; i++)
             {
-                object[] keyAttrib = members[i].GetCustomAttributes(typeof(PrimaryKey), true);
-                if (keyAttrib.Length > 0)
+                if (bindingInfo[i].PrimaryKey)
                 {
-                    whereClause = "`" + members[i].Name + "` = '" + key + "'";
+                    whereClause = "`" + bindingInfo[i].Member.Name + "` = '" + key + "'";
                     break;
                 }
             }
@@ -596,7 +595,6 @@ namespace FrameWork
         // Retourne l'objet a partir de sa primary key
         protected override TObject FindObjectByKeyImpl<TObject>(object key)
         {
-            MemberInfo[] members = typeof(TObject).GetMembers();
             var ret = (TObject)Activator.CreateInstance(typeof(TObject));
 
             string tableName = ret.TableName;
@@ -613,12 +611,12 @@ namespace FrameWork
             // Escape PK value
             key = Escape(key.ToString());
 
-            for (int i = 0; i < members.Length; i++)
+            BindingInfo[] bindingInfo = GetBindingInfo(typeof(TObject));
+            for (int i = 0; i < bindingInfo.Length; i++)
             {
-                object[] keyAttrib = members[i].GetCustomAttributes(typeof(PrimaryKey), true);
-                if (keyAttrib.Length > 0)
+                if (bindingInfo[i].PrimaryKey)
                 {
-                    whereClause = "`" + members[i].Name + "` = '" + key + "'";
+                    whereClause = "`" + bindingInfo[i].Member.Name + "` = '" + key + "'";
                     break;
                 }
             }
