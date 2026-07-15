@@ -18,3 +18,8 @@ obj/
 # Dependency directories
 packages/
 deps/
+
+
+#idea
+.idea
+.idea/
