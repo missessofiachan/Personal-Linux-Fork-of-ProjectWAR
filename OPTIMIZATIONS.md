@@ -76,8 +76,24 @@ While managed heap memory is managed by the C# garbage collector, the underlying
 
 ---
 
+## 5. Logging Configuration Stability (Cross-Platform)
+
+### Problem ("The Why")
+The logging framework configurations (`NLog.config`) contained hardcoded, Windows-specific path settings for internal logs (`c:\temp\nlog-internal.log`). Additionally, `throwExceptions` was set to `true`, meaning any permission error or directory creation issue on Linux when trying to access Windows-specific file paths would throw an unhandled exception and crash the entire game server.
+
+### Solution ("The What")
+- Changed the internal log targets in both configurations to write to a relative folder path (`logs/nlog-internal.log`).
+- Set `throwExceptions` to `false` in configuration headers to isolate logging errors and prevent them from crashing the servers.
+
+### Files Modified
+* **[WorldServer NLog.config](file:///run/media/system/NVME_GAME_1/GitHub/ProjectWAR/WorldServer/NLog.config)**
+* **[Launcher NLog.config](file:///run/media/system/NVME_GAME_1/GitHub/ProjectWAR/Launcher/NLog.config)**
+
+---
+
 ## Summary of Impact
 * **CPU Reduction**: The updater loop drops from scanning 65,000 slots per region tick to iterating only over the exact count of active entities (often $< 100$), drastically lowering baseline server CPU consumption.
 * **DB Performance**: Reading and writing records to MySQL is significantly faster and less resource-heavy because metadata mapping bypasses runtime reflection lookups entirely.
 * **GC Allocation Reduction**: Allocations from outgoing packets are completely eliminated for primitive serialization, drastically reducing garbage collector pauses and latency spikes.
 * **VM Memory Optimization**: The Mono VM benefits from high-performance unmanaged allocations via `LD_PRELOAD` of `mimalloc`, reducing unmanaged allocation latency and VM memory fragmentation.
+* **Cross-Platform Stability**: Resolved Windows-specific hardcoded internal paths and NLog exception settings, preventing unexpected file-permission crashes under Linux execution.

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
@@ -260,7 +260,7 @@ namespace FrameWork
                 Listener = new TcpListener(IPAddress.Any, port);
                 Listener.Server.ReceiveBufferSize = BUF_SIZE;
                 Listener.Server.SendBufferSize = BUF_SIZE;
-                Listener.Server.NoDelay = false;
+                Listener.Server.NoDelay = true;
                 Listener.Server.Blocking = false;
 
                 AllocatePacketBuffers();
@@ -486,7 +486,7 @@ namespace FrameWork
 
                 sock.SendBufferSize = BUF_SIZE;
                 sock.ReceiveBufferSize = BUF_SIZE;
-                sock.NoDelay = false;
+                sock.NoDelay = true;
                 sock.Blocking = false;
 
                 BaseClient baseClient = null;
