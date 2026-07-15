@@ -91,9 +91,23 @@ The logging framework configurations (`NLog.config`) contained hardcoded, Window
 
 ---
 
+## 6. Game Network Latency Optimization (TCP NoDelay)
+
+### Problem ("The Why")
+The main game TCP server had `NoDelay` socket setting explicitly set to `false`. This enabled Nagle's algorithm, causing the operating system's networking layer to buffer small packets (such as movement updates or ability casts) for up to 200ms in an attempt to optimize network usage. For real-time multiplayer games, this buffering introduces significant, noticeable network latency (lag).
+
+### Solution ("The What")
+- Configured accepted socket connections and listener sockets to set `NoDelay = true` (disabling Nagle's algorithm) to dispatch all game packets instantly.
+
+### Files Modified
+* **[TCPManager.cs](file:///run/media/system/NVME_GAME_1/GitHub/ProjectWAR/FrameWork/NetWork/TCPManager.cs)**
+
+---
+
 ## Summary of Impact
 * **CPU Reduction**: The updater loop drops from scanning 65,000 slots per region tick to iterating only over the exact count of active entities (often $< 100$), drastically lowering baseline server CPU consumption.
 * **DB Performance**: Reading and writing records to MySQL is significantly faster and less resource-heavy because metadata mapping bypasses runtime reflection lookups entirely.
 * **GC Allocation Reduction**: Allocations from outgoing packets are completely eliminated for primitive serialization, drastically reducing garbage collector pauses and latency spikes.
 * **VM Memory Optimization**: The Mono VM benefits from high-performance unmanaged allocations via `LD_PRELOAD` of `mimalloc`, reducing unmanaged allocation latency and VM memory fragmentation.
 * **Cross-Platform Stability**: Resolved Windows-specific hardcoded internal paths and NLog exception settings, preventing unexpected file-permission crashes under Linux execution.
+* **Reduced Networking Latency**: Disabling Nagle's algorithm (`NoDelay = true`) allows all game status updates to be delivered immediately, dropping in-game ping/latency by up to 200ms.
