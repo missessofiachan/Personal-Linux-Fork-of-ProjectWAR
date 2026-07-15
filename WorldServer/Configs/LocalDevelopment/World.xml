@@ -21,7 +21,7 @@
     <Database>war_characters</Database>
     <Username>root</Username>
     <Password>password</Password>
-    <Custom>Treat Tiny As Boolean=False</Custom>
+    <Custom>Treat Tiny As Boolean=False;Pooling=true;Min Pool Size=10;Max Pool Size=100;Connection Lifetime=60;SslMode=None;</Custom>
     <Catalog />
     <IPAddress />
     <MultipleActiveResultSets>false</MultipleActiveResultSets>
@@ -29,11 +29,11 @@
   </CharacterDatabase>
   <WorldDatabase>
     <Server>127.0.0.1</Server>
-      <Port>3306</Port>
+    <Port>3306</Port>
     <Database>war_world</Database>
     <Username>root</Username>
     <Password>password</Password>
-    <Custom>Treat Tiny As Boolean=False</Custom>
+    <Custom>Treat Tiny As Boolean=False;Pooling=true;Min Pool Size=10;Max Pool Size=100;Connection Lifetime=60;SslMode=None;</Custom>
     <Catalog />
     <IPAddress />
     <MultipleActiveResultSets>false</MultipleActiveResultSets>
