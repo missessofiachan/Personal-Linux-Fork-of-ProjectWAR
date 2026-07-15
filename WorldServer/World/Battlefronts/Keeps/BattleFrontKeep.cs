@@ -1,4 +1,4 @@
-﻿using Appccelerate.StateMachine;
+using Appccelerate.StateMachine;
 using Common;
 using Common.Database.World.Battlefront;
 using FrameWork;
@@ -229,7 +229,8 @@ namespace WorldServer.World.Battlefronts.Keeps
             }
 
             // Create the guild claim objective flag.
-            var guildClaimObjective = BattleFrontService.GetBattleFrontObjectives(Region.RegionId).SingleOrDefault(x => x.Entry == Info.GuildClaimObjectiveId);
+            var objectivesList = BattleFrontService.GetBattleFrontObjectives(Region.RegionId);
+            var guildClaimObjective = objectivesList != null ? objectivesList.SingleOrDefault(x => x.Entry == Info.GuildClaimObjectiveId) : null;
             if (guildClaimObjective != null)
             {
                 GuildFlag = new GuildClaimObjective(Region, guildClaimObjective);
@@ -240,7 +241,15 @@ namespace WorldServer.World.Battlefronts.Keeps
                 _logger.Error($"Could not find Guild Claim Objective for {Info.Name}");
             }
 
-            PlayerSpawnLocation = BattleFrontService._PlayerKeepSpawnPoints.SingleOrDefault(x => x.Key == Info.KeepId);
+            PlayerKeepSpawn spawnLocation;
+            if (BattleFrontService._PlayerKeepSpawnPoints.TryGetValue(Info.KeepId, out spawnLocation))
+            {
+                PlayerSpawnLocation = new KeyValuePair<int, PlayerKeepSpawn>(Info.KeepId, spawnLocation);
+            }
+            else
+            {
+                PlayerSpawnLocation = default(KeyValuePair<int, PlayerKeepSpawn>);
+            }
 
             if (WorldMgr._Keeps.ContainsKey(Info.KeepId))
                 WorldMgr._Keeps[Info.KeepId] = this;

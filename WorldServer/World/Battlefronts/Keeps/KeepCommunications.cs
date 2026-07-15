@@ -1,4 +1,4 @@
-﻿using FrameWork;
+using FrameWork;
 using GameData;
 using NLog;
 using System.Linq;
@@ -32,7 +32,7 @@ namespace WorldServer.World.Battlefronts.Keeps
                 Out.WriteByte((byte)doors.Count);
                 Out.WriteByte(keep.Rank); // Rank
                 if (doors.Count > 0)
-                    if (innerDoor != null)
+                    if (innerDoor != null && innerDoor.GameObject != null)
                         Out.WriteByte((byte)((innerDoor.GameObject.PctHealth))); // Door health
                     else
                     {

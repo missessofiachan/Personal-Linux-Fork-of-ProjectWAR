@@ -1,7 +1,7 @@
 #ifndef INTERSECTIONS_H
 #define INTERSECTIONS_H
 
-#include "glm/glm.hpp"
+#include <glm/glm.hpp>
 #include "KDTreeCPU.h"
 
 

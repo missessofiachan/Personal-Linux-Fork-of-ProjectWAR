@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC  -O3 -fPIC -shared -Wl,-soname,libWarZone.so -o libWarZone.so CMakeFiles/WarZone.dir/Source.cpp.o CMakeFiles/WarZone.dir/Intersections.cpp.o CMakeFiles/WarZone.dir/KDTreeCPU.cpp.o CMakeFiles/WarZone.dir/KDTreeNode.cpp.o CMakeFiles/WarZone.dir/ZoneManager.cpp.o CMakeFiles/WarZone.dir/Util.cpp.o 

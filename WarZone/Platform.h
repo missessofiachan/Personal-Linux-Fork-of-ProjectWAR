@@ -1,11 +1,17 @@
 #pragma once
 #define _CRT_SECURE_NO_DEPRECATE
-#include "glm/glm.hpp"
+#include <glm/glm.hpp>
+
+#ifdef _WIN32
 #include <windows.h>
+#else
+#include <stdint.h>
+#define __stdcall
+#define __declspec(x)
+#endif
 
 #include <vector>
 #include <map>
-
 
 using namespace std;
 
@@ -86,5 +92,3 @@ struct Fixture
 	Vector3 P1;
 	Vector3 P2;
 };
-
-

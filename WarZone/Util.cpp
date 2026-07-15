@@ -1,6 +1,3 @@
-#pragma once
-#include "Platform.h"
+#include "Util.h"
 
-class Util
-{
-	static void PrintMemoryInfo();};
+// Keep compile simple

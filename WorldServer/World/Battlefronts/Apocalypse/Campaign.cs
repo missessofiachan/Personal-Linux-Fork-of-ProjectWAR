@@ -1,4 +1,4 @@
-﻿using Common;
+using Common;
 using Common.Database.World.Battlefront;
 using FrameWork;
 using GameData;
@@ -516,7 +516,7 @@ namespace WorldServer.World.Battlefronts.Apocalypse
                 lock (status)
                 {
                     BattlefrontLogger.Trace($"Updating Campaign Objective Buffs...");
-                    if (status.RegionId == Region.RegionId)
+                    if (status.RegionId == Region.RegionId && Objectives != null)
                     {
                         foreach (var objective in Objectives)
                         {
@@ -656,6 +656,9 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
         private void PlaceObjectives()
         {
+            if (Objectives == null)
+                return;
+
             foreach (var battleFrontObjective in Objectives)
             {
                 Region.AddObject(battleFrontObjective, battleFrontObjective.ZoneId);
@@ -1205,6 +1208,9 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
             // Only update an active battlefront
             if (BattleFrontManager.ActiveBattleFront.RegionId != Region.RegionId)
+                return;
+
+            if (Objectives == null)
                 return;
 
             foreach (var flag in Objectives)

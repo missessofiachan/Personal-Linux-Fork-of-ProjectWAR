@@ -1,4 +1,4 @@
-﻿using Common.Database.World.Battlefront;
+using Common.Database.World.Battlefront;
 using FrameWork;
 using GameData;
 using NLog;
@@ -223,17 +223,20 @@ namespace WorldServer.World.Battlefronts.Apocalypse
 
                     regionMgr.Campaign.VictoryPointProgress = new VictoryPointProgress();
 
-                    foreach (var objective in regionMgr.Campaign.Objectives)
+                    if (regionMgr.Campaign.Objectives != null)
                     {
-                        if (forceDefaultRealm)
-                            objective.OwningRealm = (Realms)regionMgr.Campaign.BattleFrontManager.ActiveBattleFront.DefaultRealmLock;
-                        else
+                        foreach (var objective in regionMgr.Campaign.Objectives)
                         {
-                            objective.OwningRealm = (Realms)regionMgr.Campaign.BattleFrontManager.ActiveBattleFront.LastOwningRealm;
+                            if (forceDefaultRealm)
+                                objective.OwningRealm = (Realms)regionMgr.Campaign.BattleFrontManager.ActiveBattleFront.DefaultRealmLock;
+                            else
+                            {
+                                objective.OwningRealm = (Realms)regionMgr.Campaign.BattleFrontManager.ActiveBattleFront.LastOwningRealm;
+                            }
+                            //objective.fsm.Fire(CampaignObjectiveStateMachine.Command.OnLockZone);
+                            objective.SetObjectiveLocked();
+                            ProgressionLogger.Debug($" Locking BattlefieldObjective to {(Realms)regionMgr.Campaign.BattleFrontManager.ActiveBattleFront.LastOwningRealm} {objective.Name} {objective.State} {objective.State}");
                         }
-                        //objective.fsm.Fire(CampaignObjectiveStateMachine.Command.OnLockZone);
-                        objective.SetObjectiveLocked();
-                        ProgressionLogger.Debug($" Locking BattlefieldObjective to {(Realms)regionMgr.Campaign.BattleFrontManager.ActiveBattleFront.LastOwningRealm} {objective.Name} {objective.State} {objective.State}");
                     }
 
                     foreach (var keep in regionMgr.Campaign.Keeps)
